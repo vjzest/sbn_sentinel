@@ -1,0 +1,63 @@
+@import "tailwindcss";
+
+@theme {
+  --color-brand-primary: #4F46E5;
+  --color-brand-blue: #2563EB;
+  --color-brand-purple: #7C3AED;
+  --color-brand-green: #10B981;
+  --color-brand-orange: #F59E0B;
+  --color-brand-red: #EF4444;
+  --color-brand-bg: #F7F9FC;
+  --color-brand-surface: #FFFFFF;
+  --color-brand-border: #E8EDF5;
+  --color-brand-text: #111827;
+  --color-brand-text-sec: #6B7280;
+}
+
+@layer base {
+  html, body {
+    background-color: #F7F9FC;
+    color: #111827;
+    margin: 0;
+    padding: 0;
+  }
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.premium-shadow {
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03), 0 1px 3px rgba(0,0,0,0.02);
+}
+
+.card-hover:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05), 0 2px 5px rgba(0,0,0,0.02);
+}
+
+/* Instant Dark Mode Hack */
+.dark-mode-active {
+  filter: invert(1) hue-rotate(180deg);
+  background-color: #050505 !important;
+}
+
+.dark-mode-active img,
+.dark-mode-active video,
+.dark-mode-active .no-invert {
+  filter: invert(1) hue-rotate(180deg);
+}
