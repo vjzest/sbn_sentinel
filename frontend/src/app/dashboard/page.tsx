@@ -8,7 +8,7 @@ import { AIInsights } from '@/components/CommandCenter/AIInsights';
 import { RevenueImpact } from '@/components/CommandCenter/RevenueImpact';
 import { ConnectorsView } from '@/components/CommandCenter/ConnectorsView';
 import { IntelligenceView } from '@/components/CommandCenter/IntelligenceView';
-import { PatientFlowMonitor } from '@/components/CommandCenter/PatientFlowMonitor';
+import { PatientFlowView } from '@/components/CommandCenter/PatientFlowView';
 import { ScheduleOptimizerView } from '@/components/CommandCenter/ScheduleOptimizerView';
 import { ClinicalLogsView } from '@/components/CommandCenter/ClinicalLogsView';
 import { RevenueReportsView } from '@/components/CommandCenter/RevenueReportsView';
@@ -224,22 +224,17 @@ export default function Dashboard() {
         <style dangerouslySetInnerHTML={{
           __html: `
           html {
-            /* Premium Instant Dark Mode: 
-               - Invert 100% to perfectly flip lightness 
-               - Hue-rotate 180deg to perfectly restore original color hues
-               - Slight brightness & contrast bump for crisp text 
+            /* 
+              invert(0.93) turns white into dark grey (#121212) instead of pure black.
+              sepia(0.4) adds a warm brownish tint.
+              hue-rotate(195deg) shifts that brown into a beautiful rich dark blue/slate!
+              saturate(1.2) boosts the blue slightly.
             */
-            filter: invert(1) hue-rotate(180deg) brightness(1.1) contrast(0.95) !important;
-            background-color: #030712 !important;
+            filter: invert(0.93) sepia(0.4) hue-rotate(195deg) saturate(1.2) !important;
+            background-color: #0B1121 !important;
           }
-          /* Re-invert images and videos so they don't look like negatives */
           img, video {
             filter: invert(1) hue-rotate(180deg) !important;
-            opacity: 0.9; /* Soften bright images in dark mode */
-          }
-          /* Specific overrides for gradients and shadows */
-          .premium-shadow {
-            box-shadow: 0 4px 20px rgba(255, 255, 255, 0.05) !important;
           }
         `}} />
       )}
@@ -776,7 +771,7 @@ export default function Dashboard() {
             {activeTab === 'connectors' && <ConnectorsView />}
             {activeTab === 'signals' && <SignalsDetailView />}
             {activeTab === 'intelligence' && <IntelligenceView />}
-            {activeTab === 'patient-flow' && <PatientFlowMonitor />}
+            {activeTab === 'patient-flow' && <PatientFlowView />}
             {activeTab === 'schedule' && <ScheduleOptimizerView />}
             {activeTab === 'clinical-logs' && <ClinicalLogsView />}
             {activeTab === 'revenue' && <RevenueReportsView />}
