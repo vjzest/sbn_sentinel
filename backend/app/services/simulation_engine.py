@@ -6,7 +6,7 @@ from app.schemas.signal import SignalEvent
 from app.db.database import SessionLocal
 from app.models.signal import SignalModel
 
-from app.services.ml_engine import ml_engine
+from app.services.intelligence_engine import intelligence_engine
 
 class SimulationEngine:
     def __init__(self):
@@ -30,21 +30,23 @@ class SimulationEngine:
             event_template = random.choice(self.events)
             message_str = event_template["msg_template"].format(patient=patient)
             
-            # Predict using our custom trained ML models
-            ml_result = ml_engine.evaluate_signal(
+            # --- INTELLIGENCE PIPELINE (Teacher-Student Strategy) ---
+            # This handles HIPAA masking, OpenAI evaluation, and Local ML fallback automatically
+            ai_result = intelligence_engine.evaluate(
                 event_type=event_template["type"],
                 metadata={"patient_name": patient, "detail": message_str}
             )
             
+            # Create the final event
             event = SignalEvent(
                 id=str(uuid.uuid4())[:8],
                 source=event_template["source"],
                 type=event_template["type"],
                 message=message_str,
                 timestamp=datetime.now(timezone.utc).isoformat(),
-                metadata={"patient_name": patient, "priority": ml_result["priority"]},
-                ai_insight=ml_result["ai_insight"],
-                recommended_action=ml_result["recommended_action"]
+                metadata={"patient_name": patient, "priority": ai_result.get("priority", "Medium")},
+                ai_insight=ai_result.get("ai_insight", ""),
+                recommended_action=ai_result.get("recommended_action", "")
             )
             
             # Save to PostgreSQL database
