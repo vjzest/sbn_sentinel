@@ -43,9 +43,33 @@ def generate_synthetic_data(num_samples=1000):
         
     return pd.DataFrame(data)
 
+import json
+
 def train_and_save_models():
     print("Generating synthetic clinical data...")
-    df = generate_synthetic_data(2000)
+    df_synthetic = generate_synthetic_data(2000)
+    
+    # --- The Data Flywheel: Load real AI-verified recommendations ---
+    real_data = []
+    log_file = "local_training_data.jsonl"
+    if os.path.exists(log_file):
+        print(f"Found real-world learning data in {log_file}. Merging...")
+        with open(log_file, "r") as f:
+            for line in f:
+                try:
+                    point = json.loads(line)
+                    if point.get("text") and point.get("priority") and point.get("action"):
+                        real_data.append(point)
+                except Exception:
+                    pass
+    
+    if real_data:
+        df_real = pd.DataFrame(real_data)
+        df = pd.concat([df_synthetic, df_real], ignore_index=True)
+        print(f"Training on combined dataset: {len(df)} samples ({len(df_real)} real-world samples).")
+    else:
+        df = df_synthetic
+        print("Training on synthetic dataset only.")
     
     print("Training Priority Detection Model (Model 1)...")
     pipeline_priority = Pipeline([

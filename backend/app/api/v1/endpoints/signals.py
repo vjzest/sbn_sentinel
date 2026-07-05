@@ -27,6 +27,30 @@ def get_historical_signals(db: Session = Depends(get_db)):
         })
     return result
 
+import threading
+from app.services.ml_trainer import train_and_save_models
+from app.services.ml_engine import ml_engine
+
+@router.post("/retrain-ai")
+def trigger_ai_retraining():
+    """
+    Advanced Feature: Manually trigger the Local ML Engine to retrain itself
+    using all the newly accumulated 'Teacher Model' recommendations.
+    """
+    def background_train():
+        try:
+            train_and_save_models()
+            ml_engine.load_models() # Reload into memory
+            print("AI Retraining complete and models reloaded.")
+        except Exception as e:
+            print(f"Retraining failed: {e}")
+            
+    # Run in a separate thread so it doesn't block the API
+    thread = threading.Thread(target=background_train)
+    thread.start()
+    
+    return {"status": "success", "message": "Local Machine Learning model retraining has started in the background."}
+
 @router.on_event("startup")
 async def startup_event():
     simulation_engine.start()
