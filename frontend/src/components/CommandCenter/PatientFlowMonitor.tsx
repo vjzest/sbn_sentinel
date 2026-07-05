@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { 
   Users, UserCheck, Clock, AlertCircle, Phone, CreditCard, 
   ArrowRight, PhoneCall, HeartPulse, Stethoscope, 
-  TestTube2, Activity, ArrowUpRight, ArrowDownRight, MoreVertical 
+  TestTube2, Activity, ArrowUpRight, ArrowDownRight, MoreVertical, Check
 } from 'lucide-react';
 
 export const PatientFlowMonitor: React.FC = () => {
