@@ -6,7 +6,7 @@ from app.schemas.signal import SignalEvent
 from app.db.database import SessionLocal
 from app.models.signal import SignalModel
 
-from app.services.rules_engine import rules_engine
+from app.services.ml_engine import ml_engine
 
 class SimulationEngine:
     def __init__(self):
@@ -15,11 +15,11 @@ class SimulationEngine:
         
         self.patients = ["John Doe", "Jane Smith", "Michael Johnson", "Emily Davis", "Robert Brown"]
         self.events = [
-            {"source": "Practice Fusion", "type": "EHR", "msg_template": "Patient {patient} appointment marked as No-Show.", "insight": "Revenue loss of $150.", "action": "Auto-send rescheduling SMS to patient."},
-            {"source": "Practice Fusion", "type": "EHR", "msg_template": "New appointment booked by {patient}.", "insight": "High priority walk-in expected.", "action": "Prepare intake forms."},
-            {"source": "Twilio", "type": "Phone", "msg_template": "Missed call from {patient} (+1-555-0198).", "insight": "Patient likely calling to reschedule.", "action": "Trigger callback task for front desk."},
-            {"source": "Outlook", "type": "Email", "msg_template": "Email received from Lab Corp regarding {patient} results.", "insight": "Lab results available for review.", "action": "Notify Dr. Smith to review."},
-            {"source": "Practice Fusion", "type": "EHR", "msg_template": "Patient {patient} wait time has reached 45 minutes.", "insight": "High wait time alert.", "action": "Re-route to Room 3."}
+            {"source": "Practice Fusion", "type": "EHR", "msg_template": "Patient {patient} appointment marked as No-Show."},
+            {"source": "Practice Fusion", "type": "EHR", "msg_template": "New appointment booked by {patient}."},
+            {"source": "Twilio", "type": "Phone", "msg_template": "Missed call from {patient} (+1-555-0198)."},
+            {"source": "Outlook", "type": "Email", "msg_template": "Email received from Lab Corp regarding {patient} results."},
+            {"source": "Practice Fusion", "type": "EHR", "msg_template": "Patient {patient} wait time has reached 45 minutes."}
         ]
 
     async def generate_realistic_data(self):
@@ -30,7 +30,8 @@ class SimulationEngine:
             event_template = random.choice(self.events)
             message_str = event_template["msg_template"].format(patient=patient)
             
-            rule_result = rules_engine.evaluate_rule(
+            # Predict using our custom trained ML models
+            ml_result = ml_engine.evaluate_signal(
                 event_type=event_template["type"],
                 metadata={"patient_name": patient, "detail": message_str}
             )
@@ -41,9 +42,9 @@ class SimulationEngine:
                 type=event_template["type"],
                 message=message_str,
                 timestamp=datetime.now(timezone.utc).isoformat(),
-                metadata={"patient_name": patient, "priority": rule_result["priority"]},
-                ai_insight=rule_result["ai_insight"],
-                recommended_action=rule_result["recommended_action"]
+                metadata={"patient_name": patient, "priority": ml_result["priority"]},
+                ai_insight=ml_result["ai_insight"],
+                recommended_action=ml_result["recommended_action"]
             )
             
             # Save to PostgreSQL database
