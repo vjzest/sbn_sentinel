@@ -248,18 +248,18 @@ export default function Dashboard() {
           }
         `}} />
       )}
-      <div className="flex h-screen bg-[#F7F9FC] text-[#111827] font-sans overflow-hidden w-full absolute inset-0">
+      <div className="flex h-screen bg-[#F7F9FC] text-[#111827] font-sans overflow-hidden w-full absolute inset-0 p-3 gap-3">
         
         {/* Mobile Sidebar Overlay */}
         {isMobileMenuOpen && (
           <div 
-            className="fixed inset-0 bg-gray-900/50 backdrop-blur-sm z-[55] md:hidden"
+            className="fixed inset-0 bg-gray-900/40 backdrop-blur-sm z-[55] md:hidden"
             onClick={() => setIsMobileMenuOpen(false)}
           ></div>
         )}
 
-        {/* Sidebar */}
-        <aside className={`w-64 bg-gradient-to-b from-white via-[#F8FAFC] to-[#F1F5F9] border-r border-[#E2E8F0] flex flex-col fixed md:relative z-[60] h-full transition-transform duration-300 ease-in-out text-slate-700 shrink-0 ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}`}>
+        {/* Sidebar - Floating Premium SaaS Style */}
+        <aside className={`w-[260px] glass-panel bg-white/80 border border-[#E8EDF5] rounded-[24px] premium-shadow flex flex-col fixed md:relative z-[60] h-full transition-transform duration-300 ease-in-out text-slate-700 shrink-0 ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}`}>
           <div className="p-6 pb-5 border-b border-[#E2E8F0] relative overflow-hidden group flex justify-between items-center">
             {/* Subtle premium gradient indicator at the top border */}
             <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-[#6D5DF6] to-transparent"></div>
@@ -314,7 +314,7 @@ export default function Dashboard() {
             </div>
           </div>
 
-          <div className="p-4 space-y-1 border-t border-[#E2E8F0] bg-[#F1F5F9]/50">
+          <div className="p-4 space-y-1 border-t border-[#E8EDF5] bg-white/50 rounded-b-[24px]">
             <SidebarItem icon={Settings} label="Settings" active={activeTab === 'settings'} onClick={() => setActiveTab('settings')} />
             <SidebarItem icon={HelpCircle} label="Help & Support" active={activeTab === 'help'} onClick={() => setActiveTab('help')} />
             <SidebarItem icon={LogOut} label="Disconnect" active={false} onClick={() => { localStorage.removeItem('token'); localStorage.removeItem('user'); localStorage.removeItem('userRole'); router.push('/'); }} className="mt-2 text-rose-600 hover:bg-rose-50 hover:text-rose-700 border border-transparent hover:border-rose-100" />
@@ -322,7 +322,7 @@ export default function Dashboard() {
         </aside>
 
         {/* Main Content Area */}
-        <main className="flex-1 flex flex-col relative overflow-hidden bg-[#F7F9FC]">
+        <main className="flex-1 flex flex-col relative overflow-hidden bg-white/60 backdrop-blur-3xl rounded-[24px] border border-[#E8EDF5] premium-shadow">
           {/* Background blobs */}
           <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-gradient-to-br from-[#6D5DF6]/5 to-[#7C3AED]/5 rounded-full blur-[100px] pointer-events-none z-0"></div>
           <div className="absolute top-40 left-0 w-[500px] h-[500px] bg-[#2563EB]/5 rounded-full blur-[100px] pointer-events-none z-0"></div>
