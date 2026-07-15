@@ -14,6 +14,7 @@ import { ClinicalLogsView } from '@/components/CommandCenter/ClinicalLogsView';
 import { RevenueReportsView } from '@/components/CommandCenter/RevenueReportsView';
 import { SettingsView } from '@/components/CommandCenter/SettingsView';
 import { HelpSupportView } from '@/components/CommandCenter/HelpSupportView';
+import { UserProfileView } from '@/components/CommandCenter/UserProfileView';
 import { SignalsDetailView } from '@/components/CommandCenter/SignalsDetailView';
 import { AuthScreen } from '@/components/Auth/AuthScreen';
 import { BootScreen } from '@/components/CommandCenter/BootScreen';
@@ -486,7 +487,7 @@ export default function Dashboard() {
                       <p className="text-xs font-medium text-[#6B7280]">admin@sbnsentinel.com</p>
                     </div>
                     <div className="p-2 space-y-1">
-                      <button onClick={() => { setActiveTab('settings'); setIsProfileOpen(false); }} className="w-full flex items-center gap-2 px-3 py-2 text-sm font-bold text-[#4B5563] hover:text-[#111827] hover:bg-[#F9FAFB] rounded-[10px] transition-colors">
+                      <button onClick={() => { setActiveTab('profile'); setIsProfileOpen(false); }} className="w-full flex items-center gap-2 px-3 py-2 text-sm font-bold text-[#4B5563] hover:text-[#111827] hover:bg-[#F9FAFB] rounded-[10px] transition-colors">
                         <User className="w-4 h-4" /> Profile Details
                       </button>
                       <button
@@ -799,6 +800,7 @@ export default function Dashboard() {
               />
             )}
             {activeTab === 'help' && <HelpSupportView />}
+            {activeTab === 'profile' && <UserProfileView />}
           </div>
         </main>
       </div>
