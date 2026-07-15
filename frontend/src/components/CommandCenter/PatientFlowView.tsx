@@ -171,7 +171,7 @@ export const PatientFlowView: React.FC = () => {
     const combinedNotes = `Subjective: ${soapS}\n\nObjective: ${soapO}\n\nAssessment: ${soapA}\n\nPlan: ${soapP}`;
     
     try {
-      const response = await fetch(`http://localhost:8000/api/v1/encounters/${encId}`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/encounters/${encId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -230,7 +230,7 @@ export const PatientFlowView: React.FC = () => {
     setIsHealthCardModalOpen(true);
 
     try {
-      const response = await fetch(`http://localhost:8000/api/v1/insurance/patient/${encodeURIComponent(patientName)}`);
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/insurance/patient/${encodeURIComponent(patientName)}`);
       if (response.ok) {
         const data = await response.json();
         if (data) {
@@ -372,7 +372,7 @@ export const PatientFlowView: React.FC = () => {
           .logo-icon {
             width: 40px;
             height: 40px;
-            background: #4f46e5;
+            background: #6D5DF6;
             border-radius: 10px;
             display: flex;
             align-items: center;
@@ -404,14 +404,14 @@ export const PatientFlowView: React.FC = () => {
             text-transform: uppercase;
             letter-spacing: 1px;
             font-weight: 800;
-            color: #4f46e5;
+            color: #6D5DF6;
             margin-top: 25px;
             margin-bottom: 12px;
             border-bottom: 1px solid #e5e7eb;
             padding-bottom: 4px;
           }
           .patient-card {
-            background: #f9fafb;
+            background: #F7F9FC;
             border: 1px solid #e5e7eb;
             border-radius: 12px;
             padding: 20px;
@@ -443,7 +443,7 @@ export const PatientFlowView: React.FC = () => {
             border: 1px solid #e5e7eb;
             border-radius: 12px;
             padding: 14px;
-            background: #f9fafb;
+            background: #F7F9FC;
             text-align: center;
           }
           .vital-box span {
@@ -498,7 +498,7 @@ export const PatientFlowView: React.FC = () => {
             color: #4b5563;
             margin: 8px 0 0 28px;
             white-space: pre-wrap;
-            background: #f9fafb;
+            background: #F7F9FC;
             border: 1px solid #f3f4f6;
             padding: 10px;
             border-radius: 8px;
@@ -526,7 +526,7 @@ export const PatientFlowView: React.FC = () => {
       </head>
       <body>
         <div class="print-btn-container" style="text-align: right; margin-bottom: 15px;">
-          <button onclick="window.print()" style="background: #4f46e5; color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 700; font-size: 12px; cursor: pointer; transition: background 0.2s;">Print / Save as PDF</button>
+          <button onclick="window.print()" style="background: #6D5DF6; color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 700; font-size: 12px; cursor: pointer; transition: background 0.2s;">Print / Save as PDF</button>
         </div>
         <div class="header">
           <div class="logo-area">
@@ -656,7 +656,7 @@ export const PatientFlowView: React.FC = () => {
           <p className="text-sm text-[#6B7280] font-medium">Real-time tracking of patients across clinic locations.</p>
         </div>
         <div className="flex items-center gap-3 relative">
-          <button onClick={() => setShowFilter(!showFilter)} className={`flex items-center gap-2 border text-[#111827] font-bold text-xs px-4 py-2.5 rounded-[12px] premium-shadow hover:bg-[#F9FAFB] transition-colors relative z-20 ${activeFilter ? 'bg-[#EEF4FF] border-[#BFDBFE] text-[#2563EB]' : 'bg-white border-[#E8EDF5]'}`}>
+          <button onClick={() => setShowFilter(!showFilter)} className={`flex items-center gap-2 border text-[#111827] font-bold text-xs px-4 py-2.5 rounded-[16px] premium-shadow hover:bg-[#F7F9FC] transition-colors relative z-20 ${activeFilter ? 'bg-[#EEF4FF] border-[#BFDBFE] text-[#2563EB]' : 'bg-white border-[#E8EDF5]'}`}>
             <Filter className="w-4 h-4" /> {activeFilter || 'Filter'}
           </button>
           
@@ -676,13 +676,13 @@ export const PatientFlowView: React.FC = () => {
             </div>
           )}
 
-          <button onClick={handleExport} className={`flex items-center gap-2 font-bold text-xs px-4 py-2.5 rounded-[12px] premium-shadow transition-colors ${isExporting ? 'bg-[#10B981] text-white hover:bg-[#059669]' : 'bg-white border border-[#E8EDF5] text-[#111827] hover:bg-[#F9FAFB] active:scale-95'}`}>
+          <button onClick={handleExport} className={`flex items-center gap-2 font-bold text-xs px-4 py-2.5 rounded-[16px] premium-shadow transition-colors ${isExporting ? 'bg-[#10B981] text-white hover:bg-[#059669]' : 'bg-white border border-[#E8EDF5] text-[#111827] hover:bg-[#F7F9FC] active:scale-95'}`}>
             {isExporting ? <Check className="w-4 h-4 animate-bounce" /> : <Download className="w-4 h-4 text-[#6B7280]" />} {isExporting ? 'Exported!' : 'Export'}
           </button>
-          <button onClick={() => setDateFilter(dateFilter === 'Today' ? 'Yesterday' : dateFilter === 'Yesterday' ? 'Last 7 Days' : 'Today')} className="flex items-center gap-2 bg-white border border-[#E8EDF5] text-[#111827] font-bold text-xs px-4 py-2.5 rounded-[12px] premium-shadow hover:bg-[#F9FAFB] transition-colors active:scale-95">
+          <button onClick={() => setDateFilter(dateFilter === 'Today' ? 'Yesterday' : dateFilter === 'Yesterday' ? 'Last 7 Days' : 'Today')} className="flex items-center gap-2 bg-white border border-[#E8EDF5] text-[#111827] font-bold text-xs px-4 py-2.5 rounded-[16px] premium-shadow hover:bg-[#F7F9FC] transition-colors active:scale-95">
             <Calendar className="w-4 h-4 text-[#6B7280]" /> {dateFilter}
           </button>
-          <div className="flex items-center gap-2 bg-[#ECFDF5] text-[#10B981] border border-[#D1FAE5] font-bold text-xs px-4 py-2.5 rounded-[12px] premium-shadow">
+          <div className="flex items-center gap-2 bg-[#ECFDF5] text-[#10B981] border border-[#D1FAE5] font-bold text-xs px-4 py-2.5 rounded-[16px] premium-shadow">
             <div className="w-2.5 h-2.5 rounded-full bg-[#10B981] animate-pulse shadow-[0_0_8px_#10B981]"></div>
             Live Status
           </div>
@@ -789,7 +789,7 @@ export const PatientFlowView: React.FC = () => {
                   }
 
                   return (
-                    <tr key={row.id || i} className="border-b border-[#F3F4F6] hover:bg-[#F9FAFB] transition-colors last:border-0 cursor-pointer">
+                    <tr key={row.id || i} className="border-b border-[#F3F4F6] hover:bg-[#F7F9FC] transition-colors last:border-0 cursor-pointer">
                       <td className="py-4 px-2">
                         <div className="flex items-center gap-3">
                           <img src={row.avatar || 'https://i.pravatar.cc/150?img=1'} className="w-8 h-8 rounded-full border border-[#E8EDF5]" alt="" />
@@ -853,7 +853,7 @@ export const PatientFlowView: React.FC = () => {
         <div className="flex flex-col gap-6">
           <div className="bg-white border border-[#E8EDF5] rounded-[24px] p-8 premium-shadow flex-1">
              <h3 className="text-base font-bold text-[#111827] mb-6 flex items-center gap-2">
-               <LayoutGrid className="w-5 h-5 text-[#4F46E5]" /> Clinic Heat Map
+               <LayoutGrid className="w-5 h-5 text-[#6D5DF6]" /> Clinic Heat Map
              </h3>
              <div className="grid grid-cols-2 gap-4">
                 {Object.keys(roomAssignments).map((roomName) => {
@@ -898,7 +898,7 @@ export const PatientFlowView: React.FC = () => {
           </div>
           
           <div className="bg-[#111827] border border-[#1F2937] rounded-[24px] p-8 premium-shadow relative overflow-hidden text-white">
-             <div className="absolute top-0 right-0 w-32 h-32 bg-[#4F46E5] rounded-full blur-[50px] opacity-30 animate-pulse"></div>
+             <div className="absolute top-0 right-0 w-32 h-32 bg-[#6D5DF6] rounded-full blur-[50px] opacity-30 animate-pulse"></div>
              <h3 className="text-base font-bold flex items-center gap-2 mb-4">
                <Activity className="w-5 h-5 text-[#3B82F6]" /> AI Suggestions
              </h3>
@@ -938,11 +938,11 @@ export const PatientFlowView: React.FC = () => {
                     alert("AI Suggestion applied successfully.");
                   }
                 }}
-                className="flex-1 bg-[#2563EB] hover:bg-[#1D4ED8] text-white font-bold py-2.5 rounded-[12px] text-xs transition-colors hover:scale-[1.02] active:scale-95 cursor-pointer"
+                className="flex-1 bg-[#2563EB] hover:bg-[#1D4ED8] text-white font-bold py-2.5 rounded-[16px] text-xs transition-colors hover:scale-[1.02] active:scale-95 cursor-pointer"
                >
                 Approve
                </button>
-               <button className="flex-1 bg-[#1F2937] border border-[#374151] hover:bg-[#374151] text-white font-bold py-2.5 rounded-[12px] text-xs transition-colors hover:scale-[1.02] active:scale-95">Dismiss</button>
+               <button className="flex-1 bg-[#1F2937] border border-[#374151] hover:bg-[#374151] text-white font-bold py-2.5 rounded-[16px] text-xs transition-colors hover:scale-[1.02] active:scale-95">Dismiss</button>
              </div>
           </div>
         </div>
@@ -971,9 +971,9 @@ export const PatientFlowView: React.FC = () => {
               <div className="lg:col-span-5 space-y-6">
                 
                 {/* Physical Health Card Mockup */}
-                <div className="relative aspect-[1.586/1] w-full rounded-[24px] bg-gradient-to-br from-[#1E1B4B] via-[#312E81] to-[#4338CA] p-6 text-white shadow-xl overflow-hidden border border-white/10">
+                <div className="relative aspect-[1.586/1] w-full rounded-[24px] bg-gradient-to-br from-[#1E1B4B] via-[#312E81] to-[#5B4AE8] p-6 text-white shadow-xl overflow-hidden border border-white/10">
                   <div className="absolute top-0 right-0 w-48 h-48 bg-[#6366F1] rounded-full blur-[80px] opacity-40"></div>
-                  <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-[#4F46E5] rounded-full blur-[70px] opacity-30"></div>
+                  <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-[#6D5DF6] rounded-full blur-[70px] opacity-30"></div>
                   
                   {/* Top Bar */}
                   <div className="flex justify-between items-start relative z-10">
@@ -1021,7 +1021,7 @@ export const PatientFlowView: React.FC = () => {
                   <button 
                     onClick={handleOCRScan}
                     disabled={isScanning}
-                    className="w-full py-3 bg-[#F5F3FF] border border-[#DDD6FE] hover:bg-[#DDD6FE] text-[#7C3AED] font-bold text-xs rounded-[12px] transition-all flex items-center justify-center gap-2 active:scale-98"
+                    className="w-full py-3 bg-[#F5F3FF] border border-[#DDD6FE] hover:bg-[#DDD6FE] text-[#7C3AED] font-bold text-xs rounded-[16px] transition-all flex items-center justify-center gap-2 active:scale-98"
                   >
                     {isScanning ? (
                       <>
@@ -1059,7 +1059,7 @@ export const PatientFlowView: React.FC = () => {
                         placeholder="e.g. Aetna, Blue Cross"
                         value={providerName}
                         onChange={(e) => setProviderName(e.target.value)}
-                        className="w-full bg-[#F9FAFB] border border-[#E8EDF5] rounded-[12px] py-2.5 px-3 text-xs font-bold text-[#111827] outline-none focus:border-[#7C3AED] focus:bg-white transition-all"
+                        className="w-full bg-[#F7F9FC] border border-[#E8EDF5] rounded-[16px] py-2.5 px-3 text-xs font-bold text-[#111827] outline-none focus:border-[#7C3AED] focus:bg-white transition-all"
                         required
                       />
                     </div>
@@ -1070,7 +1070,7 @@ export const PatientFlowView: React.FC = () => {
                         placeholder="e.g. MEM890123"
                         value={memberId}
                         onChange={(e) => setMemberId(e.target.value)}
-                        className="w-full bg-[#F9FAFB] border border-[#E8EDF5] rounded-[12px] py-2.5 px-3 text-xs font-bold text-[#111827] outline-none focus:border-[#7C3AED] focus:bg-white transition-all"
+                        className="w-full bg-[#F7F9FC] border border-[#E8EDF5] rounded-[16px] py-2.5 px-3 text-xs font-bold text-[#111827] outline-none focus:border-[#7C3AED] focus:bg-white transition-all"
                         required
                       />
                     </div>
@@ -1084,7 +1084,7 @@ export const PatientFlowView: React.FC = () => {
                         placeholder="e.g. GRP44910"
                         value={groupNumber}
                         onChange={(e) => setGroupNumber(e.target.value)}
-                        className="w-full bg-[#F9FAFB] border border-[#E8EDF5] rounded-[12px] py-2.5 px-3 text-xs font-bold text-[#111827] outline-none focus:border-[#7C3AED] focus:bg-white transition-all"
+                        className="w-full bg-[#F7F9FC] border border-[#E8EDF5] rounded-[16px] py-2.5 px-3 text-xs font-bold text-[#111827] outline-none focus:border-[#7C3AED] focus:bg-white transition-all"
                       />
                     </div>
                     <div>
@@ -1094,7 +1094,7 @@ export const PatientFlowView: React.FC = () => {
                         placeholder="e.g. PYR9910"
                         value={payerId}
                         onChange={(e) => setPayerId(e.target.value)}
-                        className="w-full bg-[#F9FAFB] border border-[#E8EDF5] rounded-[12px] py-2.5 px-3 text-xs font-bold text-[#111827] outline-none focus:border-[#7C3AED] focus:bg-white transition-all"
+                        className="w-full bg-[#F7F9FC] border border-[#E8EDF5] rounded-[16px] py-2.5 px-3 text-xs font-bold text-[#111827] outline-none focus:border-[#7C3AED] focus:bg-white transition-all"
                       />
                     </div>
                   </div>
@@ -1102,7 +1102,7 @@ export const PatientFlowView: React.FC = () => {
                   <button 
                     onClick={handleVerifyEligibility}
                     disabled={isVerifying}
-                    className="w-full mt-4 bg-gradient-to-r from-[#7C3AED] to-[#4F46E5] hover:opacity-90 text-white font-extrabold py-3.5 rounded-[12px] text-xs shadow-md transition-transform active:scale-98 flex items-center justify-center gap-2"
+                    className="w-full mt-4 bg-gradient-to-r from-[#7C3AED] to-[#6D5DF6] hover:opacity-90 text-white font-extrabold py-3.5 rounded-[16px] text-xs shadow-md transition-transform active:scale-98 flex items-center justify-center gap-2"
                   >
                     {isVerifying ? (
                       <>
@@ -1188,7 +1188,7 @@ export const PatientFlowView: React.FC = () => {
             <div className="mt-8 border-t border-[#E8EDF5] pt-5 flex justify-end">
               <button 
                 onClick={() => setIsHealthCardModalOpen(false)}
-                className="bg-[#111827] text-white hover:bg-gray-800 font-extrabold px-8 py-3 rounded-[12px] text-xs transition-colors active:scale-95 shadow-md"
+                className="bg-[#111827] text-white hover:bg-gray-800 font-extrabold px-8 py-3 rounded-[16px] text-xs transition-colors active:scale-95 shadow-md"
               >
                 Close Portal
               </button>
@@ -1306,7 +1306,7 @@ export const PatientFlowView: React.FC = () => {
 
               <button 
                 onClick={() => { setCallingPatient(null); setCallingStatus(null); }}
-                className="w-full py-2.5 bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs rounded-[12px] transition-colors"
+                className="w-full py-2.5 bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs rounded-[16px] transition-colors"
               >
                 {callingStatus === 'completed' ? 'Close' : 'End Call'}
               </button>
@@ -1440,7 +1440,7 @@ export const PatientFlowView: React.FC = () => {
                                   </div>
                                   <div className="bg-white p-2 rounded-lg border border-slate-100">
                                     <span className="text-[8px] text-slate-400 block font-bold">SpO2</span>
-                                    <span className="text-xs font-black text-indigo-600">98%</span>
+                                    <span className="text-xs font-black text-[#6D5DF6]">98%</span>
                                   </div>
                                 </div>
                               </div>
@@ -1477,19 +1477,19 @@ export const PatientFlowView: React.FC = () => {
                           <div className="space-y-4">
                             <div className="flex items-center justify-between pb-3 border-b border-[#F3F4F6]">
                               <h4 className="text-xs font-black text-slate-900 flex items-center gap-1.5">
-                                <FileText className="w-4 h-4 text-indigo-600" />
+                                <FileText className="w-4 h-4 text-[#6D5DF6]" />
                                 Clinical Charting Workspace
                               </h4>
                             </div>
 
                             {/* Modern Workspace Segmented Tab Selection */}
-                            <div className="flex gap-1 bg-slate-100 p-1 rounded-xl">
+                            <div className="flex gap-1 bg-slate-100 p-1 rounded-2xl">
                               <button
                                 type="button"
                                 onClick={() => setModalActiveTab('soap')}
                                 className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
                                   modalActiveTab === 'soap' 
-                                    ? 'bg-white text-indigo-600 shadow-sm' 
+                                    ? 'bg-white text-[#6D5DF6] shadow-sm' 
                                     : 'text-slate-500 hover:text-slate-900'
                                 }`}
                               >
@@ -1500,7 +1500,7 @@ export const PatientFlowView: React.FC = () => {
                                 onClick={() => setModalActiveTab('rx')}
                                 className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
                                   modalActiveTab === 'rx' 
-                                    ? 'bg-white text-indigo-600 shadow-sm' 
+                                    ? 'bg-white text-[#6D5DF6] shadow-sm' 
                                     : 'text-slate-500 hover:text-slate-900'
                                 }`}
                               >
@@ -1511,7 +1511,7 @@ export const PatientFlowView: React.FC = () => {
                                 onClick={() => setModalActiveTab('vitals')}
                                 className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
                                   modalActiveTab === 'vitals' 
-                                    ? 'bg-white text-indigo-600 shadow-sm' 
+                                    ? 'bg-white text-[#6D5DF6] shadow-sm' 
                                     : 'text-slate-500 hover:text-slate-900'
                                 }`}
                               >
@@ -1535,7 +1535,7 @@ export const PatientFlowView: React.FC = () => {
                                           setSoapP("Continue current regimen. Schedule a blood pressure follow-up clinic appointment in 2 weeks.");
                                           setEditingDiagnosis("I10 (Essential Hypertension)");
                                         }}
-                                        className="flex-1 text-[9px] font-black text-[#4F46E5] bg-indigo-50 hover:bg-indigo-100 py-1.5 px-2 rounded-[8px] border border-indigo-200 transition-colors"
+                                        className="flex-1 text-[9px] font-black text-[#6D5DF6] bg-[#EEEAFE] hover:bg-[#E0D9FD] py-1.5 px-2 rounded-[8px] border border-indigo-200 transition-colors"
                                       >
                                         Hypertension
                                       </button>
@@ -1580,7 +1580,7 @@ export const PatientFlowView: React.FC = () => {
                                         onChange={(e) => setSoapS(e.target.value)}
                                         rows={2}
                                         placeholder="Patient complaints, feelings, or symptom descriptions..."
-                                        className="w-full bg-[#F9FAFB] border border-[#E8EDF5] text-xs font-semibold text-[#1F2937] rounded-[10px] px-3 py-2 outline-none focus:border-blue-500 focus:bg-white transition-all resize-none"
+                                        className="w-full bg-[#F7F9FC] border border-[#E8EDF5] text-xs font-semibold text-[#1F2937] rounded-[10px] px-3 py-2 outline-none focus:border-blue-500 focus:bg-white transition-all resize-none"
                                       />
                                     </div>
 
@@ -1597,7 +1597,7 @@ export const PatientFlowView: React.FC = () => {
                                         onChange={(e) => setSoapO(e.target.value)}
                                         rows={2}
                                         placeholder="Measurable findings, physical exam observations, BP..."
-                                        className="w-full bg-[#F9FAFB] border border-[#E8EDF5] text-xs font-semibold text-[#1F2937] rounded-[10px] px-3 py-2 outline-none focus:border-emerald-500 focus:bg-white transition-all resize-none"
+                                        className="w-full bg-[#F7F9FC] border border-[#E8EDF5] text-xs font-semibold text-[#1F2937] rounded-[10px] px-3 py-2 outline-none focus:border-emerald-500 focus:bg-white transition-all resize-none"
                                       />
                                     </div>
 
@@ -1614,14 +1614,14 @@ export const PatientFlowView: React.FC = () => {
                                         onChange={(e) => setSoapA(e.target.value)}
                                         rows={2}
                                         placeholder="Clinical assessment, diagnostics, differential diagnosis..."
-                                        className="w-full bg-[#F9FAFB] border border-[#E8EDF5] text-xs font-semibold text-[#1F2937] rounded-[10px] px-3 py-2 outline-none focus:border-amber-500 focus:bg-white transition-all resize-none"
+                                        className="w-full bg-[#F7F9FC] border border-[#E8EDF5] text-xs font-semibold text-[#1F2937] rounded-[10px] px-3 py-2 outline-none focus:border-amber-500 focus:bg-white transition-all resize-none"
                                       />
                                     </div>
 
                                     <div>
                                       <div className="flex justify-between items-center mb-1">
                                         <label className="text-[10px] text-slate-500 font-extrabold uppercase tracking-wider flex items-center gap-1">
-                                          <span className="w-4 h-4 rounded bg-indigo-100 text-indigo-700 font-bold flex items-center justify-center text-[9px]">P</span>
+                                          <span className="w-4 h-4 rounded bg-[#E0D9FD] text-[#5B4AE8] font-bold flex items-center justify-center text-[9px]">P</span>
                                           Plan / Treatment
                                         </label>
                                         <span className="text-[8px] text-slate-400 font-semibold">Next Steps</span>
@@ -1631,7 +1631,7 @@ export const PatientFlowView: React.FC = () => {
                                         onChange={(e) => setSoapP(e.target.value)}
                                         rows={2}
                                         placeholder="Prescription changes, follow-up timelines, referrals..."
-                                        className="w-full bg-[#F9FAFB] border border-[#E8EDF5] text-xs font-semibold text-[#1F2937] rounded-[10px] px-3 py-2 outline-none focus:border-indigo-500 focus:bg-white transition-all resize-none"
+                                        className="w-full bg-[#F7F9FC] border border-[#E8EDF5] text-xs font-semibold text-[#1F2937] rounded-[10px] px-3 py-2 outline-none focus:border-[#EEEAFE]0 focus:bg-white transition-all resize-none"
                                       />
                                     </div>
                                   </div>
@@ -1648,7 +1648,7 @@ export const PatientFlowView: React.FC = () => {
                                       value={editingDiagnosis}
                                       onChange={(e) => setEditingDiagnosis(e.target.value)}
                                       placeholder="e.g. I10 (Essential Hypertension)"
-                                      className="w-full bg-[#F9FAFB] border border-[#E8EDF5] text-xs font-bold text-[#1F2937] rounded-[10px] px-3 py-2 outline-none focus:border-indigo-600 focus:bg-white focus:ring-1 focus:ring-indigo-600 transition-all"
+                                      className="w-full bg-[#F7F9FC] border border-[#E8EDF5] text-xs font-bold text-[#1F2937] rounded-[10px] px-3 py-2 outline-none focus:border-[#6D5DF6] focus:bg-white focus:ring-1 focus:ring-[#6D5DF6] transition-all"
                                     />
                                   </div>
 
@@ -1659,7 +1659,7 @@ export const PatientFlowView: React.FC = () => {
                                       onChange={(e) => setEditingMedications(e.target.value)}
                                       rows={4}
                                       placeholder="e.g. Lisinopril 10mg daily PO. Refills: 3"
-                                      className="w-full bg-[#F9FAFB] border border-[#E8EDF5] text-xs font-semibold text-[#1F2937] rounded-[10px] px-3 py-2 outline-none focus:border-indigo-600 focus:bg-white focus:ring-1 focus:ring-indigo-600 transition-all resize-none"
+                                      className="w-full bg-[#F7F9FC] border border-[#E8EDF5] text-xs font-semibold text-[#1F2937] rounded-[10px] px-3 py-2 outline-none focus:border-[#6D5DF6] focus:bg-white focus:ring-1 focus:ring-[#6D5DF6] transition-all resize-none"
                                     />
                                   </div>
                                 </div>
@@ -1682,14 +1682,14 @@ export const PatientFlowView: React.FC = () => {
                                       </div>
                                       <div className="bg-white p-2.5 rounded-lg border border-slate-100">
                                         <span className="text-[8px] text-slate-400 block font-bold">SpO2</span>
-                                        <span className="text-xs font-black text-indigo-600">98%</span>
+                                        <span className="text-xs font-black text-[#6D5DF6]">98%</span>
                                       </div>
                                     </div>
                                   </div>
 
                                   {/* Quick Actions / Verification Gateways */}
-                                  <div className="bg-indigo-50/50 border border-indigo-100 rounded-[16px] p-4 space-y-3">
-                                    <span className="text-[9px] text-indigo-600 font-extrabold uppercase tracking-wider block">Verification & Communications</span>
+                                  <div className="bg-[#EEEAFE]/50 border border-[#E0D9FD] rounded-[16px] p-4 space-y-3">
+                                    <span className="text-[9px] text-[#6D5DF6] font-extrabold uppercase tracking-wider block">Verification & Communications</span>
                                     <div className="flex gap-2">
                                       <button
                                         onClick={() => {
@@ -1720,7 +1720,7 @@ export const PatientFlowView: React.FC = () => {
                               className={`flex-1 py-2.5 text-xs font-bold rounded-[10px] transition-all cursor-pointer text-center ${
                                 saveChartSuccess 
                                   ? 'bg-emerald-50 text-emerald-600 border border-emerald-300' 
-                                  : 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm hover:scale-[1.01] active:scale-98'
+                                  : 'bg-[#6D5DF6] hover:bg-[#5B4AE8] text-white shadow-sm hover:scale-[1.01] active:scale-98'
                               }`}
                             >
                               {isSavingChart ? 'Saving Patient Record...' : saveChartSuccess ? '✓ Chart Notes Saved Successfully' : 'Save Charting Details'}

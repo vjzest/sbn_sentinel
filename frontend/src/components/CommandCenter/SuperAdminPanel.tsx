@@ -123,7 +123,7 @@ export const SuperAdminPanel: React.FC<SuperAdminProps> = ({ onLogout, user }) =
   if (isLoading) {
     return (
       <div className="min-h-screen w-full bg-[#0B1121] flex items-center justify-center">
-        <div className="w-10 h-10 border-4 border-slate-700 border-t-indigo-500 rounded-full animate-spin"></div>
+        <div className="w-10 h-10 border-4 border-slate-700 border-t-[#EEEAFE]0 rounded-full animate-spin"></div>
       </div>
     );
   }
@@ -143,12 +143,12 @@ export const SuperAdminPanel: React.FC<SuperAdminProps> = ({ onLogout, user }) =
       <aside className={`w-64 bg-[#111827] text-white flex flex-col fixed md:relative z-[60] h-full transition-transform duration-300 ease-in-out shrink-0 ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}`}>
         <div className="p-6 pb-5 border-b border-gray-800 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-[12px] bg-gradient-to-br from-[#4F46E5] to-[#7C3AED] flex items-center justify-center font-black text-xl shadow-lg">
+            <div className="w-10 h-10 rounded-[16px] bg-gradient-to-br from-[#6D5DF6] to-[#7C3AED] flex items-center justify-center font-black text-xl shadow-lg">
               S
             </div>
             <div>
               <h1 className="text-sm font-black tracking-tight leading-none">Super Admin</h1>
-              <p className="text-[9px] text-[#4F46E5] tracking-[0.2em] uppercase font-black mt-1.5 flex items-center gap-1.5">
+              <p className="text-[9px] text-[#6D5DF6] tracking-[0.2em] uppercase font-black mt-1.5 flex items-center gap-1.5">
                 SaaS Control <span className="w-1.5 h-1.5 bg-[#10B981] rounded-full animate-pulse shadow-[0_0_8px_#10B981]"></span>
               </p>
             </div>
@@ -160,33 +160,33 @@ export const SuperAdminPanel: React.FC<SuperAdminProps> = ({ onLogout, user }) =
 
         <div className="flex-1 overflow-y-auto px-4 py-6 space-y-1">
           <p className="text-[9px] font-black text-gray-500 uppercase tracking-[0.2em] mb-3 px-4">Platform</p>
-          <button onClick={() => setActiveTab('overview')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all ${activeTab === 'overview' ? 'bg-[#4F46E5] text-white shadow-lg' : 'text-gray-400 hover:text-white hover:bg-gray-800'}`}>
+          <button onClick={() => setActiveTab('overview')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-bold transition-all ${activeTab === 'overview' ? 'bg-[#6D5DF6] text-white shadow-lg' : 'text-gray-400 hover:text-white hover:bg-gray-800'}`}>
             <Activity className="w-4 h-4" /> Overview
           </button>
-          <button onClick={() => setActiveTab('clinics')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all ${activeTab === 'clinics' ? 'bg-[#4F46E5] text-white shadow-lg' : 'text-gray-400 hover:text-white hover:bg-gray-800'}`}>
+          <button onClick={() => setActiveTab('clinics')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-bold transition-all ${activeTab === 'clinics' ? 'bg-[#6D5DF6] text-white shadow-lg' : 'text-gray-400 hover:text-white hover:bg-gray-800'}`}>
             <Building2 className="w-4 h-4" /> Clinics (Tenants)
           </button>
-          <button onClick={() => setActiveTab('users')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all ${activeTab === 'users' ? 'bg-[#4F46E5] text-white shadow-lg' : 'text-gray-400 hover:text-white hover:bg-gray-800'}`}>
+          <button onClick={() => setActiveTab('users')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-bold transition-all ${activeTab === 'users' ? 'bg-[#6D5DF6] text-white shadow-lg' : 'text-gray-400 hover:text-white hover:bg-gray-800'}`}>
             <Users className="w-4 h-4" /> Platform Users
           </button>
-          <button onClick={() => setActiveTab('billing')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all ${activeTab === 'billing' ? 'bg-[#4F46E5] text-white shadow-lg' : 'text-gray-400 hover:text-white hover:bg-gray-800'}`}>
+          <button onClick={() => setActiveTab('billing')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-bold transition-all ${activeTab === 'billing' ? 'bg-[#6D5DF6] text-white shadow-lg' : 'text-gray-400 hover:text-white hover:bg-gray-800'}`}>
             <DollarSign className="w-4 h-4" /> Subscriptions & Revenue
           </button>
 
           <p className="text-[9px] font-black text-gray-500 uppercase tracking-[0.2em] mb-3 px-4 mt-8">System</p>
-          <button onClick={() => setActiveTab('ai-usage')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all ${activeTab === 'ai-usage' ? 'bg-[#4F46E5] text-white shadow-lg' : 'text-gray-400 hover:text-white hover:bg-gray-800'}`}>
+          <button onClick={() => setActiveTab('ai-usage')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-bold transition-all ${activeTab === 'ai-usage' ? 'bg-[#6D5DF6] text-white shadow-lg' : 'text-gray-400 hover:text-white hover:bg-gray-800'}`}>
             <BrainCircuit className="w-4 h-4" /> AI Costs & Usage
           </button>
-          <button onClick={() => setActiveTab('settings')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all ${activeTab === 'settings' ? 'bg-[#4F46E5] text-white shadow-lg' : 'text-gray-400 hover:text-white hover:bg-gray-800'}`}>
+          <button onClick={() => setActiveTab('settings')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-bold transition-all ${activeTab === 'settings' ? 'bg-[#6D5DF6] text-white shadow-lg' : 'text-gray-400 hover:text-white hover:bg-gray-800'}`}>
             <Server className="w-4 h-4" /> Infrastructure Settings
           </button>
-          <button onClick={() => setActiveTab('audit-logs')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all ${activeTab === 'audit-logs' ? 'bg-[#4F46E5] text-white shadow-lg' : 'text-gray-400 hover:text-white hover:bg-gray-800'}`}>
+          <button onClick={() => setActiveTab('audit-logs')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-bold transition-all ${activeTab === 'audit-logs' ? 'bg-[#6D5DF6] text-white shadow-lg' : 'text-gray-400 hover:text-white hover:bg-gray-800'}`}>
             <ShieldCheck className="w-4 h-4" /> Platform Audit Logs
           </button>
         </div>
 
         <div className="p-4 border-t border-gray-800">
-          <button onClick={onLogout} className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold text-rose-500 hover:bg-rose-500/10 transition-colors">
+          <button onClick={onLogout} className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-bold text-rose-500 hover:bg-rose-500/10 transition-colors">
             <LogOut className="w-4 h-4" /> Sign Out
           </button>
         </div>
@@ -210,7 +210,7 @@ export const SuperAdminPanel: React.FC<SuperAdminProps> = ({ onLogout, user }) =
               <span className="text-xs font-bold text-[#4B5563]">Super Admin Mode</span>
             </div>
             <div className="flex items-center gap-3 ml-0 md:ml-4">
-              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#4F46E5] to-[#7C3AED] flex items-center justify-center text-white font-bold text-xs shadow-md">
+              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#6D5DF6] to-[#7C3AED] flex items-center justify-center text-white font-bold text-xs shadow-md">
                 SA
               </div>
               <div>
@@ -229,28 +229,28 @@ export const SuperAdminPanel: React.FC<SuperAdminProps> = ({ onLogout, user }) =
             <div className="space-y-8 animate-in fade-in duration-500 max-w-[1400px] mx-auto">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <div className="bg-white p-6 rounded-2xl border border-[#E8EDF5] shadow-sm">
-                  <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center mb-4">
+                  <div className="w-10 h-10 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center mb-4">
                     <Building2 className="w-5 h-5" />
                   </div>
                   <p className="text-xs text-gray-500 font-bold uppercase tracking-wider">Total Clinics</p>
                   <p className="text-3xl font-black text-gray-900 mt-1">{stats.total_clinics}</p>
                 </div>
                 <div className="bg-white p-6 rounded-2xl border border-[#E8EDF5] shadow-sm">
-                  <div className="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center mb-4">
+                  <div className="w-10 h-10 rounded-2xl bg-[#EEEAFE] text-[#6D5DF6] flex items-center justify-center mb-4">
                     <Users className="w-5 h-5" />
                   </div>
                   <p className="text-xs text-gray-500 font-bold uppercase tracking-wider">Active Users</p>
                   <p className="text-3xl font-black text-gray-900 mt-1">{stats.active_users}</p>
                 </div>
                 <div className="bg-white p-6 rounded-2xl border border-[#E8EDF5] shadow-sm">
-                  <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center mb-4">
+                  <div className="w-10 h-10 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center mb-4">
                     <DollarSign className="w-5 h-5" />
                   </div>
                   <p className="text-xs text-gray-500 font-bold uppercase tracking-wider">Platform Revenue MRR</p>
                   <p className="text-3xl font-black text-gray-900 mt-1">{stats.platform_revenue_formatted}</p>
                 </div>
                 <div className="bg-white p-6 rounded-2xl border border-[#E8EDF5] shadow-sm">
-                  <div className="w-10 h-10 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center mb-4">
+                  <div className="w-10 h-10 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center mb-4">
                     <BrainCircuit className="w-5 h-5" />
                   </div>
                   <p className="text-xs text-gray-500 font-bold uppercase tracking-wider">AI Tokens Today</p>
@@ -263,7 +263,7 @@ export const SuperAdminPanel: React.FC<SuperAdminProps> = ({ onLogout, user }) =
                   <h3 className="text-base font-bold text-gray-900 mb-6">Recent Clinic Activity</h3>
                   <div className="space-y-4">
                     {clinics.slice(0, 5).map((clinic, i) => (
-                      <div key={i} className="flex items-center justify-between p-4 border border-gray-100 rounded-xl hover:bg-gray-50 transition-colors">
+                      <div key={i} className="flex items-center justify-between p-4 border border-gray-100 rounded-2xl hover:bg-gray-50 transition-colors">
                         <div className="flex items-center gap-4">
                           <div className="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center font-bold text-gray-600">
                             {clinic.name.charAt(0)}
@@ -282,7 +282,7 @@ export const SuperAdminPanel: React.FC<SuperAdminProps> = ({ onLogout, user }) =
                 </div>
                 
                 <div className="bg-slate-900 rounded-2xl p-6 shadow-lg relative overflow-hidden">
-                  <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/20 rounded-full blur-[80px]"></div>
+                  <div className="absolute top-0 right-0 w-64 h-64 bg-[#EEEAFE]0/20 rounded-full blur-[80px]"></div>
                   <h3 className="text-base font-bold text-white mb-6 flex items-center gap-2">
                     <Server className="w-5 h-5 text-indigo-400" /> System Health
                   </h3>
@@ -294,7 +294,7 @@ export const SuperAdminPanel: React.FC<SuperAdminProps> = ({ onLogout, user }) =
                         <span className="text-white font-bold">45%</span>
                       </div>
                       <div className="w-full bg-gray-800 rounded-full h-2">
-                        <div className="bg-indigo-500 h-2 rounded-full" style={{ width: '45%' }}></div>
+                        <div className="bg-[#EEEAFE]0 h-2 rounded-full" style={{ width: '45%' }}></div>
                       </div>
                     </div>
                     <div>
@@ -329,7 +329,7 @@ export const SuperAdminPanel: React.FC<SuperAdminProps> = ({ onLogout, user }) =
                 <div className="flex gap-3">
                   <div className="relative">
                     <Search className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
-                    <input type="text" placeholder="Search users..." className="pl-9 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-indigo-500" />
+                    <input type="text" placeholder="Search users..." className="pl-9 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-[#EEEAFE]0" />
                   </div>
                 </div>
               </div>
@@ -356,7 +356,7 @@ export const SuperAdminPanel: React.FC<SuperAdminProps> = ({ onLogout, user }) =
                         <td className="p-4 text-sm font-medium text-gray-600">{u.clinic}</td>
                         <td className="p-4">
                           <span className={`px-2.5 py-1 text-[10px] font-bold rounded-full uppercase tracking-wider ${
-                            u.role === 'super_admin' ? 'bg-indigo-100 text-indigo-700' :
+                            u.role === 'super_admin' ? 'bg-[#E0D9FD] text-[#5B4AE8]' :
                             u.role === 'clinic_admin' ? 'bg-purple-100 text-purple-700' :
                             'bg-blue-100 text-blue-700'
                           }`}>
@@ -378,7 +378,7 @@ export const SuperAdminPanel: React.FC<SuperAdminProps> = ({ onLogout, user }) =
                           <button 
                             onClick={() => toggleUserStatus(u.id)}
                             disabled={u.role === 'super_admin'}
-                            className="text-xs font-bold text-indigo-600 hover:text-indigo-800 disabled:opacity-30 disabled:cursor-not-allowed"
+                            className="text-xs font-bold text-[#6D5DF6] hover:text-indigo-800 disabled:opacity-30 disabled:cursor-not-allowed"
                           >
                             {u.is_active ? 'Suspend' : 'Activate'}
                           </button>
@@ -399,7 +399,7 @@ export const SuperAdminPanel: React.FC<SuperAdminProps> = ({ onLogout, user }) =
                  <h3 className="text-base font-bold text-gray-900">Registered Clinics (Tenants)</h3>
                  <p className="text-sm text-gray-500 mt-1">Manage isolated workspaces and subscriptions.</p>
                </div>
-               <button onClick={() => setIsInviteOpen(true)} className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-xl text-sm font-bold shadow-sm transition-colors">
+               <button onClick={() => setIsInviteOpen(true)} className="bg-[#6D5DF6] hover:bg-[#5B4AE8] text-white px-4 py-2 rounded-2xl text-sm font-bold shadow-sm transition-colors">
                  + Add Clinic
                </button>
              </div>
@@ -408,7 +408,7 @@ export const SuperAdminPanel: React.FC<SuperAdminProps> = ({ onLogout, user }) =
                <div className="p-12 text-center text-gray-500 font-medium">
                  <Building2 className="w-12 h-12 mx-auto mb-4 text-gray-300" />
                  <p>No clinics registered yet.</p>
-                 <button onClick={() => setIsInviteOpen(true)} className="text-indigo-600 font-bold mt-2 hover:underline">Register your first clinic</button>
+                 <button onClick={() => setIsInviteOpen(true)} className="text-[#6D5DF6] font-bold mt-2 hover:underline">Register your first clinic</button>
                </div>
              ) : (
                <div className="overflow-x-auto">
@@ -477,7 +477,7 @@ export const SuperAdminPanel: React.FC<SuperAdminProps> = ({ onLogout, user }) =
               <h4 className="text-sm font-bold text-gray-900 mb-4">Recent Invoices</h4>
               <div className="space-y-3">
                 {[1, 2, 3].map(i => (
-                  <div key={i} className="flex justify-between items-center p-4 border border-gray-100 rounded-xl">
+                  <div key={i} className="flex justify-between items-center p-4 border border-gray-100 rounded-2xl">
                     <div>
                       <p className="text-sm font-bold text-gray-900">INV-2026-00{i}</p>
                       <p className="text-xs text-gray-500">City Heart Clinic • Pro Plan</p>
@@ -497,11 +497,11 @@ export const SuperAdminPanel: React.FC<SuperAdminProps> = ({ onLogout, user }) =
             <div className="bg-white border border-[#E8EDF5] rounded-2xl shadow-sm animate-in fade-in max-w-[1400px] mx-auto p-6">
               <h3 className="text-base font-bold text-gray-900 mb-6">OpenAI & LLM Token Usage</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-                <div className="p-6 border border-indigo-100 bg-indigo-50/50 rounded-2xl">
-                  <BrainCircuit className="w-8 h-8 text-indigo-600 mb-4" />
+                <div className="p-6 border border-[#E0D9FD] bg-[#EEEAFE]/50 rounded-2xl">
+                  <BrainCircuit className="w-8 h-8 text-[#6D5DF6] mb-4" />
                   <p className="text-gray-600 text-sm font-bold mb-1">Total Tokens Used (MTD)</p>
                   <p className="text-4xl font-black text-indigo-900">42.8M</p>
-                  <p className="text-xs text-indigo-600 font-medium mt-2">Est. Cost: $428.00</p>
+                  <p className="text-xs text-[#6D5DF6] font-medium mt-2">Est. Cost: $428.00</p>
                 </div>
                 <div className="p-6 border border-emerald-100 bg-emerald-50/50 rounded-2xl">
                   <Activity className="w-8 h-8 text-emerald-600 mb-4" />
@@ -513,7 +513,7 @@ export const SuperAdminPanel: React.FC<SuperAdminProps> = ({ onLogout, user }) =
               <h4 className="text-sm font-bold text-gray-900 mb-4">Top Consumers</h4>
               <div className="space-y-3">
                 {clinics.slice(0, 3).map((c, i) => (
-                  <div key={i} className="flex justify-between items-center p-4 border border-gray-100 rounded-xl">
+                  <div key={i} className="flex justify-between items-center p-4 border border-gray-100 rounded-2xl">
                     <span className="text-sm font-bold text-gray-900">{c.name}</span>
                     <span className="text-sm font-medium text-gray-500">{(Math.random() * 5 + 1).toFixed(1)}M tokens</span>
                   </div>
@@ -530,15 +530,15 @@ export const SuperAdminPanel: React.FC<SuperAdminProps> = ({ onLogout, user }) =
               <div className="space-y-6 max-w-2xl">
                 <div>
                   <label className="block text-sm font-bold text-gray-900 mb-2">Platform Name</label>
-                  <input type="text" defaultValue="SBN Sentinel" className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-indigo-500 bg-gray-50" />
+                  <input type="text" defaultValue="SBN Sentinel" className="w-full border border-gray-200 rounded-2xl px-4 py-3 text-sm focus:outline-none focus:border-[#EEEAFE]0 bg-gray-50" />
                 </div>
                 <div>
                   <label className="block text-sm font-bold text-gray-900 mb-2">Master LLM API Key (OpenAI)</label>
-                  <input type="password" defaultValue="sk-sentinel-abcdef1234567890" className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-indigo-500 bg-gray-50" />
+                  <input type="password" defaultValue="sk-sentinel-abcdef1234567890" className="w-full border border-gray-200 rounded-2xl px-4 py-3 text-sm focus:outline-none focus:border-[#EEEAFE]0 bg-gray-50" />
                 </div>
                 <div>
                   <label className="block text-sm font-bold text-gray-900 mb-2">Default LLM Engine</label>
-                  <select className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-indigo-500 bg-gray-50">
+                  <select className="w-full border border-gray-200 rounded-2xl px-4 py-3 text-sm focus:outline-none focus:border-[#EEEAFE]0 bg-gray-50">
                     <option>GPT-4o (Default)</option>
                     <option>Claude 3.5 Sonnet</option>
                   </select>
@@ -555,7 +555,7 @@ export const SuperAdminPanel: React.FC<SuperAdminProps> = ({ onLogout, user }) =
                     <span className="text-sm font-bold text-gray-700">{maintenanceMode ? 'System Offline (Updates Active)' : 'Currently Live'}</span>
                   </div>
                 </div>
-                <button className="bg-indigo-600 text-white px-6 py-3 rounded-xl text-sm font-bold hover:bg-indigo-700 transition-colors">
+                <button className="bg-[#6D5DF6] text-white px-6 py-3 rounded-2xl text-sm font-bold hover:bg-[#5B4AE8] transition-colors">
                   Save Global Settings
                 </button>
               </div>
@@ -566,7 +566,7 @@ export const SuperAdminPanel: React.FC<SuperAdminProps> = ({ onLogout, user }) =
           {activeTab === 'audit-logs' && (
             <div className="bg-white border border-[#E8EDF5] rounded-2xl shadow-sm animate-in fade-in max-w-[1400px] mx-auto p-6">
               <h3 className="text-base font-bold text-gray-900 mb-6 flex items-center gap-2">
-                <ShieldCheck className="w-5 h-5 text-indigo-600" /> Super Admin Audit Trail
+                <ShieldCheck className="w-5 h-5 text-[#6D5DF6]" /> Super Admin Audit Trail
               </h3>
               <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse">
@@ -583,7 +583,7 @@ export const SuperAdminPanel: React.FC<SuperAdminProps> = ({ onLogout, user }) =
                       <tr key={log.id} className="border-b border-gray-100 hover:bg-gray-50/50">
                         <td className="p-4 text-xs font-bold text-gray-900">{log.time}</td>
                         <td className="p-4">
-                          <span className="px-2 py-1 text-[10px] font-bold uppercase rounded bg-indigo-50 text-indigo-700 border border-indigo-100">
+                          <span className="px-2 py-1 text-[10px] font-bold uppercase rounded bg-[#EEEAFE] text-[#5B4AE8] border border-[#E0D9FD]">
                             {log.action.replace('_', ' ')}
                           </span>
                         </td>
@@ -607,7 +607,7 @@ export const SuperAdminPanel: React.FC<SuperAdminProps> = ({ onLogout, user }) =
               <p className="text-sm text-gray-500 mb-6">Create a new tenant workspace and invite the owner.</p>
               
               {inviteMsg && (
-                <div className={`p-3 mb-4 rounded-xl text-sm font-bold ${inviteMsg.includes('✅') ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700'}`}>
+                <div className={`p-3 mb-4 rounded-2xl text-sm font-bold ${inviteMsg.includes('✅') ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700'}`}>
                   {inviteMsg}
                 </div>
               )}
@@ -615,31 +615,31 @@ export const SuperAdminPanel: React.FC<SuperAdminProps> = ({ onLogout, user }) =
               <form onSubmit={handleInvite} className="space-y-4">
                 <div>
                   <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Clinic Name</label>
-                  <input required type="text" value={inviteForm.clinic_name} onChange={e => setInviteForm({...inviteForm, clinic_name: e.target.value})} className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-indigo-500 bg-gray-50" placeholder="e.g. City Heart Clinic" />
+                  <input required type="text" value={inviteForm.clinic_name} onChange={e => setInviteForm({...inviteForm, clinic_name: e.target.value})} className="w-full border border-gray-200 rounded-2xl px-4 py-3 text-sm focus:outline-none focus:border-[#EEEAFE]0 bg-gray-50" placeholder="e.g. City Heart Clinic" />
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Owner Name</label>
-                  <input required type="text" value={inviteForm.full_name} onChange={e => setInviteForm({...inviteForm, full_name: e.target.value})} className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-indigo-500 bg-gray-50" placeholder="Dr. John Doe" />
+                  <input required type="text" value={inviteForm.full_name} onChange={e => setInviteForm({...inviteForm, full_name: e.target.value})} className="w-full border border-gray-200 rounded-2xl px-4 py-3 text-sm focus:outline-none focus:border-[#EEEAFE]0 bg-gray-50" placeholder="Dr. John Doe" />
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Owner Email</label>
-                  <input required type="email" value={inviteForm.email} onChange={e => setInviteForm({...inviteForm, email: e.target.value})} className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-indigo-500 bg-gray-50" placeholder="doctor@clinic.com" />
+                  <input required type="email" value={inviteForm.email} onChange={e => setInviteForm({...inviteForm, email: e.target.value})} className="w-full border border-gray-200 rounded-2xl px-4 py-3 text-sm focus:outline-none focus:border-[#EEEAFE]0 bg-gray-50" placeholder="doctor@clinic.com" />
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Temporary Password</label>
-                  <input required type="text" value={inviteForm.temp_password} onChange={e => setInviteForm({...inviteForm, temp_password: e.target.value})} className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-indigo-500 bg-gray-50" placeholder="e.g. Clinic@2026" />
+                  <input required type="text" value={inviteForm.temp_password} onChange={e => setInviteForm({...inviteForm, temp_password: e.target.value})} className="w-full border border-gray-200 rounded-2xl px-4 py-3 text-sm focus:outline-none focus:border-[#EEEAFE]0 bg-gray-50" placeholder="e.g. Clinic@2026" />
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Subscription Plan</label>
-                  <select value={inviteForm.plan} onChange={e => setInviteForm({...inviteForm, plan: e.target.value})} className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-indigo-500 bg-gray-50">
+                  <select value={inviteForm.plan} onChange={e => setInviteForm({...inviteForm, plan: e.target.value})} className="w-full border border-gray-200 rounded-2xl px-4 py-3 text-sm focus:outline-none focus:border-[#EEEAFE]0 bg-gray-50">
                     <option value="Basic">Basic Plan</option>
                     <option value="Pro">Pro Plan (Most Popular)</option>
                     <option value="Enterprise">Enterprise Plan</option>
                   </select>
                 </div>
                 <div className="flex gap-3 mt-8">
-                  <button type="button" onClick={() => setIsInviteOpen(false)} className="flex-1 px-4 py-3 bg-gray-100 text-gray-700 rounded-xl text-sm font-bold hover:bg-gray-200">Cancel</button>
-                  <button type="submit" className="flex-1 px-4 py-3 bg-indigo-600 text-white rounded-xl text-sm font-bold hover:bg-indigo-700">Create Tenant</button>
+                  <button type="button" onClick={() => setIsInviteOpen(false)} className="flex-1 px-4 py-3 bg-gray-100 text-gray-700 rounded-2xl text-sm font-bold hover:bg-gray-200">Cancel</button>
+                  <button type="submit" className="flex-1 px-4 py-3 bg-[#6D5DF6] text-white rounded-2xl text-sm font-bold hover:bg-[#5B4AE8]">Create Tenant</button>
                 </div>
               </form>
             </div>

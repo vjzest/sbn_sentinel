@@ -27,10 +27,10 @@ const initialState: SignalState = {
   events: [],
   isConnected: false,
   stats: {
-    activeSignals: 1284,
-    patientFlow: 42,
-    criticalEvents: 3,
-    actionsTaken: 89,
+    activeSignals: 0,
+    patientFlow: 0,
+    criticalEvents: 0,
+    actionsTaken: 0,
   }
 };
 
@@ -61,9 +61,12 @@ const signalSlice = createSlice({
     },
     incrementActionsTaken(state) {
       state.stats.actionsTaken += 1;
+    },
+    removeSignal(state, action: PayloadAction<string>) {
+      state.events = state.events.filter(e => e.id !== action.payload);
     }
   }
 });
 
-export const { addSignal, setConnectionStatus, incrementActionsTaken } = signalSlice.actions;
+export const { addSignal, setConnectionStatus, incrementActionsTaken, removeSignal } = signalSlice.actions;
 export default signalSlice.reducer;

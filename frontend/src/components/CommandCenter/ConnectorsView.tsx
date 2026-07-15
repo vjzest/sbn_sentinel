@@ -248,7 +248,7 @@ export const ConnectorsView: React.FC = () => {
             setConnectError(null);
             setIsAddModalOpen(true);
           }}
-          className="flex items-center gap-2 bg-gradient-to-r from-[#4F46E5] to-[#7C3AED] hover:from-[#4338CA] hover:to-[#6D28D9] text-white font-bold px-6 py-3 rounded-[14px] transition-transform active:scale-95 shadow-[0_4px_14px_rgba(79,70,229,0.3)]"
+          className="flex items-center gap-2 bg-gradient-to-r from-[#6D5DF6] to-[#7C3AED] hover:from-[#5B4AE8] hover:to-[#6D28D9] text-white font-bold px-6 py-3 rounded-[14px] transition-transform active:scale-95 shadow-[0_4px_14px_rgba(79,70,229,0.3)]"
         >
           <Plus className="w-4 h-4" /> Add Integration
         </button>
@@ -279,7 +279,7 @@ export const ConnectorsView: React.FC = () => {
       {/* Grid */}
       {isLoading ? (
         <div className="flex items-center justify-center py-20">
-          <div className="w-12 h-12 border-4 border-[#EEF4FF] border-t-[#4F46E5] rounded-full animate-spin mb-4"></div>
+          <div className="w-12 h-12 border-4 border-[#EEF4FF] border-t-[#6D5DF6] rounded-full animate-spin mb-4"></div>
           <span className="ml-4 font-bold text-[#4B5563]">Loading active connectors...</span>
         </div>
       ) : (
@@ -289,7 +289,7 @@ export const ConnectorsView: React.FC = () => {
             const isThisSyncing = syncingId === conn.id || conn.status === 'Syncing';
 
             return (
-              <div key={conn.id} className={`bg-white border border-[#E8EDF5] rounded-[24px] p-6 premium-shadow card-hover flex flex-col justify-between group transition-all duration-500 ${pulse && idx === (events.length % 6) ? 'scale-[1.02] ring-2 ring-[#4F46E5] shadow-lg' : ''}`}>
+              <div key={conn.id} className={`bg-white border border-[#E8EDF5] rounded-[24px] p-6 premium-shadow card-hover flex flex-col justify-between group transition-all duration-500 ${pulse && idx === (events.length % 6) ? 'scale-[1.02] ring-2 ring-[#6D5DF6] shadow-lg' : ''}`}>
                 <div className="flex justify-between items-start mb-6">
                   <div className="flex items-center gap-4">
                     <div className={`p-4 ${bg} rounded-[16px]`}>
@@ -322,7 +322,7 @@ export const ConnectorsView: React.FC = () => {
                 </div>
 
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2 bg-[#F9FAFB] border border-[#E8EDF5] px-3 py-1.5 rounded-[8px]">
+                  <div className="flex items-center gap-2 bg-[#F7F9FC] border border-[#E8EDF5] px-3 py-1.5 rounded-[8px]">
                      {conn.status === 'Connected' && <CheckCircle2 className="w-3.5 h-3.5 text-[#10B981]" />}
                      {conn.status === 'Syncing' && <RefreshCw className="w-3.5 h-3.5 text-[#F59E0B] animate-spin" />}
                      {conn.status === 'Needs attention' && <AlertTriangle className="w-3.5 h-3.5 text-[#EF4444]" />}
@@ -374,7 +374,7 @@ export const ConnectorsView: React.FC = () => {
                 return (
                   <div key={i} className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active">
                     <div className={`flex items-center justify-center w-6 h-6 rounded-full border-4 border-white ${logTypeColor} text-white shadow shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 z-10 transition-transform ${pulse && i === 0 ? 'scale-125 ring-4 ring-blue-100' : ''}`}></div>
-                    <div className="w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] bg-white p-3 rounded-[12px] border border-[#E8EDF5] shadow-sm">
+                    <div className="w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] bg-white p-3 rounded-[16px] border border-[#E8EDF5] shadow-sm">
                       <div className="flex items-center justify-between mb-1">
                         <span className="font-bold text-[#111827] text-xs leading-tight">{log.type} from {log.source}</span>
                       </div>
@@ -441,7 +441,7 @@ export const ConnectorsView: React.FC = () => {
             {!selectedSystem ? (
               <>
                 <h3 className="text-xl font-extrabold text-[#111827] mb-2 flex items-center gap-2">
-                  <Plus className="w-5 h-5 text-[#4F46E5]" /> Connect New System
+                  <Plus className="w-5 h-5 text-[#6D5DF6]" /> Connect New System
                 </h3>
                 <p className="text-sm font-medium text-[#6B7280] mb-6">Select a system from the Sentinel Marketplace to integrate with your practice.</p>
                 
@@ -456,18 +456,18 @@ export const ConnectorsView: React.FC = () => {
                      <div 
                        key={sys.name} 
                        onClick={() => handleSelectSystem(sys.name)}
-                       className="flex items-center justify-between p-4 border border-[#E8EDF5] rounded-[16px] hover:border-[#4F46E5] hover:bg-[#EEF4FF] cursor-pointer transition-all group"
+                       className="flex items-center justify-between p-4 border border-[#E8EDF5] rounded-[16px] hover:border-[#6D5DF6] hover:bg-[#EEF4FF] cursor-pointer transition-all group"
                      >
                         <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 bg-[#F9FAFB] border border-[#E8EDF5] rounded-full flex items-center justify-center group-hover:border-[#4F46E5] bg-white transition-all">
-                            <Database className="w-4 h-4 text-[#4B5563] group-hover:text-[#4F46E5]" />
+                          <div className="w-10 h-10 bg-[#F7F9FC] border border-[#E8EDF5] rounded-full flex items-center justify-center group-hover:border-[#6D5DF6] bg-white transition-all">
+                            <Database className="w-4 h-4 text-[#4B5563] group-hover:text-[#6D5DF6]" />
                           </div>
                           <div>
                             <p className="text-sm font-bold text-[#111827]">{sys.name}</p>
                             <p className="text-[10px] text-[#9CA3AF] font-bold uppercase">{sys.type}</p>
                           </div>
                         </div>
-                        <button className="text-[11px] font-bold text-[#4F46E5] px-4 py-2 bg-white border border-[#4F46E5] rounded-[8px] group-hover:bg-[#4F46E5] group-hover:text-white transition-colors">
+                        <button className="text-[11px] font-bold text-[#6D5DF6] px-4 py-2 bg-white border border-[#6D5DF6] rounded-[8px] group-hover:bg-[#6D5DF6] group-hover:text-white transition-colors">
                           Connect
                         </button>
                      </div>
@@ -495,7 +495,7 @@ export const ConnectorsView: React.FC = () => {
                       placeholder="e.g. dr.patel@clinic.com"
                       value={ssoUsername}
                       onChange={(e) => setSsoUsername(e.target.value)}
-                      className="w-full bg-[#F9FAFB] border border-[#E8EDF5] rounded-[12px] py-3 px-4 text-sm font-bold text-[#111827] outline-none focus:border-[#4F46E5] focus:bg-white transition-all"
+                      className="w-full bg-[#F7F9FC] border border-[#E8EDF5] rounded-[16px] py-3 px-4 text-sm font-bold text-[#111827] outline-none focus:border-[#6D5DF6] focus:bg-white transition-all"
                       required 
                     />
                   </div>
@@ -506,14 +506,14 @@ export const ConnectorsView: React.FC = () => {
                       placeholder="••••••••••••"
                       value={ssoPassword}
                       onChange={(e) => setSsoPassword(e.target.value)}
-                      className="w-full bg-[#F9FAFB] border border-[#E8EDF5] rounded-[12px] py-3 px-4 text-sm font-bold text-[#111827] outline-none focus:border-[#4F46E5] focus:bg-white transition-all"
+                      className="w-full bg-[#F7F9FC] border border-[#E8EDF5] rounded-[16px] py-3 px-4 text-sm font-bold text-[#111827] outline-none focus:border-[#6D5DF6] focus:bg-white transition-all"
                       required 
                     />
                   </div>
                 </div>
 
                 {connectError && (
-                  <div className="bg-rose-50 border border-rose-100 text-rose-600 rounded-[12px] p-3 text-xs font-bold flex items-center gap-2">
+                  <div className="bg-rose-50 border border-rose-100 text-rose-600 rounded-[16px] p-3 text-xs font-bold flex items-center gap-2">
                     <ShieldAlert className="w-4 h-4 text-rose-500 shrink-0" />
                     <span>{connectError}</span>
                   </div>
@@ -523,14 +523,14 @@ export const ConnectorsView: React.FC = () => {
                   <button 
                     type="button"
                     onClick={() => setIsSSOModalOpen(false)}
-                    className="flex-1 bg-white border border-[#E8EDF5] text-[#4B5563] font-bold py-3 rounded-[12px] text-xs hover:bg-[#F9FAFB] transition-colors"
+                    className="flex-1 bg-white border border-[#E8EDF5] text-[#4B5563] font-bold py-3 rounded-[16px] text-xs hover:bg-[#F7F9FC] transition-colors"
                   >
                     Cancel
                   </button>
                   <button 
                     type="submit"
                     disabled={isSubmitting}
-                    className="flex-1 bg-[#111827] hover:bg-gray-800 text-white font-bold py-3 rounded-[12px] text-xs flex items-center justify-center gap-2"
+                    className="flex-1 bg-[#111827] hover:bg-gray-800 text-white font-bold py-3 rounded-[16px] text-xs flex items-center justify-center gap-2"
                   >
                     {isSubmitting ? (
                       <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
@@ -544,7 +544,7 @@ export const ConnectorsView: React.FC = () => {
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-3">
                     <div className="p-3 bg-[#EEF4FF] rounded-lg">
-                      <ShieldCheck className="w-6 h-6 text-[#4F46E5]" />
+                      <ShieldCheck className="w-6 h-6 text-[#6D5DF6]" />
                     </div>
                     <div>
                       <h3 className="text-lg font-extrabold text-[#111827]">Developer Authentication</h3>
@@ -566,7 +566,7 @@ export const ConnectorsView: React.FC = () => {
                     type="text" 
                     value={connName}
                     onChange={(e) => setConnName(e.target.value)}
-                    className="w-full bg-[#F9FAFB] border border-[#E8EDF5] rounded-[12px] py-3 px-4 text-sm font-bold text-[#111827] outline-none focus:border-[#4F46E5] focus:bg-white transition-all"
+                    className="w-full bg-[#F7F9FC] border border-[#E8EDF5] rounded-[16px] py-3 px-4 text-sm font-bold text-[#111827] outline-none focus:border-[#6D5DF6] focus:bg-white transition-all"
                     required 
                   />
                 </div>
@@ -579,7 +579,7 @@ export const ConnectorsView: React.FC = () => {
                       placeholder="e.g. cli_00289"
                       value={clientId}
                       onChange={(e) => setClientId(e.target.value)}
-                      className="w-full bg-[#F9FAFB] border border-[#E8EDF5] rounded-[12px] py-3 px-4 text-xs font-bold text-[#111827] outline-none focus:border-[#4F46E5] focus:bg-white transition-all"
+                      className="w-full bg-[#F7F9FC] border border-[#E8EDF5] rounded-[16px] py-3 px-4 text-xs font-bold text-[#111827] outline-none focus:border-[#6D5DF6] focus:bg-white transition-all"
                       required 
                     />
                   </div>
@@ -592,7 +592,7 @@ export const ConnectorsView: React.FC = () => {
                         placeholder="••••••••••••••"
                         value={apiKey}
                         onChange={(e) => setApiKey(e.target.value)}
-                        className="w-full bg-[#F9FAFB] border border-[#E8EDF5] rounded-[12px] py-3 pl-9 pr-4 text-xs font-bold text-[#111827] outline-none focus:border-[#4F46E5] focus:bg-white transition-all"
+                        className="w-full bg-[#F7F9FC] border border-[#E8EDF5] rounded-[16px] py-3 pl-9 pr-4 text-xs font-bold text-[#111827] outline-none focus:border-[#6D5DF6] focus:bg-white transition-all"
                         required 
                       />
                     </div>
@@ -606,13 +606,13 @@ export const ConnectorsView: React.FC = () => {
                     placeholder="https://api.epic.com/v1/auth"
                     value={apiEndpoint}
                     onChange={(e) => setApiEndpoint(e.target.value)}
-                    className="w-full bg-[#F9FAFB] border border-[#E8EDF5] rounded-[12px] py-3 px-4 text-xs font-bold text-[#111827] outline-none focus:border-[#4F46E5] focus:bg-white transition-all"
+                    className="w-full bg-[#F7F9FC] border border-[#E8EDF5] rounded-[16px] py-3 px-4 text-xs font-bold text-[#111827] outline-none focus:border-[#6D5DF6] focus:bg-white transition-all"
                     required 
                   />
                 </div>
 
                 {connectError && (
-                  <div className="bg-rose-50 border border-rose-100 text-rose-600 rounded-[12px] p-3 text-xs font-bold flex items-center gap-2">
+                  <div className="bg-rose-50 border border-rose-100 text-rose-600 rounded-[16px] p-3 text-xs font-bold flex items-center gap-2">
                     <ShieldAlert className="w-4 h-4 text-rose-500 shrink-0" />
                     <span>{connectError}</span>
                   </div>
@@ -622,14 +622,14 @@ export const ConnectorsView: React.FC = () => {
                   <button 
                     type="button"
                     onClick={() => setSelectedSystem(null)}
-                    className="flex-1 bg-white border border-[#E8EDF5] text-[#4B5563] font-bold py-3 rounded-[12px] text-xs hover:bg-[#F9FAFB] transition-colors"
+                    className="flex-1 bg-white border border-[#E8EDF5] text-[#4B5563] font-bold py-3 rounded-[16px] text-xs hover:bg-[#F7F9FC] transition-colors"
                   >
                     Back
                   </button>
                   <button 
                     type="submit"
                     disabled={isSubmitting}
-                    className="flex-1 bg-gradient-to-r from-[#4F46E5] to-[#7C3AED] hover:opacity-90 text-white font-bold py-3 rounded-[12px] text-xs flex items-center justify-center gap-2"
+                    className="flex-1 bg-gradient-to-r from-[#6D5DF6] to-[#7C3AED] hover:opacity-90 text-white font-bold py-3 rounded-[16px] text-xs flex items-center justify-center gap-2"
                   >
                     {isSubmitting ? (
                       <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
@@ -653,7 +653,7 @@ export const ConnectorsView: React.FC = () => {
                 <div className="pt-4 space-y-4">
                   <button 
                     onClick={() => setIsSSOModalOpen(true)}
-                    className="w-full bg-gradient-to-r from-[#4F46E5] to-[#7C3AED] hover:opacity-90 text-white font-bold py-3.5 rounded-[12px] text-xs flex items-center justify-center gap-2 premium-shadow transition-transform active:scale-95 cursor-pointer"
+                    className="w-full bg-gradient-to-r from-[#6D5DF6] to-[#7C3AED] hover:opacity-90 text-white font-bold py-3.5 rounded-[16px] text-xs flex items-center justify-center gap-2 premium-shadow transition-transform active:scale-95 cursor-pointer"
                   >
                     <Key className="w-4 h-4 text-white" /> Authorize & Link {selectedSystem}
                   </button>
@@ -711,7 +711,7 @@ export const ConnectorsView: React.FC = () => {
             </div>
             
             <div className="mt-6 flex justify-end">
-              <button onClick={() => setDetailsModalData(null)} className="text-sm font-bold text-white bg-[#111827] hover:bg-[#374151] px-6 py-2.5 rounded-[12px] transition-colors">
+              <button onClick={() => setDetailsModalData(null)} className="text-sm font-bold text-white bg-[#111827] hover:bg-[#374151] px-6 py-2.5 rounded-[16px] transition-colors">
                 Close Log
               </button>
             </div>
@@ -741,7 +741,7 @@ export const ConnectorsView: React.FC = () => {
                 </p>
               </div>
               
-              <div className="bg-slate-50 border border-[#E8EDF5] rounded-xl p-3 w-full text-left">
+              <div className="bg-slate-50 border border-[#E8EDF5] rounded-2xl p-3 w-full text-left">
                 <p className="text-[10px] uppercase font-extrabold text-[#9CA3AF] tracking-wider mb-1">Integration ID</p>
                 <p className="text-xs font-mono font-bold text-[#111827]">{disconnectingConnector.id}</p>
               </div>
@@ -749,13 +749,13 @@ export const ConnectorsView: React.FC = () => {
               <div className="flex gap-3 w-full pt-2">
                 <button 
                   onClick={() => setDisconnectingConnector(null)}
-                  className="flex-1 bg-white border border-[#E8EDF5] text-[#4B5563] font-bold py-3 rounded-[12px] text-xs hover:bg-[#F9FAFB] transition-colors"
+                  className="flex-1 bg-white border border-[#E8EDF5] text-[#4B5563] font-bold py-3 rounded-[16px] text-xs hover:bg-[#F7F9FC] transition-colors"
                 >
                   Keep Connection
                 </button>
                 <button 
                   onClick={() => handleDisconnect(disconnectingConnector.id)}
-                  className="flex-1 bg-rose-600 hover:bg-rose-700 text-white font-bold py-3 rounded-[12px] text-xs transition-colors shadow-[0_4px_12px_rgba(220,38,38,0.2)]"
+                  className="flex-1 bg-rose-600 hover:bg-rose-700 text-white font-bold py-3 rounded-[16px] text-xs transition-colors shadow-[0_4px_12px_rgba(220,38,38,0.2)]"
                 >
                   Confirm Disconnect
                 </button>

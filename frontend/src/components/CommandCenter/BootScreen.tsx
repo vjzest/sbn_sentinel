@@ -36,15 +36,15 @@ export const BootScreen: React.FC<BootScreenProps> = ({ onComplete }) => {
   return (
     <div className="fixed inset-0 bg-[#0B1121] text-white font-mono flex flex-col items-center justify-center z-50 p-6">
       {/* Radar Glow Background */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-gradient-to-br from-[#4F46E5]/10 to-[#7C3AED]/10 rounded-full blur-[120px] pointer-events-none animate-pulse"></div>
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-gradient-to-br from-[#6D5DF6]/10 to-[#7C3AED]/10 rounded-full blur-[120px] pointer-events-none animate-pulse"></div>
 
       <div className="w-full max-w-xl flex flex-col items-center relative z-10">
         {/* Animated Sentinel Core Logo */}
         <div className="mb-10 relative">
-          <div className="w-20 h-20 rounded-[24px] bg-gradient-to-br from-[#4F46E5] to-[#7C3AED] flex items-center justify-center text-white font-extrabold text-4xl shadow-[0_0_40px_rgba(79,70,229,0.5)] animate-bounce">
+          <div className="w-20 h-20 rounded-[24px] bg-gradient-to-br from-[#6D5DF6] to-[#7C3AED] flex items-center justify-center text-white font-extrabold text-4xl shadow-[0_0_40px_rgba(79,70,229,0.5)] animate-bounce">
             S
           </div>
-          <div className="absolute -inset-2 border-2 border-[#4F46E5]/30 rounded-[28px] animate-ping opacity-75"></div>
+          <div className="absolute -inset-2 border-2 border-[#6D5DF6]/30 rounded-[28px] animate-ping opacity-75"></div>
         </div>
 
         <h2 className="text-xl font-bold tracking-[0.15em] uppercase text-slate-100 mb-2">SBN SENTINEL V1</h2>
@@ -64,7 +64,7 @@ export const BootScreen: React.FC<BootScreenProps> = ({ onComplete }) => {
           })}
           {currentStep < steps.length && (
             <div className="flex items-center gap-3 text-xs text-slate-500 animate-pulse">
-              <Activity className="w-4 h-4 text-[#4F46E5] shrink-0 animate-spin" />
+              <Activity className="w-4 h-4 text-[#6D5DF6] shrink-0 animate-spin" />
               <span>Checking {steps[currentStep].text.toLowerCase()}</span>
             </div>
           )}
@@ -73,7 +73,7 @@ export const BootScreen: React.FC<BootScreenProps> = ({ onComplete }) => {
         {/* Progress Bar */}
         <div className="w-full bg-slate-800 h-1.5 rounded-full mt-6 overflow-hidden">
           <div 
-            className="bg-gradient-to-r from-[#4F46E5] to-[#7C3AED] h-full transition-all duration-300"
+            className="bg-gradient-to-r from-[#6D5DF6] to-[#7C3AED] h-full transition-all duration-300"
             style={{ width: `${(currentStep / steps.length) * 100}%` }}
           ></div>
         </div>

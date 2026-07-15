@@ -39,7 +39,8 @@ export default function Dashboard() {
   const [isLoading, setIsLoading] = useState(true);
   const [isBooting, setIsBooting] = useState(true);
   const [activeTab, setActiveTab] = useState('dashboard');
-  const [userRole, setUserRole] = useState('admin');
+  const [userRole, setUserRole] = useState('org_admin');
+  const [currentUser, setCurrentUser] = useState<any>(null);
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isNotifOpen, setIsNotifOpen] = useState(false);
@@ -174,6 +175,14 @@ export default function Dashboard() {
   useEffect(() => {
     const token = localStorage.getItem('token');
     const role = localStorage.getItem('userRole');
+    const userStr = localStorage.getItem('user');
+    
+    if (userStr) {
+      try {
+        setCurrentUser(JSON.parse(userStr));
+      } catch(e) {}
+    }
+
     if (!token) {
       router.push('/');
       return;
@@ -210,7 +219,7 @@ export default function Dashboard() {
   if (isLoading) {
     return (
       <div className="h-screen w-screen bg-[#0B1121] flex items-center justify-center">
-        <div className="w-10 h-10 border-4 border-slate-700 border-t-indigo-500 rounded-full animate-spin"></div>
+        <div className="w-10 h-10 border-4 border-slate-700 border-t-[#EEEAFE]0 rounded-full animate-spin"></div>
       </div>
     );
   }
@@ -253,14 +262,14 @@ export default function Dashboard() {
         <aside className={`w-64 bg-gradient-to-b from-white via-[#F8FAFC] to-[#F1F5F9] border-r border-[#E2E8F0] flex flex-col fixed md:relative z-[60] h-full transition-transform duration-300 ease-in-out text-slate-700 shrink-0 ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}`}>
           <div className="p-6 pb-5 border-b border-[#E2E8F0] relative overflow-hidden group flex justify-between items-center">
             {/* Subtle premium gradient indicator at the top border */}
-            <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-[#4F46E5] to-transparent"></div>
+            <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-[#6D5DF6] to-transparent"></div>
             <div className="flex items-center gap-3 relative z-10">
-              <div className="w-10 h-10 rounded-[12px] bg-gradient-to-br from-[#4F46E5] to-[#7C3AED] flex items-center justify-center text-white font-black text-xl shadow-[0_4px_15px_rgba(79,70,229,0.25)] group-hover:scale-105 transition-transform duration-300">
+              <div className="w-10 h-10 rounded-[16px] bg-gradient-to-br from-[#6D5DF6] to-[#7C3AED] flex items-center justify-center text-white font-black text-xl shadow-[0_4px_15px_rgba(79,70,229,0.25)] group-hover:scale-105 transition-transform duration-300">
                 {practiceName.charAt(0).toUpperCase()}
               </div>
               <div className="min-w-0 flex-1">
                 <h1 className="text-sm font-black tracking-tight text-[#0F172A] leading-none truncate" title={practiceName}>{practiceName}</h1>
-                <p className="text-[9px] text-[#4F46E5] tracking-[0.2em] uppercase font-black mt-1.5 flex items-center gap-1.5">
+                <p className="text-[9px] text-[#6D5DF6] tracking-[0.2em] uppercase font-black mt-1.5 flex items-center gap-1.5">
                   Command Center <span className="w-1.5 h-1.5 bg-[#10B981] rounded-full animate-pulse shadow-[0_0_8px_#10B981]"></span>
                 </p>
               </div>
@@ -315,7 +324,7 @@ export default function Dashboard() {
         {/* Main Content Area */}
         <main className="flex-1 flex flex-col relative overflow-hidden bg-[#F7F9FC]">
           {/* Background blobs */}
-          <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-gradient-to-br from-[#4F46E5]/5 to-[#7C3AED]/5 rounded-full blur-[100px] pointer-events-none z-0"></div>
+          <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-gradient-to-br from-[#6D5DF6]/5 to-[#7C3AED]/5 rounded-full blur-[100px] pointer-events-none z-0"></div>
           <div className="absolute top-40 left-0 w-[500px] h-[500px] bg-[#2563EB]/5 rounded-full blur-[100px] pointer-events-none z-0"></div>
           {/* Topbar */}
           <header className="h-20 flex items-center justify-between px-4 md:px-8 relative z-50 shrink-0">
@@ -347,7 +356,7 @@ export default function Dashboard() {
                     <div className="absolute right-0 mt-4 w-80 bg-white border border-[#E8EDF5] rounded-[16px] premium-shadow z-50 animate-in fade-in slide-in-from-top-2">
                       <div className="p-3 border-b border-[#F3F4F6] flex justify-between items-center">
                         <p className="text-sm font-bold text-[#111827]">Notifications</p>
-                        <span className="text-xs text-[#4F46E5] font-bold cursor-pointer hover:underline">Mark all as read</span>
+                        <span className="text-xs text-[#6D5DF6] font-bold cursor-pointer hover:underline">Mark all as read</span>
                       </div>
                       <div className="max-h-80 overflow-y-auto custom-scrollbar">
                         {[
@@ -355,7 +364,7 @@ export default function Dashboard() {
                           { title: 'Schedule Optimized', msg: 'Dr. Smith\'s afternoon schedule was auto-balanced.', time: '1 hr ago', type: 'success' },
                           { title: 'New Signal Source', msg: 'Epic EHR connector is now active.', time: '3 hrs ago', type: 'info' }
                         ].map((n, i) => (
-                          <div key={i} className="p-3 border-b border-[#F3F4F6] hover:bg-[#F9FAFB] cursor-pointer transition-colors flex gap-3">
+                          <div key={i} className="p-3 border-b border-[#F3F4F6] hover:bg-[#F7F9FC] cursor-pointer transition-colors flex gap-3">
                             <div className={`mt-0.5 w-2 h-2 rounded-full flex-shrink-0 ${n.type === 'alert' ? 'bg-[#EF4444]' : n.type === 'success' ? 'bg-[#10B981]' : 'bg-[#3B82F6]'}`}></div>
                             <div>
                               <p className="text-sm font-bold text-[#111827]">{n.title}</p>
@@ -385,7 +394,7 @@ export default function Dashboard() {
                     <div className="absolute right-0 mt-4 w-80 bg-white border border-[#E8EDF5] rounded-[16px] premium-shadow z-50 animate-in fade-in slide-in-from-top-2">
                       <div className="p-3 border-b border-[#F3F4F6] flex justify-between items-center">
                         <p className="text-sm font-bold text-[#111827]">Messages</p>
-                        <span className="text-xs text-[#4F46E5] font-bold cursor-pointer hover:underline">New Message</span>
+                        <span className="text-xs text-[#6D5DF6] font-bold cursor-pointer hover:underline">New Message</span>
                       </div>
                       <div className="max-h-80 overflow-y-auto custom-scrollbar">
                         {[
@@ -393,7 +402,7 @@ export default function Dashboard() {
                           { name: 'System Admin', msg: 'Server maintenance scheduled for tonight.', time: 'Yesterday', unread: true },
                           { name: 'Jane Doe (Billing)', msg: 'Insurance claims batch processed successfully.', time: 'Yesterday', unread: false }
                         ].map((m, i) => (
-                          <div key={i} onClick={() => { setActiveChat(m.name); setIsMsgOpen(false); }} className="p-3 border-b border-[#F3F4F6] hover:bg-[#F9FAFB] cursor-pointer transition-colors flex gap-3 items-center">
+                          <div key={i} onClick={() => { setActiveChat(m.name); setIsMsgOpen(false); }} className="p-3 border-b border-[#F3F4F6] hover:bg-[#F7F9FC] cursor-pointer transition-colors flex gap-3 items-center">
                             <div className="w-8 h-8 rounded-full bg-gradient-to-br from-gray-100 to-gray-200 border border-gray-300 flex items-center justify-center text-gray-600 font-bold text-xs flex-shrink-0">
                               {m.name.charAt(0)}
                             </div>
@@ -447,7 +456,7 @@ export default function Dashboard() {
                   className="hidden md:block hover:text-[#111827] transition-colors cursor-pointer"
                   title={isDarkMode ? "Disable Dark Mode" : "Enable Dark Mode"}
                 >
-                  {isDarkMode ? <Moon className="w-5 h-5 text-[#4F46E5]" /> : <Sun className="w-5 h-5" />}
+                  {isDarkMode ? <Moon className="w-5 h-5 text-[#6D5DF6]" /> : <Sun className="w-5 h-5" />}
                 </button>
               </div>
               <div className="h-8 w-px bg-[#E8EDF5]"></div>
@@ -457,11 +466,11 @@ export default function Dashboard() {
                   className="flex items-center gap-3 cursor-pointer group"
                   onClick={() => { setIsProfileOpen(!isProfileOpen); setIsNotifOpen(false); setIsMsgOpen(false); }}
                 >
-                  <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-white shadow-sm bg-gradient-to-br from-[#4F46E5] to-[#7C3AED] flex items-center justify-center text-white">
+                  <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-white shadow-sm bg-gradient-to-br from-[#6D5DF6] to-[#7C3AED] flex items-center justify-center text-white">
                     <User className="w-5 h-5" />
                   </div>
                   <div className="hidden md:block">
-                    <p className="text-sm font-bold text-[#111827] group-hover:text-[#4F46E5] transition-colors">
+                    <p className="text-sm font-bold text-[#111827] group-hover:text-[#6D5DF6] transition-colors">
                       {userRole === 'org_admin' && 'Org Admin'}
                       {userRole === 'clinic_admin' && 'Clinic Admin'}
                       {userRole === 'ops_manager' && 'Ops Manager'}
@@ -483,16 +492,16 @@ export default function Dashboard() {
                 {isProfileOpen && (
                   <div className="absolute right-0 mt-3 w-56 bg-white border border-[#E8EDF5] rounded-[16px] premium-shadow z-50 animate-in fade-in slide-in-from-top-2">
                     <div className="p-3 border-b border-[#F3F4F6]">
-                      <p className="text-sm font-bold text-[#111827]">Admin User</p>
-                      <p className="text-xs font-medium text-[#6B7280]">admin@sbnsentinel.com</p>
+                      <p className="text-sm font-bold text-[#111827]">{currentUser?.full_name || 'Admin User'}</p>
+                      <p className="text-xs font-medium text-[#6B7280]">{currentUser?.email || 'admin@sbnsentinel.com'}</p>
                     </div>
                     <div className="p-2 space-y-1">
-                      <button onClick={() => { setActiveTab('profile'); setIsProfileOpen(false); }} className="w-full flex items-center gap-2 px-3 py-2 text-sm font-bold text-[#4B5563] hover:text-[#111827] hover:bg-[#F9FAFB] rounded-[10px] transition-colors">
+                      <button onClick={() => { setActiveTab('profile'); setIsProfileOpen(false); }} className="w-full flex items-center gap-2 px-3 py-2 text-sm font-bold text-[#4B5563] hover:text-[#111827] hover:bg-[#F7F9FC] rounded-[10px] transition-colors">
                         <User className="w-4 h-4" /> Profile Details
                       </button>
                       <button
                         onClick={() => { setActiveTab('settings'); setIsProfileOpen(false); }}
-                        className="w-full flex items-center gap-2 px-3 py-2 text-sm font-bold text-[#4B5563] hover:text-[#111827] hover:bg-[#F9FAFB] rounded-[10px] transition-colors"
+                        className="w-full flex items-center gap-2 px-3 py-2 text-sm font-bold text-[#4B5563] hover:text-[#111827] hover:bg-[#F7F9FC] rounded-[10px] transition-colors"
                       >
                         <Settings className="w-4 h-4" /> Account Settings
                       </button>
@@ -523,7 +532,7 @@ export default function Dashboard() {
                 {/* Hero */}
                 <div className="flex flex-col md:flex-row md:items-end justify-between mb-4 md:mb-2 gap-4">
                   <div>
-                    <p className="text-[#4F46E5] font-semibold text-sm mb-1">Good Morning, Admin! 👋</p>
+                    <p className="text-[#6D5DF6] font-semibold text-sm mb-1">Good Morning, Admin! 👋</p>
                     <h2 className="text-2xl md:text-3xl font-extrabold text-[#111827] mb-1">Multi-Provider Operations</h2>
                     <p className="text-sm text-[#6B7280] font-medium hidden md:block">Real-time overview of clinic operations across all doctors and intelligence engine outputs.</p>
                   </div>
@@ -531,9 +540,9 @@ export default function Dashboard() {
                     <div className="relative">
                       <div
                         onClick={() => { setIsNotifOpen(false); setIsMsgOpen(false); setIsProfileOpen(false); document.getElementById('providerDropdown')?.classList.toggle('hidden'); }}
-                        className="flex items-center gap-3 bg-white border border-[#E8EDF5] rounded-[16px] px-4 py-2.5 premium-shadow cursor-pointer hover:bg-[#F9FAFB] transition-colors"
+                        className="flex items-center gap-3 bg-white border border-[#E8EDF5] rounded-[16px] px-4 py-2.5 premium-shadow cursor-pointer hover:bg-[#F7F9FC] transition-colors"
                       >
-                        <Users className="w-4 h-4 text-[#4F46E5]" />
+                        <Users className="w-4 h-4 text-[#6D5DF6]" />
                         <div className="text-sm">
                           <span className="font-bold text-[#111827]" id="selectedProviderText">All Providers</span>
                         </div>
@@ -541,17 +550,17 @@ export default function Dashboard() {
                       </div>
                       <div id="providerDropdown" className="hidden absolute right-0 mt-3 w-56 bg-white border border-[#E8EDF5] rounded-[16px] premium-shadow z-50 animate-in fade-in slide-in-from-top-2">
                         <div className="p-2 space-y-1">
-                          <button onClick={(e) => { document.getElementById('selectedProviderText')!.innerText = 'All Providers'; e.currentTarget.parentElement?.parentElement?.classList.add('hidden'); }} className="w-full text-left px-3 py-2 text-sm font-bold text-[#111827] hover:bg-[#F9FAFB] rounded-[10px] transition-colors">All Providers</button>
-                          <button onClick={(e) => { document.getElementById('selectedProviderText')!.innerText = 'Dr. Smith (Cardio)'; e.currentTarget.parentElement?.parentElement?.classList.add('hidden'); }} className="w-full text-left px-3 py-2 text-sm font-bold text-[#4B5563] hover:text-[#111827] hover:bg-[#F9FAFB] rounded-[10px] transition-colors">Dr. Smith (Cardio)</button>
-                          <button onClick={(e) => { document.getElementById('selectedProviderText')!.innerText = 'Dr. Patel (General)'; e.currentTarget.parentElement?.parentElement?.classList.add('hidden'); }} className="w-full text-left px-3 py-2 text-sm font-bold text-[#4B5563] hover:text-[#111827] hover:bg-[#F9FAFB] rounded-[10px] transition-colors">Dr. Patel (General)</button>
-                          <button onClick={(e) => { document.getElementById('selectedProviderText')!.innerText = 'Dr. Chen (X-Ray)'; e.currentTarget.parentElement?.parentElement?.classList.add('hidden'); }} className="w-full text-left px-3 py-2 text-sm font-bold text-[#4B5563] hover:text-[#111827] hover:bg-[#F9FAFB] rounded-[10px] transition-colors">Dr. Chen (X-Ray)</button>
+                          <button onClick={(e) => { document.getElementById('selectedProviderText')!.innerText = 'All Providers'; e.currentTarget.parentElement?.parentElement?.classList.add('hidden'); }} className="w-full text-left px-3 py-2 text-sm font-bold text-[#111827] hover:bg-[#F7F9FC] rounded-[10px] transition-colors">All Providers</button>
+                          <button onClick={(e) => { document.getElementById('selectedProviderText')!.innerText = 'Dr. Smith (Cardio)'; e.currentTarget.parentElement?.parentElement?.classList.add('hidden'); }} className="w-full text-left px-3 py-2 text-sm font-bold text-[#4B5563] hover:text-[#111827] hover:bg-[#F7F9FC] rounded-[10px] transition-colors">Dr. Smith (Cardio)</button>
+                          <button onClick={(e) => { document.getElementById('selectedProviderText')!.innerText = 'Dr. Patel (General)'; e.currentTarget.parentElement?.parentElement?.classList.add('hidden'); }} className="w-full text-left px-3 py-2 text-sm font-bold text-[#4B5563] hover:text-[#111827] hover:bg-[#F7F9FC] rounded-[10px] transition-colors">Dr. Patel (General)</button>
+                          <button onClick={(e) => { document.getElementById('selectedProviderText')!.innerText = 'Dr. Chen (X-Ray)'; e.currentTarget.parentElement?.parentElement?.classList.add('hidden'); }} className="w-full text-left px-3 py-2 text-sm font-bold text-[#4B5563] hover:text-[#111827] hover:bg-[#F7F9FC] rounded-[10px] transition-colors">Dr. Chen (X-Ray)</button>
                         </div>
                       </div>
                     </div>
                     <div className="relative">
                       <button
                         onClick={() => { document.getElementById('dateDropdown')?.classList.toggle('hidden'); }}
-                        className="flex items-center gap-3 bg-white border border-[#E8EDF5] rounded-[16px] px-4 py-2.5 premium-shadow hover:bg-[#F9FAFB] transition-colors active:scale-95 cursor-pointer"
+                        className="flex items-center gap-3 bg-white border border-[#E8EDF5] rounded-[16px] px-4 py-2.5 premium-shadow hover:bg-[#F7F9FC] transition-colors active:scale-95 cursor-pointer"
                       >
                         <Calendar className="w-4 h-4 text-[#6B7280]" />
                         <div className="text-sm">
@@ -561,10 +570,10 @@ export default function Dashboard() {
                       </button>
                       <div id="dateDropdown" className="hidden absolute right-0 mt-3 w-48 bg-white border border-[#E8EDF5] rounded-[16px] premium-shadow z-50 animate-in fade-in slide-in-from-top-2">
                         <div className="p-2 space-y-1">
-                          <button onClick={(e) => { document.getElementById('selectedDateText')!.innerText = 'Today'; e.currentTarget.parentElement?.parentElement?.classList.add('hidden'); }} className="w-full text-left px-3 py-2 text-sm font-bold text-[#111827] hover:bg-[#F9FAFB] rounded-[10px] transition-colors">Today</button>
-                          <button onClick={(e) => { document.getElementById('selectedDateText')!.innerText = 'Yesterday'; e.currentTarget.parentElement?.parentElement?.classList.add('hidden'); }} className="w-full text-left px-3 py-2 text-sm font-bold text-[#4B5563] hover:text-[#111827] hover:bg-[#F9FAFB] rounded-[10px] transition-colors">Yesterday</button>
-                          <button onClick={(e) => { document.getElementById('selectedDateText')!.innerText = 'Last 7 Days'; e.currentTarget.parentElement?.parentElement?.classList.add('hidden'); }} className="w-full text-left px-3 py-2 text-sm font-bold text-[#4B5563] hover:text-[#111827] hover:bg-[#F9FAFB] rounded-[10px] transition-colors">Last 7 Days</button>
-                          <button onClick={(e) => { document.getElementById('selectedDateText')!.innerText = 'Last 30 Days'; e.currentTarget.parentElement?.parentElement?.classList.add('hidden'); }} className="w-full text-left px-3 py-2 text-sm font-bold text-[#4B5563] hover:text-[#111827] hover:bg-[#F9FAFB] rounded-[10px] transition-colors">Last 30 Days</button>
+                          <button onClick={(e) => { document.getElementById('selectedDateText')!.innerText = 'Today'; e.currentTarget.parentElement?.parentElement?.classList.add('hidden'); }} className="w-full text-left px-3 py-2 text-sm font-bold text-[#111827] hover:bg-[#F7F9FC] rounded-[10px] transition-colors">Today</button>
+                          <button onClick={(e) => { document.getElementById('selectedDateText')!.innerText = 'Yesterday'; e.currentTarget.parentElement?.parentElement?.classList.add('hidden'); }} className="w-full text-left px-3 py-2 text-sm font-bold text-[#4B5563] hover:text-[#111827] hover:bg-[#F7F9FC] rounded-[10px] transition-colors">Yesterday</button>
+                          <button onClick={(e) => { document.getElementById('selectedDateText')!.innerText = 'Last 7 Days'; e.currentTarget.parentElement?.parentElement?.classList.add('hidden'); }} className="w-full text-left px-3 py-2 text-sm font-bold text-[#4B5563] hover:text-[#111827] hover:bg-[#F7F9FC] rounded-[10px] transition-colors">Last 7 Days</button>
+                          <button onClick={(e) => { document.getElementById('selectedDateText')!.innerText = 'Last 30 Days'; e.currentTarget.parentElement?.parentElement?.classList.add('hidden'); }} className="w-full text-left px-3 py-2 text-sm font-bold text-[#4B5563] hover:text-[#111827] hover:bg-[#F7F9FC] rounded-[10px] transition-colors">Last 30 Days</button>
                         </div>
                       </div>
                     </div>
@@ -876,11 +885,11 @@ export default function Dashboard() {
                 placeholder="Type your secure message..." 
                 value={newMessageText}
                 onChange={(e) => setNewMessageText(e.target.value)}
-                className="flex-1 bg-slate-50 border border-[#E8EDF5] rounded-xl px-4 py-2 text-xs font-semibold outline-none focus:border-[#2563EB] transition-colors"
+                className="flex-1 bg-slate-50 border border-[#E8EDF5] rounded-2xl px-4 py-2 text-xs font-semibold outline-none focus:border-[#2563EB] transition-colors"
               />
               <button 
                 type="submit" 
-                className="bg-[#2563EB] hover:bg-blue-700 text-white font-bold text-xs px-4 py-2 rounded-xl transition-all shadow-sm active:scale-95 cursor-pointer"
+                className="bg-[#2563EB] hover:bg-blue-700 text-white font-bold text-xs px-4 py-2 rounded-2xl transition-all shadow-sm active:scale-95 cursor-pointer"
               >
                 Send
               </button>
@@ -905,16 +914,16 @@ export default function Dashboard() {
 const SidebarItem = ({ icon: Icon, label, active, onClick, className = '' }: { icon: any, label: string, active: boolean, onClick: () => void, className?: string }) => (
   <button
     onClick={onClick}
-    className={`group relative w-full flex items-center gap-3 px-4 py-2.5 rounded-[12px] transition-all duration-300 ${
+    className={`group relative w-full flex items-center gap-3 px-4 py-2.5 rounded-[16px] transition-all duration-300 ${
       active 
-        ? 'bg-[#EEF2FF] text-[#4F46E5] font-extrabold border border-[#C7D2FE]/50 shadow-[0_4px_12px_rgba(79,70,229,0.06)]' 
+        ? 'bg-[#EEF2FF] text-[#6D5DF6] font-extrabold border border-[#C7D2FE]/50 shadow-[0_4px_12px_rgba(79,70,229,0.06)]' 
         : 'text-[#475569] font-bold hover:bg-[#F1F5F9] hover:text-[#0F172A]'
     } ${className}`}
   >
     {active && (
-      <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-6 bg-gradient-to-b from-[#4F46E5] to-[#7C3AED] rounded-r-full shadow-[0_0_8px_#4F46E5]"></div>
+      <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-6 bg-gradient-to-b from-[#6D5DF6] to-[#7C3AED] rounded-r-full shadow-[0_0_8px_#6D5DF6]"></div>
     )}
-    <Icon className={`w-5 h-5 transition-transform duration-300 group-hover:scale-110 ${active ? 'text-[#4F46E5]' : 'text-[#94A3B8] group-hover:text-[#475569]'}`} />
+    <Icon className={`w-5 h-5 transition-transform duration-300 group-hover:scale-110 ${active ? 'text-[#6D5DF6]' : 'text-[#94A3B8] group-hover:text-[#475569]'}`} />
     <span className="text-sm tracking-wide">{label}</span>
   </button>
 );

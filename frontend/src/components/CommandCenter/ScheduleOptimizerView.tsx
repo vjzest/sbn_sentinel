@@ -87,7 +87,7 @@ export const ScheduleOptimizerView: React.FC = () => {
         <div className="relative">
           <div 
             onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-            className="flex items-center gap-3 bg-white border border-[#E8EDF5] text-[#111827] font-bold text-xs px-4 py-2.5 rounded-[12px] premium-shadow hover:bg-[#F9FAFB] cursor-pointer transition-colors active:scale-95 select-none"
+            className="flex items-center gap-3 bg-white border border-[#E8EDF5] text-[#111827] font-bold text-xs px-4 py-2.5 rounded-[16px] premium-shadow hover:bg-[#F7F9FC] cursor-pointer transition-colors active:scale-95 select-none"
           >
             <CalendarDays className="w-4 h-4 text-[#6B7280]" /> 
             <span>{dateRange}</span> 
@@ -104,7 +104,7 @@ export const ScheduleOptimizerView: React.FC = () => {
                       setIsDropdownOpen(false); 
                       showToast(`Switched schedule view to: ${range}`);
                     }} 
-                    className={`w-full text-left px-3 py-2 text-sm font-bold rounded-[10px] transition-colors ${dateRange === range ? 'text-[#2563EB] bg-[#EEF4FF]' : 'text-[#4B5563] hover:text-[#111827] hover:bg-[#F9FAFB]'}`}
+                    className={`w-full text-left px-3 py-2 text-sm font-bold rounded-[10px] transition-colors ${dateRange === range ? 'text-[#2563EB] bg-[#EEF4FF]' : 'text-[#4B5563] hover:text-[#111827] hover:bg-[#F7F9FC]'}`}
                   >
                     {range}
                   </button>
@@ -122,9 +122,9 @@ export const ScheduleOptimizerView: React.FC = () => {
             title: "Today's Capacity", 
             val: `${Math.min(100, 89 + (isOptimized ? 2 : 0) + (eLen % 2))}%`, 
             desc: "Current patient intake vs maximum daily clinic limit.",
-            line: '#4F46E5', 
+            line: '#6D5DF6', 
             bg: 'bg-[#EEF4FF]', 
-            text: 'text-[#4F46E5]', 
+            text: 'text-[#6D5DF6]', 
             icon: Zap 
           },
           { 
@@ -190,7 +190,7 @@ export const ScheduleOptimizerView: React.FC = () => {
                  <p className="text-xs text-[#6B7280] font-semibold">Review clinic slot bookings and click open suggestions to resolve scheduling gaps.</p>
                </div>
                <div className="flex gap-2">
-                 <span className="flex items-center gap-1.5 text-[9px] font-black uppercase text-indigo-600 bg-indigo-50 px-2.5 py-1 rounded-full border border-indigo-200">
+                 <span className="flex items-center gap-1.5 text-[9px] font-black uppercase text-[#6D5DF6] bg-[#EEEAFE] px-2.5 py-1 rounded-full border border-indigo-200">
                    Mon - Fri View
                  </span>
                </div>
@@ -198,7 +198,7 @@ export const ScheduleOptimizerView: React.FC = () => {
              
              <div className="border border-[#E8EDF5] rounded-[16px] overflow-hidden bg-white">
                {/* Table Header */}
-               <div className="grid grid-cols-6 border-b border-[#E8EDF5] bg-[#F9FAFB] text-[11px] font-extrabold text-[#6B7280] uppercase tracking-wider text-center select-none">
+               <div className="grid grid-cols-6 border-b border-[#E8EDF5] bg-[#F7F9FC] text-[11px] font-extrabold text-[#6B7280] uppercase tracking-wider text-center select-none">
                  <div className="p-3 border-r border-[#E8EDF5]">Time</div>
                  <div className="p-3 border-r border-[#E8EDF5]">Mon</div>
                  <div className="p-3 border-r border-[#E8EDF5]">Tue</div>
@@ -211,14 +211,14 @@ export const ScheduleOptimizerView: React.FC = () => {
                <div className="divide-y divide-[#E8EDF5]">
                  {/* Row 1: 09:00 AM */}
                  <div className="grid grid-cols-6 min-h-[90px] items-stretch">
-                   <div className="p-3 border-r border-[#E8EDF5] bg-[#F9FAFB] text-[#9CA3AF] text-[10px] font-extrabold flex items-center justify-center select-none">
+                   <div className="p-3 border-r border-[#E8EDF5] bg-[#F7F9FC] text-[#9CA3AF] text-[10px] font-extrabold flex items-center justify-center select-none">
                      09:00 AM
                    </div>
                    {/* Mon */}
                    <div className="p-2 border-r border-[#E8EDF5] flex">
                      <div 
                        onClick={() => showToast(`Encounter: Michael R. (9:00 AM Cardiology Consult)`)}
-                       className="w-full bg-[#EEF4FF] border border-[#BFDBFE] text-[#2563EB] rounded-[12px] p-2 flex flex-col justify-between shadow-sm cursor-pointer transition-all hover:scale-[1.02] hover:shadow-md"
+                       className="w-full bg-[#EEF4FF] border border-[#BFDBFE] text-[#2563EB] rounded-[16px] p-2 flex flex-col justify-between shadow-sm cursor-pointer transition-all hover:scale-[1.02] hover:shadow-md"
                      >
                         <div>
                           <p className="text-[9px] uppercase font-black tracking-wider mb-0.5 text-[#2563EB]">Cardiology</p>
@@ -233,7 +233,7 @@ export const ScheduleOptimizerView: React.FC = () => {
                    <div className="p-2 border-r border-[#E8EDF5] flex">
                      <div 
                        onClick={() => showToast(`Encounter: David L. (9:00 AM Pediatrics Visit)`)}
-                       className="w-full bg-[#FFFBEB] border border-[#FDE68A] text-[#F59E0B] rounded-[12px] p-2 flex flex-col justify-between shadow-sm cursor-pointer transition-all hover:scale-[1.02] hover:shadow-md"
+                       className="w-full bg-[#FFFBEB] border border-[#FDE68A] text-[#F59E0B] rounded-[16px] p-2 flex flex-col justify-between shadow-sm cursor-pointer transition-all hover:scale-[1.02] hover:shadow-md"
                      >
                         <div>
                           <p className="text-[9px] uppercase font-black tracking-wider mb-0.5 text-[#F59E0B]">Pediatrics</p>
@@ -250,7 +250,7 @@ export const ScheduleOptimizerView: React.FC = () => {
 
                  {/* Row 2: 10:00 AM */}
                  <div className="grid grid-cols-6 min-h-[90px] items-stretch">
-                   <div className="p-3 border-r border-[#E8EDF5] bg-[#F9FAFB] text-[#9CA3AF] text-[10px] font-extrabold flex items-center justify-center select-none">
+                   <div className="p-3 border-r border-[#E8EDF5] bg-[#F7F9FC] text-[#9CA3AF] text-[10px] font-extrabold flex items-center justify-center select-none">
                      10:00 AM
                    </div>
                    {/* Mon */}
@@ -259,7 +259,7 @@ export const ScheduleOptimizerView: React.FC = () => {
                    <div className="p-2 border-r border-[#E8EDF5] flex">
                      <div 
                        onClick={() => showToast(`Encounter: Sarah J. (10:00 AM General Practice)`)}
-                       className="w-full bg-[#ECFDF5] border border-[#A7F3D0] text-[#10B981] rounded-[12px] p-2 flex flex-col justify-between shadow-sm cursor-pointer transition-all hover:scale-[1.02] hover:shadow-md"
+                       className="w-full bg-[#ECFDF5] border border-[#A7F3D0] text-[#10B981] rounded-[16px] p-2 flex flex-col justify-between shadow-sm cursor-pointer transition-all hover:scale-[1.02] hover:shadow-md"
                      >
                         <div>
                           <p className="text-[9px] uppercase font-black tracking-wider mb-0.5 text-[#10B981]">General Care</p>
@@ -278,7 +278,7 @@ export const ScheduleOptimizerView: React.FC = () => {
 
                  {/* Row 3: 11:00 AM */}
                  <div className="grid grid-cols-6 min-h-[90px] items-stretch">
-                   <div className="p-3 border-r border-[#E8EDF5] bg-[#F9FAFB] text-[#9CA3AF] text-[10px] font-extrabold flex items-center justify-center select-none">
+                   <div className="p-3 border-r border-[#E8EDF5] bg-[#F7F9FC] text-[#9CA3AF] text-[10px] font-extrabold flex items-center justify-center select-none">
                      11:00 AM
                    </div>
                    {/* Mon */}
@@ -292,10 +292,10 @@ export const ScheduleOptimizerView: React.FC = () => {
                      {isOptimized ? (
                        <div 
                          onClick={() => showToast(`Encounter: Emily Davis (Waitlist filled via One-Click AI Optimization)`)}
-                         className="w-full bg-gradient-to-br from-[#4F46E5] to-[#7C3AED] text-white border border-[#DDD6FE] rounded-[12px] p-2 flex flex-col justify-between shadow-md cursor-pointer animate-in zoom-in duration-300 hover:scale-[1.02]"
+                         className="w-full bg-gradient-to-br from-[#6D5DF6] to-[#7C3AED] text-white border border-[#DDD6FE] rounded-[16px] p-2 flex flex-col justify-between shadow-md cursor-pointer animate-in zoom-in duration-300 hover:scale-[1.02]"
                        >
                          <div>
-                           <p className="text-[9px] uppercase font-black text-indigo-100 flex items-center gap-1">
+                           <p className="text-[9px] uppercase font-black text-[#E0D9FD] flex items-center gap-1">
                              <Sparkles className="w-2.5 h-2.5 text-yellow-300 animate-pulse" /> AI Scheduled
                            </p>
                            <p className="text-xs font-extrabold truncate">Emily Davis</p>
@@ -305,7 +305,7 @@ export const ScheduleOptimizerView: React.FC = () => {
                      ) : (
                        <div 
                          onClick={handleOptimize}
-                         className="w-full border-2 border-dashed border-indigo-200 bg-indigo-50/20 hover:bg-indigo-50/50 rounded-[12px] flex flex-col items-center justify-center cursor-pointer transition-all duration-300 hover:scale-[1.02]"
+                         className="w-full border-2 border-dashed border-indigo-200 bg-[#EEEAFE]/20 hover:bg-[#EEEAFE]/50 rounded-[16px] flex flex-col items-center justify-center cursor-pointer transition-all duration-300 hover:scale-[1.02]"
                        >
                           <span className="text-[10px] font-extrabold text-[#8B5CF6] flex items-center gap-1">
                             <Sparkles className="w-3.5 h-3.5 animate-pulse text-yellow-500" /> Open Target
@@ -320,7 +320,7 @@ export const ScheduleOptimizerView: React.FC = () => {
 
                  {/* Row 4: 12:00 PM */}
                  <div className="grid grid-cols-6 min-h-[90px] items-stretch">
-                   <div className="p-3 border-r border-[#E8EDF5] bg-[#F9FAFB] text-[#9CA3AF] text-[10px] font-extrabold flex items-center justify-center select-none">
+                   <div className="p-3 border-r border-[#E8EDF5] bg-[#F7F9FC] text-[#9CA3AF] text-[10px] font-extrabold flex items-center justify-center select-none">
                      12:00 PM
                    </div>
                    {/* Mon */}
@@ -335,7 +335,7 @@ export const ScheduleOptimizerView: React.FC = () => {
                    <div className="p-2 flex">
                      <div 
                        onClick={() => showToast("Encounter: Urgent Care Patient Walk-in")}
-                       className="w-full bg-[#FEF2F2] border border-[#FECACA] text-[#EF4444] rounded-[12px] p-2 flex flex-col justify-between shadow-sm cursor-pointer transition-all hover:scale-[1.02] hover:shadow-md"
+                       className="w-full bg-[#FEF2F2] border border-[#FECACA] text-[#EF4444] rounded-[16px] p-2 flex flex-col justify-between shadow-sm cursor-pointer transition-all hover:scale-[1.02] hover:shadow-md"
                      >
                         <div>
                           <p className="text-[9px] uppercase font-black tracking-wider mb-0.5 text-[#EF4444]">Urgent Care</p>
@@ -348,7 +348,7 @@ export const ScheduleOptimizerView: React.FC = () => {
 
                  {/* Row 5: 01:00 PM */}
                  <div className="grid grid-cols-6 min-h-[90px] items-stretch">
-                   <div className="p-3 border-r border-[#E8EDF5] bg-[#F9FAFB] text-[#9CA3AF] text-[10px] font-extrabold flex items-center justify-center select-none">
+                   <div className="p-3 border-r border-[#E8EDF5] bg-[#F7F9FC] text-[#9CA3AF] text-[10px] font-extrabold flex items-center justify-center select-none">
                      01:00 PM
                    </div>
                    {/* Mon */}
@@ -369,14 +369,14 @@ export const ScheduleOptimizerView: React.FC = () => {
 
         {/* AI Recommendations Column */}
         <div className="flex flex-col gap-6">
-          <div className="bg-gradient-to-br from-[#4F46E5] to-[#7C3AED] rounded-[24px] p-6 premium-shadow text-white relative overflow-hidden flex flex-col justify-between min-h-[220px]">
+          <div className="bg-gradient-to-br from-[#6D5DF6] to-[#7C3AED] rounded-[24px] p-6 premium-shadow text-white relative overflow-hidden flex flex-col justify-between min-h-[220px]">
              <div className="absolute top-[-50px] right-[-50px] w-48 h-48 bg-white opacity-10 rounded-full blur-2xl animate-pulse"></div>
              
              <div>
                <h3 className="text-base font-bold flex items-center gap-2 mb-2">
                  <Zap className="w-5 h-5 text-yellow-300 fill-yellow-300" /> AI Scheduling Copilot
                </h3>
-               <p className="text-xs text-indigo-100 font-medium">
+               <p className="text-xs text-[#E0D9FD] font-medium">
                  Sentinel constantly audits empty slots and matches waitlist patients to maximize utilization.
                </p>
              </div>
@@ -394,7 +394,7 @@ export const ScheduleOptimizerView: React.FC = () => {
                ) : (
                  <button 
                    onClick={handleOptimize}
-                   className="bg-white text-[#4F46E5] hover:bg-[#F9FAFB] font-extrabold py-2 px-4 rounded-[10px] text-xs flex items-center justify-center gap-1.5 shadow-lg transition-transform hover:scale-[1.02] active:scale-98 w-full cursor-pointer select-none"
+                   className="bg-white text-[#6D5DF6] hover:bg-[#F7F9FC] font-extrabold py-2 px-4 rounded-[10px] text-xs flex items-center justify-center gap-1.5 shadow-lg transition-transform hover:scale-[1.02] active:scale-98 w-full cursor-pointer select-none"
                  >
                    One-Click Auto-fill <ArrowRight className="w-4 h-4" />
                  </button>
@@ -417,7 +417,7 @@ export const ScheduleOptimizerView: React.FC = () => {
                  className={`border p-4 rounded-[20px] transition-all duration-300 group ${
                    workloadBalanced 
                      ? 'border-emerald-200 bg-emerald-50/20 opacity-75 cursor-default' 
-                     : 'border-[#E8EDF5] bg-[#F9FAFB] hover:border-[#BFDBFE] hover:bg-[#EEF4FF]/30 cursor-pointer hover:scale-[1.01]'
+                     : 'border-[#E8EDF5] bg-[#F7F9FC] hover:border-[#BFDBFE] hover:bg-[#EEF4FF]/30 cursor-pointer hover:scale-[1.01]'
                  }`}
                >
                  <div className="flex items-center justify-between mb-1.5">
@@ -446,7 +446,7 @@ export const ScheduleOptimizerView: React.FC = () => {
                  className={`border p-4 rounded-[20px] transition-all duration-300 group ${
                    waitingTimeReduced 
                      ? 'border-emerald-200 bg-emerald-50/20 opacity-75 cursor-default' 
-                     : 'border-[#E8EDF5] bg-[#F9FAFB] hover:border-[#A7F3D0] hover:bg-[#E6F4EA]/30 cursor-pointer hover:scale-[1.01]'
+                     : 'border-[#E8EDF5] bg-[#F7F9FC] hover:border-[#A7F3D0] hover:bg-[#E6F4EA]/30 cursor-pointer hover:scale-[1.01]'
                  }`}
                >
                  <div className="flex items-center justify-between mb-1.5">

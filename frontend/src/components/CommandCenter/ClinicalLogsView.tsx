@@ -112,7 +112,7 @@ export const ClinicalLogsView: React.FC = () => {
             .header-logo {
               font-size: 24px;
               font-weight: 800;
-              color: #4F46E5;
+              color: #6D5DF6;
               letter-spacing: -0.025em;
             }
             .header-sublogo {
@@ -146,7 +146,7 @@ export const ClinicalLogsView: React.FC = () => {
               font-weight: 800;
               text-transform: uppercase;
               letter-spacing: 0.05em;
-              color: #4F46E5;
+              color: #6D5DF6;
               margin-top: 25px;
               margin-bottom: 12px;
               border-bottom: 1px solid #F3F4F6;
@@ -156,7 +156,7 @@ export const ClinicalLogsView: React.FC = () => {
               width: 100%;
               border-collapse: collapse;
               margin-bottom: 25px;
-              background-color: #F9FAFB;
+              background-color: #F7F9FC;
               border: 1px solid #E5E7EB;
               border-radius: 12px;
             }
@@ -179,7 +179,7 @@ export const ClinicalLogsView: React.FC = () => {
               width: 32%;
             }
             .soap-card {
-              border-left: 4px solid #4F46E5;
+              border-left: 4px solid #6D5DF6;
               padding-left: 16px;
               margin-bottom: 20px;
             }
@@ -204,7 +204,7 @@ export const ClinicalLogsView: React.FC = () => {
             }
             .rx-box {
               background-color: #EEF2FF;
-              border: 1.5px dashed #4F46E5;
+              border: 1.5px dashed #6D5DF6;
               border-radius: 12px;
               padding: 16px;
               margin-top: 15px;
@@ -550,22 +550,22 @@ export const ClinicalLogsView: React.FC = () => {
           <p className="text-sm text-[#6B7280] font-medium">Review patient encounters, finalize charts, and generate automated bills.</p>
         </div>
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 bg-white border border-[#E8EDF5] rounded-[12px] px-3 py-2 premium-shadow">
+          <div className="flex items-center gap-2 bg-white border border-[#E8EDF5] rounded-[16px] px-3 py-2 premium-shadow">
             <Search className="w-4 h-4 text-[#6B7280]" />
             <input type="text" placeholder="Search encounters..." className="bg-transparent border-none outline-none text-xs text-[#111827] w-48 placeholder:text-[#9CA3AF]" />
           </div>
-          <button className="flex items-center gap-2 bg-white border border-[#E8EDF5] text-[#111827] font-bold text-xs px-4 py-2.5 rounded-[12px] premium-shadow hover:bg-[#F9FAFB] transition-colors">
+          <button className="flex items-center gap-2 bg-white border border-[#E8EDF5] text-[#111827] font-bold text-xs px-4 py-2.5 rounded-[16px] premium-shadow hover:bg-[#F7F9FC] transition-colors">
             <Filter className="w-4 h-4 text-[#6B7280]" /> Filter
           </button>
           <button
             onClick={handleExportAllLogs}
-            className="flex items-center gap-2 bg-white border border-[#E8EDF5] text-[#111827] font-bold text-xs px-4 py-2.5 rounded-[12px] premium-shadow hover:bg-[#F9FAFB] transition-colors"
+            className="flex items-center gap-2 bg-white border border-[#E8EDF5] text-[#111827] font-bold text-xs px-4 py-2.5 rounded-[16px] premium-shadow hover:bg-[#F7F9FC] transition-colors"
           >
             <Download className="w-4 h-4 text-[#6B7280]" /> Export Logs
           </button>
           <button
             onClick={() => setShowAddModal(true)}
-            className="flex items-center gap-2 bg-[#4F46E5] hover:bg-[#4338CA] text-white font-bold text-xs px-4 py-2.5 rounded-[12px] premium-shadow transition-all hover:scale-105 active:scale-95"
+            className="flex items-center gap-2 bg-[#6D5DF6] hover:bg-[#5B4AE8] text-white font-bold text-xs px-4 py-2.5 rounded-[16px] premium-shadow transition-all hover:scale-105 active:scale-95"
           >
             <Plus className="w-4 h-4" /> Add Encounter
           </button>
@@ -577,7 +577,7 @@ export const ClinicalLogsView: React.FC = () => {
         {/* Logs Table */}
         <div className="lg:col-span-2 bg-white border border-[#E8EDF5] rounded-[24px] p-8 premium-shadow">
           <h3 className="text-base font-bold text-[#111827] mb-6 flex items-center gap-2">
-            <FileText className="w-5 h-5 text-[#4F46E5]" /> Recent Encounters
+            <FileText className="w-5 h-5 text-[#6D5DF6]" /> Recent Encounters
           </h3>
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
@@ -594,7 +594,7 @@ export const ClinicalLogsView: React.FC = () => {
                 {encounters.map((log) => (
                   <tr
                     key={log.id}
-                    className={`border-b border-[#F3F4F6] hover:bg-[#F9FAFB] transition-colors last:border-0 cursor-pointer ${activeBillId === log.id ? 'bg-[#EEF4FF]/50 border-l-4 border-l-[#4F46E5]' : ''}`}
+                    className={`border-b border-[#F3F4F6] hover:bg-[#F7F9FC] transition-colors last:border-0 cursor-pointer ${activeBillId === log.id ? 'bg-[#EEF4FF]/50 border-l-4 border-l-[#6D5DF6]' : ''}`}
                     onClick={() => handleGenerateBill(log.id)}
                   >
                     <td className="py-4 px-2 font-mono text-[#2563EB] text-xs">{log.id}</td>
@@ -616,14 +616,14 @@ export const ClinicalLogsView: React.FC = () => {
                       {log.billing_status === 'Pending' ? (
                         <button
                           onClick={(e) => { e.stopPropagation(); handleGenerateBill(log.id); }}
-                          className="text-[11px] font-bold text-white bg-[#4F46E5] px-4 py-2 rounded-[10px] hover:bg-[#4338CA] transition-all hover:scale-105 active:scale-95 flex items-center gap-1 ml-auto"
+                          className="text-[11px] font-bold text-white bg-[#6D5DF6] px-4 py-2 rounded-[10px] hover:bg-[#5B4AE8] transition-all hover:scale-105 active:scale-95 flex items-center gap-1 ml-auto"
                         >
                           <Receipt className="w-3 h-3" /> Generate Bill
                         </button>
                       ) : (
                         <button
                           onClick={(e) => { e.stopPropagation(); handleGenerateBill(log.id); }}
-                          className="text-[11px] font-bold text-[#6B7280] hover:text-[#111827] px-3 py-1.5 transition-colors border border-[#E8EDF5] bg-[#F9FAFB] rounded-[8px] hover:bg-white"
+                          className="text-[11px] font-bold text-[#6B7280] hover:text-[#111827] px-3 py-1.5 transition-colors border border-[#E8EDF5] bg-[#F7F9FC] rounded-[8px] hover:bg-white"
                         >
                           View Details
                         </button>
@@ -647,7 +647,7 @@ export const ClinicalLogsView: React.FC = () => {
 
           {!activeBillId ? (
             <div className="flex-1 flex flex-col items-center justify-center text-center relative z-10 opacity-70">
-              <div className="w-16 h-16 bg-[#F9FAFB] border border-[#E8EDF5] rounded-full flex items-center justify-center mb-4">
+              <div className="w-16 h-16 bg-[#F7F9FC] border border-[#E8EDF5] rounded-full flex items-center justify-center mb-4">
                 <Receipt className="w-8 h-8 text-[#9CA3AF]" />
               </div>
               <p className="text-sm font-bold text-[#4B5563] mb-1">Select an encounter to bill</p>
@@ -677,19 +677,19 @@ export const ClinicalLogsView: React.FC = () => {
                   <div className="flex gap-2 w-full">
                     <button
                       onClick={() => window.print()}
-                      className="flex-1 bg-white border border-[#E8EDF5] hover:bg-[#F9FAFB] text-[#4B5563] font-bold text-xs py-2.5 rounded-[12px] flex items-center justify-center gap-1.5"
+                      className="flex-1 bg-white border border-[#E8EDF5] hover:bg-[#F7F9FC] text-[#4B5563] font-bold text-xs py-2.5 rounded-[16px] flex items-center justify-center gap-1.5"
                     >
                       <Printer className="w-3.5 h-3.5" /> Print
                     </button>
                     <button
                       onClick={() => handleDownloadChart(activeEncounter)}
-                      className="flex-1 bg-[#EEF2F6] hover:bg-[#E2E8F0] text-[#111827] font-bold text-xs py-2.5 rounded-[12px] flex items-center justify-center gap-1.5"
+                      className="flex-1 bg-[#EEF2F6] hover:bg-[#E2E8F0] text-[#111827] font-bold text-xs py-2.5 rounded-[16px] flex items-center justify-center gap-1.5"
                     >
                       <Download className="w-3.5 h-3.5" /> Download Chart
                     </button>
                     <button
                       onClick={() => setActiveBillId(null)}
-                      className="flex-1 bg-[#111827] hover:bg-gray-800 text-white font-bold text-xs py-2.5 rounded-[12px]"
+                      className="flex-1 bg-[#111827] hover:bg-gray-800 text-white font-bold text-xs py-2.5 rounded-[16px]"
                     >
                       Done
                     </button>
@@ -703,7 +703,7 @@ export const ClinicalLogsView: React.FC = () => {
                       onClick={() => setActiveTab('billing')}
                       className={`flex-1 py-2 text-xs font-bold rounded-[10px] transition-all cursor-pointer ${
                         activeTab === 'billing'
-                          ? 'bg-white text-indigo-600 shadow-sm border border-[#E2E8F0]/30'
+                          ? 'bg-white text-[#6D5DF6] shadow-sm border border-[#E2E8F0]/30'
                           : 'text-[#6B7280] hover:text-[#111827]'
                       }`}
                     >
@@ -713,7 +713,7 @@ export const ClinicalLogsView: React.FC = () => {
                       onClick={() => setActiveTab('clinical')}
                       className={`flex-1 py-2 text-xs font-bold rounded-[10px] transition-all cursor-pointer ${
                         activeTab === 'clinical'
-                          ? 'bg-white text-indigo-600 shadow-sm border border-[#E2E8F0]/30'
+                          ? 'bg-white text-[#6D5DF6] shadow-sm border border-[#E2E8F0]/30'
                           : 'text-[#6B7280] hover:text-[#111827]'
                       }`}
                     >
@@ -812,13 +812,13 @@ export const ClinicalLogsView: React.FC = () => {
                       <div className="space-y-2.5 pt-4 border-t border-[#E8EDF5]">
                         <button
                           onClick={processPaymentAction}
-                          className="w-full bg-[#111827] hover:bg-gray-800 text-white font-bold text-xs py-3 rounded-[12px] premium-shadow transition-transform active:scale-95 flex items-center justify-center gap-2 cursor-pointer"
+                          className="w-full bg-[#111827] hover:bg-gray-800 text-white font-bold text-xs py-3 rounded-[16px] premium-shadow transition-transform active:scale-95 flex items-center justify-center gap-2 cursor-pointer"
                         >
                           <CreditCard className="w-4 h-4" /> Collect Copay / Patient Payment
                         </button>
                         <button
                           onClick={submitInsuranceClaimAction}
-                          className="w-full bg-white border border-[#E8EDF5] hover:bg-[#F9FAFB] text-[#111827] font-bold text-xs py-3 rounded-[12px] shadow-sm transition-transform active:scale-95 flex items-center justify-center gap-2 cursor-pointer"
+                          className="w-full bg-white border border-[#E8EDF5] hover:bg-[#F7F9FC] text-[#111827] font-bold text-xs py-3 rounded-[16px] shadow-sm transition-transform active:scale-95 flex items-center justify-center gap-2 cursor-pointer"
                         >
                           Submit Insurance Claim <ChevronRight className="w-4 h-4 text-[#6B7280]" />
                         </button>
@@ -830,11 +830,11 @@ export const ClinicalLogsView: React.FC = () => {
                         {/* Patient Profile & Visit History */}
                         <div className="bg-[#FAFBFD] rounded-[18px] p-4 border border-[#E8EDF5]">
                           <p className="text-[10px] font-extrabold text-[#9CA3AF] uppercase tracking-wider mb-2 flex items-center gap-1.5">
-                            <Users className="w-3.5 h-3.5 text-[#4F46E5]" /> Patient Profile & History
+                            <Users className="w-3.5 h-3.5 text-[#6D5DF6]" /> Patient Profile & History
                           </p>
 
-                          <div className="flex items-center gap-2 mb-3 bg-white p-2.5 rounded-[12px] border border-[#E8EDF5]">
-                            <div className="w-8 h-8 rounded-full bg-[#EEF4FF] flex items-center justify-center text-xs font-bold text-[#4F46E5]">
+                          <div className="flex items-center gap-2 mb-3 bg-white p-2.5 rounded-[16px] border border-[#E8EDF5]">
+                            <div className="w-8 h-8 rounded-full bg-[#EEF4FF] flex items-center justify-center text-xs font-bold text-[#6D5DF6]">
                               {activeEncounter?.patient_name?.split(' ').map((n: string) => n[0]).join('') || '?'}
                             </div>
                             <div>
@@ -848,11 +848,11 @@ export const ClinicalLogsView: React.FC = () => {
                             <p className="text-[9px] font-extrabold text-[#6B7280] uppercase tracking-wider mb-2">Visit History ({encounters.filter(e => e.patient_name === activeEncounter?.patient_name && e.id !== activeEncounter?.id).length + 1} visits)</p>
                             <div className="space-y-2 max-h-[140px] overflow-y-auto pr-1">
                               {/* Current Visit */}
-                              <div className="flex gap-2.5 items-start bg-indigo-50/50 p-2 rounded-[8px] border border-indigo-100/50">
-                                <div className="w-1.5 h-1.5 rounded-full bg-[#4F46E5] mt-1.5"></div>
+                              <div className="flex gap-2.5 items-start bg-[#EEEAFE]/50 p-2 rounded-[8px] border border-[#E0D9FD]/50">
+                                <div className="w-1.5 h-1.5 rounded-full bg-[#6D5DF6] mt-1.5"></div>
                                 <div className="flex-1 text-xs">
                                   <div className="flex justify-between">
-                                    <span className="font-bold text-[#4F46E5]">Current Visit</span>
+                                    <span className="font-bold text-[#6D5DF6]">Current Visit</span>
                                     <span className="text-[9px] font-bold text-[#6B7280]">{activeEncounter?.date}</span>
                                   </div>
                                   <p className="text-[10px] font-semibold text-[#111827] mt-0.5">{activeEncounter?.diagnosis} ({activeEncounter?.type})</p>
@@ -885,15 +885,15 @@ export const ClinicalLogsView: React.FC = () => {
                           <p className="text-[10px] font-extrabold text-[#9CA3AF] uppercase tracking-wider mb-2 flex items-center gap-1.5">
                             <FileText className="w-3.5 h-3.5 text-[#10B981]" /> Clinical SOAP Notes
                           </p>
-                          <div className="bg-white p-3 rounded-[12px] border border-[#E8EDF5] text-xs font-medium text-[#4B5563] leading-relaxed mb-3 max-h-[120px] overflow-y-auto">
+                          <div className="bg-white p-3 rounded-[16px] border border-[#E8EDF5] text-xs font-medium text-[#4B5563] leading-relaxed mb-3 max-h-[120px] overflow-y-auto">
                             {activeEncounter?.clinical_notes || activeEncounter?.clinicalNotes}
                           </div>
 
                           <p className="text-[10px] font-extrabold text-[#9CA3AF] uppercase tracking-wider mb-2 flex items-center gap-1.5">
-                            <Sparkles className="w-3.5 h-3.5 text-[#4F46E5]" /> Prescribed Medications
+                            <Sparkles className="w-3.5 h-3.5 text-[#6D5DF6]" /> Prescribed Medications
                           </p>
-                          <div className="bg-indigo-50/40 p-3 rounded-[12px] border border-indigo-100/50 text-xs font-bold text-[#111827] flex items-center gap-2">
-                            <div className="w-2 h-2 rounded-full bg-indigo-500 shrink-0"></div>
+                          <div className="bg-[#EEEAFE]/40 p-3 rounded-[16px] border border-[#E0D9FD]/50 text-xs font-bold text-[#111827] flex items-center gap-2">
+                            <div className="w-2 h-2 rounded-full bg-[#EEEAFE]0 shrink-0"></div>
                             <span>{activeEncounter?.medications || 'No medications prescribed.'}</span>
                           </div>
                         </div>
@@ -903,7 +903,7 @@ export const ClinicalLogsView: React.FC = () => {
                       <div className="pt-4 border-t border-[#E8EDF5]">
                         <button
                           onClick={() => handleDownloadChart(activeEncounter)}
-                          className="w-full bg-[#EEF2F6] hover:bg-[#E2E8F0] text-[#111827] font-bold text-xs py-3 rounded-[12px] shadow-sm transition-transform active:scale-95 flex items-center justify-center gap-2 cursor-pointer"
+                          className="w-full bg-[#EEF2F6] hover:bg-[#E2E8F0] text-[#111827] font-bold text-xs py-3 rounded-[16px] shadow-sm transition-transform active:scale-95 flex items-center justify-center gap-2 cursor-pointer"
                         >
                           <Printer className="w-4 h-4 text-[#4B5563]" /> View & Print Medical Summary
                         </button>
@@ -1030,7 +1030,7 @@ export const ClinicalLogsView: React.FC = () => {
             {/* Header */}
             <div className="bg-[#F8FAFC] border-b border-[#E8EDF5] px-6 py-4 flex justify-between items-center">
               <div className="flex items-center gap-2">
-                <div className="p-1.5 rounded-lg bg-indigo-50 text-[#4F46E5]">
+                <div className="p-1.5 rounded-lg bg-[#EEEAFE] text-[#6D5DF6]">
                   <FileText className="w-4 h-4" />
                 </div>
                 <div>
@@ -1057,7 +1057,7 @@ export const ClinicalLogsView: React.FC = () => {
                   value={patientName}
                   onChange={(e) => setPatientName(e.target.value)}
                   placeholder="e.g. Robert Pattinson"
-                  className="w-full bg-[#F8FAFC] border border-[#E8EDF5] rounded-[12px] px-4 py-2.5 text-sm font-bold text-[#111827] outline-none focus:border-[#4F46E5] focus:ring-1 focus:ring-[#4F46E5] transition-all placeholder:text-[#9CA3AF]"
+                  className="w-full bg-[#F8FAFC] border border-[#E8EDF5] rounded-[16px] px-4 py-2.5 text-sm font-bold text-[#111827] outline-none focus:border-[#6D5DF6] focus:ring-1 focus:ring-[#6D5DF6] transition-all placeholder:text-[#9CA3AF]"
                 />
               </div>
 
@@ -1068,7 +1068,7 @@ export const ClinicalLogsView: React.FC = () => {
                   <select
                     value={providerName}
                     onChange={(e) => setProviderName(e.target.value)}
-                    className="w-full bg-[#F8FAFC] border border-[#E8EDF5] rounded-[12px] px-3 py-2.5 text-sm font-bold text-[#111827] outline-none focus:border-[#4F46E5] focus:ring-1 focus:ring-[#4F46E5] transition-all cursor-pointer"
+                    className="w-full bg-[#F8FAFC] border border-[#E8EDF5] rounded-[16px] px-3 py-2.5 text-sm font-bold text-[#111827] outline-none focus:border-[#6D5DF6] focus:ring-1 focus:ring-[#6D5DF6] transition-all cursor-pointer"
                   >
                     <option value="Dr. Sarah Jenkins">Dr. Sarah Jenkins</option>
                     <option value="Dr. Alan Grant">Dr. Alan Grant</option>
@@ -1080,7 +1080,7 @@ export const ClinicalLogsView: React.FC = () => {
                   <select
                     value={visitType}
                     onChange={(e) => setVisitType(e.target.value)}
-                    className="w-full bg-[#F8FAFC] border border-[#E8EDF5] rounded-[12px] px-3 py-2.5 text-sm font-bold text-[#111827] outline-none focus:border-[#4F46E5] focus:ring-1 focus:ring-[#4F46E5] transition-all cursor-pointer"
+                    className="w-full bg-[#F8FAFC] border border-[#E8EDF5] rounded-[16px] px-3 py-2.5 text-sm font-bold text-[#111827] outline-none focus:border-[#6D5DF6] focus:ring-1 focus:ring-[#6D5DF6] transition-all cursor-pointer"
                   >
                     <option value="Consultation">Consultation</option>
                     <option value="Urgent Care">Urgent Care</option>
@@ -1100,7 +1100,7 @@ export const ClinicalLogsView: React.FC = () => {
                     value={diagnosis}
                     onChange={(e) => setDiagnosis(e.target.value)}
                     placeholder="e.g. Acute Bronchitis"
-                    className="w-full bg-[#F8FAFC] border border-[#E8EDF5] rounded-[12px] px-4 py-2.5 text-sm font-bold text-[#111827] outline-none focus:border-[#4F46E5] focus:ring-1 focus:ring-[#4F46E5] transition-all placeholder:text-[#9CA3AF]"
+                    className="w-full bg-[#F8FAFC] border border-[#E8EDF5] rounded-[16px] px-4 py-2.5 text-sm font-bold text-[#111827] outline-none focus:border-[#6D5DF6] focus:ring-1 focus:ring-[#6D5DF6] transition-all placeholder:text-[#9CA3AF]"
                   />
                 </div>
                 <div>
@@ -1111,7 +1111,7 @@ export const ClinicalLogsView: React.FC = () => {
                     value={copayAmount}
                     onChange={(e) => setCopayAmount(e.target.value)}
                     placeholder="30.00"
-                    className="w-full bg-[#F8FAFC] border border-[#E8EDF5] rounded-[12px] px-4 py-2.5 text-sm font-bold text-[#111827] outline-none focus:border-[#4F46E5] focus:ring-1 focus:ring-[#4F46E5] transition-all"
+                    className="w-full bg-[#F8FAFC] border border-[#E8EDF5] rounded-[16px] px-4 py-2.5 text-sm font-bold text-[#111827] outline-none focus:border-[#6D5DF6] focus:ring-1 focus:ring-[#6D5DF6] transition-all"
                   />
                 </div>
               </div>
@@ -1124,7 +1124,7 @@ export const ClinicalLogsView: React.FC = () => {
                   value={clinicalNotes}
                   onChange={(e) => setClinicalNotes(e.target.value)}
                   placeholder="Subjective: Patient reports dry cough... Objective: Normal breath sounds... Assessment: Acute bronchitis... Plan: Antibiotics/Inhaler..."
-                  className="w-full bg-[#F8FAFC] border border-[#E8EDF5] rounded-[12px] px-4 py-2.5 text-sm font-semibold text-[#111827] outline-none focus:border-[#4F46E5] focus:ring-1 focus:ring-[#4F46E5] transition-all placeholder:text-[#9CA3AF] resize-none"
+                  className="w-full bg-[#F8FAFC] border border-[#E8EDF5] rounded-[16px] px-4 py-2.5 text-sm font-semibold text-[#111827] outline-none focus:border-[#6D5DF6] focus:ring-1 focus:ring-[#6D5DF6] transition-all placeholder:text-[#9CA3AF] resize-none"
                 />
               </div>
 
@@ -1136,7 +1136,7 @@ export const ClinicalLogsView: React.FC = () => {
                   value={medications}
                   onChange={(e) => setMedications(e.target.value)}
                   placeholder="e.g. Amoxicillin 500mg daily, Albuterol Inhaler"
-                  className="w-full bg-[#F8FAFC] border border-[#E8EDF5] rounded-[12px] px-4 py-2.5 text-sm font-bold text-[#111827] outline-none focus:border-[#4F46E5] focus:ring-1 focus:ring-[#4F46E5] transition-all placeholder:text-[#9CA3AF]"
+                  className="w-full bg-[#F8FAFC] border border-[#E8EDF5] rounded-[16px] px-4 py-2.5 text-sm font-bold text-[#111827] outline-none focus:border-[#6D5DF6] focus:ring-1 focus:ring-[#6D5DF6] transition-all placeholder:text-[#9CA3AF]"
                 />
               </div>
 
@@ -1145,13 +1145,13 @@ export const ClinicalLogsView: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setShowAddModal(false)}
-                  className="bg-white border border-[#E8EDF5] hover:bg-slate-50 text-slate-700 font-bold text-xs px-5 py-2.5 rounded-[12px] transition-colors"
+                  className="bg-white border border-[#E8EDF5] hover:bg-slate-50 text-slate-700 font-bold text-xs px-5 py-2.5 rounded-[16px] transition-colors"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="bg-[#4F46E5] hover:bg-[#4338CA] text-white font-bold text-xs px-6 py-2.5 rounded-[12px] transition-all hover:scale-105 active:scale-95 flex items-center gap-1.5"
+                  className="bg-[#6D5DF6] hover:bg-[#5B4AE8] text-white font-bold text-xs px-6 py-2.5 rounded-[16px] transition-all hover:scale-105 active:scale-95 flex items-center gap-1.5"
                 >
                   <Check className="w-3.5 h-3.5" /> Save Encounter
                 </button>

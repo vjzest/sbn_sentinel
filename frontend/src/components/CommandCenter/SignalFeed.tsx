@@ -103,13 +103,13 @@ export const SignalFeed: React.FC<SignalFeedProps> = ({ setActiveTab }) => {
         
         {/* Simplified Autopilot Toggle */}
         <div className="flex items-center gap-2">
-          <span className={`text-[10px] font-extrabold uppercase tracking-wider ${autopilot ? 'text-indigo-600 animate-pulse' : 'text-slate-400'}`}>
+          <span className={`text-[10px] font-extrabold uppercase tracking-wider ${autopilot ? 'text-[#6D5DF6] animate-pulse' : 'text-slate-400'}`}>
             {autopilot ? '⚡ Autopilot' : 'Autopilot'}
           </span>
           <button 
             onClick={() => setAutopilot(!autopilot)}
             className={`w-9 h-5 flex items-center rounded-full p-0.5 cursor-pointer transition-all duration-300 ${
-              autopilot ? 'bg-indigo-600 justify-end' : 'bg-slate-300 justify-start'
+              autopilot ? 'bg-[#6D5DF6] justify-end' : 'bg-slate-300 justify-start'
             }`}
           >
             <span className="bg-white w-4 h-4 rounded-full shadow-sm transition-all"></span>
@@ -135,10 +135,10 @@ export const SignalFeed: React.FC<SignalFeedProps> = ({ setActiveTab }) => {
                 setIsDispatched(false);
                 setIsDispatching(false);
               }}
-              className="p-4 border-b border-[#F3F4F6] last:border-0 hover:bg-[#F9FAFB] transition-colors cursor-pointer group rounded-[16px] mb-1 flex justify-between items-center"
+              className="p-4 border-b border-[#F3F4F6] last:border-0 hover:bg-[#F7F9FC] transition-colors cursor-pointer group rounded-[16px] mb-1 flex justify-between items-center"
             >
               <div className="flex items-start gap-4 flex-1">
-                <div className={`p-2.5 ${getBgColor(signal.type)} rounded-[12px] flex-shrink-0`}>
+                <div className={`p-2.5 ${getBgColor(signal.type)} rounded-[16px] flex-shrink-0`}>
                   {getIcon(signal.type)}
                 </div>
                 <div className="flex-1 mt-0.5">
@@ -146,8 +146,8 @@ export const SignalFeed: React.FC<SignalFeedProps> = ({ setActiveTab }) => {
                   <p className="text-sm text-[#111827] font-bold leading-tight">{signal.message}</p>
                   
                   {hasAction && (
-                    <div className="mt-2 text-xs bg-indigo-50 border border-indigo-100 rounded-lg p-2 text-indigo-700 font-semibold flex items-center gap-1.5 w-fit">
-                      <Sparkles className="w-3.5 h-3.5 text-indigo-600 flex-shrink-0" />
+                    <div className="mt-2 text-xs bg-[#EEEAFE] border border-[#E0D9FD] rounded-lg p-2 text-[#5B4AE8] font-semibold flex items-center gap-1.5 w-fit">
+                      <Sparkles className="w-3.5 h-3.5 text-[#6D5DF6] flex-shrink-0" />
                       <span>Recommendation: {signal.recommended_action}</span>
                     </div>
                   )}
@@ -232,21 +232,21 @@ export const SignalFeed: React.FC<SignalFeedProps> = ({ setActiveTab }) => {
 
               {/* Grid Metadata */}
               <div className="grid grid-cols-2 gap-4 text-xs font-semibold">
-                <div className="bg-slate-50 rounded-xl p-3 border border-slate-100">
+                <div className="bg-slate-50 rounded-2xl p-3 border border-slate-100">
                   <span className="text-[9px] font-bold text-[#9CA3AF] uppercase tracking-wider block mb-1">Source System</span>
                   <p className="text-[#111827] font-bold flex items-center gap-1.5">
                     <Database className="w-3.5 h-3.5 text-[#2563EB]" />
                     {selectedSignal.source}
                   </p>
                 </div>
-                <div className="bg-slate-50 rounded-xl p-3 border border-slate-100">
+                <div className="bg-slate-50 rounded-2xl p-3 border border-slate-100">
                   <span className="text-[9px] font-bold text-[#9CA3AF] uppercase tracking-wider block mb-1">Decryption Channel</span>
                   <p className="text-[#111827] font-bold flex items-center gap-1.5">
                     <Shield className="w-3.5 h-3.5 text-emerald-600" />
                     HIPAA Secure
                   </p>
                 </div>
-                <div className="col-span-2 bg-slate-50 rounded-xl p-3 border border-slate-100">
+                <div className="col-span-2 bg-slate-50 rounded-2xl p-3 border border-slate-100">
                   <span className="text-[9px] font-bold text-[#9CA3AF] uppercase tracking-wider block mb-1">Timestamp</span>
                   <p className="text-[#4B5563] font-bold flex items-center gap-1.5">
                     <Clock className="w-3.5 h-3.5 text-slate-500" />
@@ -256,16 +256,16 @@ export const SignalFeed: React.FC<SignalFeedProps> = ({ setActiveTab }) => {
               </div>
 
               {/* AI Intelligence Block */}
-              <div className="bg-indigo-50/60 border border-indigo-100/80 rounded-[20px] p-4">
+              <div className="bg-[#EEEAFE]/60 border border-[#E0D9FD]/80 rounded-[20px] p-4">
                 <div className="flex items-center gap-2 mb-2">
-                  <Sparkles className="w-4 h-4 text-indigo-600 animate-pulse" />
-                  <span className="text-[10px] font-extrabold text-indigo-700 uppercase tracking-widest">Sentinel AI Insight</span>
+                  <Sparkles className="w-4 h-4 text-[#6D5DF6] animate-pulse" />
+                  <span className="text-[10px] font-extrabold text-[#5B4AE8] uppercase tracking-widest">Sentinel AI Insight</span>
                 </div>
                 <p className="text-xs text-indigo-900 font-bold leading-relaxed mb-3">
                   {selectedSignal.ai_insight || `Critical clinical feed event analyzed by ${activeModelName}. Action recommendation is ready for dispatch.`}
                 </p>
-                <div className="bg-white/80 border border-indigo-100 rounded-lg p-2.5 text-[11px] text-indigo-950 font-bold">
-                  <span className="text-[9px] uppercase font-bold text-indigo-500 block mb-0.5">Recommended Action</span>
+                <div className="bg-white/80 border border-[#E0D9FD] rounded-lg p-2.5 text-[11px] text-indigo-950 font-bold">
+                  <span className="text-[9px] uppercase font-bold text-[#EEEAFE]0 block mb-0.5">Recommended Action</span>
                   {selectedSignal.recommended_action || "Route to practitioner for clinical review."}
                 </div>
               </div>
@@ -275,7 +275,7 @@ export const SignalFeed: React.FC<SignalFeedProps> = ({ setActiveTab }) => {
             <div className="bg-[#F8FAFC] border-t border-[#E8EDF5] px-6 py-4 flex gap-3 justify-end">
               <button 
                 onClick={() => setSelectedSignal(null)}
-                className="bg-white border border-[#E8EDF5] hover:bg-slate-50 text-slate-700 font-bold text-xs px-5 py-2.5 rounded-[12px] transition-colors"
+                className="bg-white border border-[#E8EDF5] hover:bg-slate-50 text-slate-700 font-bold text-xs px-5 py-2.5 rounded-[16px] transition-colors"
               >
                 Close Report
               </button>
@@ -312,7 +312,7 @@ export const SignalFeed: React.FC<SignalFeedProps> = ({ setActiveTab }) => {
                   }, 1000);
                 }}
                 disabled={isDispatched || isDispatching}
-                className={`font-bold text-xs px-6 py-2.5 rounded-[12px] flex items-center gap-1.5 transition-all shadow-sm ${
+                className={`font-bold text-xs px-6 py-2.5 rounded-[16px] flex items-center gap-1.5 transition-all shadow-sm ${
                   isDispatched 
                     ? 'bg-emerald-600 text-white cursor-default'
                     : 'bg-[#2563EB] hover:bg-blue-700 text-white hover:scale-105 active:scale-95 disabled:opacity-75'

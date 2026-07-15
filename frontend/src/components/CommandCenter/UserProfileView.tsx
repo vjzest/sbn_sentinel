@@ -3,13 +3,31 @@ import { User, Mail, Lock, Shield, Phone, Building, CheckCircle } from 'lucide-r
 
 export const UserProfileView = () => {
   const [profileData, setProfileData] = useState({
-    firstName: 'System',
-    lastName: 'Admin',
-    email: 'admin@sbnsentinel.com',
+    firstName: '',
+    lastName: '',
+    email: '',
     phone: '+1 (555) 123-4567',
-    role: 'Global Admin',
+    role: '',
     clinic: 'Sentinel Main Hub'
   });
+  
+  React.useEffect(() => {
+    const userStr = localStorage.getItem('user');
+    if (userStr) {
+      try {
+        const user = JSON.parse(userStr);
+        const nameParts = user.full_name ? user.full_name.split(' ') : ['Admin', 'User'];
+        setProfileData(prev => ({
+          ...prev,
+          firstName: nameParts[0] || '',
+          lastName: nameParts.slice(1).join(' ') || '',
+          email: user.email || '',
+          role: user.role || 'Global Admin',
+          clinic: user.full_name?.includes('-') ? user.full_name.split('-')[0].trim() : 'Sentinel Main Hub'
+        }));
+      } catch(e) {}
+    }
+  }, []);
   
   const [isSaved, setIsSaved] = useState(false);
 
@@ -24,17 +42,17 @@ export const UserProfileView = () => {
       
       {/* Header */}
       <div className="bg-white p-8 rounded-[24px] border border-[#E8EDF5] premium-shadow relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/5 rounded-full blur-[80px] pointer-events-none"></div>
+        <div className="absolute top-0 right-0 w-64 h-64 bg-[#EEEAFE]0/5 rounded-full blur-[80px] pointer-events-none"></div>
         <div className="flex items-center gap-6 relative z-10">
-          <div className="w-24 h-24 rounded-[20px] bg-gradient-to-br from-[#4F46E5] to-[#7C3AED] p-1 shadow-xl">
+          <div className="w-24 h-24 rounded-[20px] bg-gradient-to-br from-[#6D5DF6] to-[#7C3AED] p-1 shadow-xl">
             <div className="w-full h-full bg-white rounded-[16px] flex items-center justify-center border-2 border-transparent">
-              <User className="w-10 h-10 text-[#4F46E5]" />
+              <User className="w-10 h-10 text-[#6D5DF6]" />
             </div>
           </div>
           <div>
             <h2 className="text-3xl font-black text-[#111827]">{profileData.firstName} {profileData.lastName}</h2>
             <div className="flex items-center gap-3 mt-2">
-              <span className="px-3 py-1 bg-[#EEF2FF] text-[#4F46E5] text-xs font-bold rounded-lg uppercase tracking-wider">
+              <span className="px-3 py-1 bg-[#EEF2FF] text-[#6D5DF6] text-xs font-bold rounded-lg uppercase tracking-wider">
                 {profileData.role}
               </span>
               <span className="text-sm font-bold text-[#6B7280] flex items-center gap-1">
@@ -51,11 +69,11 @@ export const UserProfileView = () => {
         <div className="md:col-span-1 space-y-6">
           <div className="bg-white p-6 rounded-[24px] border border-[#E8EDF5] premium-shadow">
             <h3 className="text-lg font-bold text-[#111827] flex items-center gap-2 mb-6">
-              <Shield className="w-5 h-5 text-indigo-600" /> Account Security
+              <Shield className="w-5 h-5 text-[#6D5DF6]" /> Account Security
             </h3>
             
             <div className="space-y-4">
-              <div className="p-4 rounded-xl border border-emerald-100 bg-emerald-50/50 flex items-start gap-3">
+              <div className="p-4 rounded-2xl border border-emerald-100 bg-emerald-50/50 flex items-start gap-3">
                 <CheckCircle className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
                 <div>
                   <p className="text-sm font-bold text-[#111827]">Two-Factor Authentication</p>
@@ -63,7 +81,7 @@ export const UserProfileView = () => {
                 </div>
               </div>
 
-              <button className="w-full py-3 rounded-xl border border-[#E8EDF5] bg-white text-sm font-bold text-[#4B5563] hover:bg-[#F9FAFB] hover:text-[#111827] transition-colors flex items-center justify-center gap-2">
+              <button className="w-full py-3 rounded-2xl border border-[#E8EDF5] bg-white text-sm font-bold text-[#4B5563] hover:bg-[#F7F9FC] hover:text-[#111827] transition-colors flex items-center justify-center gap-2">
                 <Lock className="w-4 h-4" /> Change Password
               </button>
             </div>
@@ -83,7 +101,7 @@ export const UserProfileView = () => {
                     type="text"
                     value={profileData.firstName}
                     onChange={(e) => setProfileData({...profileData, firstName: e.target.value})}
-                    className="w-full bg-[#F8FAFC] border border-[#E8EDF5] rounded-xl px-4 py-3 text-sm font-bold text-[#111827] outline-none focus:border-[#4F46E5] focus:ring-1 focus:ring-[#4F46E5] transition-all"
+                    className="w-full bg-[#F8FAFC] border border-[#E8EDF5] rounded-2xl px-4 py-3 text-sm font-bold text-[#111827] outline-none focus:border-[#6D5DF6] focus:ring-1 focus:ring-[#6D5DF6] transition-all"
                   />
                 </div>
                 <div>
@@ -92,7 +110,7 @@ export const UserProfileView = () => {
                     type="text"
                     value={profileData.lastName}
                     onChange={(e) => setProfileData({...profileData, lastName: e.target.value})}
-                    className="w-full bg-[#F8FAFC] border border-[#E8EDF5] rounded-xl px-4 py-3 text-sm font-bold text-[#111827] outline-none focus:border-[#4F46E5] focus:ring-1 focus:ring-[#4F46E5] transition-all"
+                    className="w-full bg-[#F8FAFC] border border-[#E8EDF5] rounded-2xl px-4 py-3 text-sm font-bold text-[#111827] outline-none focus:border-[#6D5DF6] focus:ring-1 focus:ring-[#6D5DF6] transition-all"
                   />
                 </div>
               </div>
@@ -106,7 +124,7 @@ export const UserProfileView = () => {
                       type="email"
                       value={profileData.email}
                       disabled
-                      className="w-full bg-gray-50 border border-[#E8EDF5] rounded-xl pl-11 pr-4 py-3 text-sm font-bold text-[#6B7280] cursor-not-allowed"
+                      className="w-full bg-gray-50 border border-[#E8EDF5] rounded-2xl pl-11 pr-4 py-3 text-sm font-bold text-[#6B7280] cursor-not-allowed"
                     />
                   </div>
                 </div>
@@ -118,7 +136,7 @@ export const UserProfileView = () => {
                       type="tel"
                       value={profileData.phone}
                       onChange={(e) => setProfileData({...profileData, phone: e.target.value})}
-                      className="w-full bg-[#F8FAFC] border border-[#E8EDF5] rounded-xl pl-11 pr-4 py-3 text-sm font-bold text-[#111827] outline-none focus:border-[#4F46E5] focus:ring-1 focus:ring-[#4F46E5] transition-all"
+                      className="w-full bg-[#F8FAFC] border border-[#E8EDF5] rounded-2xl pl-11 pr-4 py-3 text-sm font-bold text-[#111827] outline-none focus:border-[#6D5DF6] focus:ring-1 focus:ring-[#6D5DF6] transition-all"
                     />
                   </div>
                 </div>
@@ -135,7 +153,7 @@ export const UserProfileView = () => {
                 
                 <button
                   type="submit"
-                  className="bg-[#4F46E5] hover:bg-[#4338CA] text-white px-6 py-3 rounded-xl text-sm font-bold shadow-lg shadow-indigo-500/25 transition-all hover:-translate-y-0.5 active:translate-y-0"
+                  className="bg-[#6D5DF6] hover:bg-[#5B4AE8] text-white px-6 py-3 rounded-2xl text-sm font-bold shadow-lg shadow-[#EEEAFE]0/25 transition-all hover:-translate-y-0.5 active:translate-y-0"
                 >
                   Save Changes
                 </button>

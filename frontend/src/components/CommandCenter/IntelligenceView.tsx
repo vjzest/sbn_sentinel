@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { BrainCircuit, Activity, CheckCircle2, AlertTriangle, ArrowRight, UserCircle2, FileText, Zap, ChevronRight, X, PhoneCall } from 'lucide-react';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '@/store';
+import { removeSignal, incrementActionsTaken } from '@/store/slices/signalSlice';
 
 export const IntelligenceView: React.FC = () => {
   const rawEvents = useSelector((state: RootState) => state.signals.events);
@@ -10,7 +11,24 @@ export const IntelligenceView: React.FC = () => {
   const actionableEvents = rawEvents.filter(e => e.recommended_action && e.recommended_action.length > 0).reverse();
   
   const [selectedEventIndex, setSelectedEventIndex] = useState<number>(0);
-  const selectedEvent = actionableEvents.length > 0 ? actionableEvents[selectedEventIndex] : null;
+  const selectedEvent = actionableEvents.length > 0 && selectedEventIndex < actionableEvents.length ? actionableEvents[selectedEventIndex] : (actionableEvents.length > 0 ? actionableEvents[0] : null);
+
+  const dispatch = useDispatch();
+
+  const handleDismiss = () => {
+    if (selectedEvent) {
+      dispatch(removeSignal(selectedEvent.id));
+      setSelectedEventIndex(0);
+    }
+  };
+
+  const handleApply = () => {
+    if (selectedEvent) {
+      dispatch(incrementActionsTaken());
+      dispatch(removeSignal(selectedEvent.id));
+      setSelectedEventIndex(0);
+    }
+  };
 
   return (
     <div className="animate-in fade-in duration-500 max-w-[1400px] mx-auto space-y-8">
@@ -19,7 +37,7 @@ export const IntelligenceView: React.FC = () => {
       <div className="flex items-end justify-between">
         <div>
           <div className="flex items-center gap-3 mb-2">
-            <div className="p-2 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl shadow-lg">
+            <div className="p-2 bg-gradient-to-br from-[#EEEAFE]0 to-purple-600 rounded-2xl shadow-lg">
               <BrainCircuit className="w-6 h-6 text-white" />
             </div>
             <h2 className="text-3xl font-extrabold text-gray-900 tracking-tight">AI Assistant</h2>
@@ -42,7 +60,7 @@ export const IntelligenceView: React.FC = () => {
           <div className="bg-white rounded-3xl p-6 border border-gray-100 premium-shadow">
             <h3 className="text-lg font-bold text-gray-900 mb-6 flex items-center justify-between">
               New Notifications
-              <span className="bg-indigo-100 text-indigo-700 text-xs px-2.5 py-1 rounded-full font-bold">
+              <span className="bg-[#E0D9FD] text-[#5B4AE8] text-xs px-2.5 py-1 rounded-full font-bold">
                 {actionableEvents.length} New
               </span>
             </h3>
@@ -54,12 +72,12 @@ export const IntelligenceView: React.FC = () => {
                   onClick={() => setSelectedEventIndex(idx)}
                   className={`w-full text-left p-4 rounded-2xl transition-all duration-300 border ${
                     selectedEventIndex === idx 
-                      ? 'bg-indigo-50 border-indigo-200 ring-2 ring-indigo-500/20 shadow-md' 
-                      : 'bg-white border-gray-100 hover:border-indigo-100 hover:bg-gray-50'
+                      ? 'bg-[#EEEAFE] border-indigo-200 ring-2 ring-[#EEEAFE]0/20 shadow-md' 
+                      : 'bg-white border-gray-100 hover:border-[#E0D9FD] hover:bg-gray-50'
                   }`}
                 >
                   <div className="flex items-start gap-3">
-                    <div className={`mt-0.5 p-2 rounded-xl flex-shrink-0 ${
+                    <div className={`mt-0.5 p-2 rounded-2xl flex-shrink-0 ${
                       evt.priority === 'Critical' ? 'bg-red-100 text-red-600' :
                       evt.priority === 'High' ? 'bg-orange-100 text-orange-600' :
                       'bg-blue-100 text-blue-600'
@@ -97,7 +115,7 @@ export const IntelligenceView: React.FC = () => {
               
               {/* Event Context Header */}
               <div className="bg-slate-900 p-8 text-white relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 translate-x-1/2 -translate-y-1/2"></div>
+                <div className="absolute top-0 right-0 w-64 h-64 bg-[#EEEAFE]0 rounded-full mix-blend-multiply filter blur-3xl opacity-20 translate-x-1/2 -translate-y-1/2"></div>
                 <div className="relative z-10">
                   <div className="flex items-center gap-2 text-indigo-300 text-xs font-bold uppercase tracking-wider mb-4">
                     <Activity className="w-4 h-4" />
@@ -109,14 +127,14 @@ export const IntelligenceView: React.FC = () => {
                   <div className="flex items-center gap-4 mt-6">
                     <div className="flex items-center gap-2 bg-white/10 backdrop-blur-md px-3 py-1.5 rounded-lg border border-white/10">
                       <UserCircle2 className="w-4 h-4 text-indigo-200" />
-                      <span className="text-xs font-medium text-indigo-100">Patient: <span className="font-bold text-white">{selectedEvent.metadata?.patient_name || 'Unknown'}</span></span>
+                      <span className="text-xs font-medium text-[#E0D9FD]">Patient: <span className="font-bold text-white">{selectedEvent.metadata?.patient_name || 'Unknown'}</span></span>
                     </div>
                     <div className="flex items-center gap-2 bg-white/10 backdrop-blur-md px-3 py-1.5 rounded-lg border border-white/10">
                       <AlertTriangle className={`w-4 h-4 ${
                         selectedEvent.priority === 'Critical' ? 'text-red-400' :
                         selectedEvent.priority === 'High' ? 'text-orange-400' : 'text-blue-400'
                       }`} />
-                      <span className="text-xs font-medium text-indigo-100">Priority: <span className="font-bold text-white">{selectedEvent.priority || 'Medium'}</span></span>
+                      <span className="text-xs font-medium text-[#E0D9FD]">Priority: <span className="font-bold text-white">{selectedEvent.priority || 'Medium'}</span></span>
                     </div>
                   </div>
                 </div>
@@ -126,9 +144,9 @@ export const IntelligenceView: React.FC = () => {
               <div className="p-8 space-y-8 flex-1 bg-gray-50/50">
                 
                 {/* Insight Box */}
-                <div className="bg-white p-6 rounded-2xl border border-indigo-100 shadow-sm relative">
-                  <div className="absolute -top-3 left-6 bg-indigo-100 text-indigo-700 px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider flex items-center gap-1.5">
-                    <Zap className="w-3.5 h-3.5 fill-indigo-700" />
+                <div className="bg-white p-6 rounded-2xl border border-[#E0D9FD] shadow-sm relative">
+                  <div className="absolute -top-3 left-6 bg-[#E0D9FD] text-[#5B4AE8] px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider flex items-center gap-1.5">
+                    <Zap className="w-3.5 h-3.5 fill-[#5B4AE8]" />
                     AI Observation
                   </div>
                   <p className="text-gray-700 font-medium leading-relaxed mt-2 text-lg">
@@ -151,10 +169,10 @@ export const IntelligenceView: React.FC = () => {
 
               {/* Action Buttons */}
               <div className="p-6 bg-white border-t border-gray-100 flex items-center justify-end gap-4">
-                <button className="px-6 py-3 rounded-xl font-bold text-gray-500 hover:bg-gray-100 transition-colors flex items-center gap-2">
+                <button onClick={handleDismiss} className="px-6 py-3 rounded-2xl font-bold text-gray-500 hover:bg-gray-100 transition-colors flex items-center gap-2">
                   <X className="w-5 h-5" /> Dismiss
                 </button>
-                <button className="px-8 py-3 rounded-xl font-bold text-white bg-indigo-600 hover:bg-indigo-700 shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all flex items-center gap-2">
+                <button onClick={handleApply} className="px-8 py-3 rounded-2xl font-bold text-white bg-[#6D5DF6] hover:bg-[#5B4AE8] shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all flex items-center gap-2">
                   Apply Suggestion <ArrowRight className="w-5 h-5" />
                 </button>
               </div>
@@ -162,7 +180,7 @@ export const IntelligenceView: React.FC = () => {
             </div>
           ) : (
             <div className="bg-white rounded-3xl border border-gray-100 premium-shadow h-[600px] flex flex-col items-center justify-center text-center p-8">
-              <div className="w-24 h-24 bg-indigo-50 rounded-full flex items-center justify-center mb-6">
+              <div className="w-24 h-24 bg-[#EEEAFE] rounded-full flex items-center justify-center mb-6">
                 <BrainCircuit className="w-12 h-12 text-indigo-300" />
               </div>
               <h3 className="text-2xl font-bold text-gray-900 mb-2">Ready to Help</h3>

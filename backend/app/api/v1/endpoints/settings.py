@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 from app.db.database import get_db
 from app.models.settings import SettingsModel
 from app.models.user import User
+from app.models.integration import IntegrationModel
 from app.schemas.settings import SettingsUpdate, SettingsResponse
 from app.core.security import get_password_hash
 
@@ -124,12 +125,46 @@ def revoke_team_member(user_id: int, db: Session = Depends(get_db)):
     return {"message": "Access revoked successfully"}
 
 @router.get("/integrations")
-def get_integrations() -> List[Dict[str, Any]]:
+def get_integrations(db: Session = Depends(get_db)) -> List[Dict[str, Any]]:
     """Get clinic integrations status."""
+    integrations = db.query(IntegrationModel).all()
+    if not integrations:
+        default_integrations = [
+            IntegrationModel(id='practice-fusion', name='Practice Fusion EHR', type='Clinical Integration', connected=True, lastSync='1 hr ago'),
+            IntegrationModel(id='gmail', name='Google Workspace Gmail', type='Secure Communication', connected=True, lastSync='30 mins ago'),
+            IntegrationModel(id='twilio', name='Twilio Outbound Gateway', type='Voice & SMS API', connected=True, lastSync='10 mins ago'),
+            IntegrationModel(id='clearinghouse', name='Approved Clearinghouse API', type='Billing Integration', connected=True, lastSync='2 hrs ago'),
+            IntegrationModel(id='openai', name='OpenAI Intelligence Engine', type='AI Service (Approved V1)', connected=True, lastSync='5 mins ago')
+        ]
+        db.add_all(default_integrations)
+        db.commit()
+        integrations = default_integrations
+        
     return [
-        { "id": 'practice-fusion', "name": 'Practice Fusion EHR', "type": 'Clinical Integration', "connected": True, "lastSync": '1 hr ago' },
-        { "id": 'gmail', "name": 'Google Workspace Gmail', "type": 'Secure Communication', "connected": True, "lastSync": '30 mins ago' },
-        { "id": 'twilio', "name": 'Twilio Outbound Gateway', "type": 'Voice & SMS API', "connected": True, "lastSync": '10 mins ago' },
-        { "id": 'clearinghouse', "name": 'Approved Clearinghouse API', "type": 'Billing Integration', "connected": True, "lastSync": '2 hrs ago' },
-        { "id": 'openai', "name": 'OpenAI Intelligence Engine', "type": 'AI Service (Approved V1)', "connected": True, "lastSync": '5 mins ago' }
+        {
+            "id": i.id,
+            "name": i.name,
+            "type": i.type,
+            "connected": i.connected,
+            "lastSync": i.lastSync
+        }
+        for i in integrations
     ]
+
+@router.post("/integrations/{integration_id}/toggle")
+def toggle_integration(integration_id: str, db: Session = Depends(get_db)):
+    """Toggle the connected status of an integration."""
+    integration = db.query(IntegrationModel).filter(IntegrationModel.id == integration_id).first()
+    if not integration:
+        raise HTTPException(status_code=404, detail="Integration not found")
+        
+    integration.connected = not integration.connected
+    integration.lastSync = 'Just now' if integration.connected else 'Never'
+    db.commit()
+    db.refresh(integration)
+    
+    return {
+        "id": integration.id,
+        "connected": integration.connected,
+        "lastSync": integration.lastSync
+    }

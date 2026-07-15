@@ -11,6 +11,7 @@ from app.models.insurance import PatientInsuranceModel
 from app.models.audit import AuditLogModel
 from app.models.settings import SettingsModel
 from app.models.encounter import EncounterModel
+from app.models.integration import IntegrationModel
 
 # Create tables in SQLite/PostgreSQL (if they don't exist)
 Base.metadata.create_all(bind=engine)

@@ -6,7 +6,7 @@ export const HelpSupportView: React.FC = () => {
     <div className="animate-in fade-in duration-500 max-w-[1200px] mx-auto space-y-8">
       
       {/* Header & Search */}
-      <div className="bg-gradient-to-br from-[#4F46E5] to-[#7C3AED] rounded-[24px] p-12 premium-shadow text-white relative overflow-hidden text-center flex flex-col items-center">
+      <div className="bg-gradient-to-br from-[#6D5DF6] to-[#7C3AED] rounded-[24px] p-12 premium-shadow text-white relative overflow-hidden text-center flex flex-col items-center">
          <div className="absolute top-[-100px] left-[-100px] w-64 h-64 bg-white opacity-10 rounded-full blur-3xl"></div>
          <div className="absolute bottom-[-100px] right-[-100px] w-64 h-64 bg-white opacity-10 rounded-full blur-3xl"></div>
          
@@ -52,7 +52,7 @@ export const HelpSupportView: React.FC = () => {
                 "Can I export the patient flow data to a CSV?",
                 "What is the required confidence score for automated actions?",
               ].map((q, i) => (
-                <div key={i} className="flex items-center justify-between p-4 border border-[#F3F4F6] rounded-[16px] hover:bg-[#F9FAFB] cursor-pointer transition-colors group">
+                <div key={i} className="flex items-center justify-between p-4 border border-[#F3F4F6] rounded-[16px] hover:bg-[#F7F9FC] cursor-pointer transition-colors group">
                    <p className="text-sm font-bold text-[#4B5563] group-hover:text-[#111827] transition-colors">{q}</p>
                    <ChevronRight className="w-5 h-5 text-[#9CA3AF] group-hover:text-[#2563EB]" />
                 </div>
@@ -68,7 +68,7 @@ export const HelpSupportView: React.FC = () => {
             <h3 className="text-xl font-bold mb-3">Still need help?</h3>
             <p className="text-sm text-[#9CA3AF] mb-6 leading-relaxed">Our enterprise support team is available 24/7 to assist with critical integrations and AI behavior.</p>
             
-            <button className="w-full bg-white text-[#111827] font-extrabold py-3.5 rounded-[12px] hover:bg-[#F3F4F6] transition-colors shadow-lg">
+            <button className="w-full bg-white text-[#111827] font-extrabold py-3.5 rounded-[16px] hover:bg-[#F3F4F6] transition-colors shadow-lg">
               Open Support Ticket
             </button>
             <p className="text-[10px] text-center text-[#6B7280] font-bold mt-4 uppercase tracking-widest">Avg Response Time: &lt; 5 mins</p>

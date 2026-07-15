@@ -275,7 +275,7 @@ export const SignalsDetailView: React.FC = () => {
           <button 
             onClick={fetchDbSignals} 
             disabled={isRefreshing}
-            className="flex items-center gap-2 bg-white border border-[#E8EDF5] text-[#111827] font-bold text-xs px-4 py-2.5 rounded-[12px] premium-shadow hover:bg-[#F9FAFB] transition-colors disabled:opacity-50 cursor-pointer"
+            className="flex items-center gap-2 bg-white border border-[#E8EDF5] text-[#111827] font-bold text-xs px-4 py-2.5 rounded-[16px] premium-shadow hover:bg-[#F7F9FC] transition-colors disabled:opacity-50 cursor-pointer"
           >
             <RefreshCw className={`w-4 h-4 text-[#6B7280] ${isRefreshing ? 'animate-spin' : ''}`} /> Sync Database
           </button>
@@ -347,8 +347,8 @@ export const SignalsDetailView: React.FC = () => {
                   onClick={() => setActiveFilter(filter)}
                   className={`px-3 py-1.5 rounded-[10px] text-xs font-bold transition-all border cursor-pointer ${
                     activeFilter === filter 
-                      ? 'bg-[#4F46E5] text-white border-transparent shadow-sm' 
-                      : 'bg-white text-[#6B7280] border-[#E8EDF5] hover:bg-[#F9FAFB]'
+                      ? 'bg-[#6D5DF6] text-white border-transparent shadow-sm' 
+                      : 'bg-white text-[#6B7280] border-[#E8EDF5] hover:bg-[#F7F9FC]'
                   }`}
                 >
                   {filter}
@@ -384,8 +384,8 @@ export const SignalsDetailView: React.FC = () => {
                           setIsDispatched(false);
                           setIsDispatching(false);
                         }}
-                        className={`border-b border-[#F3F4F6] hover:bg-[#F9FAFB] transition-all last:border-0 cursor-pointer ${
-                          selectedSignal?.id === signal.id ? 'bg-[#EEF4FF]/50 border-l-4 border-l-[#4F46E5]' : ''
+                        className={`border-b border-[#F3F4F6] hover:bg-[#F7F9FC] transition-all last:border-0 cursor-pointer ${
+                          selectedSignal?.id === signal.id ? 'bg-[#EEF4FF]/50 border-l-4 border-l-[#6D5DF6]' : ''
                         }`}
                       >
                         <td className="py-4 px-2 font-mono text-[11px] text-[#2563EB]">{signal.id}</td>
@@ -415,7 +415,7 @@ export const SignalsDetailView: React.FC = () => {
                           )}
                         </td>
                         <td className="py-4 px-2 text-right">
-                          <button className="text-[11px] font-bold text-[#4F46E5] bg-[#EEF4FF] hover:bg-[#DBEAFE] px-2.5 py-1.5 rounded-[8px] transition-colors inline-flex items-center gap-1 ml-auto">
+                          <button className="text-[11px] font-bold text-[#6D5DF6] bg-[#EEF4FF] hover:bg-[#DBEAFE] px-2.5 py-1.5 rounded-[8px] transition-colors inline-flex items-center gap-1 ml-auto">
                             Inspect <ArrowUpRight className="w-3.5 h-3.5" />
                           </button>
                         </td>
@@ -432,7 +432,7 @@ export const SignalsDetailView: React.FC = () => {
         <div className="flex flex-col gap-6">
           <div className="bg-white border border-[#E8EDF5] rounded-[24px] p-8 premium-shadow">
             <h3 className="text-base font-extrabold text-[#111827] mb-6 flex items-center gap-2">
-              <Shield className="w-5 h-5 text-[#4F46E5]" /> Live Stream Status
+              <Shield className="w-5 h-5 text-[#6D5DF6]" /> Live Stream Status
             </h3>
             <div className="space-y-4">
               <div className="bg-[#ECFDF5] border border-[#A7F3D0] rounded-[16px] p-4 flex items-start gap-3">
@@ -508,13 +508,13 @@ export const SignalsDetailView: React.FC = () => {
             {/* Header */}
             <div className="px-6 py-4 bg-[#F8FAFC] border-b border-[#E8EDF5] flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className={`p-2.5 ${getBgColor(selectedSignal.type)} rounded-[12px] flex-shrink-0`}>
+                <div className={`p-2.5 ${getBgColor(selectedSignal.type)} rounded-[16px] flex-shrink-0`}>
                   {getIcon(selectedSignal.type)}
                 </div>
                 <div>
                   <h4 className="text-base font-extrabold text-[#111827] flex items-center gap-2">
                     Signal Diagnostic Report
-                    <span className="text-[10px] font-mono bg-indigo-50 border border-indigo-200 text-indigo-600 px-2 py-0.5 rounded-[6px]">ID: {selectedSignal.id}</span>
+                    <span className="text-[10px] font-mono bg-[#EEEAFE] border border-indigo-200 text-[#6D5DF6] px-2 py-0.5 rounded-[6px]">ID: {selectedSignal.id}</span>
                   </h4>
                   <p className="text-[10px] text-[#6B7280] font-extrabold uppercase tracking-widest mt-0.5">Source: {selectedSignal.source} Integration Layer</p>
                 </div>
@@ -548,7 +548,7 @@ export const SignalsDetailView: React.FC = () => {
                   <p className="text-xs text-[#5B21B6] font-semibold leading-relaxed">{selectedSignal.ai_insight || "AI Engine evaluated this event. No immediate critical clinical or revenue leakage identified. Status: Clean."}</p>
                   
                   {selectedSignal.recommended_action && (
-                    <div className="mt-2.5 p-2 bg-white/60 border border-[#DDD6FE] rounded-xl inline-block text-[11px] text-[#6D28D9] font-bold">
+                    <div className="mt-2.5 p-2 bg-white/60 border border-[#DDD6FE] rounded-2xl inline-block text-[11px] text-[#6D28D9] font-bold">
                       Recommendation: {selectedSignal.recommended_action}
                     </div>
                   )}
@@ -585,7 +585,7 @@ export const SignalsDetailView: React.FC = () => {
 
                     <button 
                       onClick={() => handleCopyId(selectedSignal.id)}
-                      className="text-[10px] font-extrabold text-[#4F46E5] hover:underline flex items-center gap-1 cursor-pointer"
+                      className="text-[10px] font-extrabold text-[#6D5DF6] hover:underline flex items-center gap-1 cursor-pointer"
                     >
                       {copiedId === selectedSignal.id ? (
                         <>
@@ -640,7 +640,7 @@ export const SignalsDetailView: React.FC = () => {
             <div className="px-6 py-4 bg-[#F8FAFC] border-t border-[#E8EDF5] flex items-center justify-between shrink-0">
               <button 
                 onClick={() => setSelectedSignal(null)}
-                className="bg-white border border-[#E8EDF5] hover:bg-[#F9FAFB] text-[#475569] font-bold text-xs px-4 py-2.5 rounded-[12px] premium-shadow cursor-pointer transition-colors"
+                className="bg-white border border-[#E8EDF5] hover:bg-[#F7F9FC] text-[#475569] font-bold text-xs px-4 py-2.5 rounded-[16px] premium-shadow cursor-pointer transition-colors"
               >
                 Close Diagnostic
               </button>
@@ -649,12 +649,12 @@ export const SignalsDetailView: React.FC = () => {
                 <button
                   onClick={triggerAction}
                   disabled={isDispatching || isDispatched}
-                  className={`flex items-center gap-2 font-bold text-xs px-5 py-2.5 rounded-[12px] premium-shadow transition-all ${
+                  className={`flex items-center gap-2 font-bold text-xs px-5 py-2.5 rounded-[16px] premium-shadow transition-all ${
                     isDispatched 
                       ? 'bg-emerald-600 text-white cursor-default' 
                       : isDispatching 
-                        ? 'bg-[#4338CA] text-white opacity-50 cursor-wait' 
-                        : 'bg-[#4F46E5] hover:bg-[#4338CA] text-white cursor-pointer hover:scale-105 active:scale-95'
+                        ? 'bg-[#5B4AE8] text-white opacity-50 cursor-wait' 
+                        : 'bg-[#6D5DF6] hover:bg-[#5B4AE8] text-white cursor-pointer hover:scale-105 active:scale-95'
                   }`}
                 >
                   {isDispatched ? (

@@ -85,23 +85,23 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onLogin }) => {
   return (
     <div className="min-h-screen w-full flex bg-[#F7F9FC] font-sans relative overflow-hidden">
       {/* Background Blobs */}
-      <div className="absolute top-[-100px] right-[-100px] w-[500px] h-[500px] bg-gradient-to-br from-[#4F46E5]/20 to-[#7C3AED]/20 rounded-full blur-[100px] pointer-events-none"></div>
+      <div className="absolute top-[-100px] right-[-100px] w-[500px] h-[500px] bg-gradient-to-br from-[#6D5DF6]/20 to-[#7C3AED]/20 rounded-full blur-[100px] pointer-events-none"></div>
       <div className="absolute bottom-[-100px] left-[-100px] w-[600px] h-[600px] bg-[#2563EB]/10 rounded-full blur-[120px] pointer-events-none"></div>
 
       {/* Left Side - Branding */}
       <div className="hidden lg:flex flex-col justify-center items-start w-1/2 p-20 relative z-10">
         <div className="mb-12 flex items-center gap-4">
-          <div className="w-14 h-14 rounded-[16px] bg-gradient-to-br from-[#4F46E5] to-[#7C3AED] flex items-center justify-center text-white font-extrabold text-3xl shadow-[0_4px_20px_rgba(79,70,229,0.4)]">
+          <div className="w-14 h-14 rounded-[16px] bg-gradient-to-br from-[#6D5DF6] to-[#7C3AED] flex items-center justify-center text-white font-extrabold text-3xl shadow-[0_4px_20px_rgba(79,70,229,0.4)]">
             S
           </div>
           <div>
             <h1 className="text-4xl font-extrabold tracking-tight text-[#111827] leading-none">Sentinel</h1>
-            <p className="text-sm text-[#4F46E5] tracking-[0.2em] uppercase font-bold mt-1">Command Center</p>
+            <p className="text-sm text-[#6D5DF6] tracking-[0.2em] uppercase font-bold mt-1">Command Center</p>
           </div>
         </div>
 
         <h2 className="text-5xl font-extrabold text-[#111827] mb-6 leading-tight">
-          Enterprise <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#4F46E5] to-[#7C3AED]">Revenue Intelligence</span>
+          Enterprise <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#6D5DF6] to-[#7C3AED]">Revenue Intelligence</span>
         </h2>
         <p className="text-lg text-[#6B7280] font-medium leading-relaxed max-w-lg mb-12">
           Securely authenticate to access real-time clinical telemetry, predictive revenue models, and automated schedule optimization.
@@ -119,7 +119,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onLogin }) => {
           </div>
           <div className="flex items-center gap-4 bg-white/60 backdrop-blur-md p-4 rounded-[20px] border border-white shadow-sm max-w-md">
             <div className="p-3 bg-[#EEF4FF] rounded-[14px]">
-              <Building2 className="w-6 h-6 text-[#4F46E5]" />
+              <Building2 className="w-6 h-6 text-[#6D5DF6]" />
             </div>
             <div>
               <p className="font-bold text-[#111827]">Multi-Clinic Platform</p>
@@ -147,13 +147,13 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onLogin }) => {
 
           <form onSubmit={handleSubmit} className="space-y-5">
             {error && (
-              <div className="bg-rose-50 border border-rose-200 text-rose-600 px-4 py-3 rounded-[12px] text-xs font-bold flex items-center gap-2 animate-in fade-in">
+              <div className="bg-rose-50 border border-rose-200 text-rose-600 px-4 py-3 rounded-[16px] text-xs font-bold flex items-center gap-2 animate-in fade-in">
                 <AlertCircle className="w-4 h-4 flex-shrink-0" />
                 {error}
               </div>
             )}
             {successMsg && (
-              <div className="bg-emerald-50 border border-emerald-200 text-emerald-700 px-4 py-3 rounded-[12px] text-xs font-bold flex items-center gap-2 animate-in fade-in">
+              <div className="bg-emerald-50 border border-emerald-200 text-emerald-700 px-4 py-3 rounded-[16px] text-xs font-bold flex items-center gap-2 animate-in fade-in">
                 <ShieldCheck className="w-4 h-4 flex-shrink-0" />
                 {successMsg}
               </div>
@@ -170,7 +170,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onLogin }) => {
                       placeholder="e.g. City Heart Clinic" 
                       value={clinicName}
                       onChange={(e) => setClinicName(e.target.value)}
-                      className="w-full bg-[#F9FAFB] border border-[#E8EDF5] rounded-[16px] py-3.5 pl-12 pr-4 text-sm font-bold text-[#111827] outline-none focus:border-[#4F46E5] focus:bg-white transition-all"
+                      className="w-full bg-[#F7F9FC] border border-[#E8EDF5] rounded-[16px] py-3.5 pl-12 pr-4 text-sm font-bold text-[#111827] outline-none focus:border-[#6D5DF6] focus:bg-white transition-all"
                       required 
                     />
                   </div>
@@ -184,7 +184,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onLogin }) => {
                       placeholder="Dr. Sarah Jenkins" 
                       value={fullName}
                       onChange={(e) => setFullName(e.target.value)}
-                      className="w-full bg-[#F9FAFB] border border-[#E8EDF5] rounded-[16px] py-3.5 pl-12 pr-4 text-sm font-bold text-[#111827] outline-none focus:border-[#4F46E5] focus:bg-white transition-all"
+                      className="w-full bg-[#F7F9FC] border border-[#E8EDF5] rounded-[16px] py-3.5 pl-12 pr-4 text-sm font-bold text-[#111827] outline-none focus:border-[#6D5DF6] focus:bg-white transition-all"
                       required 
                     />
                   </div>
@@ -201,7 +201,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onLogin }) => {
                   placeholder="doctor@clinic.com" 
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full bg-[#F9FAFB] border border-[#E8EDF5] rounded-[16px] py-3.5 pl-12 pr-4 text-sm font-bold text-[#111827] outline-none focus:border-[#4F46E5] focus:bg-white transition-all"
+                  className="w-full bg-[#F7F9FC] border border-[#E8EDF5] rounded-[16px] py-3.5 pl-12 pr-4 text-sm font-bold text-[#111827] outline-none focus:border-[#6D5DF6] focus:bg-white transition-all"
                   required 
                 />
               </div>
@@ -228,7 +228,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onLogin }) => {
                     placeholder="••••••••"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="w-full bg-[#F9FAFB] border border-[#E8EDF5] rounded-[16px] py-3.5 pl-12 pr-12 text-sm font-bold text-[#111827] outline-none focus:border-[#4F46E5] focus:bg-white transition-all"
+                    className="w-full bg-[#F7F9FC] border border-[#E8EDF5] rounded-[16px] py-3.5 pl-12 pr-12 text-sm font-bold text-[#111827] outline-none focus:border-[#6D5DF6] focus:bg-white transition-all"
                     required={!isForgotPassword} 
                   />
                   <button
@@ -245,7 +245,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onLogin }) => {
             <button 
               type="submit" 
               disabled={isLoading}
-              className="w-full mt-8 bg-gradient-to-r from-[#4F46E5] to-[#7C3AED] hover:opacity-90 text-white font-extrabold py-4 rounded-[16px] text-sm shadow-[0_8px_20px_rgba(79,70,229,0.3)] transition-all transform hover:-translate-y-0.5 flex items-center justify-center gap-2 disabled:opacity-60 cursor-pointer"
+              className="w-full mt-8 bg-gradient-to-r from-[#6D5DF6] to-[#7C3AED] hover:opacity-90 text-white font-extrabold py-4 rounded-[16px] text-sm shadow-[0_8px_20px_rgba(79,70,229,0.3)] transition-all transform hover:-translate-y-0.5 flex items-center justify-center gap-2 disabled:opacity-60 cursor-pointer"
             >
               {isLoading ? (
                 <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
@@ -263,7 +263,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onLogin }) => {
               Remember your password?{' '}
               <button 
                 onClick={() => { setIsForgotPassword(false); setError(''); setSuccessMsg(''); }} 
-                className="text-[#4F46E5] hover:underline cursor-pointer"
+                className="text-[#6D5DF6] hover:underline cursor-pointer"
               >
                 Back to log in
               </button>
@@ -273,7 +273,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onLogin }) => {
               {isLogin ? "Don't have an account? " : "Already have an account? "}
               <button 
                 onClick={() => { setIsLogin(!isLogin); setError(''); setSuccessMsg(''); }} 
-                className="text-[#4F46E5] hover:underline cursor-pointer"
+                className="text-[#6D5DF6] hover:underline cursor-pointer"
               >
                 {isLogin ? 'Register Clinic' : 'Log in'}
               </button>

@@ -107,14 +107,8 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onSaveSettings }) =>
       } else {
         throw new Error();
       }
-    } catch {
-      // Fallback HIPAA audits
-      setAuditLogs([
-        { id: 1, timestamp: new Date(Date.now() - 1000 * 60 * 12).toISOString(), user_email: 'admin@clinic.com', action: 'ACCESS_PATIENT_RECORD', resource: 'ENC-1092 (Michael R.)', ip_address: '192.168.1.45' },
-        { id: 2, timestamp: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(), user_email: 'dr.jenkins@clinic.com', action: 'WRITE_SOAP_NOTES', resource: 'ENC-1091 (Sarah J.)', ip_address: '10.0.0.12' },
-        { id: 3, timestamp: new Date(Date.now() - 1000 * 60 * 60 * 5).toISOString(), user_email: 'admin@clinic.com', action: 'GENERATE_INVOICE', resource: 'ENC-1090 (David L.)', ip_address: '192.168.1.45' },
-        { id: 4, timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(), user_email: 'biller.officer@clinic.com', action: 'CHECK_INSURANCE_ELIGIBILITY', resource: 'Emily D. (Aetna)', ip_address: '192.168.1.80' },
-      ]);
+    } catch (error) {
+      console.error("Failed to fetch audit logs", error);
     } finally {
       setLoadingAudits(false);
     }
@@ -256,23 +250,36 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onSaveSettings }) =>
   };
 
   // Toggle Integration Status
-  const handleToggleIntegration = (id: string) => {
-    setIntegrationsList(prev => prev.map(integration => {
-      if (integration.id === id) {
-        const nextState = !integration.connected;
-        showToast(`${integration.name} ${nextState ? 'connected successfully!' : 'disconnected.'}`);
-        return { 
-          ...integration, 
-          connected: nextState,
-          lastSync: nextState ? 'Just now' : 'Never'
-        };
+  const handleToggleIntegration = async (id: string) => {
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/settings/integrations/${id}/toggle`, {
+        method: 'POST'
+      });
+      if (res.ok) {
+        const updated = await res.json();
+        setIntegrationsList(prev => prev.map(integration => 
+          integration.id === id ? { ...integration, connected: updated.connected, lastSync: updated.lastSync } : integration
+        ));
+        showToast(`Integration ${updated.connected ? 'connected successfully!' : 'disconnected.'}`);
+      } else {
+        showToast('Failed to toggle integration.', 'error');
       }
-      return integration;
-    }));
+    } catch {
+      showToast('Error syncing with clinical server.', 'error');
+    }
   };
 
   // Handle Invoice Download Simulate
   const handleDownloadInvoice = (invId: string) => {
+    const csvContent = `Invoice ID,Date,Amount,Status\n${invId},${new Date().toLocaleDateString()},199.00,Paid`;
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    link.setAttribute("href", url);
+    link.setAttribute("download", `Invoice_${invId}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
     showToast(`Downloading receipt for ${invId}...`);
   };
 
@@ -304,7 +311,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onSaveSettings }) =>
         </div>
         <button 
           onClick={handleSaveChanges}
-          className="flex items-center gap-2 bg-gradient-to-r from-[#4F46E5] to-[#7C3AED] hover:opacity-90 text-white font-bold text-xs px-6 py-3 rounded-[14px] premium-shadow transition-transform active:scale-95 cursor-pointer"
+          className="flex items-center gap-2 bg-gradient-to-r from-[#6D5DF6] to-[#7C3AED] hover:opacity-90 text-white font-bold text-xs px-6 py-3 rounded-[14px] premium-shadow transition-transform active:scale-95 cursor-pointer"
         >
           <Save className="w-4 h-4" /> Save Changes
         </button>
@@ -319,7 +326,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onSaveSettings }) =>
                <button
                  key={item.id}
                  onClick={() => setActiveMenu(item.id)}
-                 className={`flex items-center gap-3 px-4 py-3.5 rounded-[12px] transition-all text-sm font-bold w-full text-left border ${activeMenu === item.id ? 'bg-[#EEF4FF] text-[#2563EB] shadow-sm border-[#BFDBFE]/50' : 'text-[#6B7280] border-transparent hover:bg-[#F9FAFB] hover:text-[#111827]'}`}
+                 className={`flex items-center gap-3 px-4 py-3.5 rounded-[16px] transition-all text-sm font-bold w-full text-left border ${activeMenu === item.id ? 'bg-[#EEF4FF] text-[#2563EB] shadow-sm border-[#BFDBFE]/50' : 'text-[#6B7280] border-transparent hover:bg-[#F7F9FC] hover:text-[#111827]'}`}
                >
                  <item.icon className={`w-5 h-5 ${activeMenu === item.id ? 'text-[#2563EB]' : 'text-[#9CA3AF]'}`} />
                  {item.label}
@@ -351,7 +358,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onSaveSettings }) =>
                        type="text" 
                        value={practiceName} 
                        onChange={(e) => setPracticeName(e.target.value)}
-                       className="w-full bg-[#F9FAFB] border border-[#E8EDF5] rounded-[12px] py-3 px-4 text-sm font-bold text-[#111827] outline-none focus:border-[#4F46E5] focus:bg-white transition-all"
+                       className="w-full bg-[#F7F9FC] border border-[#E8EDF5] rounded-[16px] py-3 px-4 text-sm font-bold text-[#111827] outline-none focus:border-[#6D5DF6] focus:bg-white transition-all"
                      />
                    </div>
                    <div>
@@ -360,7 +367,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onSaveSettings }) =>
                        type="text" 
                        value={practicePhone} 
                        onChange={(e) => setPracticePhone(e.target.value)}
-                       className="w-full bg-[#F9FAFB] border border-[#E8EDF5] rounded-[12px] py-3 px-4 text-sm font-bold text-[#111827] outline-none focus:border-[#4F46E5] focus:bg-white transition-all"
+                       className="w-full bg-[#F7F9FC] border border-[#E8EDF5] rounded-[16px] py-3 px-4 text-sm font-bold text-[#111827] outline-none focus:border-[#6D5DF6] focus:bg-white transition-all"
                      />
                    </div>
                  </div>
@@ -373,7 +380,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onSaveSettings }) =>
                      <select 
                        value={timezone} 
                        onChange={(e) => setTimezone(e.target.value)}
-                       className="w-full bg-[#F9FAFB] border border-[#E8EDF5] rounded-[12px] py-3 px-3 text-sm font-bold text-[#111827] outline-none focus:border-[#4F46E5] focus:bg-white transition-all cursor-pointer"
+                       className="w-full bg-[#F7F9FC] border border-[#E8EDF5] rounded-[16px] py-3 px-3 text-sm font-bold text-[#111827] outline-none focus:border-[#6D5DF6] focus:bg-white transition-all cursor-pointer"
                      >
                        <option value="Eastern Time (US & Canada)">Eastern Time (US & Canada)</option>
                        <option value="Central Time (US & Canada)">Central Time (US & Canada)</option>
@@ -387,7 +394,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onSaveSettings }) =>
                      <select 
                        value={language} 
                        onChange={(e) => setLanguage(e.target.value)}
-                       className="w-full bg-[#F9FAFB] border border-[#E8EDF5] rounded-[12px] py-3 px-3 text-sm font-bold text-[#111827] outline-none focus:border-[#4F46E5] focus:bg-white transition-all cursor-pointer"
+                       className="w-full bg-[#F7F9FC] border border-[#E8EDF5] rounded-[16px] py-3 px-3 text-sm font-bold text-[#111827] outline-none focus:border-[#6D5DF6] focus:bg-white transition-all cursor-pointer"
                      >
                        <option value="en">English (US)</option>
                        <option value="es">Español (ES)</option>
@@ -408,14 +415,14 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onSaveSettings }) =>
                         type="time" 
                         value={openTime} 
                         onChange={(e) => setOpenTime(e.target.value)}
-                        className="bg-[#F9FAFB] border border-[#E8EDF5] rounded-[10px] py-2 px-3 text-sm font-bold text-[#111827]"
+                        className="bg-[#F7F9FC] border border-[#E8EDF5] rounded-[10px] py-2 px-3 text-sm font-bold text-[#111827]"
                       />
                       <span className="text-xs text-[#9CA3AF] font-bold">to</span>
                       <input 
                         type="time" 
                         value={closeTime} 
                         onChange={(e) => setCloseTime(e.target.value)}
-                        className="bg-[#F9FAFB] border border-[#E8EDF5] rounded-[10px] py-2 px-3 text-sm font-bold text-[#111827]"
+                        className="bg-[#F7F9FC] border border-[#E8EDF5] rounded-[10px] py-2 px-3 text-sm font-bold text-[#111827]"
                       />
                     </div>
                  </div>
@@ -435,7 +442,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onSaveSettings }) =>
                            className={`px-4 py-2 border rounded-[10px] text-xs font-bold transition-all uppercase tracking-wider ${
                              themeMode === mode 
                                ? 'bg-[#111827] text-white border-[#111827]' 
-                               : 'bg-white text-[#6B7280] border-[#E8EDF5] hover:bg-[#F9FAFB]'
+                               : 'bg-white text-[#6B7280] border-[#E8EDF5] hover:bg-[#F7F9FC]'
                            }`}
                          >
                            {mode}
@@ -472,12 +479,12 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onSaveSettings }) =>
                            max="3" 
                            value={schedulingAggressiveness} 
                            onChange={(e) => setSchedulingAggressiveness(parseInt(e.target.value))}
-                           className="w-full accent-[#4F46E5] h-2 bg-[#F3F4F6] rounded-lg appearance-none cursor-pointer" 
+                           className="w-full accent-[#6D5DF6] h-2 bg-[#F3F4F6] rounded-lg appearance-none cursor-pointer" 
                          />
                          <div className="flex justify-between text-[10px] font-bold text-[#9CA3AF] mt-2 uppercase tracking-wider">
-                           <span className={schedulingAggressiveness === 1 ? 'text-[#4F46E5]' : ''}>Conservative</span>
-                           <span className={schedulingAggressiveness === 2 ? 'text-[#4F46E5]' : ''}>Balanced</span>
-                           <span className={schedulingAggressiveness === 3 ? 'text-[#4F46E5]' : ''}>Aggressive</span>
+                           <span className={schedulingAggressiveness === 1 ? 'text-[#6D5DF6]' : ''}>Conservative</span>
+                           <span className={schedulingAggressiveness === 2 ? 'text-[#6D5DF6]' : ''}>Balanced</span>
+                           <span className={schedulingAggressiveness === 3 ? 'text-[#6D5DF6]' : ''}>Aggressive</span>
                          </div>
                       </div>
                    </div>
@@ -510,7 +517,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onSaveSettings }) =>
                       <select 
                         value={confidenceThreshold}
                         onChange={(e) => setConfidenceThreshold(e.target.value)}
-                        className="bg-[#F9FAFB] border border-[#E8EDF5] text-[#111827] text-sm font-bold rounded-[10px] focus:ring-[#4F46E5] focus:border-[#4F46E5] block p-2.5 outline-none cursor-pointer"
+                        className="bg-[#F7F9FC] border border-[#E8EDF5] text-[#111827] text-sm font-bold rounded-[10px] focus:ring-[#6D5DF6] focus:border-[#6D5DF6] block p-2.5 outline-none cursor-pointer"
                       >
                         <option>70% (Loose)</option>
                         <option>85% (Recommended)</option>
@@ -530,8 +537,8 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onSaveSettings }) =>
                           onClick={() => setAiModel('gpt-4o')}
                           className={`flex items-center gap-3 p-3 border rounded-[10px] cursor-pointer transition-all ${
                             aiModel === 'gpt-4o' 
-                              ? 'border-[#4F46E5] bg-[#EEF4FF]' 
-                              : 'border-[#E8EDF5] bg-white hover:bg-[#F9FAFB]'
+                              ? 'border-[#6D5DF6] bg-[#EEF4FF]' 
+                              : 'border-[#E8EDF5] bg-white hover:bg-[#F7F9FC]'
                           }`}
                         >
                           <input 
@@ -539,16 +546,16 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onSaveSettings }) =>
                             name="model" 
                             checked={aiModel === 'gpt-4o'} 
                             onChange={() => setAiModel('gpt-4o')}
-                            className="w-4 h-4 text-[#4F46E5] bg-white border-gray-300 focus:ring-[#4F46E5]" 
+                            className="w-4 h-4 text-[#6D5DF6] bg-white border-gray-300 focus:ring-[#6D5DF6]" 
                           />
-                          <span className={`text-sm font-bold ${aiModel === 'gpt-4o' ? 'text-[#4F46E5]' : 'text-[#6B7280]'}`}>GPT-4o (Default)</span>
+                          <span className={`text-sm font-bold ${aiModel === 'gpt-4o' ? 'text-[#6D5DF6]' : 'text-[#6B7280]'}`}>GPT-4o (Default)</span>
                         </label>
                         <label 
                           onClick={() => setAiModel('claude')}
                           className={`flex items-center gap-3 p-3 border rounded-[10px] cursor-pointer transition-all ${
                             aiModel === 'claude' 
                               ? 'border-[#2563EB] bg-[#EFF6FF]' 
-                              : 'border-[#E8EDF5] bg-white hover:bg-[#F9FAFB]'
+                              : 'border-[#E8EDF5] bg-white hover:bg-[#F7F9FC]'
                           }`}
                         >
                           <input 
@@ -580,11 +587,11 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onSaveSettings }) =>
                 <div className="h-px w-full bg-[#E8EDF5]"></div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-                  <div className="p-6 border border-indigo-100 bg-indigo-50/50 rounded-[16px]">
-                    <BrainCircuit className="w-8 h-8 text-indigo-600 mb-4" />
+                  <div className="p-6 border border-[#E0D9FD] bg-[#EEEAFE]/50 rounded-[16px]">
+                    <BrainCircuit className="w-8 h-8 text-[#6D5DF6] mb-4" />
                     <p className="text-[#6B7280] text-sm font-bold mb-1">Clinic Tokens Used (MTD)</p>
                     <p className="text-4xl font-black text-[#111827]">2.4M</p>
-                    <p className="text-xs text-indigo-600 font-bold mt-2 bg-indigo-100 px-3 py-1 rounded-full inline-block">Est. Cost: $24.00</p>
+                    <p className="text-xs text-[#6D5DF6] font-bold mt-2 bg-[#E0D9FD] px-3 py-1 rounded-full inline-block">Est. Cost: $24.00</p>
                   </div>
                   <div className="p-6 border border-emerald-100 bg-emerald-50/50 rounded-[16px]">
                     <Activity className="w-8 h-8 text-emerald-600 mb-4" />
@@ -602,10 +609,10 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onSaveSettings }) =>
                       { name: 'Automated Clinical Summaries', usage: '800K tokens', cost: '$8.00' },
                       { name: 'Billing Code Extraction', usage: '400K tokens', cost: '$4.00' }
                     ].map((item, i) => (
-                      <div key={i} className="flex justify-between items-center p-4 border border-[#F3F4F6] rounded-[12px] hover:bg-[#F9FAFB] transition-colors">
+                      <div key={i} className="flex justify-between items-center p-4 border border-[#F3F4F6] rounded-[16px] hover:bg-[#F7F9FC] transition-colors">
                         <span className="text-sm font-bold text-[#111827]">{item.name}</span>
                         <div className="text-right">
-                          <span className="block text-sm font-bold text-[#4F46E5]">{item.usage}</span>
+                          <span className="block text-sm font-bold text-[#6D5DF6]">{item.usage}</span>
                           <span className="block text-xs font-medium text-[#6B7280]">{item.cost}</span>
                         </div>
                       </div>
@@ -621,13 +628,13 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onSaveSettings }) =>
                 <div className="flex justify-between items-start">
                   <div>
                     <h3 className="text-xl font-bold text-[#111827] mb-2 flex items-center gap-2">
-                      <Users className="w-5 h-5 text-[#4F46E5]" /> Team & Access Control
+                      <Users className="w-5 h-5 text-[#6D5DF6]" /> Team & Access Control
                     </h3>
                     <p className="text-sm text-[#6B7280] font-medium">Manage clinical staff members, physicians, and billing agents access permissions.</p>
                   </div>
                   <button 
                     onClick={() => setShowInviteModal(true)}
-                    className="flex items-center gap-1.5 bg-[#4F46E5] hover:bg-[#4338CA] text-white font-bold text-xs px-4 py-2.5 rounded-[10px] transition-transform active:scale-95 cursor-pointer"
+                    className="flex items-center gap-1.5 bg-[#6D5DF6] hover:bg-[#5B4AE8] text-white font-bold text-xs px-4 py-2.5 rounded-[10px] transition-transform active:scale-95 cursor-pointer"
                   >
                     <Plus className="w-4 h-4" /> Invite Staff Member
                   </button>
@@ -648,10 +655,10 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onSaveSettings }) =>
                     </thead>
                     <tbody className="text-xs font-semibold text-[#111827]">
                       {teamMembers.map((member) => (
-                        <tr key={member.id} className="border-b border-[#F3F4F6] hover:bg-[#F9FAFB]/50 last:border-0">
+                        <tr key={member.id} className="border-b border-[#F3F4F6] hover:bg-[#F7F9FC]/50 last:border-0">
                           <td className="py-3.5 px-4">
                             <div className="flex items-center gap-2.5">
-                              <div className="w-8 h-8 rounded-full bg-[#EEF4FF] flex items-center justify-center text-[10px] font-bold text-[#4F46E5] border border-[#BFDBFE]">
+                              <div className="w-8 h-8 rounded-full bg-[#EEF4FF] flex items-center justify-center text-[10px] font-bold text-[#6D5DF6] border border-[#BFDBFE]">
                                 {member.name.split(' ').map(n => n[0]).join('')}
                               </div>
                               <span className="font-bold text-[#111827]">{member.name}</span>
@@ -661,7 +668,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onSaveSettings }) =>
                           <td className="py-3.5 px-4">
                             <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
                               member.role.includes('Administrator') 
-                                ? 'bg-indigo-50 text-indigo-700 border border-indigo-200'
+                                ? 'bg-[#EEEAFE] text-[#5B4AE8] border border-indigo-200'
                                 : member.role.includes('Manager')
                                 ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
                                 : 'bg-slate-50 text-slate-700 border border-slate-200'
@@ -795,7 +802,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onSaveSettings }) =>
                       <select 
                         value={reminderInterval}
                         onChange={(e) => setReminderInterval(e.target.value)}
-                        className="bg-[#F9FAFB] border border-[#E8EDF5] text-[#111827] text-sm font-bold rounded-[10px] focus:ring-[#4F46E5] focus:border-[#4F46E5] block p-2.5 outline-none cursor-pointer"
+                        className="bg-[#F7F9FC] border border-[#E8EDF5] text-[#111827] text-sm font-bold rounded-[10px] focus:ring-[#6D5DF6] focus:border-[#6D5DF6] block p-2.5 outline-none cursor-pointer"
                       >
                         <option value="12h">12 Hours Prior</option>
                         <option value="24h">24 Hours Prior</option>
@@ -811,7 +818,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onSaveSettings }) =>
              <div className="space-y-6 animate-in fade-in">
                 <div>
                    <h3 className="text-xl font-bold text-[#111827] mb-2 flex items-center gap-2">
-                     <Database className="w-5 h-5 text-indigo-600" /> System Connectors & Integrations
+                     <Database className="w-5 h-5 text-[#6D5DF6]" /> System Connectors & Integrations
                    </h3>
                    <p className="text-sm text-[#6B7280] font-medium">Verify active connection links and API synchronizations with clinic platforms.</p>
                 </div>
@@ -822,7 +829,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onSaveSettings }) =>
                   {integrationsList.map(integration => (
                     <div 
                       key={integration.id} 
-                      className="border border-[#E8EDF5] rounded-[20px] p-5 flex justify-between items-center bg-[#F9FAFB]/50 hover:bg-white transition-all premium-shadow group"
+                      className="border border-[#E8EDF5] rounded-[20px] p-5 flex justify-between items-center bg-[#F7F9FC]/50 hover:bg-white transition-all premium-shadow group"
                     >
                       <div className="flex items-center gap-4">
                         <div className={`w-10 h-10 rounded-full flex items-center justify-center border ${
@@ -953,7 +960,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onSaveSettings }) =>
                         </thead>
                         <tbody className="text-xs font-semibold text-[#111827]">
                           {invoices.map(inv => (
-                            <tr key={inv.id} className="border-b border-[#F3F4F6] hover:bg-[#F9FAFB]/50 last:border-0">
+                            <tr key={inv.id} className="border-b border-[#F3F4F6] hover:bg-[#F7F9FC]/50 last:border-0">
                               <td className="py-3.5 px-4 font-mono text-[#2563EB] font-bold">{inv.id}</td>
                               <td className="py-3.5 px-4 text-slate-500">{inv.date}</td>
                               <td className="py-3.5 px-4 text-slate-800 font-bold">${inv.amount.toFixed(2)}</td>
@@ -1011,7 +1018,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onSaveSettings }) =>
                      </thead>
                      <tbody className="text-xs font-semibold text-[#111827]">
                        {auditLogs.map((log) => (
-                         <tr key={log.id} className="border-b border-[#F3F4F6] hover:bg-[#F9FAFB]/50 last:border-0">
+                         <tr key={log.id} className="border-b border-[#F3F4F6] hover:bg-[#F7F9FC]/50 last:border-0">
                            <td className="py-3.5 px-4 text-slate-500 font-mono">{new Date(log.timestamp).toLocaleString()}</td>
                            <td className="py-3.5 px-4 text-[#2563EB] font-bold">{log.user_email}</td>
                            <td className="py-3.5 px-4">
@@ -1040,7 +1047,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onSaveSettings }) =>
             {/* Header */}
             <div className="bg-[#F8FAFC] border-b border-[#E8EDF5] px-6 py-4 flex justify-between items-center">
               <div className="flex items-center gap-2">
-                <div className="p-1.5 rounded-lg bg-indigo-50 text-[#4F46E5]">
+                <div className="p-1.5 rounded-lg bg-[#EEEAFE] text-[#6D5DF6]">
                   <Users className="w-4 h-4" />
                 </div>
                 <div>
@@ -1066,7 +1073,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onSaveSettings }) =>
                   value={inviteName}
                   onChange={(e) => setInviteName(e.target.value)}
                   placeholder="e.g. Dr. Robert Pattinson"
-                  className="w-full bg-[#F8FAFC] border border-[#E8EDF5] rounded-[12px] px-4 py-2.5 text-sm font-bold text-[#111827] outline-none focus:border-[#4F46E5] focus:ring-1 focus:ring-[#4F46E5] transition-all placeholder:text-[#9CA3AF]"
+                  className="w-full bg-[#F8FAFC] border border-[#E8EDF5] rounded-[16px] px-4 py-2.5 text-sm font-bold text-[#111827] outline-none focus:border-[#6D5DF6] focus:ring-1 focus:ring-[#6D5DF6] transition-all placeholder:text-[#9CA3AF]"
                 />
               </div>
 
@@ -1078,7 +1085,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onSaveSettings }) =>
                   value={inviteEmail}
                   onChange={(e) => setInviteEmail(e.target.value)}
                   placeholder="e.g. r.pattinson@sentinel.com"
-                  className="w-full bg-[#F8FAFC] border border-[#E8EDF5] rounded-[12px] px-4 py-2.5 text-sm font-bold text-[#111827] outline-none focus:border-[#4F46E5] focus:ring-1 focus:ring-[#4F46E5] transition-all placeholder:text-[#9CA3AF]"
+                  className="w-full bg-[#F8FAFC] border border-[#E8EDF5] rounded-[16px] px-4 py-2.5 text-sm font-bold text-[#111827] outline-none focus:border-[#6D5DF6] focus:ring-1 focus:ring-[#6D5DF6] transition-all placeholder:text-[#9CA3AF]"
                 />
               </div>
 
@@ -1087,7 +1094,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onSaveSettings }) =>
                 <select
                   value={inviteRole}
                   onChange={(e) => setInviteRole(e.target.value)}
-                  className="w-full bg-[#F8FAFC] border border-[#E8EDF5] rounded-[12px] px-3 py-2.5 text-sm font-bold text-[#111827] outline-none focus:border-[#4F46E5] focus:ring-1 focus:ring-[#4F46E5] transition-all cursor-pointer"
+                  className="w-full bg-[#F8FAFC] border border-[#E8EDF5] rounded-[16px] px-3 py-2.5 text-sm font-bold text-[#111827] outline-none focus:border-[#6D5DF6] focus:ring-1 focus:ring-[#6D5DF6] transition-all cursor-pointer"
                 >
                   <option value="Clinic Administrator">Clinic Administrator</option>
                   <option value="Operations Manager">Operations Manager</option>
@@ -1101,13 +1108,13 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onSaveSettings }) =>
                 <button
                   type="button"
                   onClick={() => setShowInviteModal(false)}
-                  className="bg-white border border-[#E8EDF5] hover:bg-slate-50 text-slate-700 font-bold text-xs px-5 py-2.5 rounded-[12px] transition-colors cursor-pointer"
+                  className="bg-white border border-[#E8EDF5] hover:bg-slate-50 text-slate-700 font-bold text-xs px-5 py-2.5 rounded-[16px] transition-colors cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="bg-[#4F46E5] hover:bg-[#4338CA] text-white font-bold text-xs px-6 py-2.5 rounded-[12px] transition-all hover:scale-105 active:scale-95 flex items-center gap-1.5 cursor-pointer"
+                  className="bg-[#6D5DF6] hover:bg-[#5B4AE8] text-white font-bold text-xs px-6 py-2.5 rounded-[16px] transition-all hover:scale-105 active:scale-95 flex items-center gap-1.5 cursor-pointer"
                 >
                   <Check className="w-3.5 h-3.5" /> Send Invitation
                 </button>

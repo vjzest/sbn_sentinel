@@ -25,7 +25,7 @@ export const StatCard: React.FC<StatCardProps> = ({ title, value, icon: Icon, tr
   return (
     <div 
       onClick={onClick}
-      className={`bg-white border border-[#E8EDF5] rounded-[24px] p-6 relative overflow-hidden group card-hover premium-shadow flex flex-col justify-between h-[160px] ${onClick ? 'cursor-pointer select-none hover:border-[#4F46E5]/40' : 'cursor-default'}`}
+      className={`bg-white border border-[#E8EDF5] rounded-[24px] p-6 relative overflow-hidden group card-hover premium-shadow flex flex-col justify-between h-[160px] ${onClick ? 'cursor-pointer select-none hover:border-[#6D5DF6]/40' : 'cursor-default'}`}
     >
       
       <div className="flex justify-between items-start z-10">

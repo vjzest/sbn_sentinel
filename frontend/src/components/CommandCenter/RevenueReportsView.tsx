@@ -143,7 +143,7 @@ export const RevenueReportsView: React.FC = () => {
           <p className="text-sm text-[#6B7280] font-medium">Financial insights and real-time claim audits processed directly from clinic encounters.</p>
         </div>
         <div className="flex gap-3 relative">
-          <button onClick={() => setShowFilter(!showFilter)} className="flex items-center gap-2 bg-white border border-[#E8EDF5] text-[#111827] font-bold text-xs px-4 py-2.5 rounded-[12px] premium-shadow hover:bg-[#F9FAFB] transition-colors relative z-20 select-none">
+          <button onClick={() => setShowFilter(!showFilter)} className="flex items-center gap-2 bg-white border border-[#E8EDF5] text-[#111827] font-bold text-xs px-4 py-2.5 rounded-[16px] premium-shadow hover:bg-[#F7F9FC] transition-colors relative z-20 select-none">
             <Filter className="w-4 h-4 text-[#6B7280]" /> Filter: {filterRange}
           </button>
           
@@ -165,7 +165,7 @@ export const RevenueReportsView: React.FC = () => {
             </div>
           )}
 
-          <button onClick={handleExport} className={`flex items-center gap-2 text-white font-bold text-xs px-4 py-2.5 rounded-[12px] premium-shadow transition-colors ${isExporting ? 'bg-[#10B981] hover:bg-[#059669]' : 'bg-[#111827] hover:bg-[#1F2937]'}`}>
+          <button onClick={handleExport} className={`flex items-center gap-2 text-white font-bold text-xs px-4 py-2.5 rounded-[16px] premium-shadow transition-colors ${isExporting ? 'bg-[#10B981] hover:bg-[#059669]' : 'bg-[#111827] hover:bg-[#1F2937]'}`}>
             {isExporting ? <Check className="w-4 h-4" /> : <Download className="w-4 h-4" />}
             {isExporting ? 'Exported!' : 'Export CSV'}
           </button>
@@ -222,8 +222,8 @@ export const RevenueReportsView: React.FC = () => {
              <svg viewBox="0 0 800 300" className="w-full h-full overflow-visible" preserveAspectRatio="none">
                 <defs>
                   <linearGradient id="mainChart" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#4F46E5" stopOpacity={0.2}/>
-                    <stop offset="95%" stopColor="#4F46E5" stopOpacity={0}/>
+                    <stop offset="5%" stopColor="#6D5DF6" stopOpacity={0.2}/>
+                    <stop offset="95%" stopColor="#6D5DF6" stopOpacity={0}/>
                   </linearGradient>
                 </defs>
                 <g className="text-[#9CA3AF] text-[10px] font-mono font-bold">
@@ -245,8 +245,8 @@ export const RevenueReportsView: React.FC = () => {
  
                 <g className="transition-transform duration-500">
                   <path d="M20,180 C150,80 300,240 450,140 C600,40 700,100 800,60 L800,260 L20,260 Z" fill="url(#mainChart)"/>
-                  <path d="M20,180 C150,80 300,240 450,140 C600,40 700,100 800,60" fill="none" stroke="#4F46E5" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"/>
-                  <circle cx="800" cy="60" r="6" fill="#4F46E5" stroke="white" strokeWidth="3" className="animate-pulse" />
+                  <path d="M20,180 C150,80 300,240 450,140 C600,40 700,100 800,60" fill="none" stroke="#6D5DF6" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"/>
+                  <circle cx="800" cy="60" r="6" fill="#6D5DF6" stroke="white" strokeWidth="3" className="animate-pulse" />
                   
                   <g transform="translate(730, 15)">
                      <rect width="80" height="30" rx="12" fill="#111827" />
@@ -370,9 +370,9 @@ export const RevenueReportsView: React.FC = () => {
                   <tr 
                     key={i} 
                     onClick={() => setSelectedClaimDetail({ ...row, sBg, sText })}
-                    className="border-b border-[#F3F4F6] hover:bg-[#F9FAFB] transition-colors last:border-0 cursor-pointer"
+                    className="border-b border-[#F3F4F6] hover:bg-[#F7F9FC] transition-colors last:border-0 cursor-pointer"
                   >
-                    <td className="py-4 px-4 font-mono text-[#4F46E5] text-xs font-bold">{row.id}</td>
+                    <td className="py-4 px-4 font-mono text-[#6D5DF6] text-xs font-bold">{row.id}</td>
                     <td className="py-4 px-4 font-bold">{enc.patient_name}</td>
                     <td className="py-4 px-4 font-bold text-xs">{row.code}</td>
                     <td className="py-4 px-4 text-[#6B7280]">{row.payer}</td>
@@ -401,7 +401,7 @@ export const RevenueReportsView: React.FC = () => {
               </div>
               <button 
                 onClick={() => setSelectedClaimDetail(null)} 
-                className="w-8 h-8 rounded-full bg-white border border-[#E8EDF5] flex items-center justify-center hover:bg-[#F9FAFB] transition-colors cursor-pointer"
+                className="w-8 h-8 rounded-full bg-white border border-[#E8EDF5] flex items-center justify-center hover:bg-[#F7F9FC] transition-colors cursor-pointer"
               >
                 <X className="w-4 h-4 text-[#6B7280]" />
               </button>
@@ -429,7 +429,7 @@ export const RevenueReportsView: React.FC = () => {
                 <p className="text-xs font-bold text-[#111827]">{selectedClaimDetail.diagnosis}</p>
               </div>
  
-              <div className="bg-[#FAFBFD] border border-[#E8EDF5] rounded-[12px] p-3 max-h-[160px] overflow-y-auto">
+              <div className="bg-[#FAFBFD] border border-[#E8EDF5] rounded-[16px] p-3 max-h-[160px] overflow-y-auto">
                 <span className="text-[9px] font-bold text-[#9CA3AF] uppercase">Clinical Notes Summary</span>
                 <p className="text-xs text-[#4B5563] font-medium mt-1 leading-relaxed whitespace-pre-wrap">{selectedClaimDetail.details}</p>
               </div>
@@ -461,7 +461,7 @@ export const RevenueReportsView: React.FC = () => {
               </div>
               <button 
                 onClick={() => setShowClaimsModal(false)} 
-                className="w-8 h-8 rounded-full bg-white border border-[#E8EDF5] flex items-center justify-center hover:bg-[#F9FAFB] transition-colors cursor-pointer"
+                className="w-8 h-8 rounded-full bg-white border border-[#E8EDF5] flex items-center justify-center hover:bg-[#F7F9FC] transition-colors cursor-pointer"
               >
                 <X className="w-4 h-4 text-[#6B7280]" />
               </button>
@@ -496,7 +496,7 @@ export const RevenueReportsView: React.FC = () => {
               <div className="flex gap-3 pt-2">
                 <button 
                   onClick={() => setShowClaimsModal(false)}
-                  className="flex-1 bg-white border border-[#E8EDF5] hover:bg-[#F9FAFB] text-[#4B5563] font-bold py-2.5 rounded-[10px] text-xs transition-colors cursor-pointer"
+                  className="flex-1 bg-white border border-[#E8EDF5] hover:bg-[#F7F9FC] text-[#4B5563] font-bold py-2.5 rounded-[10px] text-xs transition-colors cursor-pointer"
                 >
                   Cancel
                 </button>

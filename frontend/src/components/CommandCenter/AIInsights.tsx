@@ -64,7 +64,7 @@ export const AIInsights: React.FC = () => {
       
       <div className="flex items-center justify-between mb-6">
         <h3 className="text-base font-bold text-[#111827] flex items-center gap-2">
-          <BrainCircuit className="w-5 h-5 text-[#4F46E5]" />
+          <BrainCircuit className="w-5 h-5 text-[#6D5DF6]" />
           Sentinel AI Engine
         </h3>
         <span className="text-[10px] font-bold bg-[#F5F3FF] text-[#7C3AED] px-2.5 py-1 rounded-full border border-[#EDE9FE]">
@@ -117,10 +117,10 @@ export const AIInsights: React.FC = () => {
                       {latestInsightSignal.recommended_action || "Acknowledge event to continue tracking."}
                     </p>
                     <div className="flex gap-3">
-                      <button onClick={handleApprove} className="bg-[#4F46E5] hover:bg-[#4338CA] text-white font-bold text-xs px-5 py-2.5 rounded-[10px] shadow-[0_4px_10px_rgba(79,70,229,0.3)] transition-transform active:scale-95">
+                      <button onClick={handleApprove} className="bg-[#6D5DF6] hover:bg-[#5B4AE8] text-white font-bold text-xs px-5 py-2.5 rounded-[10px] shadow-[0_4px_10px_rgba(79,70,229,0.3)] transition-transform active:scale-95">
                         Approve Action
                       </button>
-                      <button onClick={() => setActionStatus('dismissed')} className="bg-white border border-[#E8EDF5] hover:bg-[#F9FAFB] text-[#111827] font-bold text-xs px-5 py-2.5 rounded-[10px] shadow-sm transition-transform active:scale-95">
+                      <button onClick={() => setActionStatus('dismissed')} className="bg-white border border-[#E8EDF5] hover:bg-[#F7F9FC] text-[#111827] font-bold text-xs px-5 py-2.5 rounded-[10px] shadow-sm transition-transform active:scale-95">
                         Dismiss
                       </button>
                     </div>
