@@ -37,16 +37,16 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onSaveSettings }) =>
 
   // Team & Access States
   const [teamMembers, setTeamMembers] = useState([
-    { id: 'usr-1', name: 'Dr. Sarah Jenkins', email: 's.jenkins@sentinel.com', role: 'Attending Doctor', status: 'Active' },
-    { id: 'usr-2', name: 'Dr. Alan Grant', email: 'a.grant@sentinel.com', role: 'Attending Doctor', status: 'Active' },
+    { id: 'usr-1', name: 'Dr. Sarah Jenkins', email: 's.jenkins@sentinel.com', role: 'Clinic Administrator', status: 'Active' },
+    { id: 'usr-2', name: 'Dr. Alan Grant', email: 'a.grant@sentinel.com', role: 'Operations Manager', status: 'Active' },
     { id: 'usr-3', name: 'Sarah Jenkins', email: 'manager@sentinel.com', role: 'Practice Manager', status: 'Active' },
-    { id: 'usr-4', name: 'Dr. Emily Chen', email: 'e.chen@sentinel.com', role: 'Attending Doctor', status: 'Active' },
-    { id: 'usr-5', name: 'John Davis', email: 'j.davis@sentinel.com', role: 'Billing Specialist', status: 'Active' }
+    { id: 'usr-4', name: 'Dr. Emily Chen', email: 'e.chen@sentinel.com', role: 'Staff User', status: 'Active' },
+    { id: 'usr-5', name: 'John Davis', email: 'j.davis@sentinel.com', role: 'Staff User', status: 'Active' }
   ]);
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [inviteName, setInviteName] = useState('');
   const [inviteEmail, setInviteEmail] = useState('');
-  const [inviteRole, setInviteRole] = useState('Attending Doctor');
+  const [inviteRole, setInviteRole] = useState('Staff User');
 
   // Notifications States
   const [notifySms, setNotifySms] = useState(true);
@@ -57,11 +57,11 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onSaveSettings }) =>
 
   // Integrations States
   const [integrationsList, setIntegrationsList] = useState([
+    { id: 'practice-fusion', name: 'Practice Fusion EHR', type: 'Clinical Integration', connected: true, lastSync: '1 hr ago' },
+    { id: 'gmail', name: 'Google Workspace Gmail', type: 'Secure Communication', connected: true, lastSync: '30 mins ago' },
     { id: 'twilio', name: 'Twilio Outbound Gateway', type: 'Voice & SMS API', connected: true, lastSync: '10 mins ago' },
-    { id: 'epic', name: 'Epic Systems EHR Sandbox', type: 'Clinical Integration', connected: true, lastSync: '1 hr ago' },
-    { id: 'kareo', name: 'Kareo Medical Billing API', type: 'Billing Integration', connected: true, lastSync: '2 hrs ago' },
-    { id: 'gmail', name: 'Google Workspace Gmail Sync', type: 'Secure Communication', connected: true, lastSync: '30 mins ago' },
-    { id: 'zoom', name: 'Zoom Telehealth Webhook Router', type: 'Video Integration', connected: false, lastSync: 'Never' }
+    { id: 'clearinghouse', name: 'Approved Clearinghouse API', type: 'Billing Integration', connected: true, lastSync: '2 hrs ago' },
+    { id: 'openai', name: 'OpenAI Intelligence Engine', type: 'AI Service (Approved V1)', connected: true, lastSync: '5 mins ago' }
   ]);
 
   // Billing States
@@ -629,7 +629,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onSaveSettings }) =>
                           <td className="py-3.5 px-4 text-slate-500">{member.email}</td>
                           <td className="py-3.5 px-4">
                             <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
-                              member.role.includes('Doctor') 
+                              member.role.includes('Administrator') 
                                 ? 'bg-indigo-50 text-indigo-700 border border-indigo-200'
                                 : member.role.includes('Manager')
                                 ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
@@ -1049,10 +1049,10 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onSaveSettings }) =>
                   onChange={(e) => setInviteRole(e.target.value)}
                   className="w-full bg-[#F8FAFC] border border-[#E8EDF5] rounded-[12px] px-3 py-2.5 text-sm font-bold text-[#111827] outline-none focus:border-[#4F46E5] focus:ring-1 focus:ring-[#4F46E5] transition-all cursor-pointer"
                 >
-                  <option value="Attending Doctor">Attending Doctor</option>
+                  <option value="Clinic Administrator">Clinic Administrator</option>
+                  <option value="Operations Manager">Operations Manager</option>
                   <option value="Practice Manager">Practice Manager</option>
-                  <option value="Billing Specialist">Billing Specialist</option>
-                  <option value="Medical Assistant">Medical Assistant</option>
+                  <option value="Staff User">Staff User</option>
                 </select>
               </div>
 

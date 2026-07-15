@@ -7,6 +7,7 @@ interface AuthScreenProps {
 
 export const AuthScreen: React.FC<AuthScreenProps> = ({ onLogin }) => {
   const [isLogin, setIsLogin] = useState(true);
+  const [isForgotPassword, setIsForgotPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   
   const [email, setEmail] = useState('');
@@ -24,6 +25,19 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onLogin }) => {
     setSuccessMsg('');
 
     try {
+      if (isForgotPassword) {
+        // Simulate Forgot Password API Call
+        setTimeout(() => {
+          setSuccessMsg('✅ Password reset link has been sent to your email.');
+          setIsLoading(false);
+          // Wait 3 seconds then return to login
+          setTimeout(() => {
+            setIsForgotPassword(false);
+            setSuccessMsg('');
+          }, 3000);
+        }, 1500);
+        return;
+      }
       if (isLogin) {
         const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/auth/login`, {
           method: 'POST',
@@ -119,9 +133,15 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onLogin }) => {
       <div className="w-full lg:w-1/2 flex items-center justify-center p-8 relative z-10">
         <div className="bg-white/80 backdrop-blur-xl border border-white/50 w-full max-w-md p-10 rounded-[32px] shadow-[0_20px_80px_rgba(79,70,229,0.12)] animate-in slide-in-from-bottom-4 duration-500">
           <div className="mb-8 text-center">
-            <h2 className="text-2xl font-extrabold text-[#111827] mb-2">{isLogin ? 'Welcome Back' : 'Register Your Clinic'}</h2>
+            <h2 className="text-2xl font-extrabold text-[#111827] mb-2">
+              {isForgotPassword ? 'Reset Password' : isLogin ? 'Welcome Back' : 'Register Your Clinic'}
+            </h2>
             <p className="text-sm text-[#6B7280] font-medium">
-              {isLogin ? 'Enter your credentials to access the portal' : 'Create your clinic workspace on SBN Sentinel'}
+              {isForgotPassword 
+                ? 'Enter your email to receive a password reset link' 
+                : isLogin 
+                  ? 'Enter your credentials to access the portal' 
+                  : 'Create your clinic workspace on SBN Sentinel'}
             </p>
           </div>
 
@@ -139,7 +159,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onLogin }) => {
               </div>
             )}
 
-            {!isLogin && (
+            {!isLogin && !isForgotPassword && (
               <>
                 <div>
                   <label className="block text-[11px] font-extrabold text-[#9CA3AF] uppercase tracking-wider mb-2">Clinic / Practice Name</label>
@@ -190,26 +210,36 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onLogin }) => {
             <div>
               <label className="block text-[11px] font-extrabold text-[#9CA3AF] uppercase tracking-wider mb-2 flex justify-between">
                 <span>Password</span>
-                {isLogin && <button type="button" className="text-[#2563EB] hover:underline normal-case font-semibold">Forgot?</button>}
+                {isLogin && !isForgotPassword && (
+                  <button 
+                    type="button" 
+                    onClick={() => { setIsForgotPassword(true); setError(''); setSuccessMsg(''); }}
+                    className="text-[#2563EB] hover:underline normal-case font-semibold cursor-pointer"
+                  >
+                    Forgot?
+                  </button>
+                )}
               </label>
-              <div className="relative">
-                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#9CA3AF]" />
-                <input 
-                  type={showPassword ? 'text' : 'password'}
-                  placeholder="••••••••"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full bg-[#F9FAFB] border border-[#E8EDF5] rounded-[16px] py-3.5 pl-12 pr-12 text-sm font-bold text-[#111827] outline-none focus:border-[#4F46E5] focus:bg-white transition-all"
-                  required 
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-[#9CA3AF] hover:text-[#111827] transition-colors cursor-pointer"
-                >
-                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                </button>
-              </div>
+              {!isForgotPassword && (
+                <div className="relative">
+                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#9CA3AF]" />
+                  <input 
+                    type={showPassword ? 'text' : 'password'}
+                    placeholder="••••••••"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="w-full bg-[#F9FAFB] border border-[#E8EDF5] rounded-[16px] py-3.5 pl-12 pr-12 text-sm font-bold text-[#111827] outline-none focus:border-[#4F46E5] focus:bg-white transition-all"
+                    required={!isForgotPassword} 
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-[#9CA3AF] hover:text-[#111827] transition-colors cursor-pointer"
+                  >
+                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
+              )}
             </div>
 
             <button 
@@ -221,22 +251,34 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onLogin }) => {
                 <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
               ) : (
                 <>
-                  {isLogin ? 'Sign In to Dashboard' : 'Create Clinic Account'}
+                  {isForgotPassword ? 'Send Reset Link' : isLogin ? 'Sign In to Dashboard' : 'Create Clinic Account'}
                   <ArrowRight className="w-4 h-4" />
                 </>
               )}
             </button>
           </form>
 
-          <p className="mt-8 text-center text-sm font-bold text-[#6B7280]">
-            {isLogin ? "Don't have an account? " : "Already have an account? "}
-            <button 
-              onClick={() => { setIsLogin(!isLogin); setError(''); setSuccessMsg(''); }} 
-              className="text-[#4F46E5] hover:underline cursor-pointer"
-            >
-              {isLogin ? 'Register Clinic' : 'Log in'}
-            </button>
-          </p>
+          {isForgotPassword ? (
+            <p className="mt-8 text-center text-sm font-bold text-[#6B7280]">
+              Remember your password?{' '}
+              <button 
+                onClick={() => { setIsForgotPassword(false); setError(''); setSuccessMsg(''); }} 
+                className="text-[#4F46E5] hover:underline cursor-pointer"
+              >
+                Back to log in
+              </button>
+            </p>
+          ) : (
+            <p className="mt-8 text-center text-sm font-bold text-[#6B7280]">
+              {isLogin ? "Don't have an account? " : "Already have an account? "}
+              <button 
+                onClick={() => { setIsLogin(!isLogin); setError(''); setSuccessMsg(''); }} 
+                className="text-[#4F46E5] hover:underline cursor-pointer"
+              >
+                {isLogin ? 'Register Clinic' : 'Log in'}
+              </button>
+            </p>
+          )}
         </div>
       </div>
     </div>

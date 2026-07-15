@@ -275,7 +275,7 @@ export default function Dashboard() {
               <p className="text-[9px] font-black text-[#94A3B8] uppercase tracking-[0.2em] mb-3 px-4">Core System</p>
               <div className="space-y-1">
                 <SidebarItem icon={LayoutDashboard} label="Dashboard" active={activeTab === 'dashboard'} onClick={() => setActiveTab('dashboard')} />
-                {['admin', 'clinic_admin'].includes(userRole) && (
+                {['org_admin', 'clinic_admin'].includes(userRole) && (
                   <>
                     <SidebarItem icon={BrainCircuit} label="Intelligence Layer" active={activeTab === 'intelligence'} onClick={() => setActiveTab('intelligence')} />
                     <SidebarItem icon={Cpu} label="Signals Hub" active={activeTab === 'signals'} onClick={() => setActiveTab('signals')} />
@@ -288,17 +288,17 @@ export default function Dashboard() {
             <div>
               <p className="text-[9px] font-black text-[#94A3B8] uppercase tracking-[0.2em] mb-3 px-4">Operations</p>
               <div className="space-y-1">
-                {['admin', 'clinic_admin', 'provider', 'frontdesk'].includes(userRole) && (
+                {['org_admin', 'clinic_admin', 'ops_manager', 'practice_manager', 'staff'].includes(userRole) && (
                   <SidebarItem icon={Users} label="Patient Flow" active={activeTab === 'patient-flow'} onClick={() => setActiveTab('patient-flow')} />
                 )}
-                {['admin', 'clinic_admin', 'provider', 'frontdesk'].includes(userRole) && (
+                {['org_admin', 'clinic_admin', 'ops_manager', 'practice_manager', 'staff'].includes(userRole) && (
                   <SidebarItem icon={Calendar} label="Schedule Optimizer" active={activeTab === 'schedule'} onClick={() => setActiveTab('schedule')} />
                 )}
-                {['admin', 'clinic_admin', 'provider', 'biller'].includes(userRole) && (
+                {['org_admin', 'clinic_admin', 'practice_manager'].includes(userRole) && (
                   <SidebarItem icon={FileText} label="Clinical Logs" active={activeTab === 'clinical-logs'} onClick={() => setActiveTab('clinical-logs')} />
                 )}
-                {['admin', 'clinic_admin', 'biller'].includes(userRole) && (
-                  <SidebarItem icon={DollarSign} label="Revenue Reports" active={activeTab === 'revenue'} onClick={() => setActiveTab('revenue')} />
+                {['org_admin', 'clinic_admin', 'ops_manager'].includes(userRole) && (
+                  <SidebarItem icon={DollarSign} label="Revenue Reports" active={activeTab === 'revenue-reports'} onClick={() => setActiveTab('revenue-reports')} />
                 )}
               </div>
             </div>
@@ -417,21 +417,22 @@ export default function Dashboard() {
                     onChange={(e) => {
                       const newRole = e.target.value;
                       setUserRole(newRole);
-                      if (newRole === 'provider' && ['connectors', 'revenue'].includes(activeTab)) {
+                      // Reset tab if role doesn't have access
+                      if (['practice_manager'].includes(newRole) && ['intelligence', 'signals', 'connectors', 'revenue-reports'].includes(activeTab)) {
                         setActiveTab('dashboard');
-                      } else if (newRole === 'biller' && ['intelligence', 'connectors', 'patient-flow', 'schedule'].includes(activeTab)) {
+                      } else if (['staff'].includes(newRole) && ['intelligence', 'signals', 'connectors', 'revenue-reports', 'clinical-logs'].includes(activeTab)) {
                         setActiveTab('dashboard');
-                      } else if (newRole === 'frontdesk' && ['revenue', 'clinical-logs', 'intelligence', 'connectors'].includes(activeTab)) {
+                      } else if (['ops_manager'].includes(newRole) && ['intelligence', 'signals', 'connectors', 'clinical-logs'].includes(activeTab)) {
                         setActiveTab('dashboard');
                       }
                     }}
                     className="bg-[#F3F4F6] border border-[#E8EDF5] text-xs font-bold text-[#4B5563] rounded-[10px] px-2.5 py-1.5 outline-none cursor-pointer hover:bg-gray-100 hover:text-[#111827] transition-colors"
                   >
-                    <option value="admin">System Admin</option>
+                    <option value="org_admin">Organization Admin</option>
                     <option value="clinic_admin">Clinic Admin</option>
-                    <option value="provider">Dr. Sarah Jenkins</option>
-                    <option value="biller">Billing Officer</option>
-                    <option value="frontdesk">Front Desk Agent</option>
+                    <option value="ops_manager">Operations Manager</option>
+                    <option value="practice_manager">Practice Manager</option>
+                    <option value="staff">Staff User</option>
                   </select>
                 </div>
 
@@ -460,17 +461,18 @@ export default function Dashboard() {
                   </div>
                   <div className="hidden md:block">
                     <p className="text-sm font-bold text-[#111827] group-hover:text-[#4F46E5] transition-colors">
-                      {userRole === 'admin' && 'Admin User'}
+                      {userRole === 'org_admin' && 'Org Admin'}
                       {userRole === 'clinic_admin' && 'Clinic Admin'}
-                      {userRole === 'provider' && 'Dr. Sarah Jenkins'}
-                      {userRole === 'biller' && 'Billing Officer'}
-                      {userRole === 'frontdesk' && 'Front Desk Agent'}
+                      {userRole === 'ops_manager' && 'Ops Manager'}
+                      {userRole === 'practice_manager' && 'Practice Manager'}
+                      {userRole === 'staff' && 'Staff User'}
                     </p>
                     <p className="text-[11px] text-[#6B7280] font-medium">
-                      {userRole === 'admin' && `System Admin • ${activePlan.toUpperCase()}`}
-                      {userRole === 'provider' && 'Clinical Provider'}
-                      {userRole === 'biller' && 'Revenue Operations'}
-                      {userRole === 'frontdesk' && 'Patient intake Coordinator'}
+                      {userRole === 'org_admin' && `Global Admin • ${activePlan.toUpperCase()}`}
+                      {userRole === 'clinic_admin' && `Clinic Admin • ${activePlan.toUpperCase()}`}
+                      {userRole === 'ops_manager' && 'Operations'}
+                      {userRole === 'practice_manager' && 'Practice Ops'}
+                      {userRole === 'staff' && 'General Staff'}
                     </p>
                   </div>
                   <ChevronDown className={`w-4 h-4 text-[#6B7280] group-hover:text-[#111827] transition-transform ${isProfileOpen ? 'rotate-180' : ''}`} />
