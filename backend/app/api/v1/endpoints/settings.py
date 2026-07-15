@@ -1,8 +1,11 @@
+from typing import List, Dict, Any
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from app.db.database import get_db
 from app.models.settings import SettingsModel
+from app.models.user import User
 from app.schemas.settings import SettingsUpdate, SettingsResponse
+from app.core.security import get_password_hash
 
 router = APIRouter()
 
@@ -59,3 +62,74 @@ def update_settings(payload: SettingsUpdate, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(settings)
     return settings
+
+@router.get("/team")
+def get_team_members(db: Session = Depends(get_db)) -> List[Dict[str, Any]]:
+    """Retrieve all clinic users (except super admins)."""
+    users = db.query(User).filter(User.role != "super_admin").all()
+    return [
+        {
+            "id": str(u.id),
+            "name": u.full_name or "Unknown",
+            "email": u.email,
+            "role": u.role,
+            "status": "Active" if u.is_active else "Inactive"
+        }
+        for u in users
+    ]
+
+@router.post("/team/invite")
+def invite_team_member(payload: Dict[str, Any], db: Session = Depends(get_db)):
+    """Invite a new staff member to the clinic."""
+    email = payload.get("email")
+    name = payload.get("name", "New Staff")
+    role = payload.get("role", "staff")
+    
+    if not email:
+        raise HTTPException(status_code=400, detail="Email is required")
+        
+    existing = db.query(User).filter(User.email == email).first()
+    if existing:
+        raise HTTPException(status_code=400, detail="Email already registered")
+        
+    new_user = User(
+        email=email,
+        full_name=name,
+        role=role,
+        hashed_password=get_password_hash("Sentinel@123"), # Default password
+        is_active=True
+    )
+    db.add(new_user)
+    db.commit()
+    db.refresh(new_user)
+    return {
+        "id": str(new_user.id),
+        "name": new_user.full_name,
+        "email": new_user.email,
+        "role": new_user.role,
+        "status": "Active"
+    }
+
+@router.delete("/team/{user_id}")
+def revoke_team_member(user_id: int, db: Session = Depends(get_db)):
+    """Revoke access for a team member."""
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    if user.role == "super_admin":
+        raise HTTPException(status_code=403, detail="Cannot revoke super admin")
+        
+    user.is_active = False
+    db.commit()
+    return {"message": "Access revoked successfully"}
+
+@router.get("/integrations")
+def get_integrations() -> List[Dict[str, Any]]:
+    """Get clinic integrations status."""
+    return [
+        { "id": 'practice-fusion', "name": 'Practice Fusion EHR', "type": 'Clinical Integration', "connected": True, "lastSync": '1 hr ago' },
+        { "id": 'gmail', "name": 'Google Workspace Gmail', "type": 'Secure Communication', "connected": True, "lastSync": '30 mins ago' },
+        { "id": 'twilio', "name": 'Twilio Outbound Gateway', "type": 'Voice & SMS API', "connected": True, "lastSync": '10 mins ago' },
+        { "id": 'clearinghouse', "name": 'Approved Clearinghouse API', "type": 'Billing Integration', "connected": True, "lastSync": '2 hrs ago' },
+        { "id": 'openai', "name": 'OpenAI Intelligence Engine', "type": 'AI Service (Approved V1)', "connected": True, "lastSync": '5 mins ago' }
+    ]

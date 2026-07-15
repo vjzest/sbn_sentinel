@@ -3,6 +3,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from app.db.database import get_db
 from app.models.user import User
+from pydantic import BaseModel, EmailStr
 from app.schemas.user import UserCreate, UserLogin, Token, UserResponse
 from app.core.security import verify_password, get_password_hash, create_access_token, ACCESS_TOKEN_EXPIRE_MINUTES
 
@@ -55,3 +56,17 @@ def login_access_token(user_in: UserLogin, db: Session = Depends(get_db)):
         "token_type": "bearer",
         "user": user
     }
+
+class ForgotPasswordRequest(BaseModel):
+    email: EmailStr
+
+@router.post("/forgot-password")
+def forgot_password(payload: ForgotPasswordRequest, db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.email == payload.email).first()
+    if not user:
+        # To prevent email enumeration, return the same success response
+        return {"message": "If that email is registered, a password reset link has been sent."}
+    
+    # In a real app, generate a secure reset token and send an email
+    # For now, simulate success
+    return {"message": "If that email is registered, a password reset link has been sent."}

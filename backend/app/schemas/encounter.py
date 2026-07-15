@@ -17,6 +17,9 @@ class EncounterCreate(BaseModel):
     avatar: Optional[str] = None
     clinical_notes: Optional[str] = None
     medications: Optional[str] = None
+    payer_network: Optional[str] = "Uninsured"
+    cpt_code: Optional[str] = "99213"
+    billing_amount: Optional[float] = 95.0
 
 class EncounterUpdate(BaseModel):
     status: Optional[str] = None
@@ -26,6 +29,9 @@ class EncounterUpdate(BaseModel):
     priority: Optional[str] = None
     clinical_notes: Optional[str] = None
     medications: Optional[str] = None
+    payer_network: Optional[str] = None
+    cpt_code: Optional[str] = None
+    billing_amount: Optional[float] = None
 
 class EncounterResponse(BaseModel):
     id: str
@@ -43,6 +49,9 @@ class EncounterResponse(BaseModel):
     avatar: Optional[str] = None
     clinical_notes: Optional[str] = None
     medications: Optional[str] = None
+    payer_network: str
+    cpt_code: str
+    billing_amount: float
 
     class Config:
         from_attributes = True

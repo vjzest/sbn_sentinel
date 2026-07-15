@@ -9,6 +9,7 @@ export interface SignalEvent {
   metadata?: any;
   ai_insight?: string;
   recommended_action?: string;
+  priority?: string;
 }
 
 interface SignalState {

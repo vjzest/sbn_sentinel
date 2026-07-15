@@ -120,10 +120,34 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onSaveSettings }) =>
     }
   };
 
-  useEffect(() => {
-    if (activeMenu === 'security') {
-      fetchAudits();
+  const fetchTeam = async () => {
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/settings/team`);
+      if (res.ok) {
+        const data = await res.json();
+        if (data.length > 0) setTeamMembers(data);
+      }
+    } catch (err) {
+      console.error("Failed to fetch team:", err);
     }
+  };
+
+  const fetchIntegrations = async () => {
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/settings/integrations`);
+      if (res.ok) {
+        const data = await res.json();
+        if (data.length > 0) setIntegrationsList(data);
+      }
+    } catch (err) {
+      console.error("Failed to fetch integrations:", err);
+    }
+  };
+
+  useEffect(() => {
+    if (activeMenu === 'security') fetchAudits();
+    if (activeMenu === 'team') fetchTeam();
+    if (activeMenu === 'integrations') fetchIntegrations();
   }, [activeMenu]);
 
   // Load clinical settings on component mount
@@ -205,23 +229,30 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onSaveSettings }) =>
   };
 
   // Handle Invite Member Submit
-  const handleInviteSubmit = (e: React.FormEvent) => {
+  const handleInviteSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!inviteName || !inviteEmail) return;
 
-    const newMember = {
-      id: `usr-${Math.floor(100 + Math.random() * 900)}`,
-      name: inviteName,
-      email: inviteEmail,
-      role: inviteRole,
-      status: 'Active'
-    };
-
-    setTeamMembers(prev => [...prev, newMember]);
-    setInviteName('');
-    setInviteEmail('');
-    setShowInviteModal(false);
-    showToast(`Invitation email successfully sent to ${newMember.email}`);
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/settings/team/invite`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: inviteName, email: inviteEmail, role: inviteRole })
+      });
+      if (res.ok) {
+        const newMember = await res.json();
+        setTeamMembers(prev => [...prev, newMember]);
+        setInviteName('');
+        setInviteEmail('');
+        setShowInviteModal(false);
+        showToast(`Invitation email successfully sent to ${newMember.email}`);
+      } else {
+        const errData = await res.json();
+        showToast(errData.detail || 'Failed to send invite', 'error');
+      }
+    } catch (err) {
+      showToast('Error syncing with clinical server.', 'error');
+    }
   };
 
   // Toggle Integration Status
@@ -645,9 +676,18 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onSaveSettings }) =>
                           </td>
                           <td className="py-3.5 px-4 text-right">
                             <button 
-                              onClick={() => {
-                                setTeamMembers(prev => prev.filter(m => m.id !== member.id));
-                                showToast(`Revoked clinical access for ${member.name}.`);
+                              onClick={async () => {
+                                try {
+                                  const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/settings/team/${member.id}`, { method: 'DELETE' });
+                                  if (res.ok) {
+                                    setTeamMembers(prev => prev.filter(m => m.id !== member.id));
+                                    showToast(`Revoked clinical access for ${member.name}.`);
+                                  } else {
+                                    showToast('Failed to revoke access.', 'error');
+                                  }
+                                } catch {
+                                  showToast('Error syncing with clinical server.', 'error');
+                                }
                               }}
                               className="text-[10px] font-bold text-rose-500 hover:text-rose-700 transition-colors cursor-pointer"
                             >

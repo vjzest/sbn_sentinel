@@ -20,3 +20,6 @@ class EncounterModel(Base):
     avatar = Column(String, nullable=True)
     clinical_notes = Column(String, nullable=True)
     medications = Column(String, nullable=True)
+    payer_network = Column(String, default="Uninsured")
+    cpt_code = Column(String, default="99213")
+    billing_amount = Column(Float, default=95.0)
