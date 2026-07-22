@@ -8,6 +8,7 @@ interface AuthScreenProps {
 export const AuthScreen: React.FC<AuthScreenProps> = ({ onLogin }) => {
   const [isLogin, setIsLogin] = useState(true);
   const [isForgotPassword, setIsForgotPassword] = useState(false);
+  const [isInviteMode, setIsInviteMode] = useState(false);
   const [isOtpMode, setIsOtpMode] = useState(false);
   const [otpValue, setOtpValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -33,31 +34,34 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onLogin }) => {
     setSuccessMsg('');
 
     try {
-      if (isForgotPassword) {
+      if (isForgotPassword || isInviteMode) {
         if (!isOtpMode) {
-          // Request OTP for reset
-          const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/auth/forgot-password`, {
+          // Request OTP for reset or activation
+          const endpoint = isInviteMode ? '/api/v1/auth/forgot-password' : '/api/v1/auth/forgot-password'; // We can use the same forgot password endpoint to send an OTP to the invited user
+          const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}${endpoint}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ email })
           });
           if (response.ok) {
-            setSuccessMsg('✅ OTP sent to your email.');
+            setSuccessMsg(isInviteMode ? '✅ Activation OTP sent to your email.' : '✅ OTP sent to your email.');
             setIsOtpMode(true);
           } else {
             setError('Failed to send OTP.');
           }
         } else {
-          // Verify OTP for reset
-          const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/auth/reset-password`, {
+          // Verify OTP for reset or activation
+          const endpoint = isInviteMode ? '/api/v1/auth/accept-invite' : '/api/v1/auth/reset-password';
+          const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}${endpoint}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ email, otp: otpValue, new_password: password })
           });
           if (response.ok) {
-            setSuccessMsg('✅ Password reset successful! Please log in.');
+            setSuccessMsg(isInviteMode ? '✅ Account activated successfully! Please log in.' : '✅ Password reset successful! Please log in.');
             setIsOtpMode(false);
             setIsForgotPassword(false);
+            setIsInviteMode(false);
             setOtpValue('');
             setPassword('');
           } else {
@@ -231,10 +235,12 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onLogin }) => {
         <div className="w-full max-w-2xl animate-in slide-in-from-bottom-4 duration-500">
           <div className="mb-8 text-center">
             <h2 className="text-2xl font-extrabold text-[#111827] mb-2">
-              {isForgotPassword ? (isOtpMode ? 'Enter OTP' : 'Reset Password') : isLogin ? 'Welcome Back, Doctor' : (isOtpMode ? 'Verify Email' : 'Register Your Clinic')}
+              {isInviteMode ? (isOtpMode ? 'Set Password' : 'Activate Account') : isForgotPassword ? (isOtpMode ? 'Enter OTP' : 'Reset Password') : isLogin ? 'Welcome Back, Doctor' : (isOtpMode ? 'Verify Email' : 'Register Your Clinic')}
             </h2>
             <p className="text-sm text-[#6B7280] font-medium">
-              {isForgotPassword 
+              {isInviteMode
+                ? (isOtpMode ? 'Enter the OTP and set your secure password to activate your account.' : 'Enter your email address to receive an activation OTP.')
+                : isForgotPassword 
                 ? (isOtpMode ? 'Enter the OTP sent to your email and your new password' : 'Enter your email to receive an OTP') 
                 : isLogin 
                   ? 'Enter your email and password to log in' 
@@ -351,19 +357,10 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onLogin }) => {
             )}
 
             <div>
-              <label className="block text-[11px] font-extrabold text-[#9CA3AF] uppercase tracking-wider mb-2 flex justify-between">
-                <span>{isForgotPassword && isOtpMode ? 'New Password' : 'Password'}</span>
-                {isLogin && !isForgotPassword && (
-                  <button 
-                    type="button" 
-                    onClick={() => { setIsForgotPassword(true); setError(''); setSuccessMsg(''); setIsOtpMode(false); }}
-                    className="text-[#2563EB] hover:underline normal-case font-semibold cursor-pointer"
-                  >
-                    Forgot?
-                  </button>
-                )}
+              <label className="block text-[11px] font-extrabold text-[#9CA3AF] uppercase tracking-wider mb-2">
+                <span>{(isForgotPassword || isInviteMode) && isOtpMode ? 'New Password' : 'Password'}</span>
               </label>
-              {(!isForgotPassword || (isForgotPassword && isOtpMode)) && !(!isForgotPassword && isOtpMode) && (
+              {(!(isForgotPassword || isInviteMode) || ((isForgotPassword || isInviteMode) && isOtpMode)) && !(!(isForgotPassword || isInviteMode) && isOtpMode) && (
                 <div className="relative">
                   <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#9CA3AF]" />
                   <input 
@@ -372,7 +369,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onLogin }) => {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     className="w-full bg-[#F7F9FC] border border-[#E8EDF5] rounded-[16px] py-2.5 pl-12 pr-12 text-sm font-bold text-[#111827] outline-none focus:border-[#2E1055] focus:bg-white transition-all"
-                    required={!isForgotPassword} 
+                    required={!(isForgotPassword || isInviteMode)} 
                   />
                   <button
                     type="button"
@@ -380,6 +377,17 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onLogin }) => {
                     className="absolute right-4 top-1/2 -translate-y-1/2 text-[#9CA3AF] hover:text-[#111827] transition-colors cursor-pointer"
                   >
                     {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
+              )}
+              {isLogin && !isForgotPassword && !isInviteMode && (
+                <div className="flex justify-end mt-2">
+                  <button 
+                    type="button" 
+                    onClick={() => { setIsForgotPassword(true); setError(''); setSuccessMsg(''); setIsOtpMode(false); }}
+                    className="text-[#2563EB] hover:underline text-xs font-bold cursor-pointer"
+                  >
+                    Forgot your password?
                   </button>
                 </div>
               )}
@@ -394,34 +402,48 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onLogin }) => {
                 <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
               ) : (
                 <>
-                  {isForgotPassword ? (isOtpMode ? 'Reset Password' : 'Send Reset OTP') : isLogin ? 'Sign In to Dashboard' : (isOtpMode ? 'Verify & Register' : 'Submit Registration')}
+                  {isInviteMode ? (isOtpMode ? 'Activate Account' : 'Send Activation OTP') : isForgotPassword ? (isOtpMode ? 'Reset Password' : 'Send Reset OTP') : isLogin ? 'Sign In to Dashboard' : (isOtpMode ? 'Verify & Register' : 'Submit Registration')}
                   <ArrowRight className="w-5 h-5" />
                 </>
               )}
             </button>
           </form>
 
-          {isForgotPassword ? (
+          {isForgotPassword || isInviteMode ? (
             <p className="mt-8 text-center text-sm font-bold text-[#6B7280]">
               Remember your password?{' '}
               <button 
-                onClick={() => { setIsForgotPassword(false); setError(''); setSuccessMsg(''); }} 
+                onClick={() => { setIsForgotPassword(false); setIsInviteMode(false); setError(''); setSuccessMsg(''); }} 
                 className="text-[#2E1055] hover:underline cursor-pointer"
               >
                 Back to log in
               </button>
             </p>
           ) : (
-                <p className="mt-8 text-center text-[#6B7280] font-medium text-sm">
-                  {isLogin ? "Don't have an account?" : "Already have an account?"}{' '}
-                  <button 
-                    type="button"
-                    onClick={() => { setIsLogin(!isLogin); setError(''); setSuccessMsg(''); setIsForgotPassword(false); setIsOtpMode(false); }}
-                    className="text-[#2E1055] font-bold hover:underline"
-                  >
-                    {isLogin ? 'Register Clinic' : 'Log in'}
-                  </button>
-                </p>
+                <div className="mt-8 text-center text-[#6B7280] font-medium text-sm flex flex-col gap-3">
+                  <p>
+                    {isLogin ? "Don't have an account?" : "Already have an account?"}{' '}
+                    <button 
+                      type="button"
+                      onClick={() => { setIsLogin(!isLogin); setError(''); setSuccessMsg(''); setIsForgotPassword(false); setIsInviteMode(false); setIsOtpMode(false); }}
+                      className="text-[#2E1055] font-bold hover:underline"
+                    >
+                      {isLogin ? 'Register Clinic' : 'Log in'}
+                    </button>
+                  </p>
+                  {isLogin && (
+                    <p className="pt-3 border-t border-gray-200/60">
+                      Have an invite from your clinic?{' '}
+                      <button 
+                        type="button"
+                        onClick={() => { setIsInviteMode(true); setIsLogin(false); setError(''); setSuccessMsg(''); setIsOtpMode(false); }}
+                        className="text-[#2563EB] font-bold hover:underline cursor-pointer"
+                      >
+                        Activate Account
+                      </button>
+                    </p>
+                  )}
+                </div>
           )}
         </div>
       </div>

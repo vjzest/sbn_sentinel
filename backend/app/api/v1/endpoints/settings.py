@@ -98,10 +98,17 @@ def invite_team_member(payload: Dict[str, Any], db: Session = Depends(get_db)):
         email=email,
         full_name=name,
         role=role,
-        hashed_password=get_password_hash("Sentinel@123"), # Default password
-        is_active=True
+        hashed_password="",
+        is_active=False
     )
     db.add(new_user)
+    
+    import random
+    from app.models.otp import OTPModel
+    otp = str(random.randint(100000, 999999))
+    db_otp = OTPModel(email=email, otp_code=otp, purpose="invite")
+    db.add(db_otp)
+    
     db.commit()
     db.refresh(new_user)
     
@@ -113,14 +120,10 @@ def invite_team_member(payload: Dict[str, Any], db: Session = Depends(get_db)):
             <h2>Welcome to SBN Sentinel!</h2>
             <p>Hi {name},</p>
             <p>You have been invited to join the SBN Sentinel Clinic Management platform.</p>
-            <p>Your account has been created with the following temporary credentials:</p>
-            <ul>
-                <li><strong>Email:</strong> {email}</li>
-                <li><strong>Password:</strong> Sentinel@123</li>
-            </ul>
-            <p>Please log in and update your password immediately.</p>
+            <p>Your activation OTP is: <strong>{otp}</strong></p>
+            <p>Please go to the login screen, click "Activate Account", and enter this code to set up your password.</p>
             <br/>
-            <a href="{login_url}">Click here to log in</a>
+            <a href="{login_url}">Click here to activate your account</a>
         </body>
     </html>
     """
@@ -131,7 +134,7 @@ def invite_team_member(payload: Dict[str, Any], db: Session = Depends(get_db)):
         "name": new_user.full_name,
         "email": new_user.email,
         "role": new_user.role,
-        "status": "Active"
+        "status": "Pending"
     }
 
 @router.delete("/team/{user_id}")

@@ -59,6 +59,15 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onSaveSettings, acti
   const [inviteEmail, setInviteEmail] = useState('');
   const [inviteRole, setInviteRole] = useState('Staff User');
 
+  // Clinics States
+  const [clinicsList, setClinicsList] = useState<any[]>([
+    { id: '1', name: 'Sentinel Health Urgent Care (Main)', address: '123 Health Ave, New York, NY', phone: '(555) 019-2834', status: 'Active' }
+  ]);
+  const [showAddClinicModal, setShowAddClinicModal] = useState(false);
+  const [newClinicName, setNewClinicName] = useState('');
+  const [newClinicAddress, setNewClinicAddress] = useState('');
+  const [newClinicPhone, setNewClinicPhone] = useState('');
+
   // Notifications States
   const [notifySms, setNotifySms] = useState(true);
   const [notifyEmail, setNotifyEmail] = useState(false);
@@ -93,8 +102,6 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onSaveSettings, acti
 
   const menuItems = [
     { id: 'general', label: 'General Settings', icon: SettingsIcon },
-    { id: 'ai', label: 'AI Preferences', icon: BrainCircuit },
-    { id: 'ai-usage', label: 'AI Costs & Usage', icon: Sparkles },
     { id: 'team', label: 'Team & Access', icon: Users },
     { id: 'notifications', label: 'Notifications', icon: Bell },
     { id: 'integrations', label: 'Integrations', icon: Database },
@@ -145,7 +152,14 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onSaveSettings, acti
       const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/settings/integrations`);
       if (res.ok) {
         const data = await res.json();
-        if (data.length > 0) setIntegrationsList(data);
+        setIntegrationsList(data);
+      }
+      
+      // Fetch Clinics
+      const clinicsRes = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/clinics`);
+      if (clinicsRes.ok) {
+        const clinicsData = await clinicsRes.json();
+        setClinicsList(clinicsData);
       }
     } catch (err) {
       console.error("Failed to fetch integrations:", err);
@@ -283,6 +297,34 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onSaveSettings, acti
     }
   };
 
+  const handleAddClinic = async () => {
+    if (!newClinicName) {
+      setToast({ message: 'Clinic name is required', type: 'error' });
+      return;
+    }
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/clinics`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: newClinicName,
+          address: newClinicAddress,
+          phone: newClinicPhone
+        })
+      });
+      if (!res.ok) throw new Error('Failed to create clinic');
+      const data = await res.json();
+      setClinicsList([...clinicsList, data]);
+      setToast({ message: 'Clinic created successfully', type: 'success' });
+      setShowAddClinicModal(false);
+      setNewClinicName('');
+      setNewClinicAddress('');
+      setNewClinicPhone('');
+    } catch (err: any) {
+      setToast({ message: err.message, type: 'error' });
+    }
+  };
+
   // Handle Invoice Download Simulate
   const handleDownloadInvoice = (invId: string) => {
     const csvContent = `Invoice ID,Date,Amount,Status\n${invId},${new Date().toLocaleDateString()},199.00,Paid`;
@@ -295,6 +337,78 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onSaveSettings, acti
     link.click();
     document.body.removeChild(link);
     showToast(`Downloading receipt for ${invId}...`);
+  };
+
+  const renderContent = () => {
+    switch (localActiveMenu) {
+      case 'settings-clinics':
+        return (
+          <div className="space-y-6 animate-in fade-in duration-300">
+            <div className="flex justify-between items-center bg-white/5 border border-white/10 p-6 rounded-[24px]">
+              <div>
+                <h3 className="text-xl font-bold text-white mb-1">Clinics & Facilities</h3>
+                <p className="text-sm text-white/50">Manage your organization's physical clinic locations.</p>
+              </div>
+              <button 
+                onClick={() => setShowAddClinicModal(true)}
+                className="bg-[#2563EB] hover:bg-[#1D4ED8] text-white px-5 py-2.5 rounded-[12px] text-sm font-bold transition-colors flex items-center gap-2"
+              >
+                <Plus className="w-4 h-4" /> Add Clinic
+              </button>
+            </div>
+
+            <div className="bg-white/5 border border-white/10 rounded-[24px] overflow-hidden">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="border-b border-white/10 bg-white/[0.02]">
+                    <th className="py-4 px-6 text-[10px] font-extrabold text-white/40 uppercase tracking-wider">Clinic Name</th>
+                    <th className="py-4 px-6 text-[10px] font-extrabold text-white/40 uppercase tracking-wider">Address</th>
+                    <th className="py-4 px-6 text-[10px] font-extrabold text-white/40 uppercase tracking-wider">Phone</th>
+                    <th className="py-4 px-6 text-[10px] font-extrabold text-white/40 uppercase tracking-wider">Status</th>
+                    <th className="py-4 px-6 text-[10px] font-extrabold text-white/40 uppercase tracking-wider text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-white/10">
+                  {clinicsList.map((clinic, idx) => (
+                    <tr key={idx} className="hover:bg-white/[0.02] transition-colors">
+                      <td className="py-4 px-6">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-full bg-[#2E1055] flex items-center justify-center">
+                            <Building className="w-4 h-4 text-white/70" />
+                          </div>
+                          <div>
+                            <p className="text-sm font-bold text-white">{clinic.name}</p>
+                            <p className="text-[11px] text-white/40">ID: {clinic.id}</p>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="py-4 px-6">
+                        <p className="text-sm text-white/70">{clinic.address || 'N/A'}</p>
+                      </td>
+                      <td className="py-4 px-6 text-sm text-white/70">{clinic.phone || 'N/A'}</td>
+                      <td className="py-4 px-6">
+                        <span className={`px-3 py-1 rounded-full text-[10px] font-bold ${clinic.status === 'Active' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-white/10 text-white/50 border border-white/20'}`}>
+                          {clinic.status}
+                        </span>
+                      </td>
+                      <td className="py-4 px-6 text-right">
+                        <button className="text-[11px] font-bold text-[#2563EB] hover:text-white transition-colors bg-[#2563EB]/10 px-3 py-1.5 rounded-lg">Edit</button>
+                      </td>
+                    </tr>
+                  ))}
+                  {clinicsList.length === 0 && (
+                    <tr>
+                      <td colSpan={5} className="py-8 px-6 text-center text-sm text-white/50">No clinics configured.</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        );
+      default:
+        return null;
+    }
   };
 
   return (
@@ -314,14 +428,22 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onSaveSettings, acti
           )}
           <span className="text-xs font-bold">{toast.message}</span>
         </div>,
-        document.body
+document.body
       )}
 
       {/* Header */}
       <div className="flex items-end justify-between mb-2">
         <div>
-          <h2 className="text-3xl font-extrabold text-white mb-1">Settings</h2>
-          <p className="text-sm text-white/70 font-medium">Manage your clinic preferences, credentials, and AI configurations.</p>
+          <h2 className="text-3xl font-extrabold text-white mb-1">
+            {localActiveMenu === 'general' ? 'Organization Details' :
+             localActiveMenu === 'clinics' || localActiveMenu === 'settings-clinics' ? 'Clinics & Facilities' :
+             localActiveMenu === 'team' ? 'Users & Roles' :
+             localActiveMenu === 'notifications' ? 'Notifications' :
+             localActiveMenu === 'integrations' ? 'Integrations' :
+             localActiveMenu === 'billing' ? 'Billing & Plans' :
+             localActiveMenu === 'security' ? 'Compliance & Security' : 'Settings'}
+          </h2>
+          <p className="text-sm text-white/70 font-medium">Manage your system configurations and preferences.</p>
         </div>
         <button 
           onClick={handleSaveChanges}
@@ -395,8 +517,6 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onSaveSettings, acti
                        className="w-full bg-white/5 border border-white/10 rounded-[16px] py-3 px-3 text-sm font-bold text-white outline-none focus:border-[#2E1055] focus:bg-[#120524] transition-all cursor-pointer"
                      >
                        <option value="en" className="bg-[#120524] text-white">English (US)</option>
-                       <option value="es" className="bg-[#120524] text-white">Español (ES)</option>
-                       <option value="hi" className="bg-[#120524] text-white">हिंदी (Hindi)</option>
                      </select>
                    </div>
                  </div>
@@ -452,173 +572,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onSaveSettings, acti
              </div>
            )}
 
-           {/* 2. AI PREFERENCES */}
-           {localActiveMenu === 'ai' && (
-             <div className="space-y-8 animate-in fade-in">
-                <div>
-                   <h3 className="text-xl font-bold text-white mb-2 flex items-center gap-2">
-                     <BrainCircuit className="w-5 h-5 text-white" /> AI Preferences
-                   </h3>
-                   <p className="text-sm text-white/70 font-medium">Configure how the Sentinel AI engine behaves in your environment.</p>
-                </div>
-                
-                <div className="h-px w-full bg-white/10"></div>
 
-                <div className="space-y-6">
-                   <div className="flex justify-between items-start">
-                      <div className="max-w-md">
-                         <h4 className="text-sm font-bold text-white mb-1">Auto-Scheduling Aggressiveness</h4>
-                         <p className="text-xs text-white/70 leading-relaxed">Determine how proactively Sentinel will try to fill empty slots from the waitlist.</p>
-                      </div>
-                      <div className="w-64">
-                         <input 
-                           type="range" 
-                           min="1" 
-                           max="3" 
-                           value={schedulingAggressiveness} 
-                           onChange={(e) => setSchedulingAggressiveness(parseInt(e.target.value))}
-                           className="w-full accent-[#2E1055] h-2 bg-white/10 rounded-lg appearance-none cursor-pointer" 
-                         />
-                         <div className="flex justify-between text-[10px] font-bold text-white/50 mt-2 uppercase tracking-wider">
-                           <span className={schedulingAggressiveness === 1 ? 'text-[#A78BFA]' : ''}>Conservative</span>
-                           <span className={schedulingAggressiveness === 2 ? 'text-[#A78BFA]' : ''}>Balanced</span>
-                           <span className={schedulingAggressiveness === 3 ? 'text-[#A78BFA]' : ''}>Aggressive</span>
-                         </div>
-                      </div>
-                   </div>
-
-                   <div className="h-px w-full bg-white/10"></div>
-
-                   <div className="flex justify-between items-center">
-                      <div className="max-w-md">
-                         <h4 className="text-sm font-bold text-white mb-1">Automated Patient Outreach</h4>
-                         <p className="text-xs text-white/70 leading-relaxed">Allow AI to send SMS confirmations and waitlist offers directly without human review.</p>
-                      </div>
-                      <label className="relative inline-flex items-center cursor-pointer">
-                         <input 
-                           type="checkbox" 
-                           className="sr-only peer" 
-                           checked={autoOutreach}
-                           onChange={() => setAutoOutreach(!autoOutreach)}
-                         />
-                         <div className="w-11 h-6 bg-[#E5E7EB] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-[#120524] after:border-white/10 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#10B981]"></div>
-                      </label>
-                   </div>
-
-                   <div className="h-px w-full bg-white/10"></div>
-
-                   <div className="flex justify-between items-center">
-                      <div className="max-w-md">
-                         <h4 className="text-sm font-bold text-white mb-1">LLM Confidence Threshold</h4>
-                         <p className="text-xs text-white/70 leading-relaxed">Minimum confidence score required before Sentinel flags a potential revenue leak.</p>
-                      </div>
-                      <select 
-                        value={confidenceThreshold}
-                        onChange={(e) => setConfidenceThreshold(e.target.value)}
-                        className="bg-white/5 border border-white/10 text-white text-sm font-bold rounded-[10px] focus:ring-[#2E1055] focus:border-[#2E1055] block p-2.5 outline-none cursor-pointer"
-                      >
-                        <option className="bg-[#120524] text-white">70% (Loose)</option>
-                        <option className="bg-[#120524] text-white">85% (Recommended)</option>
-                        <option className="bg-[#120524] text-white">95% (Strict)</option>
-                      </select>
-                   </div>
-                   
-                   <div className="h-px w-full bg-white/10"></div>
-
-                   <div className="flex justify-between items-start">
-                      <div className="max-w-md">
-                         <h4 className="text-sm font-bold text-white mb-1">Active AI Model</h4>
-                         <p className="text-xs text-white/70 leading-relaxed">Select the foundational model powering your AI Assistant.</p>
-                      </div>
-                      <div className="flex flex-col gap-2">
-                        <label 
-                          onClick={() => setAiModel('gpt-4o')}
-                          className={`flex items-center gap-3 p-3 border rounded-[10px] cursor-pointer transition-all ${
-                            aiModel === 'gpt-4o' 
-                              ? 'border-[#2E1055] bg-[#EEF4FF]' 
-                              : 'border-white/10 bg-[#120524] hover:bg-white/5'
-                          }`}
-                        >
-                          <input 
-                            type="radio" 
-                            name="model" 
-                            checked={aiModel === 'gpt-4o'} 
-                            onChange={() => setAiModel('gpt-4o')}
-                            className="w-4 h-4 text-[#A78BFA] bg-[#120524] border-white/10 focus:ring-[#2E1055]" 
-                          />
-                          <span className={`text-sm font-bold ${aiModel === 'gpt-4o' ? 'text-[#A78BFA]' : 'text-white/70'}`}>GPT-4o (Default)</span>
-                        </label>
-                        <label 
-                          onClick={() => setAiModel('claude')}
-                          className={`flex items-center gap-3 p-3 border rounded-[10px] cursor-pointer transition-all ${
-                            aiModel === 'claude' 
-                              ? 'border-[#2563EB] bg-[#EFF6FF]' 
-                              : 'border-white/10 bg-[#120524] hover:bg-white/5'
-                          }`}
-                        >
-                          <input 
-                            type="radio" 
-                            name="model" 
-                            checked={aiModel === 'claude'} 
-                            onChange={() => setAiModel('claude')}
-                            className="w-4 h-4 text-[#2563EB] bg-[#120524] border-white/10 focus:ring-[#2563EB]" 
-                          />
-                          <span className={`text-sm font-bold ${aiModel === 'claude' ? 'text-[#2563EB]' : 'text-white/70'}`}>Claude 3.5 Sonnet</span>
-                        </label>
-                      </div>
-                   </div>
-
-                </div>
-             </div>
-           )}
-
-           {/* AI COSTS & USAGE */}
-           {localActiveMenu === 'ai-usage' && (
-             <div className="space-y-8 animate-in fade-in">
-                <div>
-                   <h3 className="text-xl font-bold text-white mb-2 flex items-center gap-2">
-                     <Sparkles className="w-5 h-5 text-[#F59E0B]" /> AI Costs & Token Usage
-                   </h3>
-                   <p className="text-sm text-white/70 font-medium">Track your clinic's AI consumption and associated API costs.</p>
-                </div>
-                
-                <div className="h-px w-full bg-white/10"></div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-                  <div className="p-6 border border-[#E0D9FD] bg-[#EEEAFE]/50 rounded-[16px]">
-                    <BrainCircuit className="w-8 h-8 text-[#A78BFA] mb-4" />
-                    <p className="text-white/70 text-sm font-bold mb-1">Clinic Tokens Used (MTD)</p>
-                    <p className="text-4xl font-black text-white">2.4M</p>
-                    <p className="text-xs text-[#A78BFA] font-bold mt-2 bg-[#E0D9FD] px-3 py-1 rounded-full inline-block">Est. Cost: $24.00</p>
-                  </div>
-                  <div className="p-6 border border-emerald-100 bg-emerald-50/50 rounded-[16px]">
-                    <Activity className="w-8 h-8 text-emerald-600 mb-4" />
-                    <p className="text-white/70 text-sm font-bold mb-1">Cache Hit Ratio</p>
-                    <p className="text-4xl font-black text-white">92.1%</p>
-                    <p className="text-xs text-emerald-600 font-bold mt-2 bg-emerald-100 px-3 py-1 rounded-full inline-block">High Efficiency</p>
-                  </div>
-                </div>
-
-                <div className="bg-[#120524] border border-white/10 rounded-[16px] p-6 shadow-sm">
-                  <h4 className="text-sm font-bold text-white mb-4">Top AI Workflows</h4>
-                  <div className="space-y-3">
-                    {[
-                      { name: 'Patient Triage Chatbot', usage: '1.2M tokens', cost: '$12.00' },
-                      { name: 'Automated Clinical Summaries', usage: '800K tokens', cost: '$8.00' },
-                      { name: 'Billing Code Extraction', usage: '400K tokens', cost: '$4.00' }
-                    ].map((item, i) => (
-                      <div key={i} className="flex justify-between items-center p-4 border border-white/10 rounded-[16px] hover:bg-white/5 transition-colors">
-                        <span className="text-sm font-bold text-white">{item.name}</span>
-                        <div className="text-right">
-                          <span className="block text-sm font-bold text-[#A78BFA]">{item.usage}</span>
-                          <span className="block text-xs font-medium text-white/70">{item.cost}</span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-             </div>
-           )}
 
            {/* 3. TEAM & ACCESS CONTROL */}
            {localActiveMenu === 'team' && (
@@ -1031,6 +985,9 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onSaveSettings, acti
              </div>
            )}
 
+           {/* Dynamically render extras */}
+           {renderContent()}
+
          </div>
       </div>
 
@@ -1117,6 +1074,62 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onSaveSettings, acti
           </div>
         </div>,
         document.body
+      )}
+
+      {/* Add Clinic Modal */}
+      {showAddClinicModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowAddClinicModal(false)}></div>
+          <div className="relative w-full max-w-md bg-[#120524] border border-white/10 rounded-[24px] shadow-2xl p-6">
+            <button onClick={() => setShowAddClinicModal(false)} className="absolute top-4 right-4 text-white/40 hover:text-white transition-colors">
+              <X className="w-5 h-5" />
+            </button>
+            <h3 className="text-xl font-bold text-white mb-2">Add New Clinic</h3>
+            <p className="text-sm text-white/50 mb-6">Create a new clinic location under your organization.</p>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="block text-[11px] font-extrabold text-white/40 uppercase tracking-wider mb-2">Clinic Name</label>
+                <input 
+                  type="text"
+                  placeholder="e.g. City Heart North"
+                  value={newClinicName}
+                  onChange={(e) => setNewClinicName(e.target.value)}
+                  className="w-full bg-white/5 border border-white/10 rounded-[12px] py-2.5 px-4 text-sm font-bold text-white outline-none focus:border-[#2E1055] transition-colors"
+                />
+              </div>
+              <div>
+                <label className="block text-[11px] font-extrabold text-white/40 uppercase tracking-wider mb-2">Address</label>
+                <input 
+                  type="text"
+                  placeholder="e.g. 456 Medical Parkway, TX"
+                  value={newClinicAddress}
+                  onChange={(e) => setNewClinicAddress(e.target.value)}
+                  className="w-full bg-white/5 border border-white/10 rounded-[12px] py-2.5 px-4 text-sm font-bold text-white outline-none focus:border-[#2E1055] transition-colors"
+                />
+              </div>
+              <div>
+                <label className="block text-[11px] font-extrabold text-white/40 uppercase tracking-wider mb-2">Phone</label>
+                <input 
+                  type="text"
+                  placeholder="e.g. (555) 123-4567"
+                  value={newClinicPhone}
+                  onChange={(e) => setNewClinicPhone(e.target.value)}
+                  className="w-full bg-white/5 border border-white/10 rounded-[12px] py-2.5 px-4 text-sm font-bold text-white outline-none focus:border-[#2E1055] transition-colors"
+                />
+              </div>
+            </div>
+
+            <div className="mt-8 flex justify-end gap-3">
+              <button onClick={() => setShowAddClinicModal(false)} className="px-5 py-2.5 rounded-[12px] text-sm font-bold text-white/70 hover:text-white hover:bg-white/5 transition-colors">
+                Cancel
+              </button>
+              <button onClick={handleAddClinic} className="bg-[#2563EB] hover:bg-[#1D4ED8] text-white px-5 py-2.5 rounded-[12px] text-sm font-bold transition-colors">
+                Create Clinic
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
     </div>

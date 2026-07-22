@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 # Import subsystem routers here when created
-from app.api.v1.endpoints import reality_connectors, signals, auth, insurance, audit, settings, encounters, super_admin, billing
+from app.api.v1.endpoints import reality_connectors, signals, auth, insurance, audit, settings, encounters, super_admin, billing, clinics
 api_router = APIRouter()
 # Register Phase 2 Subsystems
 api_router.include_router(auth.router, prefix="/auth", tags=["00_Authentication"])
@@ -12,6 +12,7 @@ api_router.include_router(settings.router, prefix="/settings", tags=["004_Settin
 api_router.include_router(encounters.router, prefix="/encounters", tags=["005_Patient_Encounters"])
 api_router.include_router(super_admin.router, prefix="/super-admin", tags=["006_Super_Admin"])
 api_router.include_router(billing.router, prefix="/billing", tags=["007_Billing"])
+api_router.include_router(clinics.router, prefix="/clinics", tags=["008_Clinics"])
 
 @api_router.get("/health")
 def health_check():

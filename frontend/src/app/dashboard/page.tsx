@@ -1,10 +1,9 @@
 'use client';
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { Search, Bell, Mail, Sun, LayoutDashboard, BrainCircuit, Users, Calendar, DollarSign, FileText, BarChart2, Settings, HelpCircle, LogOut, ChevronDown, CheckCircle2, Clock, AlertTriangle, ChevronRight, Plus, Moon, User, Activity, X, Cpu, Check, Menu, Shield, CreditCard, Database } from 'lucide-react';
+import { Search, Bell, Mail, Sun, LayoutDashboard, BrainCircuit, Users, Calendar, DollarSign, FileText, BarChart2, Settings, HelpCircle, LogOut, ChevronDown, CheckCircle2, Clock, AlertTriangle, ChevronRight, Plus, Moon, User, Activity, X, Cpu, Check, Menu, Shield, CreditCard, Database, Building2, ClipboardList } from 'lucide-react';
 import { StatCard } from '@/components/CommandCenter/StatCard';
 import { SignalFeed } from '@/components/CommandCenter/SignalFeed';
-import { AIInsights } from '@/components/CommandCenter/AIInsights';
 import { RevenueImpact } from '@/components/CommandCenter/RevenueImpact';
 import { ConnectorsView } from '@/components/CommandCenter/ConnectorsView';
 import { IntelligenceView } from '@/components/CommandCenter/IntelligenceView';
@@ -14,6 +13,8 @@ import { ClinicalLogsView } from '@/components/CommandCenter/ClinicalLogsView';
 import { RevenueReportsView } from '@/components/CommandCenter/RevenueReportsView';
 import { SettingsView } from '@/components/CommandCenter/SettingsView';
 import { HelpSupportView } from '@/components/CommandCenter/HelpSupportView';
+import { AuditLogsView } from '@/components/CommandCenter/AuditLogsView';
+import { AccessDeniedView } from '@/components/CommandCenter/AccessDeniedView';
 import { UserProfileView } from '@/components/CommandCenter/UserProfileView';
 import { SignalsDetailView } from '@/components/CommandCenter/SignalsDetailView';
 import { AuthScreen } from '@/components/Auth/AuthScreen';
@@ -292,14 +293,26 @@ export default function Dashboard() {
               </div>
             </div>
 
+            {['super_admin', 'org_admin', 'clinic_admin'].includes(userRole) && (
+              <div>
+                <p className="text-[9px] font-black text-white/40 uppercase tracking-[0.2em] mb-3 px-4">Organizations</p>
+                <div className="space-y-1">
+                  {['super_admin'].includes(userRole) && (
+                    <SidebarItem icon={Settings} label="Organization Details" active={activeTab === 'settings-general'} onClick={() => setActiveTab('settings-general')} />
+                  )}
+                  {['super_admin', 'org_admin'].includes(userRole) && (
+                    <SidebarItem icon={Building2} label="Clinics & Facilities" active={activeTab === 'settings-clinics'} onClick={() => setActiveTab('settings-clinics')} />
+                  )}
+                  <SidebarItem icon={Users} label="Users & Roles" active={activeTab === 'settings-team'} onClick={() => setActiveTab('settings-team')} />
+                </div>
+              </div>
+            )}
+
             <div>
               <p className="text-[9px] font-black text-white/40 uppercase tracking-[0.2em] mb-3 px-4">Operations</p>
               <div className="space-y-1">
                 {['org_admin', 'clinic_admin', 'ops_manager', 'practice_manager', 'staff'].includes(userRole) && (
                   <SidebarItem icon={Users} label="Patient Flow" active={activeTab === 'patient-flow'} onClick={() => setActiveTab('patient-flow')} />
-                )}
-                {['org_admin', 'clinic_admin', 'ops_manager', 'practice_manager', 'staff'].includes(userRole) && (
-                  <SidebarItem icon={Calendar} label="Schedule Optimizer" active={activeTab === 'schedule'} onClick={() => setActiveTab('schedule')} />
                 )}
                 {['org_admin', 'clinic_admin', 'practice_manager'].includes(userRole) && (
                   <SidebarItem icon={FileText} label="Clinical Logs" active={activeTab === 'clinical-logs'} onClick={() => setActiveTab('clinical-logs')} />
@@ -309,18 +322,22 @@ export default function Dashboard() {
                 )}
               </div>
             </div>
-            <div>
-              <p className="text-[9px] font-black text-white/40 uppercase tracking-[0.2em] mb-3 px-4">Settings</p>
-              <div className="space-y-1">
-                <SidebarItem icon={Settings} label="General" active={activeTab === 'settings-general'} onClick={() => setActiveTab('settings-general')} />
-                <SidebarItem icon={BrainCircuit} label="AI Preferences" active={activeTab === 'settings-ai'} onClick={() => setActiveTab('settings-ai')} />
-                <SidebarItem icon={Users} label="Team & Access" active={activeTab === 'settings-team'} onClick={() => setActiveTab('settings-team')} />
-                <SidebarItem icon={Bell} label="Notifications" active={activeTab === 'settings-notifications'} onClick={() => setActiveTab('settings-notifications')} />
-                <SidebarItem icon={Database} label="Integrations" active={activeTab === 'settings-integrations'} onClick={() => setActiveTab('settings-integrations')} />
-                <SidebarItem icon={CreditCard} label="Billing & Plans" active={activeTab === 'settings-billing'} onClick={() => setActiveTab('settings-billing')} />
-                <SidebarItem icon={Shield} label="Compliance" active={activeTab === 'settings-security'} onClick={() => setActiveTab('settings-security')} />
+
+            {['super_admin', 'org_admin', 'clinic_admin'].includes(userRole) && (
+              <div>
+                <p className="text-[9px] font-black text-white/40 uppercase tracking-[0.2em] mb-3 px-4">Administration</p>
+                <div className="space-y-1">
+                  {['super_admin', 'org_admin'].includes(userRole) && (
+                    <SidebarItem icon={Database} label="Integrations" active={activeTab === 'settings-integrations'} onClick={() => setActiveTab('settings-integrations')} />
+                  )}
+                  <SidebarItem icon={Bell} label="Notifications" active={activeTab === 'settings-notifications'} onClick={() => setActiveTab('settings-notifications')} />
+                  <SidebarItem icon={ClipboardList} label="Audit Logs" active={activeTab === 'audit-logs'} onClick={() => setActiveTab('audit-logs')} />
+                  {['super_admin', 'org_admin'].includes(userRole) && (
+                    <SidebarItem icon={Settings} label="Settings" active={activeTab === 'settings-security' || activeTab === 'settings-billing'} onClick={() => setActiveTab('settings-security')} />
+                  )}
+                </div>
               </div>
-            </div>
+            )}
           </div>
 
           <div className="p-4 space-y-1 border-t border-white/10 bg-white/5 rounded-b-[24px]">
@@ -606,9 +623,8 @@ export default function Dashboard() {
                 </div>
 
                 {/* Main Middle Row */}
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   <SignalFeed setActiveTab={setActiveTab} />
-                  <AIInsights />
                   <RevenueImpact setActiveTab={setActiveTab} />
                 </div>
 
@@ -788,34 +804,38 @@ export default function Dashboard() {
                 </div>
               </div>
             )}
-            {activeTab === 'connectors' && <ConnectorsView />}
-            {activeTab === 'signals' && <SignalsDetailView />}
-            {activeTab === 'intelligence' && <IntelligenceView />}
+            {activeTab === 'intelligence' && (['practice_manager', 'staff', 'ops_manager'].includes(userRole) ? <AccessDeniedView onReturn={() => setActiveTab('dashboard')} /> : <IntelligenceView />)}
+            {activeTab === 'signals' && (['practice_manager', 'staff', 'ops_manager'].includes(userRole) ? <AccessDeniedView onReturn={() => setActiveTab('dashboard')} /> : <SignalFeed />)}
+            {activeTab === 'signals-detail' && (['practice_manager', 'staff', 'ops_manager'].includes(userRole) ? <AccessDeniedView onReturn={() => setActiveTab('dashboard')} /> : <SignalsDetailView />)}
+            {activeTab === 'connectors' && (['practice_manager', 'staff', 'ops_manager'].includes(userRole) ? <AccessDeniedView onReturn={() => setActiveTab('dashboard')} /> : <ConnectorsView />)}
             {activeTab === 'patient-flow' && <PatientFlowView />}
             {activeTab === 'schedule' && <ScheduleOptimizerView />}
             {activeTab === 'clinical-logs' && <ClinicalLogsView />}
-            {activeTab === 'revenue' && <RevenueReportsView />}
+            {activeTab === 'revenue-reports' && (['practice_manager', 'staff'].includes(userRole) ? <AccessDeniedView onReturn={() => setActiveTab('dashboard')} /> : <RevenueReportsView />)}
+            {activeTab === 'audit-logs' && (['practice_manager', 'staff', 'ops_manager'].includes(userRole) ? <AccessDeniedView onReturn={() => setActiveTab('dashboard')} /> : <AuditLogsView />)}
             {activeTab.startsWith('settings-') && (
-              <SettingsView
-                activeMenuProp={activeTab === 'settings-general' ? 'general' : activeTab === 'settings-ai' ? 'ai' : activeTab === 'settings-team' ? 'team' : activeTab === 'settings-notifications' ? 'notifications' : activeTab === 'settings-integrations' ? 'integrations' : activeTab === 'settings-billing' ? 'billing' : activeTab === 'settings-security' ? 'security' : 'general'}
-                onSaveSettings={(data) => {
-                  if (data.practiceName) setPracticeName(data.practiceName);
-                  if (data.activePlan) setActivePlan(data.activePlan);
-                  if (data.aiModel) {
-                    if (data.aiModel === 'claude') {
-                      setActiveModelName('Claude 3.5 Sonnet');
-                    } else {
-                      setActiveModelName('GPT-4o');
-                    }
-                  }
-                  if (data.themeMode) {
-                    const isDark = data.themeMode === 'dark';
-                    setIsDarkMode(isDark);
-                    if (isDark) document.documentElement.classList.add('dark');
-                    else document.documentElement.classList.remove('dark');
-                  }
-                }}
-              />
+              (['practice_manager', 'staff', 'ops_manager'].includes(userRole) && ['settings-integrations', 'settings-clinics', 'settings-billing', 'settings-security', 'settings-team', 'settings-general'].includes(activeTab)) 
+                ? <AccessDeniedView onReturn={() => setActiveTab('dashboard')} /> 
+                : <SettingsView
+                    activeMenuProp={activeTab === 'settings-general' ? 'general' : activeTab === 'settings-ai' ? 'ai' : activeTab === 'settings-team' ? 'team' : activeTab === 'settings-notifications' ? 'notifications' : activeTab === 'settings-integrations' ? 'integrations' : activeTab === 'settings-billing' ? 'billing' : activeTab === 'settings-security' ? 'security' : activeTab === 'settings-clinics' ? 'settings-clinics' : 'general'}
+                    onSaveSettings={(data) => {
+                      if (data.practiceName) setPracticeName(data.practiceName);
+                      if (data.activePlan) setActivePlan(data.activePlan);
+                      if (data.aiModel) {
+                        if (data.aiModel === 'claude') {
+                          setActiveModelName('Claude 3.5 Sonnet');
+                        } else {
+                          setActiveModelName('GPT-4o');
+                        }
+                      }
+                      if (data.themeMode) {
+                        const isDark = data.themeMode === 'dark';
+                        setIsDarkMode(isDark);
+                        if (isDark) document.documentElement.classList.add('dark');
+                        else document.documentElement.classList.remove('dark');
+                      }
+                    }}
+                  />
             )}
             {activeTab === 'help' && <HelpSupportView />}
             {activeTab === 'profile' && <UserProfileView />}

@@ -162,11 +162,26 @@ def reset_password(payload: ResetPasswordRequest, db: Session = Depends(get_db))
     otp_record.is_used = True
     db.commit()
     return {"message": "Password has been successfully reset."}
+
+@router.post("/accept-invite")
+def accept_invite(payload: ResetPasswordRequest, db: Session = Depends(get_db)):
+    from app.models.otp import OTPModel
+    otp_record = db.query(OTPModel).filter(
+        OTPModel.email == payload.email, 
+        OTPModel.otp_code == payload.otp,
+        OTPModel.purpose == "invite",
+        OTPModel.is_used == False
+    ).order_by(OTPModel.created_at.desc()).first()
+    
+    if not otp_record:
+        raise HTTPException(status_code=400, detail="Invalid or expired OTP")
+        
     user = db.query(User).filter(User.email == payload.email).first()
     if not user:
-        # To prevent email enumeration, return the same success response
-        return {"message": "If that email is registered, a password reset link has been sent."}
-    
-    # In a real app, generate a secure reset token and send an email
-    # For now, simulate success
-    return {"message": "If that email is registered, a password reset link has been sent."}
+        raise HTTPException(status_code=400, detail="User not found")
+        
+    user.hashed_password = get_password_hash(payload.new_password)
+    user.is_active = True
+    otp_record.is_used = True
+    db.commit()
+    return {"message": "Account has been successfully activated."}

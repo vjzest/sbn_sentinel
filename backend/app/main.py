@@ -70,11 +70,11 @@ def create_app() -> FastAPI:
                 )
                 db.add(admin)
                 db.commit()
-                print("✅ Super Admin seeded: superadmin@sbnsentinel.com / SBNAdmin@2024")
+                print("[SUCCESS] Super Admin seeded: superadmin@sbnsentinel.com / SBNAdmin@2024")
             else:
-                print("✅ Super Admin already exists.")
+                print("[SUCCESS] Super Admin already exists.")
         except Exception as e:
-            print(f"⚠️ Could not seed super admin: {e}")
+            print(f"[WARNING] Could not seed super admin: {e}")
         finally:
             db.close()
 
