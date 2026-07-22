@@ -11,6 +11,8 @@ export const metadata: Metadata = {
   description: "Platform Foundation",
 };
 
+import { ErrorScreen } from '@/components/CommandCenter/ErrorScreen';
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -20,9 +22,11 @@ export default function RootLayout({
     <html lang="en">
       <body className={`${inter.className} antialiased bg-[#F7F9FC] text-[#111827]`}>
         <StoreProvider>
-          <div className="min-h-screen relative w-full overflow-hidden">
-            {children}
-          </div>
+          <ErrorScreen>
+            <div className="min-h-screen relative w-full overflow-hidden">
+              {children}
+            </div>
+          </ErrorScreen>
         </StoreProvider>
       </body>
     </html>

@@ -12,6 +12,7 @@ from app.models.audit import AuditLogModel
 from app.models.settings import SettingsModel
 from app.models.encounter import EncounterModel
 from app.models.integration import IntegrationModel
+from app.models.otp import OTPModel
 
 # Create tables in SQLite/PostgreSQL (if they don't exist)
 Base.metadata.create_all(bind=engine)
@@ -69,11 +70,11 @@ def create_app() -> FastAPI:
                 )
                 db.add(admin)
                 db.commit()
-                print("✅ Super Admin seeded: superadmin@sbnsentinel.com / SBNAdmin@2024")
+                print("[SUCCESS] Super Admin seeded: superadmin@sbnsentinel.com / SBNAdmin@2024")
             else:
-                print("✅ Super Admin already exists.")
+                print("[SUCCESS] Super Admin already exists.")
         except Exception as e:
-            print(f"⚠️ Could not seed super admin: {e}")
+            print(f"[WARNING] Could not seed super admin: {e}")
         finally:
             db.close()
 

@@ -75,9 +75,9 @@ export const SignalsDetailView: React.FC = () => {
 
   const getBgColor = (type: string) => {
     switch (type) {
-      case 'EHR': return 'bg-[#FEF3C7] text-[#F59E0B] border border-[#FDE68A]';
-      case 'Phone': return 'bg-[#FEE2E2] text-[#EF4444] border border-[#FCA5A5]';
-      case 'Email': return 'bg-[#DBEAFE] text-[#3B82F6] border border-[#BFDBFE]';
+      case 'EHR': return 'bg-[#F59E0B]/20 text-[#FBBF24] border border-[#FDE68A]';
+      case 'Phone': return 'bg-[#EF4444]/20 text-[#F87171] border border-[#FCA5A5]';
+      case 'Email': return 'bg-[#3B82F6]/20 text-[#60A5FA] border border-[#BFDBFE]';
       default: return 'bg-[#D1FAE5] text-[#10B981] border border-[#A7F3D0]';
     }
   };
@@ -200,7 +200,7 @@ export const SignalsDetailView: React.FC = () => {
         },
         audit_trail: {
           practise_fusion_client_id: "pf-oauth-client-88123-prod",
-          api_version: "FHIR R4",
+          api_version: "Secure Data R4",
           authorization_scope: "user/Appointment.write patient/Patient.read"
         }
       };
@@ -268,58 +268,58 @@ export const SignalsDetailView: React.FC = () => {
       {/* Header */}
       <div className="flex items-end justify-between relative">
         <div>
-          <h2 className="text-3xl font-extrabold text-[#111827] mb-1">Signals Intelligence Hub</h2>
-          <p className="text-sm text-[#6B7280] font-medium">Real-time FHIR EHR connections, Twilio hooks, and automated audit stream logs.</p>
+          <h2 className="text-3xl font-extrabold text-white mb-1">Signals Intelligence Hub</h2>
+          <p className="text-sm text-white/70 font-medium">Real-time Secure Data EHR connections, Twilio hooks, and automated audit stream logs.</p>
         </div>
         <div className="flex items-center gap-3">
           <button 
             onClick={fetchDbSignals} 
             disabled={isRefreshing}
-            className="flex items-center gap-2 bg-white border border-[#E8EDF5] text-[#111827] font-bold text-xs px-4 py-2.5 rounded-[16px] premium-shadow hover:bg-[#F7F9FC] transition-colors disabled:opacity-50 cursor-pointer"
+            className="flex items-center gap-2 bg-white/10 border border-white/20 text-white font-bold text-xs px-4 py-2.5 rounded-[16px] hover:bg-white/20 transition-colors disabled:opacity-50 cursor-pointer"
           >
-            <RefreshCw className={`w-4 h-4 text-[#6B7280] ${isRefreshing ? 'animate-spin' : ''}`} /> Sync Database
+            <RefreshCw className={`w-4 h-4 text-white/70 ${isRefreshing ? 'animate-spin' : ''}`} /> Sync Database
           </button>
         </div>
       </div>
 
       {/* Metrics Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <div className="bg-white border border-[#E8EDF5] p-6 rounded-[24px] premium-shadow flex items-center justify-between">
+        <div className="bg-gradient-to-br from-[#2E1055] to-[#120524] border border-white/10 p-6 rounded-[24px] shadow-[0_20px_50px_rgba(46,16,85,0.3)] flex items-center justify-between text-white">
           <div>
-            <p className="text-xs font-bold text-[#6B7280] uppercase tracking-widest mb-1">Total Signals</p>
-            <p className="text-2xl font-black text-[#111827]">{1284 + totalCount}</p>
+            <p className="text-xs font-bold text-white/70 uppercase tracking-widest mb-1">Total Signals</p>
+            <p className="text-2xl font-black text-white">{1284 + totalCount}</p>
           </div>
-          <span className="p-3 bg-[#EEF4FF] text-[#2563EB] rounded-[16px]">
+          <span className="p-3 bg-[#3B82F6]/20 text-[#60A5FA] rounded-[16px]">
             <Cpu className="w-6 h-6" />
           </span>
         </div>
 
-        <div className="bg-white border border-[#E8EDF5] p-6 rounded-[24px] premium-shadow flex items-center justify-between">
+        <div className="bg-gradient-to-br from-[#2E1055] to-[#120524] border border-white/10 p-6 rounded-[24px] shadow-[0_20px_50px_rgba(46,16,85,0.3)] flex items-center justify-between text-white">
           <div>
-            <p className="text-xs font-bold text-[#6B7280] uppercase tracking-widest mb-1">EHR (Practice Fusion)</p>
+            <p className="text-xs font-bold text-white/70 uppercase tracking-widest mb-1">EHR (Practice Fusion)</p>
             <p className="text-2xl font-black text-[#F59E0B]">{ehrCount} Active</p>
           </div>
-          <span className="p-3 bg-[#FEF3C7] text-[#F59E0B] rounded-[16px]">
+          <span className="p-3 bg-[#F59E0B]/20 text-[#FBBF24] rounded-[16px]">
             <Database className="w-6 h-6" />
           </span>
         </div>
 
-        <div className="bg-white border border-[#E8EDF5] p-6 rounded-[24px] premium-shadow flex items-center justify-between">
+        <div className="bg-gradient-to-br from-[#2E1055] to-[#120524] border border-white/10 p-6 rounded-[24px] shadow-[0_20px_50px_rgba(46,16,85,0.3)] flex items-center justify-between text-white">
           <div>
-            <p className="text-xs font-bold text-[#6B7280] uppercase tracking-widest mb-1">Communication Logs</p>
+            <p className="text-xs font-bold text-white/70 uppercase tracking-widest mb-1">Communication Logs</p>
             <p className="text-2xl font-black text-[#3B82F6]">{phoneCount + emailCount} Transmitted</p>
           </div>
-          <span className="p-3 bg-[#DBEAFE] text-[#3B82F6] rounded-[16px]">
+          <span className="p-3 bg-[#3B82F6]/20 text-[#60A5FA] rounded-[16px]">
             <Mail className="w-6 h-6" />
           </span>
         </div>
 
-        <div className="bg-white border border-[#E8EDF5] p-6 rounded-[24px] premium-shadow flex items-center justify-between">
+        <div className="bg-gradient-to-br from-[#2E1055] to-[#120524] border border-white/10 p-6 rounded-[24px] shadow-[0_20px_50px_rgba(46,16,85,0.3)] flex items-center justify-between text-white">
           <div>
-            <p className="text-xs font-bold text-[#6B7280] uppercase tracking-widest mb-1">Revenue Risk Triggers</p>
+            <p className="text-xs font-bold text-white/70 uppercase tracking-widest mb-1">Revenue Risk Triggers</p>
             <p className="text-2xl font-black text-[#EF4444]">{lossRiskCount} Flagged</p>
           </div>
-          <span className="p-3 bg-[#FEE2E2] text-[#EF4444] rounded-[16px]">
+          <span className="p-3 bg-[#EF4444]/20 text-[#F87171] rounded-[16px]">
             <AlertTriangle className="w-6 h-6 animate-pulse" />
           </span>
         </div>
@@ -327,16 +327,16 @@ export const SignalsDetailView: React.FC = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Main Signals Feed Table */}
-        <div className="lg:col-span-2 bg-white border border-[#E8EDF5] rounded-[24px] p-8 premium-shadow">
+        <div className="lg:col-span-2 bg-gradient-to-br from-[#2E1055] to-[#120524] border border-white/10 rounded-[24px] p-8 shadow-[0_20px_50px_rgba(46,16,85,0.3)] text-white">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
-            <div className="flex items-center gap-2 bg-white border border-[#E8EDF5] rounded-[14px] px-3.5 py-2 premium-shadow w-72">
-              <Search className="w-4 h-4 text-[#6B7280]" />
+            <div className="flex items-center gap-2 bg-white/5 border border-white/10 rounded-[14px] px-3.5 py-2 w-72">
+              <Search className="w-4 h-4 text-white/70" />
               <input 
                 type="text" 
                 placeholder="Search patient, source, or text..." 
                 value={searchTerm}
                 onChange={e => setSearchTerm(e.target.value)}
-                className="bg-transparent border-none outline-none text-xs text-[#111827] w-full placeholder:text-[#9CA3AF]"
+                className="bg-transparent border-none outline-none text-xs text-white w-full placeholder:text-[#9CA3AF]"
               />
             </div>
             
@@ -347,8 +347,8 @@ export const SignalsDetailView: React.FC = () => {
                   onClick={() => setActiveFilter(filter)}
                   className={`px-3 py-1.5 rounded-[10px] text-xs font-bold transition-all border cursor-pointer ${
                     activeFilter === filter 
-                      ? 'bg-[#6D5DF6] text-white border-transparent shadow-sm' 
-                      : 'bg-white text-[#6B7280] border-[#E8EDF5] hover:bg-[#F7F9FC]'
+                      ? 'bg-white/20 text-white border-white/40 shadow-md' 
+                      : 'bg-white/5 text-white/70 border-white/10 hover:bg-white/10'
                   }`}
                 >
                   {filter}
@@ -360,7 +360,7 @@ export const SignalsDetailView: React.FC = () => {
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="border-b border-[#E8EDF5] text-[11px] uppercase text-[#6B7280] tracking-wider">
+                <tr className="border-b border-white/10 text-[11px] uppercase text-white/70 tracking-wider">
                   <th className="pb-4 font-extrabold px-2">ID</th>
                   <th className="pb-4 font-extrabold px-2">Channel / Patient</th>
                   <th className="pb-4 font-extrabold px-2">Message</th>
@@ -368,10 +368,10 @@ export const SignalsDetailView: React.FC = () => {
                   <th className="pb-4 font-extrabold px-2 text-right">Payload</th>
                 </tr>
               </thead>
-              <tbody className="text-sm font-semibold text-[#111827]">
+              <tbody className="text-sm font-semibold text-white">
                 {filteredSignals.length === 0 ? (
                   <tr>
-                    <td colSpan={5} className="py-8 text-center text-[#9CA3AF] font-medium">No matching signals active in database.</td>
+                    <td colSpan={5} className="py-8 text-center text-white/50 font-medium">No matching signals active in database.</td>
                   </tr>
                 ) : (
                   filteredSignals.map((signal) => {
@@ -384,8 +384,8 @@ export const SignalsDetailView: React.FC = () => {
                           setIsDispatched(false);
                           setIsDispatching(false);
                         }}
-                        className={`border-b border-[#F3F4F6] hover:bg-[#F7F9FC] transition-all last:border-0 cursor-pointer ${
-                          selectedSignal?.id === signal.id ? 'bg-[#EEF4FF]/50 border-l-4 border-l-[#6D5DF6]' : ''
+                        className={`border-b border-white/10 hover:bg-white/5 transition-all last:border-0 cursor-pointer ${
+                          selectedSignal?.id === signal.id ? 'bg-white/10 border-l-4 border-l-[#A78BFA]' : ''
                         }`}
                       >
                         <td className="py-4 px-2 font-mono text-[11px] text-[#2563EB]">{signal.id}</td>
@@ -394,28 +394,28 @@ export const SignalsDetailView: React.FC = () => {
                             {getIcon(signal.type)}
                             {signal.source}
                           </span>
-                          <p className="text-xs text-[#6B7280] font-bold mt-0.5">Patient: {signal.metadata?.patient_name || 'N/A'}</p>
+                          <p className="text-xs text-white/70 font-bold mt-0.5">Patient: {signal.metadata?.patient_name || 'N/A'}</p>
                         </td>
                         <td className="py-4 px-2 max-w-xs">
-                          <p className="text-sm font-bold text-[#111827] line-clamp-2 leading-snug">{signal.message}</p>
-                          <p className="text-[10px] text-[#9CA3AF] uppercase mt-1 flex items-center gap-1">
+                          <p className="text-sm font-bold text-white line-clamp-2 leading-snug">{signal.message}</p>
+                          <p className="text-[10px] text-white/50 uppercase mt-1 flex items-center gap-1">
                             <Clock className="w-3 h-3" />
                             {new Date(signal.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
                           </p>
                         </td>
                         <td className="py-4 px-2">
                           {isRisk ? (
-                            <span className="inline-flex items-center gap-1 text-[10px] bg-red-50 text-red-600 border border-red-200 px-2 py-0.5 rounded-[8px] font-extrabold uppercase">
+                            <span className="inline-flex items-center gap-1 text-[10px] bg-red-500/20 text-red-400 border border-red-500/30 px-2 py-0.5 rounded-[8px] font-extrabold uppercase">
                               <AlertCircle className="w-3 h-3" /> Risk Flagged
                             </span>
                           ) : (
-                            <span className="inline-flex items-center gap-1 text-[10px] bg-emerald-50 text-emerald-600 border border-emerald-200 px-2 py-0.5 rounded-[8px] font-extrabold uppercase">
+                            <span className="inline-flex items-center gap-1 text-[10px] bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded-[8px] font-extrabold uppercase">
                               <ShieldCheck className="w-3 h-3" /> Normal
                             </span>
                           )}
                         </td>
                         <td className="py-4 px-2 text-right">
-                          <button className="text-[11px] font-bold text-[#6D5DF6] bg-[#EEF4FF] hover:bg-[#DBEAFE] px-2.5 py-1.5 rounded-[8px] transition-colors inline-flex items-center gap-1 ml-auto">
+                          <button className="text-[11px] font-bold text-white bg-white/10 hover:bg-white/20 px-2.5 py-1.5 rounded-[8px] transition-colors inline-flex items-center gap-1 ml-auto">
                             Inspect <ArrowUpRight className="w-3.5 h-3.5" />
                           </button>
                         </td>
@@ -430,67 +430,67 @@ export const SignalsDetailView: React.FC = () => {
 
         {/* Diagnostic Panel Sidebar */}
         <div className="flex flex-col gap-6">
-          <div className="bg-white border border-[#E8EDF5] rounded-[24px] p-8 premium-shadow">
-            <h3 className="text-base font-extrabold text-[#111827] mb-6 flex items-center gap-2">
-              <Shield className="w-5 h-5 text-[#6D5DF6]" /> Live Stream Status
+          <div className="bg-gradient-to-br from-[#2E1055] to-[#120524] border border-white/10 rounded-[24px] p-8 shadow-[0_20px_50px_rgba(46,16,85,0.3)] text-white">
+            <h3 className="text-base font-extrabold text-white mb-6 flex items-center gap-2">
+              <Shield className="w-5 h-5 text-[#A78BFA]" /> Live Stream Status
             </h3>
             <div className="space-y-4">
-              <div className="bg-[#ECFDF5] border border-[#A7F3D0] rounded-[16px] p-4 flex items-start gap-3">
+              <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-[16px] p-4 flex items-start gap-3">
                 <ShieldCheck className="w-5 h-5 text-[#10B981] flex-shrink-0 mt-0.5" />
                 <div>
-                  <h4 className="text-sm font-bold text-[#065F46]">HIPAA Compliant Tunnel</h4>
-                  <p className="text-xs text-[#047857] leading-relaxed mt-1 font-semibold">All socket connections utilize TLS 1.3 encryption with OAuth2 API authentication verification tokens.</p>
+                  <h4 className="text-sm font-bold text-emerald-400">HIPAA Compliant Tunnel</h4>
+                  <p className="text-xs text-emerald-300 leading-relaxed mt-1 font-semibold">All socket connections utilize TLS 1.3 encryption with OAuth2 API authentication verification tokens.</p>
                 </div>
               </div>
 
-              <div className="space-y-3 pt-2 text-xs font-bold text-[#4B5563]">
-                <div className="flex justify-between py-2 border-b border-[#F3F4F6]">
-                  <span className="text-[#6B7280]">Socket Connection</span>
+              <div className="space-y-3 pt-2 text-xs font-bold text-white/80">
+                <div className="flex justify-between py-2 border-b border-white/10">
+                  <span className="text-white/70">Socket Connection</span>
                   <span className="text-emerald-600 flex items-center gap-1">
                     <span className="w-2 h-2 bg-emerald-500 rounded-full animate-ping"></span> Live Connected
                   </span>
                 </div>
-                <div className="flex justify-between py-2 border-b border-[#F3F4F6]">
-                  <span className="text-[#6B7280]">Active Tunnels</span>
-                  <span className="text-[#111827]">Practice Fusion, Twilio, LabCorp</span>
+                <div className="flex justify-between py-2 border-b border-white/10">
+                  <span className="text-white/70">Active Tunnels</span>
+                  <span className="text-white">Practice Fusion, Twilio, LabCorp</span>
                 </div>
-                <div className="flex justify-between py-2 border-b border-[#F3F4F6]">
-                  <span className="text-[#6B7280]">Response Latency</span>
+                <div className="flex justify-between py-2 border-b border-white/10">
+                  <span className="text-white/70">Response Latency</span>
                   <span className="text-emerald-600">~12ms</span>
                 </div>
-                <div className="flex justify-between py-2 border-b border-[#F3F4F6]">
-                  <span className="text-[#6B7280]">Average Daily Volume</span>
-                  <span className="text-[#111827]">4,821 telemetry packets</span>
+                <div className="flex justify-between py-2 border-b border-white/10">
+                  <span className="text-white/70">Average Daily Volume</span>
+                  <span className="text-white">4,821 telemetry packets</span>
                 </div>
               </div>
             </div>
           </div>
 
-          <div className="bg-white border border-[#E8EDF5] rounded-[24px] p-8 premium-shadow flex-1">
-            <h3 className="text-base font-extrabold text-[#111827] mb-6 flex items-center gap-2">
+          <div className="bg-gradient-to-br from-[#2E1055] to-[#120524] border border-white/10 rounded-[24px] p-8 shadow-[0_20px_50px_rgba(46,16,85,0.3)] flex-1 text-white">
+            <h3 className="text-base font-extrabold text-white mb-6 flex items-center gap-2">
               <CheckCircle2 className="w-5 h-5 text-[#10B981]" /> Action Dispatch History
             </h3>
             <div className="space-y-4 max-h-[360px] overflow-y-auto custom-scrollbar pr-2">
               {auditLogs.length === 0 ? (
-                <div className="text-xs font-semibold text-[#9CA3AF] py-8 text-center border-2 border-dashed border-[#E8EDF5] rounded-[16px]">
+                <div className="text-xs font-semibold text-[#9CA3AF] py-8 text-center border-2 border-dashed border-white/20 rounded-[16px]">
                   No approved actions dispatched yet.
                 </div>
               ) : (
                 auditLogs.map((log, index) => (
-                  <div key={log.id || index} className="border border-[#E8EDF5] rounded-[16px] p-4 bg-slate-50 hover:border-emerald-500/30 transition-all premium-shadow">
+                  <div key={log.id || index} className="border border-white/10 rounded-[16px] p-4 bg-white/5 hover:border-emerald-500/50 transition-all premium-shadow">
                     <div className="flex items-center justify-between mb-2">
-                      <span className="inline-flex items-center gap-1 text-[9px] bg-emerald-50 text-emerald-600 border border-emerald-200 px-2 py-0.5 rounded-[8px] font-black uppercase tracking-wider">
+                      <span className="inline-flex items-center gap-1 text-[9px] bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded-[8px] font-black uppercase tracking-wider">
                         <Check className="w-2.5 h-2.5" /> Dispatched
                       </span>
                       <span className="text-[10px] text-[#9CA3AF] font-bold">
                         {new Date(log.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                       </span>
                     </div>
-                    <p className="text-xs font-bold text-[#111827] leading-relaxed">
+                    <p className="text-xs font-bold text-white leading-relaxed">
                       {log.action.replace('Approved Sentinel Action: ', '')}
                     </p>
-                    <div className="flex items-center justify-between mt-3 pt-2 border-t border-[#E8EDF5] text-[10px] text-[#6B7280]">
-                      <span>User: <strong className="text-[#111827]">{log.user_email}</strong></span>
+                    <div className="flex items-center justify-between mt-3 pt-2 border-t border-white/10 text-[10px] text-white/70">
+                      <span>User: <strong className="text-white">{log.user_email}</strong></span>
                       <span className="font-mono text-[9px] text-[#2563EB]">{log.resource}</span>
                     </div>
                   </div>
@@ -504,24 +504,24 @@ export const SignalsDetailView: React.FC = () => {
       {/* Detail Inspection Modal */}
       {selectedSignal && createPortal(
         <div className="fixed inset-0 z-[1000] bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in">
-          <div className="bg-white border border-[#E8EDF5] w-full max-w-2xl rounded-[28px] overflow-hidden premium-shadow animate-in zoom-in-95 duration-200 flex flex-col max-h-[90vh]">
+          <div className="bg-white/5 border border-white/10 w-full max-w-2xl rounded-[28px] overflow-hidden premium-shadow animate-in zoom-in-95 duration-200 flex flex-col max-h-[90vh]">
             {/* Header */}
-            <div className="px-6 py-4 bg-[#F8FAFC] border-b border-[#E8EDF5] flex items-center justify-between">
+            <div className="px-6 py-4 bg-white/5 border-b border-white/10 flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className={`p-2.5 ${getBgColor(selectedSignal.type)} rounded-[16px] flex-shrink-0`}>
                   {getIcon(selectedSignal.type)}
                 </div>
                 <div>
-                  <h4 className="text-base font-extrabold text-[#111827] flex items-center gap-2">
+                  <h4 className="text-base font-extrabold text-white flex items-center gap-2">
                     Signal Diagnostic Report
-                    <span className="text-[10px] font-mono bg-[#EEEAFE] border border-indigo-200 text-[#6D5DF6] px-2 py-0.5 rounded-[6px]">ID: {selectedSignal.id}</span>
+                    <span className="text-[10px] font-mono bg-[#2E1055]/20 border border-[#2E1055]/50 text-[#A78BFA] px-2 py-0.5 rounded-[6px]">ID: {selectedSignal.id}</span>
                   </h4>
-                  <p className="text-[10px] text-[#6B7280] font-extrabold uppercase tracking-widest mt-0.5">Source: {selectedSignal.source} Integration Layer</p>
+                  <p className="text-[10px] text-white/70 font-extrabold uppercase tracking-widest mt-0.5">Source: {selectedSignal.source} Integration Layer</p>
                 </div>
               </div>
               <button 
                 onClick={() => setSelectedSignal(null)} 
-                className="w-8 h-8 rounded-full hover:bg-slate-200/50 flex items-center justify-center transition-colors cursor-pointer text-slate-500 hover:text-slate-900"
+                className="w-8 h-8 rounded-full hover:bg-white/10 flex items-center justify-center transition-colors cursor-pointer text-white/60 hover:text-white"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -530,45 +530,45 @@ export const SignalsDetailView: React.FC = () => {
             {/* Modal Body */}
             <div className="p-6 space-y-6 overflow-y-auto custom-scrollbar flex-1">
               {/* Event Description */}
-              <div className="bg-slate-50 border border-[#E8EDF5] rounded-[18px] p-4">
-                <h5 className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest mb-1.5">TELEMETRY MESSAGE</h5>
-                <p className="text-sm font-bold text-[#111827]">{selectedSignal.message}</p>
-                <div className="flex items-center gap-3 mt-3 text-[11px] text-[#6B7280] font-semibold">
-                  <span>Matched Patient: <strong className="text-[#111827]">{selectedSignal.metadata?.patient_name || 'None'}</strong></span>
+              <div className="bg-white/5 border border-white/10 rounded-[18px] p-4">
+                <h5 className="text-[10px] font-extrabold text-white/50 uppercase tracking-widest mb-1.5">TELEMETRY MESSAGE</h5>
+                <p className="text-sm font-bold text-white">{selectedSignal.message}</p>
+                <div className="flex items-center gap-3 mt-3 text-[11px] text-white/70 font-semibold">
+                  <span>Matched Patient: <strong className="text-white">{selectedSignal.metadata?.patient_name || 'None'}</strong></span>
                   <span>•</span>
-                  <span>Received: <strong className="text-[#111827]">{new Date(selectedSignal.timestamp).toLocaleString()}</strong></span>
+                  <span>Received: <strong className="text-white">{new Date(selectedSignal.timestamp).toLocaleString()}</strong></span>
                 </div>
               </div>
 
               {/* AI Assistant Insight */}
-              <div className="bg-[#F5F3FF] border border-[#DDD6FE] rounded-[18px] p-4 flex gap-3">
+              <div className="bg-[#A78BFA]/10 border border-[#A78BFA]/30 rounded-[18px] p-4 flex gap-3">
                 <Sparkles className="w-5 h-5 text-[#8B5CF6] flex-shrink-0 mt-0.5 animate-pulse" />
                 <div>
-                  <h5 className="text-xs font-extrabold text-[#7C3AED] uppercase tracking-wider mb-1">AI Recommendation Insight</h5>
-                  <p className="text-xs text-[#5B21B6] font-semibold leading-relaxed">{selectedSignal.ai_insight || "AI Engine evaluated this event. No immediate critical clinical or revenue leakage identified. Status: Clean."}</p>
+                  <h5 className="text-xs font-extrabold text-[#C4B5FD] uppercase tracking-wider mb-1">AI Recommendation Insight</h5>
+                  <p className="text-xs text-white/90 font-semibold leading-relaxed">{selectedSignal.ai_insight || "AI Engine evaluated this event. No immediate critical clinical or revenue leakage identified. Status: Clean."}</p>
                   
                   {selectedSignal.recommended_action && (
-                    <div className="mt-2.5 p-2 bg-white/60 border border-[#DDD6FE] rounded-2xl inline-block text-[11px] text-[#6D28D9] font-bold">
+                    <div className="mt-2.5 p-2 bg-[#A78BFA]/20 border border-[#A78BFA]/40 rounded-2xl inline-block text-[11px] text-[#C4B5FD] font-bold">
                       Recommendation: {selectedSignal.recommended_action}
                     </div>
                   )}
                 </div>
               </div>
 
-              {/* FHIR/Raw JSON Payload */}
+              {/* Secure Data/Raw JSON Payload */}
               <div>
                 <div className="flex justify-between items-center mb-3">
-                  <h5 className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">
-                    {viewMode === 'doctor' ? 'INTEGRATION DIAGNOSTICS (CLINICAL VIEW)' : 'RAW FHIR PAYLOAD (DEVELOPER VIEW)'}
+                  <h5 className="text-[10px] font-extrabold text-white/50 uppercase tracking-widest">
+                    {viewMode === 'doctor' ? 'SYSTEM STATUS (CLINICAL VIEW)' : 'RAW SYSTEM LOGS (DEVELOPER VIEW)'}
                   </h5>
                   
                   <div className="flex items-center gap-3">
                     {/* View Mode Toggle */}
-                    <div className="bg-slate-100 p-0.5 rounded-[8px] flex items-center border border-[#E8EDF5]">
+                    <div className="bg-white/5 p-0.5 rounded-[8px] flex items-center border border-white/10">
                       <button 
                         onClick={() => setViewMode('doctor')}
                         className={`text-[9px] font-black px-2 py-1 rounded-[6px] transition-all cursor-pointer ${
-                          viewMode === 'doctor' ? 'bg-white text-[#2563EB] shadow-sm' : 'text-slate-500 hover:text-slate-900'
+                          viewMode === 'doctor' ? 'bg-white/20 text-white shadow-sm' : 'text-white/50 hover:text-white'
                         }`}
                       >
                         Clinical
@@ -576,7 +576,7 @@ export const SignalsDetailView: React.FC = () => {
                       <button 
                         onClick={() => setViewMode('developer')}
                         className={`text-[9px] font-black px-2 py-1 rounded-[6px] transition-all cursor-pointer ${
-                          viewMode === 'developer' ? 'bg-white text-[#2563EB] shadow-sm' : 'text-slate-500 hover:text-slate-900'
+                          viewMode === 'developer' ? 'bg-white/20 text-white shadow-sm' : 'text-white/50 hover:text-white'
                         }`}
                       >
                         JSON Payload
@@ -585,7 +585,7 @@ export const SignalsDetailView: React.FC = () => {
 
                     <button 
                       onClick={() => handleCopyId(selectedSignal.id)}
-                      className="text-[10px] font-extrabold text-[#6D5DF6] hover:underline flex items-center gap-1 cursor-pointer"
+                      className="text-[10px] font-extrabold text-[#A78BFA] hover:underline flex items-center gap-1 cursor-pointer"
                     >
                       {copiedId === selectedSignal.id ? (
                         <>
@@ -601,29 +601,29 @@ export const SignalsDetailView: React.FC = () => {
                 </div>
 
                 {viewMode === 'doctor' ? (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-slate-50 border border-[#E8EDF5] rounded-[20px] p-5">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-white/5 border border-white/10 rounded-[20px] p-5">
                     <div className="space-y-1">
                       <span className="text-[9px] text-[#9CA3AF] font-bold uppercase block">Target EHR System</span>
-                      <p className="text-xs font-bold text-[#111827] flex items-center gap-1.5">
+                      <p className="text-xs font-bold text-white flex items-center gap-1.5">
                         <Database className="w-3.5 h-3.5 text-[#F59E0B]" />
-                        {selectedSignal.source} (FHIR R4 compliant)
+                        {selectedSignal.source} (Secure Data R4 compliant)
                       </p>
                     </div>
                     <div className="space-y-1">
                       <span className="text-[9px] text-[#9CA3AF] font-bold uppercase block">Security Verification</span>
-                      <span className="inline-flex items-center gap-1.5 text-[9px] bg-emerald-50 text-emerald-600 border border-emerald-200 px-2 py-0.5 rounded-[6px] font-extrabold uppercase">
+                      <span className="inline-flex items-center gap-1.5 text-[9px] bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded-[6px] font-extrabold uppercase">
                         <ShieldCheck className="w-3.5 h-3.5" /> HIPAA SECURE TUNNEL
                       </span>
                     </div>
-                    <div className="space-y-1 col-span-2 pt-2 border-t border-[#E8EDF5]">
+                    <div className="space-y-1 col-span-2 pt-2 border-t border-white/10">
                       <span className="text-[9px] text-[#9CA3AF] font-bold uppercase block">Action Scope</span>
-                      <p className="text-xs font-bold text-[#4B5563]">
+                      <p className="text-xs font-bold text-white/80">
                         Authorized to read patient metadata & write appointment status updates.
                       </p>
                     </div>
-                    <div className="space-y-1 col-span-2 pt-2 border-t border-[#E8EDF5]">
+                    <div className="space-y-1 col-span-2 pt-2 border-t border-white/10">
                       <span className="text-[9px] text-[#9CA3AF] font-bold uppercase block">Clinic Integration Credentials</span>
-                      <p className="text-[10px] font-mono text-slate-500 font-semibold bg-white border border-[#E8EDF5] p-2 rounded-lg truncate">
+                      <p className="text-[10px] font-mono text-white/60 font-semibold bg-white/5 border border-white/10 p-2 rounded-lg truncate">
                         oauth_client_id: pf-oauth-client-88123-prod • scope: patient/*.read appointment/*.write
                       </p>
                     </div>
@@ -637,10 +637,10 @@ export const SignalsDetailView: React.FC = () => {
             </div>
 
             {/* Modal Footer */}
-            <div className="px-6 py-4 bg-[#F8FAFC] border-t border-[#E8EDF5] flex items-center justify-between shrink-0">
+            <div className="px-6 py-4 bg-white/5 border-t border-white/10 flex items-center justify-between shrink-0">
               <button 
                 onClick={() => setSelectedSignal(null)}
-                className="bg-white border border-[#E8EDF5] hover:bg-[#F7F9FC] text-[#475569] font-bold text-xs px-4 py-2.5 rounded-[16px] premium-shadow cursor-pointer transition-colors"
+                className="bg-white/5 border border-white/10 hover:bg-white/5 text-white/80 font-bold text-xs px-4 py-2.5 rounded-[16px] premium-shadow cursor-pointer transition-colors"
               >
                 Close Diagnostic
               </button>
@@ -653,8 +653,8 @@ export const SignalsDetailView: React.FC = () => {
                     isDispatched 
                       ? 'bg-emerald-600 text-white cursor-default' 
                       : isDispatching 
-                        ? 'bg-[#5B4AE8] text-white opacity-50 cursor-wait' 
-                        : 'bg-[#6D5DF6] hover:bg-[#5B4AE8] text-white cursor-pointer hover:scale-105 active:scale-95'
+                        ? 'bg-[#120524] text-white opacity-50 cursor-wait' 
+                        : 'bg-emerald-600 hover:bg-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.4)] text-white cursor-pointer hover:scale-105 active:scale-95'
                   }`}
                 >
                   {isDispatched ? (

@@ -137,3 +137,24 @@ def get_all_encounters_summary(db: Session = Depends(get_db)) -> List[Dict[str, 
         }
         for e in encounters
     ]
+
+@router.get("/pending-approvals")
+def get_pending_approvals():
+    """Return pending clinic registrations."""
+    return []
+
+from app.models.audit import AuditLogModel
+@router.get("/audit-logs")
+def get_audit_logs(db: Session = Depends(get_db)):
+    """Return super admin audit logs from database."""
+    logs = db.query(AuditLogModel).order_by(AuditLogModel.timestamp.desc()).limit(50).all()
+    return [
+        {
+            "id": log.id,
+            "action": log.action,
+            "resource": log.resource or "-",
+            "time": log.timestamp.isoformat() + "Z",
+            "ip": log.ip_address
+        }
+        for log in logs
+    ]

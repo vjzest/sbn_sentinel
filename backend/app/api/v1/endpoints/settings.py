@@ -7,6 +7,7 @@ from app.models.user import User
 from app.models.integration import IntegrationModel
 from app.schemas.settings import SettingsUpdate, SettingsResponse
 from app.core.security import get_password_hash
+from app.core.email import send_email
 
 router = APIRouter()
 
@@ -97,18 +98,43 @@ def invite_team_member(payload: Dict[str, Any], db: Session = Depends(get_db)):
         email=email,
         full_name=name,
         role=role,
-        hashed_password=get_password_hash("Sentinel@123"), # Default password
-        is_active=True
+        hashed_password="",
+        is_active=False
     )
     db.add(new_user)
+    
+    import random
+    from app.models.otp import OTPModel
+    otp = str(random.randint(100000, 999999))
+    db_otp = OTPModel(email=email, otp_code=otp, purpose="invite")
+    db.add(db_otp)
+    
     db.commit()
     db.refresh(new_user)
+    
+    # Send invitation email
+    login_url = "http://localhost:3000"
+    html_content = f"""
+    <html>
+        <body>
+            <h2>Welcome to SBN Sentinel!</h2>
+            <p>Hi {name},</p>
+            <p>You have been invited to join the SBN Sentinel Clinic Management platform.</p>
+            <p>Your activation OTP is: <strong>{otp}</strong></p>
+            <p>Please go to the login screen, click "Activate Account", and enter this code to set up your password.</p>
+            <br/>
+            <a href="{login_url}">Click here to activate your account</a>
+        </body>
+    </html>
+    """
+    send_email(to_email=email, subject="You are invited to SBN Sentinel", body=html_content, is_html=True)
+    
     return {
         "id": str(new_user.id),
         "name": new_user.full_name,
         "email": new_user.email,
         "role": new_user.role,
-        "status": "Active"
+        "status": "Pending"
     }
 
 @router.delete("/team/{user_id}")
