@@ -75,6 +75,7 @@ export const ClinicalLogsView: React.FC = () => {
 
   // Export Patient Chart as SOAP Notes text & professional print format
   const handleDownloadChart = (enc: any) => {
+    const todayStr = new Date().toLocaleDateString('en-US', { year: 'numeric', month: '2-digit', day: '2-digit' });
     const notes = enc.clinical_notes || enc.clinicalNotes || "Patient reports standard symptoms. Checked vitals. Diagnostic codes mapped. Recommended regular check-up and follow-up consultation in 2 weeks.";
     
     // Parse notes into SOAP structure if possible, or fallback to beautiful paragraphs
@@ -112,7 +113,7 @@ export const ClinicalLogsView: React.FC = () => {
             .header-logo {
               font-size: 24px;
               font-weight: 800;
-              color: #6D5DF6;
+              color: #2E1055;
               letter-spacing: -0.025em;
             }
             .header-sublogo {
@@ -146,7 +147,7 @@ export const ClinicalLogsView: React.FC = () => {
               font-weight: 800;
               text-transform: uppercase;
               letter-spacing: 0.05em;
-              color: #6D5DF6;
+              color: #2E1055;
               margin-top: 25px;
               margin-bottom: 12px;
               border-bottom: 1px solid #F3F4F6;
@@ -179,7 +180,7 @@ export const ClinicalLogsView: React.FC = () => {
               width: 32%;
             }
             .soap-card {
-              border-left: 4px solid #6D5DF6;
+              border-left: 4px solid #2E1055;
               padding-left: 16px;
               margin-bottom: 20px;
             }
@@ -204,7 +205,7 @@ export const ClinicalLogsView: React.FC = () => {
             }
             .rx-box {
               background-color: #EEF2FF;
-              border: 1.5px dashed #6D5DF6;
+              border: 1.5px dashed #2E1055;
               border-radius: 12px;
               padding: 16px;
               margin-top: 15px;
@@ -308,7 +309,7 @@ export const ClinicalLogsView: React.FC = () => {
               <td class="info-label">Patient Name</td>
               <td class="info-val">${enc.patient_name}</td>
               <td class="info-label">Date of Visit</td>
-              <td class="info-val">${enc.date}</td>
+              <td class="info-val">${enc.date || todayStr}</td>
             </tr>
             <tr>
               <td class="info-label">Encounter ID</td>
@@ -370,7 +371,7 @@ export const ClinicalLogsView: React.FC = () => {
             </thead>
             <tbody>
               <tr>
-                <td>99213 / CPT</td>
+                <td>${enc.billing_status === 'Paid' ? '99213 / CPT' : '99213 / CPT'}</td>
                 <td>Outpatient Office Visit (Level 3)</td>
                 <td rowspan="2" style="vertical-align: middle;">
                   <span class="badge ${enc.billing_status === 'Paid' ? 'badge-success' : 'badge-warning'}">
@@ -546,26 +547,26 @@ export const ClinicalLogsView: React.FC = () => {
       {/* Header */}
       <div className="flex items-end justify-between relative">
         <div>
-          <h2 className="text-3xl font-extrabold text-[#111827] mb-1">Clinical Logs & Billing</h2>
-          <p className="text-sm text-[#6B7280] font-medium">Review patient encounters, finalize charts, and generate automated bills.</p>
+          <h2 className="text-3xl font-extrabold text-white mb-1">Clinical Logs & Billing</h2>
+          <p className="text-sm text-white/70 font-medium">Review patient encounters, finalize charts, and generate automated bills.</p>
         </div>
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 bg-white border border-[#E8EDF5] rounded-[16px] px-3 py-2 premium-shadow">
-            <Search className="w-4 h-4 text-[#6B7280]" />
-            <input type="text" placeholder="Search encounters..." className="bg-transparent border-none outline-none text-xs text-[#111827] w-48 placeholder:text-[#9CA3AF]" />
+          <div className="flex items-center gap-2 bg-white/5 border border-white/10 rounded-[16px] px-3 py-2 premium-shadow">
+            <Search className="w-4 h-4 text-white/70" />
+            <input type="text" placeholder="Search encounters..." className="bg-transparent border-none outline-none text-xs text-white w-48 placeholder:text-[#9CA3AF]" />
           </div>
-          <button className="flex items-center gap-2 bg-white border border-[#E8EDF5] text-[#111827] font-bold text-xs px-4 py-2.5 rounded-[16px] premium-shadow hover:bg-[#F7F9FC] transition-colors">
-            <Filter className="w-4 h-4 text-[#6B7280]" /> Filter
+          <button className="flex items-center gap-2 bg-white/5 border border-white/10 text-white font-bold text-xs px-4 py-2.5 rounded-[16px] premium-shadow hover:bg-white/5 transition-colors">
+            <Filter className="w-4 h-4 text-white/70" /> Filter
           </button>
           <button
             onClick={handleExportAllLogs}
-            className="flex items-center gap-2 bg-white border border-[#E8EDF5] text-[#111827] font-bold text-xs px-4 py-2.5 rounded-[16px] premium-shadow hover:bg-[#F7F9FC] transition-colors"
+            className="flex items-center gap-2 bg-white/5 border border-white/10 text-white font-bold text-xs px-4 py-2.5 rounded-[16px] premium-shadow hover:bg-white/5 transition-colors"
           >
-            <Download className="w-4 h-4 text-[#6B7280]" /> Export Logs
+            <Download className="w-4 h-4 text-white/70" /> Export Logs
           </button>
           <button
             onClick={() => setShowAddModal(true)}
-            className="flex items-center gap-2 bg-[#6D5DF6] hover:bg-[#5B4AE8] text-white font-bold text-xs px-4 py-2.5 rounded-[16px] premium-shadow transition-all hover:scale-105 active:scale-95"
+            className="flex items-center gap-2 bg-[#2E1055] hover:bg-[#120524] text-white font-bold text-xs px-4 py-2.5 rounded-[16px] premium-shadow transition-all hover:scale-105 active:scale-95"
           >
             <Plus className="w-4 h-4" /> Add Encounter
           </button>
@@ -575,14 +576,14 @@ export const ClinicalLogsView: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
 
         {/* Logs Table */}
-        <div className="lg:col-span-2 bg-white border border-[#E8EDF5] rounded-[24px] p-8 premium-shadow">
-          <h3 className="text-base font-bold text-[#111827] mb-6 flex items-center gap-2">
-            <FileText className="w-5 h-5 text-[#6D5DF6]" /> Recent Encounters
+        <div className="lg:col-span-2 bg-gradient-to-br from-[#2E1055] to-[#120524] border border-white/10 rounded-[24px] p-8 shadow-[0_20px_50px_rgba(46,16,85,0.3)] text-white">
+          <h3 className="text-base font-bold text-white mb-6 flex items-center gap-2">
+            <FileText className="w-5 h-5 text-[#2E1055]" /> Recent Encounters
           </h3>
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="border-b border-[#E8EDF5] text-[11px] uppercase text-[#6B7280]">
+                <tr className="border-b border-white/10 text-[11px] uppercase text-white/70">
                   <th className="pb-4 font-extrabold tracking-wider px-2">Encounter ID</th>
                   <th className="pb-4 font-extrabold tracking-wider px-2">Patient / Date</th>
                   <th className="pb-4 font-extrabold tracking-wider px-2">Diagnosis</th>
@@ -590,40 +591,47 @@ export const ClinicalLogsView: React.FC = () => {
                   <th className="pb-4 font-extrabold tracking-wider px-2 text-right">Action</th>
                 </tr>
               </thead>
-              <tbody className="text-sm font-semibold text-[#111827]">
+              <tbody className="text-sm font-semibold text-white">
+                {encounters.length === 0 ? (
+                  <tr>
+                    <td colSpan={5} className="py-12 text-center">
+                      <p className="text-sm text-white/50 font-bold">No clinical records found.</p>
+                    </td>
+                  </tr>
+                ) : null}
                 {encounters.map((log) => (
                   <tr
                     key={log.id}
-                    className={`border-b border-[#F3F4F6] hover:bg-[#F7F9FC] transition-colors last:border-0 cursor-pointer ${activeBillId === log.id ? 'bg-[#EEF4FF]/50 border-l-4 border-l-[#6D5DF6]' : ''}`}
+                    className={`border-b border-white/10 hover:bg-transparent/5 transition-colors last:border-0 cursor-pointer ${activeBillId === log.id ? 'bg-blue-500/20/50 border-l-4 border-l-[#2E1055]' : ''}`}
                     onClick={() => handleGenerateBill(log.id)}
                   >
-                    <td className="py-4 px-2 font-mono text-[#2563EB] text-xs">{log.id}</td>
+                    <td className="py-4 px-2 font-mono text-blue-400 text-xs">{log.id}</td>
                     <td className="py-4 px-2">
-                      <p className="text-sm font-bold text-[#111827]">{log.patient_name}</p>
-                      <p className="text-[10px] text-[#6B7280] uppercase mt-0.5">{log.date}</p>
+                      <p className="text-sm font-bold text-white">{log.patient_name}</p>
+                      <p className="text-[10px] text-white/70 uppercase mt-0.5">{log.date}</p>
                     </td>
                     <td className="py-4 px-2">
-                      <p className="text-sm font-bold text-[#4B5563]">{log.diagnosis}</p>
-                      <p className="text-[10px] text-[#9CA3AF] uppercase mt-0.5">{log.type}</p>
+                      <p className="text-sm font-bold text-white/60">{log.diagnosis}</p>
+                      <p className="text-[10px] text-white/50 uppercase mt-0.5">{log.type}</p>
                     </td>
                     <td className="py-4 px-2">
-                      {log.billing_status === 'Pending' && <span className="bg-[#FFFBEB] text-[#F59E0B] px-3 py-1 rounded-[8px] text-[10px] font-extrabold uppercase border border-[#FEF3C7]">Needs Billing</span>}
-                      {log.billing_status === 'Billed' && <span className="bg-[#EEF4FF] text-[#2563EB] px-3 py-1 rounded-[8px] text-[10px] font-extrabold uppercase border border-[#DBEAFE]">Invoice Sent</span>}
-                      {log.billing_status === 'Paid' && <span className="bg-[#ECFDF5] text-[#10B981] px-3 py-1 rounded-[8px] text-[10px] font-extrabold uppercase border border-[#D1FAE5]">Paid</span>}
-                      {log.billing_status === 'Claim Denied' && <span className="bg-[#FEF2F2] text-[#EF4444] px-3 py-1 rounded-[8px] text-[10px] font-extrabold uppercase border border-[#FEE2E2]">Claim Denied</span>}
+                      {log.billing_status === 'Pending' && <span className="bg-orange-500/20 text-orange-400 px-3 py-1 rounded-[8px] text-[10px] font-extrabold uppercase border border-orange-500/30">Needs Billing</span>}
+                      {log.billing_status === 'Billed' && <span className="bg-blue-500/20 text-blue-400 px-3 py-1 rounded-[8px] text-[10px] font-extrabold uppercase border border-blue-500/30">Invoice Sent</span>}
+                      {log.billing_status === 'Paid' && <span className="bg-emerald-500/20 text-emerald-400 px-3 py-1 rounded-[8px] text-[10px] font-extrabold uppercase border border-emerald-500/30">Paid</span>}
+                      {log.billing_status === 'Claim Denied' && <span className="bg-red-500/20 text-red-400 px-3 py-1 rounded-[8px] text-[10px] font-extrabold uppercase border border-red-500/30">Claim Denied</span>}
                     </td>
                     <td className="py-4 px-2 text-right">
                       {log.billing_status === 'Pending' ? (
                         <button
                           onClick={(e) => { e.stopPropagation(); handleGenerateBill(log.id); }}
-                          className="text-[11px] font-bold text-white bg-[#6D5DF6] px-4 py-2 rounded-[10px] hover:bg-[#5B4AE8] transition-all hover:scale-105 active:scale-95 flex items-center gap-1 ml-auto"
+                          className="text-[11px] font-bold text-white bg-[#2E1055] px-4 py-2 rounded-[10px] hover:bg-[#120524] transition-all hover:scale-105 active:scale-95 flex items-center gap-1 ml-auto"
                         >
                           <Receipt className="w-3 h-3" /> Generate Bill
                         </button>
                       ) : (
                         <button
                           onClick={(e) => { e.stopPropagation(); handleGenerateBill(log.id); }}
-                          className="text-[11px] font-bold text-[#6B7280] hover:text-[#111827] px-3 py-1.5 transition-colors border border-[#E8EDF5] bg-[#F7F9FC] rounded-[8px] hover:bg-white"
+                          className="text-[11px] font-bold text-white/70 hover:text-white px-3 py-1.5 transition-colors border border-white/10 bg-transparent/5 rounded-[8px] hover:bg-transparent"
                         >
                           View Details
                         </button>
@@ -637,39 +645,39 @@ export const ClinicalLogsView: React.FC = () => {
         </div>
 
         {/* AI Billing Assistant Widget */}
-        <div className="bg-white border border-[#E8EDF5] rounded-[24px] p-8 premium-shadow flex flex-col relative overflow-hidden min-h-[500px]">
+        <div className="bg-gradient-to-br from-[#2E1055] to-[#120524] border border-white/10 rounded-[24px] p-8 shadow-[0_20px_50px_rgba(46,16,85,0.3)] text-white flex flex-col relative overflow-hidden min-h-[500px]">
           {/* Background decorative blob */}
-          <div className="absolute -top-20 -right-20 w-64 h-64 bg-[#EEF4FF] rounded-full blur-[60px] pointer-events-none"></div>
+          <div className="absolute -top-20 -right-20 w-64 h-64 bg-blue-500/20 rounded-full blur-[60px] pointer-events-none"></div>
 
-          <h3 className="text-base font-bold text-[#111827] mb-6 flex items-center gap-2 relative z-10">
-            <FileSignature className="w-5 h-5 text-[#2563EB]" /> AI Billing Assistant
+          <h3 className="text-base font-bold text-white mb-6 flex items-center gap-2 relative z-10">
+            <FileSignature className="w-5 h-5 text-blue-400" /> AI Billing Assistant
           </h3>
 
           {!activeBillId ? (
             <div className="flex-1 flex flex-col items-center justify-center text-center relative z-10 opacity-70">
-              <div className="w-16 h-16 bg-[#F7F9FC] border border-[#E8EDF5] rounded-full flex items-center justify-center mb-4">
-                <Receipt className="w-8 h-8 text-[#9CA3AF]" />
+              <div className="w-16 h-16 bg-transparent/5 border border-white/10 rounded-full flex items-center justify-center mb-4">
+                <Receipt className="w-8 h-8 text-white/50" />
               </div>
-              <p className="text-sm font-bold text-[#4B5563] mb-1">Select an encounter to bill</p>
-              <p className="text-xs text-[#6B7280]">Our AI will automatically map ICD-10 codes and fetch active patient insurance coverage.</p>
+              <p className="text-sm font-bold text-white/60 mb-1">Select an encounter to bill</p>
+              <p className="text-xs text-white/70">Our AI will automatically map ICD-10 codes and fetch active patient insurance coverage.</p>
             </div>
           ) : (
             <div className="flex-1 flex flex-col relative z-10 animate-in slide-in-from-right-4">
               {processing ? (
                 <div className="flex-1 flex flex-col items-center justify-center">
                   <div className="w-12 h-12 border-4 border-[#EEF4FF] border-t-[#2563EB] rounded-full animate-spin mb-4"></div>
-                  <p className="text-sm font-bold text-[#111827]">Processing Transaction...</p>
-                  <p className="text-xs text-[#6B7280] mt-1">Connecting to gateway & checking claims rules</p>
+                  <p className="text-sm font-bold text-white">Processing Transaction...</p>
+                  <p className="text-xs text-white/70 mt-1">Connecting to gateway & checking claims rules</p>
                 </div>
               ) : billingSuccess ? (
                 <div className="flex-1 flex flex-col items-center justify-center text-center animate-in zoom-in-95">
-                  <div className="w-16 h-16 bg-[#ECFDF5] border border-[#D1FAE5] rounded-full flex items-center justify-center mb-4">
-                    <Check className="w-8 h-8 text-[#10B981]" />
+                  <div className="w-16 h-16 bg-emerald-500/20 border border-emerald-500/30 rounded-full flex items-center justify-center mb-4">
+                    <Check className="w-8 h-8 text-emerald-400" />
                   </div>
-                  <h4 className="text-base font-bold text-[#111827] mb-1">
+                  <h4 className="text-base font-bold text-white mb-1">
                     {billingSuccess === 'Paid' ? 'Payment Completed!' : 'Claim Dispatched!'}
                   </h4>
-                  <p className="text-xs text-[#6B7280] max-w-[240px] mb-6">
+                  <p className="text-xs text-white/70 max-w-[240px] mb-6">
                     {billingSuccess === 'Paid'
                       ? 'Co-pay collection processed and marked as settled in EHR.'
                       : 'Insurance claim successfully coded and uploaded to clearinghouse portal.'}
@@ -677,19 +685,19 @@ export const ClinicalLogsView: React.FC = () => {
                   <div className="flex gap-2 w-full">
                     <button
                       onClick={() => window.print()}
-                      className="flex-1 bg-white border border-[#E8EDF5] hover:bg-[#F7F9FC] text-[#4B5563] font-bold text-xs py-2.5 rounded-[16px] flex items-center justify-center gap-1.5"
+                      className="flex-1 bg-transparent border border-white/10 hover:bg-transparent/5 text-white/60 font-bold text-xs py-2.5 rounded-[16px] flex items-center justify-center gap-1.5"
                     >
                       <Printer className="w-3.5 h-3.5" /> Print
                     </button>
                     <button
                       onClick={() => handleDownloadChart(activeEncounter)}
-                      className="flex-1 bg-[#EEF2F6] hover:bg-[#E2E8F0] text-[#111827] font-bold text-xs py-2.5 rounded-[16px] flex items-center justify-center gap-1.5"
+                      className="flex-1 bg-white hover:bg-[#E2E8F0] text-[#120524] font-bold text-xs py-2.5 rounded-[16px] flex items-center justify-center gap-1.5"
                     >
                       <Download className="w-3.5 h-3.5" /> Download Chart
                     </button>
                     <button
                       onClick={() => setActiveBillId(null)}
-                      className="flex-1 bg-[#111827] hover:bg-gray-800 text-white font-bold text-xs py-2.5 rounded-[16px]"
+                      className="flex-1 bg-white/10 hover:bg-white/20 text-white font-bold text-xs py-2.5 rounded-[16px]"
                     >
                       Done
                     </button>
@@ -698,13 +706,13 @@ export const ClinicalLogsView: React.FC = () => {
               ) : (
                 <>
                   {/* Tab Switcher */}
-                  <div className="flex bg-[#F1F5F9] p-1 rounded-[14px] mb-5 border border-[#E2E8F0] relative z-10 shrink-0">
+                  <div className="flex bg-transparent/5 p-1 rounded-[14px] mb-5 border border-white/10 relative z-10 shrink-0">
                     <button
                       onClick={() => setActiveTab('billing')}
                       className={`flex-1 py-2 text-xs font-bold rounded-[10px] transition-all cursor-pointer ${
                         activeTab === 'billing'
-                          ? 'bg-white text-[#6D5DF6] shadow-sm border border-[#E2E8F0]/30'
-                          : 'text-[#6B7280] hover:text-[#111827]'
+                          ? 'bg-transparent text-[#2E1055] shadow-sm border border-white/10/30'
+                          : 'text-white/70 hover:text-white'
                       }`}
                     >
                       Billing & Insurance
@@ -713,8 +721,8 @@ export const ClinicalLogsView: React.FC = () => {
                       onClick={() => setActiveTab('clinical')}
                       className={`flex-1 py-2 text-xs font-bold rounded-[10px] transition-all cursor-pointer ${
                         activeTab === 'clinical'
-                          ? 'bg-white text-[#6D5DF6] shadow-sm border border-[#E2E8F0]/30'
-                          : 'text-[#6B7280] hover:text-[#111827]'
+                          ? 'bg-transparent text-[#2E1055] shadow-sm border border-white/10/30'
+                          : 'text-white/70 hover:text-white'
                       }`}
                     >
                       Clinical Notes & Rx
@@ -725,61 +733,61 @@ export const ClinicalLogsView: React.FC = () => {
                     <div className="space-y-4 animate-in fade-in duration-300 flex-1 flex flex-col justify-between">
                       <div className="space-y-4">
                         {/* Charge Summary Card */}
-                        <div className="bg-[#F8FAFC] rounded-[18px] p-4 border border-[#E8EDF5]">
-                          <div className="flex justify-between items-start mb-3 border-b border-[#E2E8F0] pb-3">
+                        <div className="bg-transparent/5 rounded-[18px] p-4 border border-white/10">
+                          <div className="flex justify-between items-start mb-3 border-b border-white/10 pb-3">
                             <div>
-                              <p className="text-[10px] font-extrabold text-[#9CA3AF] uppercase tracking-wider mb-0.5">Encounter</p>
-                              <p className="text-sm font-bold text-[#111827]">{activeBillId} ({activeEncounter?.patient_name})</p>
+                              <p className="text-[10px] font-extrabold text-white/50 uppercase tracking-wider mb-0.5">Encounter</p>
+                              <p className="text-sm font-bold text-white">{activeBillId} ({activeEncounter?.patient_name})</p>
                             </div>
                             <div className="text-right">
-                              <p className="text-[10px] font-extrabold text-[#9CA3AF] uppercase tracking-wider mb-0.5">Charge amount</p>
-                              <p className="text-xl font-extrabold text-[#111827]">$245.00</p>
+                              <p className="text-[10px] font-extrabold text-white/50 uppercase tracking-wider mb-0.5">Charge amount</p>
+                              <p className="text-xl font-extrabold text-white">$245.00</p>
                             </div>
                           </div>
 
                           <div className="space-y-2.5">
                             <div className="flex justify-between text-xs font-semibold">
-                              <span className="text-[#4B5563]">99213 (Level 3 Visit)</span>
-                              <span className="text-[#111827]">$120.00</span>
+                              <span className="text-white/60">99213 (Level 3 Visit)</span>
+                              <span className="text-white">$120.00</span>
                             </div>
                             <div className="flex justify-between text-xs font-semibold">
-                              <span className="text-[#4B5563]">36415 (Venipuncture)</span>
-                              <span className="text-[#111827]">$45.00</span>
+                              <span className="text-white/60">36415 (Venipuncture)</span>
+                              <span className="text-white">$45.00</span>
                             </div>
                             <div className="flex justify-between text-xs font-semibold">
-                              <span className="text-[#4B5563]">80053 (Comp Metabolic)</span>
-                              <span className="text-[#111827]">$80.00</span>
+                              <span className="text-white/60">80053 (Comp Metabolic)</span>
+                              <span className="text-white">$80.00</span>
                             </div>
                           </div>
 
-                          <div className="mt-4 pt-3 border-t border-[#E2E8F0] flex items-center justify-between">
-                            <span className="text-[10px] font-bold text-[#2563EB] bg-[#EEF4FF] px-2 py-0.5 rounded flex items-center gap-1">
+                          <div className="mt-4 pt-3 border-t border-white/10 flex items-center justify-between">
+                            <span className="text-[10px] font-bold text-blue-400 bg-blue-500/20 px-2 py-0.5 rounded flex items-center gap-1">
                               <Sparkles className="w-2.5 h-2.5" /> AI Auto-Coded
                             </span>
-                            <span className="text-[10px] font-bold text-[#10B981] flex items-center gap-0.5"><Check className="w-3 h-3" /> 99% Accuracy</span>
+                            <span className="text-[10px] font-bold text-emerald-400 flex items-center gap-0.5"><Check className="w-3 h-3" /> 99% Accuracy</span>
                           </div>
                         </div>
 
                         {/* Integrated Insurance Eligibility Widget */}
                         <div>
-                          <p className="text-[10px] font-extrabold text-[#9CA3AF] uppercase tracking-wider mb-2">Insurance Status check</p>
+                          <p className="text-[10px] font-extrabold text-white/50 uppercase tracking-wider mb-2">Insurance Status check</p>
                           {selectedPatientInsurance ? (
-                            <div className={`p-4 rounded-[16px] border ${selectedPatientInsurance.eligibility_status === 'Active' ? 'bg-[#ECFDF5]/60 border-[#D1FAE5] text-[#065F46]' : 'bg-rose-50 border-rose-100 text-rose-800'}`}>
+                            <div className={`p-4 rounded-[16px] border ${selectedPatientInsurance.eligibility_status === 'Active' ? 'bg-emerald-500/20 border-emerald-500/30 text-emerald-400' : 'bg-rose-500/20 border-rose-500/30 text-rose-400'}`}>
                               <div className="flex items-start gap-2.5">
                                 {selectedPatientInsurance.eligibility_status === 'Active' ? (
                                   <>
-                                    <ShieldCheck className="w-5 h-5 text-[#10B981] shrink-0 mt-0.5" />
+                                    <ShieldCheck className="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" />
                                     <div className="text-xs">
                                       <p className="font-extrabold">Active Insurance: {selectedPatientInsurance.provider_name}</p>
-                                      <p className="text-[10px] font-medium text-emerald-700 mt-0.5">Policy ID: {selectedPatientInsurance.member_id}</p>
+                                      <p className="text-[10px] font-medium text-emerald-300 mt-0.5">Policy ID: {selectedPatientInsurance.member_id}</p>
 
                                       <div className="grid grid-cols-2 gap-3 mt-3 pt-2 border-t border-emerald-200/50">
                                         <div>
-                                          <p className="text-[9px] uppercase font-bold text-emerald-800">Primary Copay</p>
+                                          <p className="text-[9px] uppercase font-bold text-emerald-400">Primary Copay</p>
                                           <p className="font-extrabold text-sm">${selectedPatientInsurance.copay_primary?.toFixed(2)}</p>
                                         </div>
                                         <div>
-                                          <p className="text-[9px] uppercase font-bold text-emerald-800">Deductible</p>
+                                          <p className="text-[9px] uppercase font-bold text-emerald-400">Deductible</p>
                                           <p className="font-extrabold text-sm">${selectedPatientInsurance.deductible?.toFixed(2)}</p>
                                         </div>
                                       </div>
@@ -790,15 +798,15 @@ export const ClinicalLogsView: React.FC = () => {
                                     <ShieldAlert className="w-5 h-5 text-rose-500 shrink-0 mt-0.5" />
                                     <div className="text-xs">
                                       <p className="font-extrabold">Inactive Insurance coverage</p>
-                                      <p className="text-[10px] font-medium text-rose-600 mt-0.5">Claims submitted will likely be rejected.</p>
+                                      <p className="text-[10px] font-medium text-rose-300 mt-0.5">Claims submitted will likely be rejected.</p>
                                     </div>
                                   </>
                                 )}
                               </div>
                             </div>
                           ) : (
-                            <div className="bg-[#FFFBEB] border border-[#FEF3C7] rounded-[16px] p-4 text-xs font-semibold text-[#92400E] flex items-start gap-2.5">
-                              <AlertTriangle className="w-5 h-5 text-[#F59E0B] shrink-0 mt-0.5" />
+                            <div className="bg-orange-500/20 border border-orange-500/30 rounded-[16px] p-4 text-xs font-semibold text-[#92400E] flex items-start gap-2.5">
+                              <AlertTriangle className="w-5 h-5 text-orange-400 shrink-0 mt-0.5" />
                               <div>
                                 <p className="font-extrabold">Insurance Unverified</p>
                                 <p className="text-[10px] text-[#B45309] font-medium mt-0.5">No insurance eligibility check recorded for {activeEncounter?.patient_name}. Please verify their health card in Patient Flow first.</p>
@@ -809,18 +817,18 @@ export const ClinicalLogsView: React.FC = () => {
                       </div>
 
                       {/* Billing Action buttons */}
-                      <div className="space-y-2.5 pt-4 border-t border-[#E8EDF5]">
+                      <div className="space-y-2.5 pt-4 border-t border-white/10">
                         <button
                           onClick={processPaymentAction}
-                          className="w-full bg-[#111827] hover:bg-gray-800 text-white font-bold text-xs py-3 rounded-[16px] premium-shadow transition-transform active:scale-95 flex items-center justify-center gap-2 cursor-pointer"
+                          className="w-full bg-white/10 hover:bg-white/20 text-white font-bold text-xs py-3 rounded-[16px] premium-shadow transition-transform active:scale-95 flex items-center justify-center gap-2 cursor-pointer"
                         >
                           <CreditCard className="w-4 h-4" /> Collect Copay / Patient Payment
                         </button>
                         <button
                           onClick={submitInsuranceClaimAction}
-                          className="w-full bg-white border border-[#E8EDF5] hover:bg-[#F7F9FC] text-[#111827] font-bold text-xs py-3 rounded-[16px] shadow-sm transition-transform active:scale-95 flex items-center justify-center gap-2 cursor-pointer"
+                          className="w-full bg-transparent border border-white/10 hover:bg-transparent/5 text-white font-bold text-xs py-3 rounded-[16px] shadow-sm transition-transform active:scale-95 flex items-center justify-center gap-2 cursor-pointer"
                         >
-                          Submit Insurance Claim <ChevronRight className="w-4 h-4 text-[#6B7280]" />
+                          Submit Insurance Claim <ChevronRight className="w-4 h-4 text-white/70" />
                         </button>
                       </div>
                     </div>
@@ -828,50 +836,50 @@ export const ClinicalLogsView: React.FC = () => {
                     <div className="space-y-4 animate-in fade-in duration-300 flex-1 flex flex-col justify-between">
                       <div className="space-y-4">
                         {/* Patient Profile & Visit History */}
-                        <div className="bg-[#FAFBFD] rounded-[18px] p-4 border border-[#E8EDF5]">
-                          <p className="text-[10px] font-extrabold text-[#9CA3AF] uppercase tracking-wider mb-2 flex items-center gap-1.5">
-                            <Users className="w-3.5 h-3.5 text-[#6D5DF6]" /> Patient Profile & History
+                        <div className="bg-white/5 rounded-[18px] p-4 border border-white/10">
+                          <p className="text-[10px] font-extrabold text-white/50 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                            <Users className="w-3.5 h-3.5 text-[#2E1055]" /> Patient Profile & History
                           </p>
 
-                          <div className="flex items-center gap-2 mb-3 bg-white p-2.5 rounded-[16px] border border-[#E8EDF5]">
-                            <div className="w-8 h-8 rounded-full bg-[#EEF4FF] flex items-center justify-center text-xs font-bold text-[#6D5DF6]">
+                          <div className="flex items-center gap-2 mb-3 bg-white/5 p-2.5 rounded-[16px] border border-white/10">
+                            <div className="w-8 h-8 rounded-full bg-blue-500/20 flex items-center justify-center text-xs font-bold text-[#2E1055]">
                               {activeEncounter?.patient_name?.split(' ').map((n: string) => n[0]).join('') || '?'}
                             </div>
                             <div>
-                              <p className="text-xs font-bold text-[#111827]">{activeEncounter?.patient_name}</p>
-                              <p className="text-[9px] text-[#6B7280]">Primary Insurance: {selectedPatientInsurance?.provider_name || 'None / Self-Pay'}</p>
+                              <p className="text-xs font-bold text-white">{activeEncounter?.patient_name}</p>
+                              <p className="text-[9px] text-white/70">Primary Insurance: {selectedPatientInsurance?.provider_name || 'None / Self-Pay'}</p>
                             </div>
                           </div>
 
                           {/* Timeline of past visits */}
                           <div>
-                            <p className="text-[9px] font-extrabold text-[#6B7280] uppercase tracking-wider mb-2">Visit History ({encounters.filter(e => e.patient_name === activeEncounter?.patient_name && e.id !== activeEncounter?.id).length + 1} visits)</p>
+                            <p className="text-[9px] font-extrabold text-white/70 uppercase tracking-wider mb-2">Visit History ({encounters.filter(e => e.patient_name === activeEncounter?.patient_name && e.id !== activeEncounter?.id).length + 1} visits)</p>
                             <div className="space-y-2 max-h-[140px] overflow-y-auto pr-1">
                               {/* Current Visit */}
-                              <div className="flex gap-2.5 items-start bg-[#EEEAFE]/50 p-2 rounded-[8px] border border-[#E0D9FD]/50">
-                                <div className="w-1.5 h-1.5 rounded-full bg-[#6D5DF6] mt-1.5"></div>
+                              <div className="flex gap-2.5 items-start bg-[#2E1055]/20 p-2 rounded-[8px] border border-[#2E1055]/50">
+                                <div className="w-1.5 h-1.5 rounded-full bg-[#2E1055] mt-1.5"></div>
                                 <div className="flex-1 text-xs">
                                   <div className="flex justify-between">
-                                    <span className="font-bold text-[#6D5DF6]">Current Visit</span>
-                                    <span className="text-[9px] font-bold text-[#6B7280]">{activeEncounter?.date}</span>
+                                    <span className="font-bold text-[#2E1055]">Current Visit</span>
+                                    <span className="text-[9px] font-bold text-white/70">{activeEncounter?.date}</span>
                                   </div>
-                                  <p className="text-[10px] font-semibold text-[#111827] mt-0.5">{activeEncounter?.diagnosis} ({activeEncounter?.type})</p>
+                                  <p className="text-[10px] font-semibold text-white mt-0.5">{activeEncounter?.diagnosis} ({activeEncounter?.type})</p>
                                 </div>
                               </div>
 
                               {/* Past Visits */}
                               {encounters.filter(e => e.patient_name === activeEncounter?.patient_name && e.id !== activeEncounter?.id).length === 0 ? (
-                                <p className="text-[10px] text-[#9CA3AF] italic">No previous visits on record.</p>
+                                <p className="text-[10px] text-white/50 italic">No previous visits on record.</p>
                               ) : (
                                 encounters.filter(e => e.patient_name === activeEncounter?.patient_name && e.id !== activeEncounter?.id).map((pastEnc: any) => (
-                                  <div key={pastEnc.id} className="flex gap-2.5 items-start p-2 rounded-[8px] border border-transparent hover:bg-slate-50 transition-colors">
+                                  <div key={pastEnc.id} className="flex gap-2.5 items-start p-2 rounded-[8px] border border-transparent hover:bg-white/10 transition-colors">
                                     <div className="w-1.5 h-1.5 rounded-full bg-slate-300 mt-1.5"></div>
                                     <div className="flex-1 text-xs">
                                       <div className="flex justify-between">
-                                        <span className="font-bold text-[#4B5563]">{pastEnc.id}</span>
-                                        <span className="text-[9px] text-[#6B7280]">{pastEnc.date}</span>
+                                        <span className="font-bold text-white/60">{pastEnc.id}</span>
+                                        <span className="text-[9px] text-white/70">{pastEnc.date}</span>
                                       </div>
-                                      <p className="text-[10px] text-[#4B5563] mt-0.5">{pastEnc.diagnosis} ({pastEnc.type})</p>
+                                      <p className="text-[10px] text-white/80 mt-0.5">{pastEnc.diagnosis} ({pastEnc.type})</p>
                                     </div>
                                   </div>
                                 ))
@@ -881,31 +889,31 @@ export const ClinicalLogsView: React.FC = () => {
                         </div>
 
                         {/* Prescriptions & SOAP Notes */}
-                        <div className="bg-[#FAFBFD] rounded-[18px] p-4 border border-[#E8EDF5]">
-                          <p className="text-[10px] font-extrabold text-[#9CA3AF] uppercase tracking-wider mb-2 flex items-center gap-1.5">
-                            <FileText className="w-3.5 h-3.5 text-[#10B981]" /> Clinical SOAP Notes
+                        <div className="bg-white/5 rounded-[18px] p-4 border border-white/10">
+                          <p className="text-[10px] font-extrabold text-white/50 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                            <FileText className="w-3.5 h-3.5 text-emerald-400" /> Clinical SOAP Notes
                           </p>
-                          <div className="bg-white p-3 rounded-[16px] border border-[#E8EDF5] text-xs font-medium text-[#4B5563] leading-relaxed mb-3 max-h-[120px] overflow-y-auto">
+                          <div className="bg-transparent p-3 rounded-[16px] border border-white/10 text-xs font-medium text-white/90 leading-relaxed mb-3 max-h-[120px] overflow-y-auto">
                             {activeEncounter?.clinical_notes || activeEncounter?.clinicalNotes}
                           </div>
 
-                          <p className="text-[10px] font-extrabold text-[#9CA3AF] uppercase tracking-wider mb-2 flex items-center gap-1.5">
-                            <Sparkles className="w-3.5 h-3.5 text-[#6D5DF6]" /> Prescribed Medications
+                          <p className="text-[10px] font-extrabold text-white/50 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                            <Sparkles className="w-3.5 h-3.5 text-[#2E1055]" /> Prescribed Medications
                           </p>
-                          <div className="bg-[#EEEAFE]/40 p-3 rounded-[16px] border border-[#E0D9FD]/50 text-xs font-bold text-[#111827] flex items-center gap-2">
-                            <div className="w-2 h-2 rounded-full bg-[#EEEAFE]0 shrink-0"></div>
+                          <div className="bg-[#2E1055]/20 p-3 rounded-[16px] border border-[#2E1055]/50 text-xs font-bold text-white flex items-center gap-2">
+                            <div className="w-2 h-2 rounded-full bg-[#2E1055] shrink-0"></div>
                             <span>{activeEncounter?.medications || 'No medications prescribed.'}</span>
                           </div>
                         </div>
                       </div>
 
                       {/* Clinical Export action button */}
-                      <div className="pt-4 border-t border-[#E8EDF5]">
+                      <div className="pt-4 border-t border-white/10">
                         <button
                           onClick={() => handleDownloadChart(activeEncounter)}
-                          className="w-full bg-[#EEF2F6] hover:bg-[#E2E8F0] text-[#111827] font-bold text-xs py-3 rounded-[16px] shadow-sm transition-transform active:scale-95 flex items-center justify-center gap-2 cursor-pointer"
+                          className="w-full bg-white hover:bg-[#E2E8F0] text-[#120524] font-bold text-xs py-3 rounded-[16px] shadow-sm transition-transform active:scale-95 flex items-center justify-center gap-2 cursor-pointer"
                         >
-                          <Printer className="w-4 h-4 text-[#4B5563]" /> View & Print Medical Summary
+                          <Printer className="w-4 h-4 text-[#120524]" /> View & Print Medical Summary
                         </button>
                       </div>
                     </div>
@@ -1026,21 +1034,21 @@ export const ClinicalLogsView: React.FC = () => {
       {/* Doctor's Add Encounter Modal */}
       {mounted && showAddModal && createPortal(
         <div className="fixed inset-0 z-[1000] bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in">
-          <div className="bg-white border border-[#E8EDF5] w-full max-w-lg rounded-[28px] overflow-hidden premium-shadow animate-in zoom-in-95 duration-200">
+          <div className="bg-[#120524] border border-white/10 w-full max-w-lg rounded-[28px] overflow-hidden premium-shadow animate-in zoom-in-95 duration-200">
             {/* Header */}
-            <div className="bg-[#F8FAFC] border-b border-[#E8EDF5] px-6 py-4 flex justify-between items-center">
+            <div className="bg-white/5 border-b border-white/10 px-6 py-4 flex justify-between items-center">
               <div className="flex items-center gap-2">
-                <div className="p-1.5 rounded-lg bg-[#EEEAFE] text-[#6D5DF6]">
+                <div className="p-1.5 rounded-lg bg-[#EEEAFE] text-[#2E1055]">
                   <FileText className="w-4 h-4" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-bold text-[#111827]">New Patient Encounter Chart</h3>
-                  <span className="text-[10px] font-semibold text-[#6B7280]">Record diagnoses, vitals, and SOAP notes</span>
+                  <h3 className="text-sm font-bold text-white">New Patient Encounter Chart</h3>
+                  <span className="text-[10px] font-semibold text-white/70">Record diagnoses, vitals, and SOAP notes</span>
                 </div>
               </div>
               <button
                 onClick={() => setShowAddModal(false)}
-                className="p-1.5 hover:bg-[#EEF2F6] rounded-full text-[#6B7280] hover:text-[#111827] transition-all"
+                className="p-1.5 hover:bg-[#EEF2F6] rounded-full text-white/70 hover:text-white transition-all"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -1050,42 +1058,42 @@ export const ClinicalLogsView: React.FC = () => {
             <form onSubmit={handleSaveEncounter} className="p-6 space-y-4">
               {/* Patient Name */}
               <div>
-                <label className="text-[10px] font-extrabold text-[#9CA3AF] uppercase tracking-wider block mb-1.5">Patient Name</label>
+                <label className="text-[10px] font-extrabold text-white/50 uppercase tracking-wider block mb-1.5">Patient Name</label>
                 <input
                   type="text"
                   required
                   value={patientName}
                   onChange={(e) => setPatientName(e.target.value)}
                   placeholder="e.g. Robert Pattinson"
-                  className="w-full bg-[#F8FAFC] border border-[#E8EDF5] rounded-[16px] px-4 py-2.5 text-sm font-bold text-[#111827] outline-none focus:border-[#6D5DF6] focus:ring-1 focus:ring-[#6D5DF6] transition-all placeholder:text-[#9CA3AF]"
+                  className="w-full bg-transparent/5 border border-white/10 rounded-[16px] px-4 py-2.5 text-sm font-bold text-white outline-none focus:border-[#2E1055] focus:ring-1 focus:ring-[#2E1055] transition-all placeholder:text-white/50"
                 />
               </div>
 
               {/* Provider & Type Grid */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="text-[10px] font-extrabold text-[#9CA3AF] uppercase tracking-wider block mb-1.5">Attending Doctor</label>
+                  <label className="text-[10px] font-extrabold text-white/50 uppercase tracking-wider block mb-1.5">Attending Doctor</label>
                   <select
                     value={providerName}
                     onChange={(e) => setProviderName(e.target.value)}
-                    className="w-full bg-[#F8FAFC] border border-[#E8EDF5] rounded-[16px] px-3 py-2.5 text-sm font-bold text-[#111827] outline-none focus:border-[#6D5DF6] focus:ring-1 focus:ring-[#6D5DF6] transition-all cursor-pointer"
+                    className="w-full bg-transparent/5 border border-white/10 rounded-[16px] px-3 py-2.5 text-sm font-bold text-white outline-none focus:border-[#2E1055] focus:ring-1 focus:ring-[#2E1055] transition-all cursor-pointer"
                   >
-                    <option value="Dr. Sarah Jenkins">Dr. Sarah Jenkins</option>
-                    <option value="Dr. Alan Grant">Dr. Alan Grant</option>
-                    <option value="Dr. Emily Chen">Dr. Emily Chen</option>
+                    <option value="Dr. Sarah Jenkins" className="bg-[#120524] text-white">Dr. Sarah Jenkins</option>
+                    <option value="Dr. Alan Grant" className="bg-[#120524] text-white">Dr. Alan Grant</option>
+                    <option value="Dr. Emily Chen" className="bg-[#120524] text-white">Dr. Emily Chen</option>
                   </select>
                 </div>
                 <div>
-                  <label className="text-[10px] font-extrabold text-[#9CA3AF] uppercase tracking-wider block mb-1.5">Visit Type</label>
+                  <label className="text-[10px] font-extrabold text-white/50 uppercase tracking-wider block mb-1.5">Visit Type</label>
                   <select
                     value={visitType}
                     onChange={(e) => setVisitType(e.target.value)}
-                    className="w-full bg-[#F8FAFC] border border-[#E8EDF5] rounded-[16px] px-3 py-2.5 text-sm font-bold text-[#111827] outline-none focus:border-[#6D5DF6] focus:ring-1 focus:ring-[#6D5DF6] transition-all cursor-pointer"
+                    className="w-full bg-transparent/5 border border-white/10 rounded-[16px] px-3 py-2.5 text-sm font-bold text-white outline-none focus:border-[#2E1055] focus:ring-1 focus:ring-[#2E1055] transition-all cursor-pointer"
                   >
-                    <option value="Consultation">Consultation</option>
-                    <option value="Urgent Care">Urgent Care</option>
-                    <option value="Checkup">Checkup</option>
-                    <option value="X-Ray / Consult">X-Ray / Consult</option>
+                    <option value="Consultation" className="bg-[#120524] text-white">Consultation</option>
+                    <option value="Urgent Care" className="bg-[#120524] text-white">Urgent Care</option>
+                    <option value="Checkup" className="bg-[#120524] text-white">Checkup</option>
+                    <option value="X-Ray / Consult" className="bg-[#120524] text-white">X-Ray / Consult</option>
                   </select>
                 </div>
               </div>
@@ -1093,65 +1101,65 @@ export const ClinicalLogsView: React.FC = () => {
               {/* Diagnosis & Copay Grid */}
               <div className="grid grid-cols-3 gap-4">
                 <div className="col-span-2">
-                  <label className="text-[10px] font-extrabold text-[#9CA3AF] uppercase tracking-wider block mb-1.5">Primary Diagnosis</label>
+                  <label className="text-[10px] font-extrabold text-white/50 uppercase tracking-wider block mb-1.5">Primary Diagnosis</label>
                   <input
                     type="text"
                     required
                     value={diagnosis}
                     onChange={(e) => setDiagnosis(e.target.value)}
                     placeholder="e.g. Acute Bronchitis"
-                    className="w-full bg-[#F8FAFC] border border-[#E8EDF5] rounded-[16px] px-4 py-2.5 text-sm font-bold text-[#111827] outline-none focus:border-[#6D5DF6] focus:ring-1 focus:ring-[#6D5DF6] transition-all placeholder:text-[#9CA3AF]"
+                    className="w-full bg-transparent/5 border border-white/10 rounded-[16px] px-4 py-2.5 text-sm font-bold text-white outline-none focus:border-[#2E1055] focus:ring-1 focus:ring-[#2E1055] transition-all placeholder:text-white/50"
                   />
                 </div>
                 <div>
-                  <label className="text-[10px] font-extrabold text-[#9CA3AF] uppercase tracking-wider block mb-1.5">Copay ($)</label>
+                  <label className="text-[10px] font-extrabold text-white/50 uppercase tracking-wider block mb-1.5">Copay ($)</label>
                   <input
                     type="number"
                     required
                     value={copayAmount}
                     onChange={(e) => setCopayAmount(e.target.value)}
                     placeholder="30.00"
-                    className="w-full bg-[#F8FAFC] border border-[#E8EDF5] rounded-[16px] px-4 py-2.5 text-sm font-bold text-[#111827] outline-none focus:border-[#6D5DF6] focus:ring-1 focus:ring-[#6D5DF6] transition-all"
+                    className="w-full bg-transparent/5 border border-white/10 rounded-[16px] px-4 py-2.5 text-sm font-bold text-white outline-none focus:border-[#2E1055] focus:ring-1 focus:ring-[#2E1055] transition-all"
                   />
                 </div>
               </div>
 
               {/* Clinical Notes (SOAP Notes) */}
               <div>
-                <label className="text-[10px] font-extrabold text-[#9CA3AF] uppercase tracking-wider block mb-1.5">Clinical SOAP Notes</label>
+                <label className="text-[10px] font-extrabold text-white/50 uppercase tracking-wider block mb-1.5">Clinical SOAP Notes</label>
                 <textarea
                   rows={4}
                   value={clinicalNotes}
                   onChange={(e) => setClinicalNotes(e.target.value)}
                   placeholder="Subjective: Patient reports dry cough... Objective: Normal breath sounds... Assessment: Acute bronchitis... Plan: Antibiotics/Inhaler..."
-                  className="w-full bg-[#F8FAFC] border border-[#E8EDF5] rounded-[16px] px-4 py-2.5 text-sm font-semibold text-[#111827] outline-none focus:border-[#6D5DF6] focus:ring-1 focus:ring-[#6D5DF6] transition-all placeholder:text-[#9CA3AF] resize-none"
+                  className="w-full bg-transparent/5 border border-white/10 rounded-[16px] px-4 py-2.5 text-sm font-semibold text-white outline-none focus:border-[#2E1055] focus:ring-1 focus:ring-[#2E1055] transition-all placeholder:text-white/50 resize-none"
                 />
               </div>
 
               {/* Prescribed Medications */}
               <div>
-                <label className="text-[10px] font-extrabold text-[#9CA3AF] uppercase tracking-wider block mb-1.5">Prescribed Medications / Rx</label>
+                <label className="text-[10px] font-extrabold text-white/50 uppercase tracking-wider block mb-1.5">Prescribed Medications / Rx</label>
                 <input
                   type="text"
                   value={medications}
                   onChange={(e) => setMedications(e.target.value)}
                   placeholder="e.g. Amoxicillin 500mg daily, Albuterol Inhaler"
-                  className="w-full bg-[#F8FAFC] border border-[#E8EDF5] rounded-[16px] px-4 py-2.5 text-sm font-bold text-[#111827] outline-none focus:border-[#6D5DF6] focus:ring-1 focus:ring-[#6D5DF6] transition-all placeholder:text-[#9CA3AF]"
+                  className="w-full bg-transparent/5 border border-white/10 rounded-[16px] px-4 py-2.5 text-sm font-bold text-white outline-none focus:border-[#2E1055] focus:ring-1 focus:ring-[#2E1055] transition-all placeholder:text-white/50"
                 />
               </div>
 
               {/* Action Buttons */}
-              <div className="flex gap-3 justify-end pt-3 border-t border-[#E8EDF5] mt-4">
+              <div className="flex gap-3 justify-end pt-3 border-t border-white/10 mt-4">
                 <button
                   type="button"
                   onClick={() => setShowAddModal(false)}
-                  className="bg-white border border-[#E8EDF5] hover:bg-slate-50 text-slate-700 font-bold text-xs px-5 py-2.5 rounded-[16px] transition-colors"
+                  className="bg-transparent border border-white/10 hover:bg-slate-50 text-slate-700 font-bold text-xs px-5 py-2.5 rounded-[16px] transition-colors"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="bg-[#6D5DF6] hover:bg-[#5B4AE8] text-white font-bold text-xs px-6 py-2.5 rounded-[16px] transition-all hover:scale-105 active:scale-95 flex items-center gap-1.5"
+                  className="bg-[#2E1055] hover:bg-[#120524] text-white font-bold text-xs px-6 py-2.5 rounded-[16px] transition-all hover:scale-105 active:scale-95 flex items-center gap-1.5"
                 >
                   <Check className="w-3.5 h-3.5" /> Save Encounter
                 </button>

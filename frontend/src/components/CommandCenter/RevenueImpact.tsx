@@ -15,7 +15,7 @@ export const RevenueImpact: React.FC<RevenueImpactProps> = ({ setActiveTab }) =>
   const atRisk = Math.max(0, (stats.criticalEvents) * 150 - (stats.actionsTaken) * 150);
 
   return (
-    <div className="relative overflow-hidden bg-[#0B0F19] border border-[#1E293B] rounded-[32px] p-6 text-white premium-shadow flex flex-col h-[480px] hover:border-[#EEEAFE]0/30 transition-all duration-500 hover:shadow-[0_20px_50px_rgba(79,70,229,0.2)] group">
+    <div className="relative overflow-hidden bg-gradient-to-br from-[#2E1055] to-[#120524] border border-white/10 rounded-[32px] p-6 text-white premium-shadow flex flex-col h-[480px] hover:border-white/30 transition-all duration-500 hover:shadow-[0_20px_50px_rgba(79,70,229,0.2)] group">
       
       {/* Dynamic Background Glow Blobs */}
       <div className="absolute -top-24 -left-24 w-72 h-72 bg-emerald-500/10 rounded-full blur-[80px] pointer-events-none group-hover:bg-emerald-500/15 transition-all duration-700"></div>
@@ -35,7 +35,7 @@ export const RevenueImpact: React.FC<RevenueImpactProps> = ({ setActiveTab }) =>
         </h3>
         <button 
           onClick={() => setActiveTab && setActiveTab('revenue')}
-          className="text-xs font-bold text-indigo-400 hover:text-indigo-300 transition-colors flex items-center gap-1 cursor-pointer bg-white/5 hover:bg-white/10 px-3.5 py-2 rounded-[14px] border border-white/5 hover:border-[#EEEAFE]0/30"
+          className="text-xs font-bold text-indigo-400 hover:text-indigo-300 transition-colors flex items-center gap-1 cursor-pointer bg-white/5 hover:bg-white/10 px-3.5 py-2 rounded-[14px] border border-white/5 hover:border-white/30"
         >
           Detailed Report <ChevronRight className="w-3.5 h-3.5" />
         </button>
@@ -57,7 +57,7 @@ export const RevenueImpact: React.FC<RevenueImpactProps> = ({ setActiveTab }) =>
         </div>
 
         {/* Optimization */}
-        <div className="bg-[#0F172A]/40 border border-[#EEEAFE]0/15 p-3 rounded-[20px] transition-all duration-300 hover:-translate-y-1 hover:border-[#EEEAFE]0/30 hover:bg-indigo-950/10 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)] cursor-default group/card">
+        <div className="bg-[#0F172A]/40 border border-[#EEEAFE]0/15 p-3 rounded-[20px] transition-all duration-300 hover:-translate-y-1 hover:border-white/30 hover:bg-indigo-950/10 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)] cursor-default group/card">
           <p className="text-[9px] text-slate-400 uppercase tracking-widest font-extrabold mb-2">Optimization</p>
           <p className="text-xl font-black text-[#6366F1] mb-1 drop-shadow-[0_0_10px_rgba(99,102,241,0.2)]">{stats.actionsTaken > 0 ? Math.min(99.9, 50 + (stats.actionsTaken) * 0.5).toFixed(1) : "0.0"}%</p>
           <p className="text-[9px] font-bold text-[#10B981] flex items-center gap-1"><CheckCircle className="w-3 h-3" /> {(stats.actionsTaken > 0 ? 7 : 0)}% vs yesterday</p>

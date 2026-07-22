@@ -7,6 +7,7 @@ from app.models.user import User
 from app.models.integration import IntegrationModel
 from app.schemas.settings import SettingsUpdate, SettingsResponse
 from app.core.security import get_password_hash
+from app.core.email import send_email
 
 router = APIRouter()
 
@@ -103,6 +104,28 @@ def invite_team_member(payload: Dict[str, Any], db: Session = Depends(get_db)):
     db.add(new_user)
     db.commit()
     db.refresh(new_user)
+    
+    # Send invitation email
+    login_url = "http://localhost:3000"
+    html_content = f"""
+    <html>
+        <body>
+            <h2>Welcome to SBN Sentinel!</h2>
+            <p>Hi {name},</p>
+            <p>You have been invited to join the SBN Sentinel Clinic Management platform.</p>
+            <p>Your account has been created with the following temporary credentials:</p>
+            <ul>
+                <li><strong>Email:</strong> {email}</li>
+                <li><strong>Password:</strong> Sentinel@123</li>
+            </ul>
+            <p>Please log in and update your password immediately.</p>
+            <br/>
+            <a href="{login_url}">Click here to log in</a>
+        </body>
+    </html>
+    """
+    send_email(to_email=email, subject="You are invited to SBN Sentinel", body=html_content, is_html=True)
+    
     return {
         "id": str(new_user.id),
         "name": new_user.full_name,

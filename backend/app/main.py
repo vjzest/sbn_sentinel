@@ -12,6 +12,7 @@ from app.models.audit import AuditLogModel
 from app.models.settings import SettingsModel
 from app.models.encounter import EncounterModel
 from app.models.integration import IntegrationModel
+from app.models.otp import OTPModel
 
 # Create tables in SQLite/PostgreSQL (if they don't exist)
 Base.metadata.create_all(bind=engine)

@@ -9,16 +9,27 @@ import { createPortal } from 'react-dom';
 
 interface SettingsViewProps {
   onSaveSettings?: (data: any) => void;
+  activeMenuProp?: string;
 }
 
-export const SettingsView: React.FC<SettingsViewProps> = ({ onSaveSettings }) => {
-  const [activeMenu, setActiveMenu] = useState('general');
+export const SettingsView: React.FC<SettingsViewProps> = ({ onSaveSettings, activeMenuProp = 'general' }) => {
+  const [localActiveMenu, setLocalActiveMenu] = useState(activeMenuProp);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     setMounted(true);
+    // Load Razorpay Script
+    const script = document.createElement('script');
+    script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+    script.async = true;
+    document.body.appendChild(script);
   }, []);
+
+  // Sync localActiveMenu when parent changes activeMenuProp (e.g. sidebar click)
+  useEffect(() => {
+    setLocalActiveMenu(activeMenuProp);
+  }, [activeMenuProp]);
 
   // General Settings States
   const [practiceName, setPracticeName] = useState('Sentinel Health Urgent Care');
@@ -67,6 +78,9 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onSaveSettings }) =>
   // Billing States
   const [activePlan, setActivePlan] = useState('professional'); // starter, professional, enterprise
   const [paymentCard, setPaymentCard] = useState('Visa ending in 4242');
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [isProcessingPayment, setIsProcessingPayment] = useState(false);
+  const [pendingPlan, setPendingPlan] = useState<string | null>(null);
   const [invoices, setInvoices] = useState([
     { id: 'INV-4019', date: 'Jun 15, 2026', amount: 199.00, status: 'Paid' },
     { id: 'INV-3982', date: 'May 15, 2026', amount: 199.00, status: 'Paid' },
@@ -139,10 +153,10 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onSaveSettings }) =>
   };
 
   useEffect(() => {
-    if (activeMenu === 'security') fetchAudits();
-    if (activeMenu === 'team') fetchTeam();
-    if (activeMenu === 'integrations') fetchIntegrations();
-  }, [activeMenu]);
+    if (localActiveMenu === 'security') fetchAudits();
+    if (localActiveMenu === 'team') fetchTeam();
+    if (localActiveMenu === 'integrations') fetchIntegrations();
+  }, [localActiveMenu]);
 
   // Load clinical settings on component mount
   useEffect(() => {
@@ -306,133 +320,117 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onSaveSettings }) =>
       {/* Header */}
       <div className="flex items-end justify-between mb-2">
         <div>
-          <h2 className="text-3xl font-extrabold text-[#111827] mb-1">Settings</h2>
-          <p className="text-sm text-[#6B7280] font-medium">Manage your clinic preferences, credentials, and AI configurations.</p>
+          <h2 className="text-3xl font-extrabold text-white mb-1">Settings</h2>
+          <p className="text-sm text-white/70 font-medium">Manage your clinic preferences, credentials, and AI configurations.</p>
         </div>
         <button 
           onClick={handleSaveChanges}
-          className="flex items-center gap-2 bg-gradient-to-r from-[#6D5DF6] to-[#7C3AED] hover:opacity-90 text-white font-bold text-xs px-6 py-3 rounded-[14px] premium-shadow transition-transform active:scale-95 cursor-pointer"
+          className="flex items-center gap-2 bg-white/10 border border-white/20 hover:bg-white/15 text-white font-bold text-xs px-6 py-3 rounded-[14px] transition-all active:scale-95 cursor-pointer"
         >
           <Save className="w-4 h-4" /> Save Changes
         </button>
       </div>
 
-      <div className="flex gap-8 items-start">
-        
-        {/* Left Sidebar Menu */}
-        <div className="w-64 shrink-0">
-           <div className="bg-white border border-[#E8EDF5] rounded-[24px] p-4 premium-shadow flex flex-col gap-1">
-             {menuItems.map((item) => (
-               <button
-                 key={item.id}
-                 onClick={() => setActiveMenu(item.id)}
-                 className={`flex items-center gap-3 px-4 py-3.5 rounded-[16px] transition-all text-sm font-bold w-full text-left border ${activeMenu === item.id ? 'bg-[#EEF4FF] text-[#2563EB] shadow-sm border-[#BFDBFE]/50' : 'text-[#6B7280] border-transparent hover:bg-[#F7F9FC] hover:text-[#111827]'}`}
-               >
-                 <item.icon className={`w-5 h-5 ${activeMenu === item.id ? 'text-[#2563EB]' : 'text-[#9CA3AF]'}`} />
-                 {item.label}
-               </button>
-             ))}
-           </div>
-        </div>
+      <div className="w-full">
 
         {/* Main Content Area */}
-        <div className="flex-1 bg-white border border-[#E8EDF5] rounded-[24px] p-8 premium-shadow min-h-[580px]">
+        <div className="bg-white/5 border border-white/10 rounded-[24px] p-8 text-white min-h-[580px] w-full">
            
            {/* 1. GENERAL SETTINGS */}
-           {activeMenu === 'general' && (
+           {localActiveMenu === 'general' && (
              <div className="space-y-8 animate-in fade-in">
                <div>
-                  <h3 className="text-xl font-bold text-[#111827] mb-2 flex items-center gap-2">
+                  <h3 className="text-xl font-bold text-white mb-2 flex items-center gap-2">
                     <SettingsIcon className="w-5 h-5 text-[#2563EB]" /> General Settings
                   </h3>
-                  <p className="text-sm text-[#6B7280] font-medium">Configure primary clinic profile, working hours, and localization preferences.</p>
+                  <p className="text-sm text-white/70 font-medium">Configure primary clinic profile, working hours, and localization preferences.</p>
                </div>
                
-               <div className="h-px w-full bg-[#E8EDF5]"></div>
+               <div className="h-px w-full bg-white/10"></div>
 
                <div className="space-y-6">
                  <div className="grid grid-cols-2 gap-6">
                    <div>
-                     <label className="block text-[10px] font-extrabold text-[#9CA3AF] uppercase tracking-wider mb-2">Practice Name</label>
+                     <label className="block text-[10px] font-extrabold text-white/50 uppercase tracking-wider mb-2">Practice Name</label>
                      <input 
                        type="text" 
                        value={practiceName} 
                        onChange={(e) => setPracticeName(e.target.value)}
-                       className="w-full bg-[#F7F9FC] border border-[#E8EDF5] rounded-[16px] py-3 px-4 text-sm font-bold text-[#111827] outline-none focus:border-[#6D5DF6] focus:bg-white transition-all"
+                       className="w-full bg-white/5 border border-white/10 rounded-[16px] py-3 px-4 text-sm font-bold text-white outline-none focus:border-[#2E1055] focus:bg-[#120524] transition-all"
                      />
                    </div>
                    <div>
-                     <label className="block text-[10px] font-extrabold text-[#9CA3AF] uppercase tracking-wider mb-2">Primary Phone Number</label>
+                     <label className="block text-[10px] font-extrabold text-white/50 uppercase tracking-wider mb-2">Primary Phone Number</label>
                      <input 
                        type="text" 
                        value={practicePhone} 
                        onChange={(e) => setPracticePhone(e.target.value)}
-                       className="w-full bg-[#F7F9FC] border border-[#E8EDF5] rounded-[16px] py-3 px-4 text-sm font-bold text-[#111827] outline-none focus:border-[#6D5DF6] focus:bg-white transition-all"
+                       className="w-full bg-white/5 border border-white/10 rounded-[16px] py-3 px-4 text-sm font-bold text-white outline-none focus:border-[#2E1055] focus:bg-[#120524] transition-all"
                      />
                    </div>
                  </div>
 
-                 <div className="h-px w-full bg-[#F3F4F6]"></div>
+                 <div className="h-px w-full bg-white/10"></div>
 
                  <div className="grid grid-cols-2 gap-6">
                    <div>
-                     <label className="block text-[10px] font-extrabold text-[#9CA3AF] uppercase tracking-wider mb-2">Clinic Timezone</label>
+                     <label className="block text-[10px] font-extrabold text-white/50 uppercase tracking-wider mb-2">Clinic Timezone</label>
                      <select 
                        value={timezone} 
                        onChange={(e) => setTimezone(e.target.value)}
-                       className="w-full bg-[#F7F9FC] border border-[#E8EDF5] rounded-[16px] py-3 px-3 text-sm font-bold text-[#111827] outline-none focus:border-[#6D5DF6] focus:bg-white transition-all cursor-pointer"
+                       className="w-full bg-white/5 border border-white/10 rounded-[16px] py-3 px-3 text-sm font-bold text-white outline-none focus:border-[#2E1055] focus:bg-[#120524] transition-all cursor-pointer"
                      >
-                       <option value="Eastern Time (US & Canada)">Eastern Time (US & Canada)</option>
-                       <option value="Central Time (US & Canada)">Central Time (US & Canada)</option>
-                       <option value="Mountain Time (US & Canada)">Mountain Time (US & Canada)</option>
-                       <option value="Pacific Time (US & Canada)">Pacific Time (US & Canada)</option>
+                       <option value="Eastern Time (US & Canada)" className="bg-[#120524] text-white">Eastern Time (US & Canada)</option>
+                       <option value="Central Time (US & Canada)" className="bg-[#120524] text-white">Central Time (US & Canada)</option>
+                       <option value="Mountain Time (US & Canada)" className="bg-[#120524] text-white">Mountain Time (US & Canada)</option>
+                       <option value="Pacific Time (US & Canada)" className="bg-[#120524] text-white">Pacific Time (US & Canada)</option>
                      </select>
                    </div>
 
                    <div>
-                     <label className="block text-[10px] font-extrabold text-[#9CA3AF] uppercase tracking-wider mb-2">Language Preferences</label>
+                     <label className="block text-[10px] font-extrabold text-white/50 uppercase tracking-wider mb-2">Language Preferences</label>
                      <select 
                        value={language} 
                        onChange={(e) => setLanguage(e.target.value)}
-                       className="w-full bg-[#F7F9FC] border border-[#E8EDF5] rounded-[16px] py-3 px-3 text-sm font-bold text-[#111827] outline-none focus:border-[#6D5DF6] focus:bg-white transition-all cursor-pointer"
+                       className="w-full bg-white/5 border border-white/10 rounded-[16px] py-3 px-3 text-sm font-bold text-white outline-none focus:border-[#2E1055] focus:bg-[#120524] transition-all cursor-pointer"
                      >
-                       <option value="en">English (US)</option>
-                       <option value="es">Español (ES)</option>
-                       <option value="hi">हिन्दी (Hindi)</option>
+                       <option value="en" className="bg-[#120524] text-white">English (US)</option>
+                       <option value="es" className="bg-[#120524] text-white">Español (ES)</option>
+                       <option value="hi" className="bg-[#120524] text-white">हिंदी (Hindi)</option>
                      </select>
                    </div>
                  </div>
 
-                 <div className="h-px w-full bg-[#F3F4F6]"></div>
+                 <div className="h-px w-full bg-white/10"></div>
 
                  <div className="flex justify-between items-center">
                     <div>
-                      <h4 className="text-sm font-bold text-[#111827] mb-1">Standard Operating Hours</h4>
-                      <p className="text-xs text-[#6B7280] leading-relaxed">Establish check-in periods for patients waitlists.</p>
+                      <h4 className="text-sm font-bold text-white mb-1">Standard Operating Hours</h4>
+                      <p className="text-xs text-white/70 leading-relaxed">Establish check-in periods for patients waitlists.</p>
                     </div>
                     <div className="flex items-center gap-3">
                       <input 
                         type="time" 
                         value={openTime} 
                         onChange={(e) => setOpenTime(e.target.value)}
-                        className="bg-[#F7F9FC] border border-[#E8EDF5] rounded-[10px] py-2 px-3 text-sm font-bold text-[#111827]"
+                        className="bg-white/5 border border-white/10 rounded-[10px] py-2 px-3 text-sm font-bold text-white"
                       />
-                      <span className="text-xs text-[#9CA3AF] font-bold">to</span>
+                      <span className="text-xs text-white/50 font-bold">to</span>
                       <input 
                         type="time" 
                         value={closeTime} 
                         onChange={(e) => setCloseTime(e.target.value)}
-                        className="bg-[#F7F9FC] border border-[#E8EDF5] rounded-[10px] py-2 px-3 text-sm font-bold text-[#111827]"
+                        className="bg-white/5 border border-white/10 rounded-[10px] py-2 px-3 text-sm font-bold text-white"
                       />
                     </div>
                  </div>
 
-                 <div className="h-px w-full bg-[#F3F4F6]"></div>
+                 <div className="h-px w-full bg-white/10"></div>
 
                  <div className="flex justify-between items-center">
                     <div>
-                      <h4 className="text-sm font-bold text-[#111827] mb-1">System Interface Theme</h4>
-                      <p className="text-xs text-[#6B7280] leading-relaxed">Change standard display theme modes.</p>
+                      <h4 className="text-sm font-bold text-white mb-1">System Interface Theme</h4>
+                      <p className="text-xs text-white/70 leading-relaxed">Change standard display theme modes.</p>
                     </div>
                     <div className="flex gap-2">
                        {['light', 'dark', 'system'].map(mode => (
@@ -442,7 +440,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onSaveSettings }) =>
                            className={`px-4 py-2 border rounded-[10px] text-xs font-bold transition-all uppercase tracking-wider ${
                              themeMode === mode 
                                ? 'bg-[#111827] text-white border-[#111827]' 
-                               : 'bg-white text-[#6B7280] border-[#E8EDF5] hover:bg-[#F7F9FC]'
+                               : 'bg-[#120524] text-white/70 border-white/10 hover:bg-white/5'
                            }`}
                          >
                            {mode}
@@ -455,22 +453,22 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onSaveSettings }) =>
            )}
 
            {/* 2. AI PREFERENCES */}
-           {activeMenu === 'ai' && (
+           {localActiveMenu === 'ai' && (
              <div className="space-y-8 animate-in fade-in">
                 <div>
-                   <h3 className="text-xl font-bold text-[#111827] mb-2 flex items-center gap-2">
-                     <BrainCircuit className="w-5 h-5 text-[#7C3AED]" /> AI Preferences
+                   <h3 className="text-xl font-bold text-white mb-2 flex items-center gap-2">
+                     <BrainCircuit className="w-5 h-5 text-white" /> AI Preferences
                    </h3>
-                   <p className="text-sm text-[#6B7280] font-medium">Configure how the Sentinel AI engine behaves in your environment.</p>
+                   <p className="text-sm text-white/70 font-medium">Configure how the Sentinel AI engine behaves in your environment.</p>
                 </div>
                 
-                <div className="h-px w-full bg-[#E8EDF5]"></div>
+                <div className="h-px w-full bg-white/10"></div>
 
                 <div className="space-y-6">
                    <div className="flex justify-between items-start">
                       <div className="max-w-md">
-                         <h4 className="text-sm font-bold text-[#111827] mb-1">Auto-Scheduling Aggressiveness</h4>
-                         <p className="text-xs text-[#6B7280] leading-relaxed">Determine how proactively Sentinel will try to fill empty slots from the waitlist.</p>
+                         <h4 className="text-sm font-bold text-white mb-1">Auto-Scheduling Aggressiveness</h4>
+                         <p className="text-xs text-white/70 leading-relaxed">Determine how proactively Sentinel will try to fill empty slots from the waitlist.</p>
                       </div>
                       <div className="w-64">
                          <input 
@@ -479,22 +477,22 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onSaveSettings }) =>
                            max="3" 
                            value={schedulingAggressiveness} 
                            onChange={(e) => setSchedulingAggressiveness(parseInt(e.target.value))}
-                           className="w-full accent-[#6D5DF6] h-2 bg-[#F3F4F6] rounded-lg appearance-none cursor-pointer" 
+                           className="w-full accent-[#2E1055] h-2 bg-white/10 rounded-lg appearance-none cursor-pointer" 
                          />
-                         <div className="flex justify-between text-[10px] font-bold text-[#9CA3AF] mt-2 uppercase tracking-wider">
-                           <span className={schedulingAggressiveness === 1 ? 'text-[#6D5DF6]' : ''}>Conservative</span>
-                           <span className={schedulingAggressiveness === 2 ? 'text-[#6D5DF6]' : ''}>Balanced</span>
-                           <span className={schedulingAggressiveness === 3 ? 'text-[#6D5DF6]' : ''}>Aggressive</span>
+                         <div className="flex justify-between text-[10px] font-bold text-white/50 mt-2 uppercase tracking-wider">
+                           <span className={schedulingAggressiveness === 1 ? 'text-[#A78BFA]' : ''}>Conservative</span>
+                           <span className={schedulingAggressiveness === 2 ? 'text-[#A78BFA]' : ''}>Balanced</span>
+                           <span className={schedulingAggressiveness === 3 ? 'text-[#A78BFA]' : ''}>Aggressive</span>
                          </div>
                       </div>
                    </div>
 
-                   <div className="h-px w-full bg-[#F3F4F6]"></div>
+                   <div className="h-px w-full bg-white/10"></div>
 
                    <div className="flex justify-between items-center">
                       <div className="max-w-md">
-                         <h4 className="text-sm font-bold text-[#111827] mb-1">Automated Patient Outreach</h4>
-                         <p className="text-xs text-[#6B7280] leading-relaxed">Allow AI to send SMS confirmations and waitlist offers directly without human review.</p>
+                         <h4 className="text-sm font-bold text-white mb-1">Automated Patient Outreach</h4>
+                         <p className="text-xs text-white/70 leading-relaxed">Allow AI to send SMS confirmations and waitlist offers directly without human review.</p>
                       </div>
                       <label className="relative inline-flex items-center cursor-pointer">
                          <input 
@@ -503,42 +501,42 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onSaveSettings }) =>
                            checked={autoOutreach}
                            onChange={() => setAutoOutreach(!autoOutreach)}
                          />
-                         <div className="w-11 h-6 bg-[#E5E7EB] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#10B981]"></div>
+                         <div className="w-11 h-6 bg-[#E5E7EB] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-[#120524] after:border-white/10 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#10B981]"></div>
                       </label>
                    </div>
 
-                   <div className="h-px w-full bg-[#F3F4F6]"></div>
+                   <div className="h-px w-full bg-white/10"></div>
 
                    <div className="flex justify-between items-center">
                       <div className="max-w-md">
-                         <h4 className="text-sm font-bold text-[#111827] mb-1">LLM Confidence Threshold</h4>
-                         <p className="text-xs text-[#6B7280] leading-relaxed">Minimum confidence score required before Sentinel flags a potential revenue leak.</p>
+                         <h4 className="text-sm font-bold text-white mb-1">LLM Confidence Threshold</h4>
+                         <p className="text-xs text-white/70 leading-relaxed">Minimum confidence score required before Sentinel flags a potential revenue leak.</p>
                       </div>
                       <select 
                         value={confidenceThreshold}
                         onChange={(e) => setConfidenceThreshold(e.target.value)}
-                        className="bg-[#F7F9FC] border border-[#E8EDF5] text-[#111827] text-sm font-bold rounded-[10px] focus:ring-[#6D5DF6] focus:border-[#6D5DF6] block p-2.5 outline-none cursor-pointer"
+                        className="bg-white/5 border border-white/10 text-white text-sm font-bold rounded-[10px] focus:ring-[#2E1055] focus:border-[#2E1055] block p-2.5 outline-none cursor-pointer"
                       >
-                        <option>70% (Loose)</option>
-                        <option>85% (Recommended)</option>
-                        <option>95% (Strict)</option>
+                        <option className="bg-[#120524] text-white">70% (Loose)</option>
+                        <option className="bg-[#120524] text-white">85% (Recommended)</option>
+                        <option className="bg-[#120524] text-white">95% (Strict)</option>
                       </select>
                    </div>
                    
-                   <div className="h-px w-full bg-[#F3F4F6]"></div>
+                   <div className="h-px w-full bg-white/10"></div>
 
                    <div className="flex justify-between items-start">
                       <div className="max-w-md">
-                         <h4 className="text-sm font-bold text-[#111827] mb-1">Active AI Model</h4>
-                         <p className="text-xs text-[#6B7280] leading-relaxed">Select the foundational model powering your Intelligence Layer.</p>
+                         <h4 className="text-sm font-bold text-white mb-1">Active AI Model</h4>
+                         <p className="text-xs text-white/70 leading-relaxed">Select the foundational model powering your AI Assistant.</p>
                       </div>
                       <div className="flex flex-col gap-2">
                         <label 
                           onClick={() => setAiModel('gpt-4o')}
                           className={`flex items-center gap-3 p-3 border rounded-[10px] cursor-pointer transition-all ${
                             aiModel === 'gpt-4o' 
-                              ? 'border-[#6D5DF6] bg-[#EEF4FF]' 
-                              : 'border-[#E8EDF5] bg-white hover:bg-[#F7F9FC]'
+                              ? 'border-[#2E1055] bg-[#EEF4FF]' 
+                              : 'border-white/10 bg-[#120524] hover:bg-white/5'
                           }`}
                         >
                           <input 
@@ -546,16 +544,16 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onSaveSettings }) =>
                             name="model" 
                             checked={aiModel === 'gpt-4o'} 
                             onChange={() => setAiModel('gpt-4o')}
-                            className="w-4 h-4 text-[#6D5DF6] bg-white border-gray-300 focus:ring-[#6D5DF6]" 
+                            className="w-4 h-4 text-[#A78BFA] bg-[#120524] border-white/10 focus:ring-[#2E1055]" 
                           />
-                          <span className={`text-sm font-bold ${aiModel === 'gpt-4o' ? 'text-[#6D5DF6]' : 'text-[#6B7280]'}`}>GPT-4o (Default)</span>
+                          <span className={`text-sm font-bold ${aiModel === 'gpt-4o' ? 'text-[#A78BFA]' : 'text-white/70'}`}>GPT-4o (Default)</span>
                         </label>
                         <label 
                           onClick={() => setAiModel('claude')}
                           className={`flex items-center gap-3 p-3 border rounded-[10px] cursor-pointer transition-all ${
                             aiModel === 'claude' 
                               ? 'border-[#2563EB] bg-[#EFF6FF]' 
-                              : 'border-[#E8EDF5] bg-white hover:bg-[#F7F9FC]'
+                              : 'border-white/10 bg-[#120524] hover:bg-white/5'
                           }`}
                         >
                           <input 
@@ -563,9 +561,9 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onSaveSettings }) =>
                             name="model" 
                             checked={aiModel === 'claude'} 
                             onChange={() => setAiModel('claude')}
-                            className="w-4 h-4 text-[#2563EB] bg-white border-gray-300 focus:ring-[#2563EB]" 
+                            className="w-4 h-4 text-[#2563EB] bg-[#120524] border-white/10 focus:ring-[#2563EB]" 
                           />
-                          <span className={`text-sm font-bold ${aiModel === 'claude' ? 'text-[#2563EB]' : 'text-[#6B7280]'}`}>Claude 3.5 Sonnet</span>
+                          <span className={`text-sm font-bold ${aiModel === 'claude' ? 'text-[#2563EB]' : 'text-white/70'}`}>Claude 3.5 Sonnet</span>
                         </label>
                       </div>
                    </div>
@@ -575,45 +573,45 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onSaveSettings }) =>
            )}
 
            {/* AI COSTS & USAGE */}
-           {activeMenu === 'ai-usage' && (
+           {localActiveMenu === 'ai-usage' && (
              <div className="space-y-8 animate-in fade-in">
                 <div>
-                   <h3 className="text-xl font-bold text-[#111827] mb-2 flex items-center gap-2">
+                   <h3 className="text-xl font-bold text-white mb-2 flex items-center gap-2">
                      <Sparkles className="w-5 h-5 text-[#F59E0B]" /> AI Costs & Token Usage
                    </h3>
-                   <p className="text-sm text-[#6B7280] font-medium">Track your clinic's AI consumption and associated API costs.</p>
+                   <p className="text-sm text-white/70 font-medium">Track your clinic's AI consumption and associated API costs.</p>
                 </div>
                 
-                <div className="h-px w-full bg-[#E8EDF5]"></div>
+                <div className="h-px w-full bg-white/10"></div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                   <div className="p-6 border border-[#E0D9FD] bg-[#EEEAFE]/50 rounded-[16px]">
-                    <BrainCircuit className="w-8 h-8 text-[#6D5DF6] mb-4" />
-                    <p className="text-[#6B7280] text-sm font-bold mb-1">Clinic Tokens Used (MTD)</p>
-                    <p className="text-4xl font-black text-[#111827]">2.4M</p>
-                    <p className="text-xs text-[#6D5DF6] font-bold mt-2 bg-[#E0D9FD] px-3 py-1 rounded-full inline-block">Est. Cost: $24.00</p>
+                    <BrainCircuit className="w-8 h-8 text-[#A78BFA] mb-4" />
+                    <p className="text-white/70 text-sm font-bold mb-1">Clinic Tokens Used (MTD)</p>
+                    <p className="text-4xl font-black text-white">2.4M</p>
+                    <p className="text-xs text-[#A78BFA] font-bold mt-2 bg-[#E0D9FD] px-3 py-1 rounded-full inline-block">Est. Cost: $24.00</p>
                   </div>
                   <div className="p-6 border border-emerald-100 bg-emerald-50/50 rounded-[16px]">
                     <Activity className="w-8 h-8 text-emerald-600 mb-4" />
-                    <p className="text-[#6B7280] text-sm font-bold mb-1">Cache Hit Ratio</p>
-                    <p className="text-4xl font-black text-[#111827]">92.1%</p>
+                    <p className="text-white/70 text-sm font-bold mb-1">Cache Hit Ratio</p>
+                    <p className="text-4xl font-black text-white">92.1%</p>
                     <p className="text-xs text-emerald-600 font-bold mt-2 bg-emerald-100 px-3 py-1 rounded-full inline-block">High Efficiency</p>
                   </div>
                 </div>
 
-                <div className="bg-white border border-[#E8EDF5] rounded-[16px] p-6 shadow-sm">
-                  <h4 className="text-sm font-bold text-[#111827] mb-4">Top AI Workflows</h4>
+                <div className="bg-[#120524] border border-white/10 rounded-[16px] p-6 shadow-sm">
+                  <h4 className="text-sm font-bold text-white mb-4">Top AI Workflows</h4>
                   <div className="space-y-3">
                     {[
                       { name: 'Patient Triage Chatbot', usage: '1.2M tokens', cost: '$12.00' },
                       { name: 'Automated Clinical Summaries', usage: '800K tokens', cost: '$8.00' },
                       { name: 'Billing Code Extraction', usage: '400K tokens', cost: '$4.00' }
                     ].map((item, i) => (
-                      <div key={i} className="flex justify-between items-center p-4 border border-[#F3F4F6] rounded-[16px] hover:bg-[#F7F9FC] transition-colors">
-                        <span className="text-sm font-bold text-[#111827]">{item.name}</span>
+                      <div key={i} className="flex justify-between items-center p-4 border border-white/10 rounded-[16px] hover:bg-white/5 transition-colors">
+                        <span className="text-sm font-bold text-white">{item.name}</span>
                         <div className="text-right">
-                          <span className="block text-sm font-bold text-[#6D5DF6]">{item.usage}</span>
-                          <span className="block text-xs font-medium text-[#6B7280]">{item.cost}</span>
+                          <span className="block text-sm font-bold text-[#A78BFA]">{item.usage}</span>
+                          <span className="block text-xs font-medium text-white/70">{item.cost}</span>
                         </div>
                       </div>
                     ))}
@@ -623,29 +621,29 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onSaveSettings }) =>
            )}
 
            {/* 3. TEAM & ACCESS CONTROL */}
-           {activeMenu === 'team' && (
+           {localActiveMenu === 'team' && (
              <div className="space-y-6 animate-in fade-in">
                 <div className="flex justify-between items-start">
                   <div>
-                    <h3 className="text-xl font-bold text-[#111827] mb-2 flex items-center gap-2">
-                      <Users className="w-5 h-5 text-[#6D5DF6]" /> Team & Access Control
+                    <h3 className="text-xl font-bold text-white mb-2 flex items-center gap-2">
+                      <Users className="w-5 h-5 text-[#A78BFA]" /> Team & Access Control
                     </h3>
-                    <p className="text-sm text-[#6B7280] font-medium">Manage clinical staff members, physicians, and billing agents access permissions.</p>
+                    <p className="text-sm text-white/70 font-medium">Manage clinical staff members, physicians, and billing agents access permissions.</p>
                   </div>
                   <button 
                     onClick={() => setShowInviteModal(true)}
-                    className="flex items-center gap-1.5 bg-[#6D5DF6] hover:bg-[#5B4AE8] text-white font-bold text-xs px-4 py-2.5 rounded-[10px] transition-transform active:scale-95 cursor-pointer"
+                    className="flex items-center gap-1.5 bg-[#2E1055] hover:bg-[#120524] text-white font-bold text-xs px-4 py-2.5 rounded-[10px] transition-transform active:scale-95 cursor-pointer"
                   >
                     <Plus className="w-4 h-4" /> Invite Staff Member
                   </button>
                 </div>
 
-                <div className="h-px w-full bg-[#E8EDF5]"></div>
+                <div className="h-px w-full bg-white/10"></div>
 
-                <div className="overflow-x-auto border border-[#E8EDF5] rounded-[16px] premium-shadow bg-white">
+                <div className="overflow-x-auto border border-white/10 rounded-[16px] premium-shadow bg-[#120524]">
                   <table className="w-full text-left border-collapse">
                     <thead>
-                      <tr className="bg-[#FAFBFD] border-b border-[#E8EDF5] text-[10px] uppercase font-extrabold text-[#6B7280]">
+                      <tr className="bg-white/5 border-b border-white/10 text-[10px] uppercase font-extrabold text-white/70">
                         <th className="py-3.5 px-4">Member Name</th>
                         <th className="py-3.5 px-4">Email</th>
                         <th className="py-3.5 px-4">System Role</th>
@@ -653,22 +651,22 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onSaveSettings }) =>
                         <th className="py-3.5 px-4 text-right">Actions</th>
                       </tr>
                     </thead>
-                    <tbody className="text-xs font-semibold text-[#111827]">
+                    <tbody className="text-xs font-semibold text-white">
                       {teamMembers.map((member) => (
-                        <tr key={member.id} className="border-b border-[#F3F4F6] hover:bg-[#F7F9FC]/50 last:border-0">
+                        <tr key={member.id} className="border-b border-white/10 hover:bg-white/5/50 last:border-0">
                           <td className="py-3.5 px-4">
                             <div className="flex items-center gap-2.5">
-                              <div className="w-8 h-8 rounded-full bg-[#EEF4FF] flex items-center justify-center text-[10px] font-bold text-[#6D5DF6] border border-[#BFDBFE]">
+                              <div className="w-8 h-8 rounded-full bg-[#EEF4FF] flex items-center justify-center text-[10px] font-bold text-[#A78BFA] border border-[#BFDBFE]">
                                 {member.name.split(' ').map(n => n[0]).join('')}
                               </div>
-                              <span className="font-bold text-[#111827]">{member.name}</span>
+                              <span className="font-bold text-white">{member.name}</span>
                             </div>
                           </td>
                           <td className="py-3.5 px-4 text-slate-500">{member.email}</td>
                           <td className="py-3.5 px-4">
                             <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
                               member.role.includes('Administrator') 
-                                ? 'bg-[#EEEAFE] text-[#5B4AE8] border border-indigo-200'
+                                ? 'bg-[#EEEAFE] text-white border border-indigo-200'
                                 : member.role.includes('Manager')
                                 ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
                                 : 'bg-slate-50 text-slate-700 border border-slate-200'
@@ -677,7 +675,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onSaveSettings }) =>
                             </span>
                           </td>
                           <td className="py-3.5 px-4">
-                            <span className="bg-[#ECFDF5] text-[#10B981] px-2 py-0.5 rounded text-[10px] font-extrabold uppercase border border-[#D1FAE5]">
+                            <span className="bg-[#ECFDF5] text-[#10B981] px-2 py-0.5 rounded text-[10px] font-extrabold uppercase border border-emerald-500/30">
                               {member.status}
                             </span>
                           </td>
@@ -710,22 +708,22 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onSaveSettings }) =>
            )}
 
            {/* 4. NOTIFICATIONS */}
-           {activeMenu === 'notifications' && (
+           {localActiveMenu === 'notifications' && (
              <div className="space-y-8 animate-in fade-in">
                 <div>
-                   <h3 className="text-xl font-bold text-[#111827] mb-2 flex items-center gap-2">
+                   <h3 className="text-xl font-bold text-white mb-2 flex items-center gap-2">
                      <Bell className="w-5 h-5 text-amber-500" /> Notifications Settings
                    </h3>
-                   <p className="text-sm text-[#6B7280] font-medium">Control routing and intervals for clinic telemetry triggers and alerts.</p>
+                   <p className="text-sm text-white/70 font-medium">Control routing and intervals for clinic telemetry triggers and alerts.</p>
                 </div>
                 
-                <div className="h-px w-full bg-[#E8EDF5]"></div>
+                <div className="h-px w-full bg-white/10"></div>
 
                 <div className="space-y-6">
                    <div className="flex justify-between items-center">
                       <div className="max-w-md">
-                         <h4 className="text-sm font-bold text-[#111827] mb-1">SMS Real-time Signals</h4>
-                         <p className="text-xs text-[#6B7280] leading-relaxed">Send high-priority waitlist and schedule updates to administrators mobile.</p>
+                         <h4 className="text-sm font-bold text-white mb-1">SMS Real-time Signals</h4>
+                         <p className="text-xs text-white/70 leading-relaxed">Send high-priority waitlist and schedule updates to administrators mobile.</p>
                       </div>
                       <label className="relative inline-flex items-center cursor-pointer">
                          <input 
@@ -734,16 +732,16 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onSaveSettings }) =>
                            checked={notifySms}
                            onChange={() => setNotifySms(!notifySms)}
                          />
-                         <div className="w-11 h-6 bg-[#E5E7EB] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#10B981]"></div>
+                         <div className="w-11 h-6 bg-[#E5E7EB] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-[#120524] after:border-white/10 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#10B981]"></div>
                       </label>
                    </div>
 
-                   <div className="h-px w-full bg-[#F3F4F6]"></div>
+                   <div className="h-px w-full bg-white/10"></div>
 
                    <div className="flex justify-between items-center">
                       <div className="max-w-md">
-                         <h4 className="text-sm font-bold text-[#111827] mb-1">Secure Email Daily Reports</h4>
-                         <p className="text-xs text-[#6B7280] leading-relaxed">Receive secure daily clinical logs summaries and revenue intelligence outcomes.</p>
+                         <h4 className="text-sm font-bold text-white mb-1">Secure Email Daily Reports</h4>
+                         <p className="text-xs text-white/70 leading-relaxed">Receive secure daily clinical logs summaries and revenue intelligence outcomes.</p>
                       </div>
                       <label className="relative inline-flex items-center cursor-pointer">
                          <input 
@@ -752,16 +750,16 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onSaveSettings }) =>
                            checked={notifyEmail}
                            onChange={() => setNotifyEmail(!notifyEmail)}
                          />
-                         <div className="w-11 h-6 bg-[#E5E7EB] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#10B981]"></div>
+                         <div className="w-11 h-6 bg-[#E5E7EB] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-[#120524] after:border-white/10 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#10B981]"></div>
                       </label>
                    </div>
 
-                   <div className="h-px w-full bg-[#F3F4F6]"></div>
+                   <div className="h-px w-full bg-white/10"></div>
 
                    <div className="flex justify-between items-center">
                       <div className="max-w-md">
-                         <h4 className="text-sm font-bold text-[#111827] mb-1">Desktop Push Alerts</h4>
-                         <p className="text-xs text-[#6B7280] leading-relaxed">Enable system notification alerts for incoming patient messages and calls.</p>
+                         <h4 className="text-sm font-bold text-white mb-1">Desktop Push Alerts</h4>
+                         <p className="text-xs text-white/70 leading-relaxed">Enable system notification alerts for incoming patient messages and calls.</p>
                       </div>
                       <label className="relative inline-flex items-center cursor-pointer">
                          <input 
@@ -770,16 +768,16 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onSaveSettings }) =>
                            checked={notifyDesktop}
                            onChange={() => setNotifyDesktop(!notifyDesktop)}
                          />
-                         <div className="w-11 h-6 bg-[#E5E7EB] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#10B981]"></div>
+                         <div className="w-11 h-6 bg-[#E5E7EB] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-[#120524] after:border-white/10 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#10B981]"></div>
                       </label>
                    </div>
 
-                   <div className="h-px w-full bg-[#F3F4F6]"></div>
+                   <div className="h-px w-full bg-white/10"></div>
 
                    <div className="flex justify-between items-center">
                       <div className="max-w-md">
-                         <h4 className="text-sm font-bold text-[#111827] mb-1">Copay Collection Alerts</h4>
-                         <p className="text-xs text-[#6B7280] leading-relaxed">Notify billing staff immediately when co-pays are verified and pending collection.</p>
+                         <h4 className="text-sm font-bold text-white mb-1">Copay Collection Alerts</h4>
+                         <p className="text-xs text-white/70 leading-relaxed">Notify billing staff immediately when co-pays are verified and pending collection.</p>
                       </div>
                       <label className="relative inline-flex items-center cursor-pointer">
                          <input 
@@ -788,25 +786,25 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onSaveSettings }) =>
                            checked={notifyCopay}
                            onChange={() => setNotifyCopay(!notifyCopay)}
                          />
-                         <div className="w-11 h-6 bg-[#E5E7EB] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#10B981]"></div>
+                         <div className="w-11 h-6 bg-[#E5E7EB] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-[#120524] after:border-white/10 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#10B981]"></div>
                       </label>
                    </div>
 
-                   <div className="h-px w-full bg-[#F3F4F6]"></div>
+                   <div className="h-px w-full bg-white/10"></div>
 
                    <div className="flex justify-between items-center">
                       <div className="max-w-md">
-                         <h4 className="text-sm font-bold text-[#111827] mb-1">Patient Reminders Delay</h4>
-                         <p className="text-xs text-[#6B7280] leading-relaxed">Default timing for sending automated text messages before a booked slot.</p>
+                         <h4 className="text-sm font-bold text-white mb-1">Patient Reminders Delay</h4>
+                         <p className="text-xs text-white/70 leading-relaxed">Default timing for sending automated text messages before a booked slot.</p>
                       </div>
                       <select 
                         value={reminderInterval}
                         onChange={(e) => setReminderInterval(e.target.value)}
-                        className="bg-[#F7F9FC] border border-[#E8EDF5] text-[#111827] text-sm font-bold rounded-[10px] focus:ring-[#6D5DF6] focus:border-[#6D5DF6] block p-2.5 outline-none cursor-pointer"
+                        className="bg-white/5 border border-white/10 text-white text-sm font-bold rounded-[10px] focus:ring-[#2E1055] focus:border-[#2E1055] block p-2.5 outline-none cursor-pointer"
                       >
-                        <option value="12h">12 Hours Prior</option>
-                        <option value="24h">24 Hours Prior</option>
-                        <option value="48h">48 Hours Prior</option>
+                        <option value="12h" className="bg-[#120524] text-white">12 Hours Prior</option>
+                        <option value="24h" className="bg-[#120524] text-white">24 Hours Prior</option>
+                        <option value="48h" className="bg-[#120524] text-white">48 Hours Prior</option>
                       </select>
                    </div>
                 </div>
@@ -814,34 +812,34 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onSaveSettings }) =>
            )}
 
            {/* 5. INTEGRATIONS */}
-           {activeMenu === 'integrations' && (
+           {localActiveMenu === 'integrations' && (
              <div className="space-y-6 animate-in fade-in">
                 <div>
-                   <h3 className="text-xl font-bold text-[#111827] mb-2 flex items-center gap-2">
-                     <Database className="w-5 h-5 text-[#6D5DF6]" /> System Connectors & Integrations
+                   <h3 className="text-xl font-bold text-white mb-2 flex items-center gap-2">
+                     <Database className="w-5 h-5 text-[#A78BFA]" /> System Connectors & Integrations
                    </h3>
-                   <p className="text-sm text-[#6B7280] font-medium">Verify active connection links and API synchronizations with clinic platforms.</p>
+                   <p className="text-sm text-white/70 font-medium">Verify active connection links and API synchronizations with clinic platforms.</p>
                 </div>
                 
-                <div className="h-px w-full bg-[#E8EDF5]"></div>
+                <div className="h-px w-full bg-white/10"></div>
 
                 <div className="grid grid-cols-1 gap-4">
                   {integrationsList.map(integration => (
                     <div 
                       key={integration.id} 
-                      className="border border-[#E8EDF5] rounded-[20px] p-5 flex justify-between items-center bg-[#F7F9FC]/50 hover:bg-white transition-all premium-shadow group"
+                      className="border border-white/10 rounded-[20px] p-5 flex justify-between items-center bg-white/5/50 hover:bg-[#120524] transition-all premium-shadow group"
                     >
                       <div className="flex items-center gap-4">
                         <div className={`w-10 h-10 rounded-full flex items-center justify-center border ${
                           integration.connected 
-                            ? 'bg-[#ECFDF5] border-[#D1FAE5] text-[#10B981]' 
+                            ? 'bg-[#ECFDF5] border-emerald-500/30 text-[#10B981]' 
                             : 'bg-slate-100 border-slate-200 text-slate-400'
                         }`}>
                           <Database className="w-5 h-5" />
                         </div>
                         <div>
-                          <p className="text-sm font-bold text-[#111827]">{integration.name}</p>
-                          <p className="text-[10px] text-[#6B7280] font-semibold">{integration.type} • Synced: {integration.lastSync}</p>
+                          <p className="text-sm font-bold text-white">{integration.name}</p>
+                          <p className="text-[10px] text-white/70 font-semibold">{integration.type} • Synced: {integration.lastSync}</p>
                         </div>
                       </div>
 
@@ -861,7 +859,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onSaveSettings }) =>
                               checked={integration.connected}
                               onChange={() => handleToggleIntegration(integration.id)}
                             />
-                            <div className="w-11 h-6 bg-[#E5E7EB] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#10B981]"></div>
+                            <div className="w-11 h-6 bg-[#E5E7EB] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-[#120524] after:border-white/10 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#10B981]"></div>
                          </label>
                       </div>
                     </div>
@@ -871,20 +869,20 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onSaveSettings }) =>
            )}
 
            {/* 6. BILLING & PLANS */}
-           {activeMenu === 'billing' && (
+           {localActiveMenu === 'billing' && (
              <div className="space-y-8 animate-in fade-in">
                 <div>
-                   <h3 className="text-xl font-bold text-[#111827] mb-2 flex items-center gap-2">
+                   <h3 className="text-xl font-bold text-white mb-2 flex items-center gap-2">
                      <CreditCard className="w-5 h-5 text-[#2563EB]" /> Billing & Plans
                    </h3>
-                   <p className="text-sm text-[#6B7280] font-medium">Select pricing packages, configure primary Stripe card, and read past transaction receipts.</p>
+                   <p className="text-sm text-white/70 font-medium">Select pricing packages, configure primary Stripe card, and read past transaction receipts.</p>
                 </div>
                 
-                <div className="h-px w-full bg-[#E8EDF5]"></div>
+                <div className="h-px w-full bg-white/10"></div>
 
                 {/* Subscriptions Grid */}
                 <div>
-                  <h4 className="text-[10px] font-extrabold text-[#9CA3AF] uppercase tracking-wider mb-4">Choose Sentinel Package</h4>
+                  <h4 className="text-[10px] font-extrabold text-white/50 uppercase tracking-wider mb-4">Choose Sentinel Package</h4>
                   <div className="grid grid-cols-3 gap-4">
                     {[
                       { id: 'starter', name: 'Sentinel Starter', price: '$0', desc: 'Basic patient logs tracking.' },
@@ -900,57 +898,53 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onSaveSettings }) =>
                         className={`p-5 rounded-[20px] border cursor-pointer transition-all flex flex-col justify-between premium-shadow ${
                           activePlan === plan.id 
                             ? 'border-[#2563EB] bg-[#EEF4FF]/50 ring-1 ring-[#2563EB]' 
-                            : 'border-[#E8EDF5] bg-white hover:bg-slate-50'
+                            : 'border-white/10 bg-[#120524] hover:bg-slate-50'
                         }`}
                       >
                         <div>
                           <div className="flex justify-between items-start mb-2">
-                            <span className="text-xs font-bold text-[#111827]">{plan.name}</span>
+                            <span className="text-xs font-bold text-white">{plan.name}</span>
                             {activePlan === plan.id && <span className="bg-[#2563EB] text-white text-[8px] font-extrabold uppercase px-1.5 py-0.5 rounded">Active</span>}
                           </div>
-                          <p className="text-2xl font-extrabold text-[#111827] mb-3">{plan.price}</p>
-                          <p className="text-[10px] text-[#6B7280] leading-relaxed">{plan.desc}</p>
+                          <p className="text-2xl font-extrabold text-white mb-3">{plan.price}</p>
+                          <p className="text-[10px] text-white/70 leading-relaxed">{plan.desc}</p>
                         </div>
                       </div>
                     ))}
                   </div>
                 </div>
 
-                <div className="h-px w-full bg-[#F3F4F6]"></div>
+                <div className="h-px w-full bg-white/10"></div>
 
                 {/* Payment Card Details */}
-                <div className="flex justify-between items-center bg-[#FAFBFD] p-5 border border-[#E8EDF5] rounded-[18px]">
+                <div className="flex justify-between items-center bg-white/5 p-5 border border-white/10 rounded-[18px]">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-white border border-[#E8EDF5] rounded-full flex items-center justify-center text-[#2563EB]">
+                    <div className="w-10 h-10 bg-[#120524] border border-white/10 rounded-full flex items-center justify-center text-[#2563EB]">
                       <CreditCard className="w-5 h-5" />
                     </div>
                     <div>
-                      <p className="text-xs font-bold text-[#111827]">{paymentCard}</p>
-                      <p className="text-[9px] text-[#9CA3AF] font-bold uppercase">Expires 12/28 • Primary Card</p>
+                      <p className="text-xs font-bold text-white">{paymentCard}</p>
+                      <p className="text-[9px] text-white/50 font-bold uppercase">Expires 12/28 • Primary Card</p>
                     </div>
                   </div>
 
                   <button 
-                    onClick={() => {
-                      const num = Math.floor(1000 + Math.random() * 9000);
-                      setPaymentCard(`Mastercard ending in ${num}`);
-                      showToast(`Primary payment card updated successfully.`);
-                    }}
+                    onClick={() => { setPendingPlan(null); setShowPaymentModal(true); }}
                     className="text-xs font-bold text-[#2563EB] hover:underline cursor-pointer"
                   >
                     Edit Card
                   </button>
                 </div>
 
-                <div className="h-px w-full bg-[#F3F4F6]"></div>
+                <div className="h-px w-full bg-white/10"></div>
 
                 {/* Invoice Logs */}
                 <div>
-                   <h4 className="text-[10px] font-extrabold text-[#9CA3AF] uppercase tracking-wider mb-4">Past Transaction Receipts</h4>
-                   <div className="overflow-x-auto border border-[#E8EDF5] rounded-[16px] premium-shadow bg-white">
+                   <h4 className="text-[10px] font-extrabold text-white/50 uppercase tracking-wider mb-4">Past Transaction Receipts</h4>
+                   <div className="overflow-x-auto border border-white/10 rounded-[16px] premium-shadow bg-[#120524]">
                       <table className="w-full text-left border-collapse">
                         <thead>
-                          <tr className="bg-[#FAFBFD] border-b border-[#E8EDF5] text-[10px] uppercase font-extrabold text-[#6B7280]">
+                          <tr className="bg-white/5 border-b border-white/10 text-[10px] uppercase font-extrabold text-white/70">
                             <th className="py-3.5 px-4">Invoice ID</th>
                             <th className="py-3.5 px-4">Billing Date</th>
                             <th className="py-3.5 px-4">Amount Paid</th>
@@ -958,21 +952,21 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onSaveSettings }) =>
                             <th className="py-3.5 px-4 text-right">Action</th>
                           </tr>
                         </thead>
-                        <tbody className="text-xs font-semibold text-[#111827]">
+                        <tbody className="text-xs font-semibold text-white">
                           {invoices.map(inv => (
-                            <tr key={inv.id} className="border-b border-[#F3F4F6] hover:bg-[#F7F9FC]/50 last:border-0">
+                            <tr key={inv.id} className="border-b border-white/10 hover:bg-white/5/50 last:border-0">
                               <td className="py-3.5 px-4 font-mono text-[#2563EB] font-bold">{inv.id}</td>
                               <td className="py-3.5 px-4 text-slate-500">{inv.date}</td>
                               <td className="py-3.5 px-4 text-slate-800 font-bold">${inv.amount.toFixed(2)}</td>
                               <td className="py-3.5 px-4">
-                                <span className="bg-[#ECFDF5] text-[#10B981] px-2 py-0.5 rounded text-[10px] font-extrabold uppercase border border-[#D1FAE5]">
+                                <span className="bg-[#ECFDF5] text-[#10B981] px-2 py-0.5 rounded text-[10px] font-extrabold uppercase border border-emerald-500/30">
                                   {inv.status}
                                 </span>
                               </td>
                               <td className="py-3.5 px-4 text-right">
                                 <button 
                                   onClick={() => handleDownloadInvoice(inv.id)}
-                                  className="text-[11px] font-bold text-[#6B7280] hover:text-[#111827] flex items-center gap-1.5 ml-auto cursor-pointer"
+                                  className="text-[11px] font-bold text-white/70 hover:text-white flex items-center gap-1.5 ml-auto cursor-pointer"
                                 >
                                   <Download className="w-3.5 h-3.5" /> PDF
                                 </button>
@@ -988,27 +982,27 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onSaveSettings }) =>
            )}
 
            {/* 7. COMPLIANCE & AUDIT TRAILS */}
-           {activeMenu === 'security' && (
+           {localActiveMenu === 'security' && (
              <div className="space-y-6 animate-in fade-in">
                <div>
-                 <h3 className="text-xl font-bold text-[#111827] mb-2 flex items-center gap-2">
+                 <h3 className="text-xl font-bold text-white mb-2 flex items-center gap-2">
                    <Shield className="w-5 h-5 text-emerald-600" /> HIPAA Security & Compliance Audit Trails
                  </h3>
-                 <p className="text-sm text-[#6B7280] font-medium">Review immutable access logs and security policy audit logs.</p>
+                 <p className="text-sm text-white/70 font-medium">Review immutable access logs and security policy audit logs.</p>
                </div>
                
-               <div className="h-px w-full bg-[#E8EDF5]"></div>
+               <div className="h-px w-full bg-white/10"></div>
 
                {loadingAudits ? (
                  <div className="flex flex-col items-center justify-center py-12">
                    <div className="w-8 h-8 border-4 border-[#EEF4FF] border-t-[#2563EB] rounded-full animate-spin"></div>
-                   <p className="text-xs text-[#6B7280] mt-2 font-bold">Fetching secure audit records...</p>
+                   <p className="text-xs text-white/70 mt-2 font-bold">Fetching secure audit records...</p>
                  </div>
                ) : (
-                 <div className="overflow-x-auto border border-[#E8EDF5] rounded-[16px] premium-shadow bg-white">
+                 <div className="overflow-x-auto border border-white/10 rounded-[16px] premium-shadow bg-[#120524]">
                    <table className="w-full text-left border-collapse">
                      <thead>
-                       <tr className="bg-[#FAFBFD] border-b border-[#E8EDF5] text-[10px] uppercase font-bold text-[#6B7280]">
+                       <tr className="bg-white/5 border-b border-white/10 text-[10px] uppercase font-bold text-white/70">
                          <th className="py-3.5 px-4">Timestamp</th>
                          <th className="py-3.5 px-4">Operator</th>
                          <th className="py-3.5 px-4">Action</th>
@@ -1016,9 +1010,9 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onSaveSettings }) =>
                          <th className="py-3.5 px-4">Host IP</th>
                        </tr>
                      </thead>
-                     <tbody className="text-xs font-semibold text-[#111827]">
+                     <tbody className="text-xs font-semibold text-white">
                        {auditLogs.map((log) => (
-                         <tr key={log.id} className="border-b border-[#F3F4F6] hover:bg-[#F7F9FC]/50 last:border-0">
+                         <tr key={log.id} className="border-b border-white/10 hover:bg-white/5/50 last:border-0">
                            <td className="py-3.5 px-4 text-slate-500 font-mono">{new Date(log.timestamp).toLocaleString()}</td>
                            <td className="py-3.5 px-4 text-[#2563EB] font-bold">{log.user_email}</td>
                            <td className="py-3.5 px-4">
@@ -1043,21 +1037,21 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onSaveSettings }) =>
       {/* Invite Staff Member Modal */}
       {showInviteModal && createPortal(
         <div className="fixed inset-0 z-[1000] bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in">
-          <div className="bg-white border border-[#E8EDF5] w-full max-w-md rounded-[28px] overflow-hidden premium-shadow animate-in zoom-in-95 duration-200">
+          <div className="bg-[#120524] border border-white/10 w-full max-w-md rounded-[28px] overflow-hidden premium-shadow animate-in zoom-in-95 duration-200">
             {/* Header */}
-            <div className="bg-[#F8FAFC] border-b border-[#E8EDF5] px-6 py-4 flex justify-between items-center">
+            <div className="bg-white/5 border-b border-white/10 px-6 py-4 flex justify-between items-center">
               <div className="flex items-center gap-2">
-                <div className="p-1.5 rounded-lg bg-[#EEEAFE] text-[#6D5DF6]">
+                <div className="p-1.5 rounded-lg bg-[#EEEAFE] text-[#A78BFA]">
                   <Users className="w-4 h-4" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-bold text-[#111827]">Invite Staff Member</h3>
-                  <span className="text-[10px] font-semibold text-[#6B7280]">Authorize clinical portal access permissions</span>
+                  <h3 className="text-sm font-bold text-white">Invite Staff Member</h3>
+                  <span className="text-[10px] font-semibold text-white/70">Authorize clinical portal access permissions</span>
                 </div>
               </div>
               <button
                 onClick={() => setShowInviteModal(false)}
-                className="p-1.5 hover:bg-[#EEF2F6] rounded-full text-[#6B7280] hover:text-[#111827] transition-all cursor-pointer"
+                className="p-1.5 hover:bg-[#EEF2F6] rounded-full text-white/70 hover:text-white transition-all cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -1066,55 +1060,55 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onSaveSettings }) =>
             {/* Form */}
             <form onSubmit={handleInviteSubmit} className="p-6 space-y-4">
               <div>
-                <label className="text-[10px] font-extrabold text-[#9CA3AF] uppercase tracking-wider block mb-1.5">Staff Name</label>
+                <label className="text-[10px] font-extrabold text-white/50 uppercase tracking-wider block mb-1.5">Staff Name</label>
                 <input
                   type="text"
                   required
                   value={inviteName}
                   onChange={(e) => setInviteName(e.target.value)}
                   placeholder="e.g. Dr. Robert Pattinson"
-                  className="w-full bg-[#F8FAFC] border border-[#E8EDF5] rounded-[16px] px-4 py-2.5 text-sm font-bold text-[#111827] outline-none focus:border-[#6D5DF6] focus:ring-1 focus:ring-[#6D5DF6] transition-all placeholder:text-[#9CA3AF]"
+                  className="w-full bg-white/5 border border-white/10 rounded-[16px] px-4 py-2.5 text-sm font-bold text-white outline-none focus:border-[#2E1055] focus:ring-1 focus:ring-[#2E1055] transition-all placeholder:text-white/50"
                 />
               </div>
 
               <div>
-                <label className="text-[10px] font-extrabold text-[#9CA3AF] uppercase tracking-wider block mb-1.5">Email Address</label>
+                <label className="text-[10px] font-extrabold text-white/50 uppercase tracking-wider block mb-1.5">Email Address</label>
                 <input
                   type="email"
                   required
                   value={inviteEmail}
                   onChange={(e) => setInviteEmail(e.target.value)}
                   placeholder="e.g. r.pattinson@sentinel.com"
-                  className="w-full bg-[#F8FAFC] border border-[#E8EDF5] rounded-[16px] px-4 py-2.5 text-sm font-bold text-[#111827] outline-none focus:border-[#6D5DF6] focus:ring-1 focus:ring-[#6D5DF6] transition-all placeholder:text-[#9CA3AF]"
+                  className="w-full bg-white/5 border border-white/10 rounded-[16px] px-4 py-2.5 text-sm font-bold text-white outline-none focus:border-[#2E1055] focus:ring-1 focus:ring-[#2E1055] transition-all placeholder:text-white/50"
                 />
               </div>
 
               <div>
-                <label className="text-[10px] font-extrabold text-[#9CA3AF] uppercase tracking-wider block mb-1.5">System Access Role</label>
+                <label className="text-[10px] font-extrabold text-white/50 uppercase tracking-wider block mb-1.5">System Access Role</label>
                 <select
                   value={inviteRole}
                   onChange={(e) => setInviteRole(e.target.value)}
-                  className="w-full bg-[#F8FAFC] border border-[#E8EDF5] rounded-[16px] px-3 py-2.5 text-sm font-bold text-[#111827] outline-none focus:border-[#6D5DF6] focus:ring-1 focus:ring-[#6D5DF6] transition-all cursor-pointer"
+                  className="w-full bg-white/5 border border-white/10 rounded-[16px] px-3 py-2.5 text-sm font-bold text-white outline-none focus:border-[#2E1055] focus:ring-1 focus:ring-[#2E1055] transition-all cursor-pointer"
                 >
-                  <option value="Clinic Administrator">Clinic Administrator</option>
-                  <option value="Operations Manager">Operations Manager</option>
-                  <option value="Practice Manager">Practice Manager</option>
-                  <option value="Staff User">Staff User</option>
+                  <option value="Clinic Administrator" className="bg-[#120524] text-white">Clinic Administrator</option>
+                  <option value="Operations Manager" className="bg-[#120524] text-white">Operations Manager</option>
+                  <option value="Practice Manager" className="bg-[#120524] text-white">Practice Manager</option>
+                  <option value="Staff User" className="bg-[#120524] text-white">Staff User</option>
                 </select>
               </div>
 
               {/* Action Buttons */}
-              <div className="flex gap-3 justify-end pt-3 border-t border-[#E8EDF5] mt-4">
+              <div className="flex gap-3 justify-end pt-3 border-t border-white/10 mt-4">
                 <button
                   type="button"
                   onClick={() => setShowInviteModal(false)}
-                  className="bg-white border border-[#E8EDF5] hover:bg-slate-50 text-slate-700 font-bold text-xs px-5 py-2.5 rounded-[16px] transition-colors cursor-pointer"
+                  className="bg-[#120524] border border-white/10 hover:bg-slate-50 text-slate-700 font-bold text-xs px-5 py-2.5 rounded-[16px] transition-colors cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="bg-[#6D5DF6] hover:bg-[#5B4AE8] text-white font-bold text-xs px-6 py-2.5 rounded-[16px] transition-all hover:scale-105 active:scale-95 flex items-center gap-1.5 cursor-pointer"
+                  className="bg-[#2E1055] hover:bg-[#120524] text-white font-bold text-xs px-6 py-2.5 rounded-[16px] transition-all hover:scale-105 active:scale-95 flex items-center gap-1.5 cursor-pointer"
                 >
                   <Check className="w-3.5 h-3.5" /> Send Invitation
                 </button>
