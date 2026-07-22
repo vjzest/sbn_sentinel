@@ -820,7 +820,7 @@ export const PatientFlowView: React.FC = () => {
                           onChange={async (e) => {
                             const newStatus = e.target.value;
                             try {
-                              const response = await fetch(`http://localhost:8000/api/v1/encounters/${row.id}`, {
+                              const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/encounters/${row.id}`, {
                                 method: 'PUT',
                                 headers: { 'Content-Type': 'application/json' },
                                 body: JSON.stringify({ status: newStatus })
@@ -924,7 +924,7 @@ export const PatientFlowView: React.FC = () => {
                   const targetEnc = encounters.find(e => e.patient_name === targetPatientName);
                   if (targetEnc) {
                     try {
-                      const response = await fetch(`http://localhost:8000/api/v1/encounters/${targetEnc.id}`, {
+                      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/encounters/${targetEnc.id}`, {
                         method: 'PUT',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ status: 'In Room' })
@@ -1740,7 +1740,7 @@ export const PatientFlowView: React.FC = () => {
                                 try {
                                   // Auto-save charting values first on checkout!
                                   const combinedNotes = `Subjective: ${soapS}\n\nObjective: ${soapO}\n\nAssessment: ${soapA}\n\nPlan: ${soapP}`;
-                                  await fetch(`http://localhost:8000/api/v1/encounters/${enc.id}`, {
+                                  await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/encounters/${enc.id}`, {
                                     method: 'PUT',
                                     headers: { 'Content-Type': 'application/json' },
                                     body: JSON.stringify({
@@ -1763,7 +1763,7 @@ export const PatientFlowView: React.FC = () => {
                             <button
                               onClick={async () => {
                                 try {
-                                  const response = await fetch(`http://localhost:8000/api/v1/encounters/${enc.id}`, {
+                                  const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/encounters/${enc.id}`, {
                                     method: 'PUT',
                                     headers: { 'Content-Type': 'application/json' },
                                     body: JSON.stringify({ status: 'Waiting' })
@@ -1812,7 +1812,7 @@ export const PatientFlowView: React.FC = () => {
                         onClick={async () => {
                           if (!assignTargetPatient) return;
                           try {
-                            const response = await fetch(`http://localhost:8000/api/v1/encounters/${assignTargetPatient}`, {
+                            const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/encounters/${assignTargetPatient}`, {
                               method: 'PUT',
                               headers: { 'Content-Type': 'application/json' },
                               body: JSON.stringify({ status: 'In Room' })

@@ -476,7 +476,7 @@ export const ClinicalLogsView: React.FC = () => {
 
     const loadInsurance = async () => {
       try {
-        const response = await fetch(`http://localhost:8000/api/v1/insurance/patient/${encodeURIComponent(activeEncounter.patient_name)}`);
+        const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/insurance/patient/${encodeURIComponent(activeEncounter.patient_name)}`);
         if (response.ok) {
           const data = await response.json();
           setSelectedPatientInsurance(data || null);
@@ -505,7 +505,7 @@ export const ClinicalLogsView: React.FC = () => {
     if (!activeBillId) return;
     setProcessing(true);
     try {
-      const response = await fetch(`http://localhost:8000/api/v1/encounters/${activeBillId}`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/encounters/${activeBillId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ billing_status: 'Paid' })
@@ -525,7 +525,7 @@ export const ClinicalLogsView: React.FC = () => {
     if (!activeBillId) return;
     setProcessing(true);
     try {
-      const response = await fetch(`http://localhost:8000/api/v1/encounters/${activeBillId}`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/encounters/${activeBillId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ billing_status: 'Billed' })

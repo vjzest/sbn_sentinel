@@ -136,7 +136,7 @@ export const ConnectorsView: React.FC = () => {
   // Handle Disconnect action
   const handleDisconnect = async (id: string) => {
     try {
-      const response = await fetch(`http://localhost:8000/api/v1/reality/disconnect/${id}`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/reality/disconnect/${id}`, {
         method: 'DELETE'
       });
       if (response.ok) {
