@@ -576,6 +576,7 @@ export const ClinicalLogsView: React.FC = () => {
       });
       if (response.ok) {
         setBillingSuccess('Billed');
+        window.dispatchEvent(new CustomEvent('show-sentinel-toast', { detail: { message: '💰 Claim submitted & billed successfully to insurance clearinghouse!', type: 'success' } }));
         await fetchEncounters();
       }
     } catch (err) {

@@ -194,3 +194,27 @@ def toggle_integration(integration_id: str, db: Session = Depends(get_db)):
         "connected": integration.connected,
         "lastSync": integration.lastSync
     }
+
+@router.post("/send-sms-reminder")
+def trigger_sms_reminder(payload: Dict[str, Any]):
+    """
+    Trigger automated 24-hour appointment reminder SMS via Twilio / Outreach Engine.
+    """
+    from app.services.sms_service import send_patient_sms_reminder
+    to_phone = payload.get("phone", "+1-555-0198")
+    patient = payload.get("patient_name", "Vijay Maurya")
+    doctor = payload.get("doctor_name", "Dr. Smith")
+    time_str = payload.get("time_str", "10:00 AM")
+    
+    result = send_patient_sms_reminder(to_phone, patient, doctor, time_str)
+    return result
+
+@router.post("/send-email-report")
+def trigger_email_report(payload: Dict[str, Any] = None):
+    """
+    Trigger automated Daily Secure Email Executive Report via Gmail SMTP Gateway.
+    """
+    from app.core.email import send_daily_report_email
+    target_email = (payload or {}).get("email", "vjzest9569@gmail.com")
+    success = send_daily_report_email(target_email)
+    return {"status": "success" if success else "failed", "recipient": target_email}

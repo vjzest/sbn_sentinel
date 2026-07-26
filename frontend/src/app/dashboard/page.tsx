@@ -263,24 +263,6 @@ export default function Dashboard() {
 
   return (
     <>
-      {isDarkMode && (
-        <style dangerouslySetInnerHTML={{
-          __html: `
-          html {
-            /* 
-              invert(0.93) turns white into dark grey (#121212) instead of pure black.
-              sepia(0.4) adds a warm brownish tint.
-              hue-rotate(195deg) shifts that brown into a beautiful rich dark blue/slate!
-              saturate(1.2) boosts the blue slightly.
-            */
-            filter: invert(0.93) sepia(0.4) hue-rotate(195deg) saturate(1.2) !important;
-            background-color: #0B1121 !important;
-          }
-          img, video {
-            filter: invert(1) hue-rotate(180deg) !important;
-          }
-        `}} />
-      )}
       {/* Global Toast Banner */}
       {toastMessage && (
         <div className="fixed top-6 right-8 z-[9999] animate-in fade-in slide-in-from-top-4 duration-300 flex items-center gap-3 bg-[#120524] border border-white/20 text-white px-5 py-3.5 rounded-[18px] shadow-[0_20px_50px_rgba(0,0,0,0.8)] backdrop-blur-2xl">

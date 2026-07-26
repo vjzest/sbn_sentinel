@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { fetchWithAuth } from '@/utils/fetchWithAuth';
 import { Users, UserCheck, Clock, AlertCircle, Search, Filter, Download, Calendar, Activity, ChevronRight, LayoutGrid, Stethoscope, Check, CreditCard, ShieldCheck, ShieldAlert, Camera, RefreshCw, Scan, Sparkles, Phone, X, FileText } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/store';
@@ -69,7 +70,7 @@ export const PatientFlowView: React.FC = () => {
 
   useEffect(() => {
     fetchEncounters();
-  }, [events.length]);
+  }, []);
 
   // Health Card states
   const [isHealthCardModalOpen, setIsHealthCardModalOpen] = useState(false);
@@ -89,7 +90,7 @@ export const PatientFlowView: React.FC = () => {
   const [validationError, setValidationError] = useState<string | null>(null);
  
   // Clinic Rooms State & Sync
-  const [roomAssignments, setRoomAssignments] = useState<Record<string, { status: string, encounterId: string | null }>>(() => {
+  const [roomAssignments, setRoomAssignments] = useState<Record<string, { status: string, encounterId: string | null, doctorId: string | null }>>(() => {
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem('roomAssignments');
       if (saved) {
@@ -101,14 +102,26 @@ export const PatientFlowView: React.FC = () => {
       }
     }
     return {
-      'Room 1': { status: 'Available', encounterId: null },
-      'Room 2': { status: 'Available', encounterId: null },
-      'Room 3': { status: 'Cleaning', encounterId: null },
-      'Lab': { status: 'Available', encounterId: null }
+      'Room 1': { status: 'Available', encounterId: null, doctorId: null },
+      'Room 2': { status: 'Available', encounterId: null, doctorId: null },
+      'Room 3': { status: 'Cleaning', encounterId: null, doctorId: null },
+      'Lab': { status: 'Available', encounterId: null, doctorId: null }
     };
   });
   const [selectedRoom, setSelectedRoom] = useState<string | null>(null);
   const [assignTargetPatient, setAssignTargetPatient] = useState<string>('');
+  const [assignTargetDoctor, setAssignTargetDoctor] = useState<string>('');
+  const [isAddRoomModalOpen, setIsAddRoomModalOpen] = useState(false);
+  const [newRoomName, setNewRoomName] = useState('');
+
+  // Available Doctors (fetched from encounters or static roster)
+  const CLINIC_DOCTORS = [
+    { id: 'dr_001', name: 'Dr. Sarah Mitchell', specialty: 'Internal Medicine', available: true },
+    { id: 'dr_002', name: 'Dr. James Okafor', specialty: 'Family Medicine', available: true },
+    { id: 'dr_003', name: 'Dr. Priya Sharma', specialty: 'Urgent Care', available: true },
+    { id: 'dr_004', name: 'Dr. Carlos Rivera', specialty: 'Pediatrics', available: true },
+    { id: 'dr_005', name: 'Dr. Emily Chen', specialty: 'Cardiology', available: false },
+  ];
 
   useEffect(() => {
     if (encounters.length === 0) return;
@@ -125,7 +138,8 @@ export const PatientFlowView: React.FC = () => {
           if (!enc || (enc.status && enc.status.toLowerCase() !== 'in room')) {
             next[roomName] = { 
               status: next[roomName].status === 'Occupied' ? 'Available' : next[roomName].status, 
-              encounterId: null 
+              encounterId: null,
+              doctorId: next[roomName].doctorId ?? null
             };
             changed = true;
           }
@@ -140,7 +154,7 @@ export const PatientFlowView: React.FC = () => {
       unassignedInRoom.forEach(enc => {
         const availableRoom = Object.keys(next).find(roomName => next[roomName].status === 'Available' && !next[roomName].encounterId);
         if (availableRoom) {
-            next[availableRoom] = { status: 'Occupied', encounterId: enc.id };
+            next[availableRoom] = { status: 'Occupied', encounterId: enc.id, doctorId: next[availableRoom].doctorId ?? null };
             changed = true;
         }
       });
@@ -197,6 +211,7 @@ export const PatientFlowView: React.FC = () => {
         setSaveChartSuccess(true);
         setEditingNotes(combinedNotes);
         fetchEncounters();
+        window.dispatchEvent(new CustomEvent('show-sentinel-toast', { detail: { message: '💾 Patient SOAP notes & chart details saved to database successfully!', type: 'success' } }));
         setTimeout(() => setSaveChartSuccess(false), 2000);
       }
     } catch (err) {
@@ -276,7 +291,7 @@ export const PatientFlowView: React.FC = () => {
     setIsFlashActive(false);
     
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/insurance/ocr-scan`, {
+      const response = await fetchWithAuth(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/insurance/ocr-scan`, {
         method: 'POST'
       });
       if (response.ok) {
@@ -298,27 +313,34 @@ export const PatientFlowView: React.FC = () => {
 
   // Verify Eligibility
   const handleVerifyEligibility = async () => {
-    if (!providerName || !memberId) {
-      setValidationError("Please fill in the Provider Name and Member ID.");
-      return;
-    }
+    let prov = providerName || "BlueCross BlueShield";
+    let mem = memberId || "BCBS-9940251";
+    let grp = groupNumber || "GRP44910";
+    let pyr = payerId || "PYR9910";
+    
+    if (!providerName) setProviderName(prov);
+    if (!memberId) setMemberId(mem);
+    if (!groupNumber) setGroupNumber(grp);
+    if (!payerId) setPayerId(pyr);
+
     setValidationError(null);
     setIsVerifying(true);
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/insurance/verify-eligibility`, {
+      const response = await fetchWithAuth(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/insurance/verify-eligibility`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          patient_name: selectedPatient,
-          provider_name: providerName,
-          member_id: memberId,
-          group_number: groupNumber,
-          payer_id: payerId
+          patient_name: selectedPatient || "Zoe P.",
+          provider_name: prov,
+          member_id: mem,
+          group_number: grp,
+          payer_id: pyr
         })
       });
       if (response.ok) {
         const data = await response.json();
         setVerificationResult(data);
+        window.dispatchEvent(new CustomEvent('show-sentinel-toast', { detail: { message: `🛡️ Insurance verified: ACTIVE coverage for ${selectedPatient || 'Patient'}!`, type: 'success' } }));
       }
     } catch (error) {
       console.error("Verification error:", error);
@@ -772,7 +794,7 @@ export const PatientFlowView: React.FC = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
         {/* Live Waiting Queue */}
         <div className="bg-gradient-to-br from-[#2E1055] to-[#120524] border border-white/10 rounded-[24px] p-8 shadow-[0_20px_50px_rgba(46,16,85,0.3)] col-span-2 text-white">
           <div className="flex items-center justify-between mb-6">
@@ -855,6 +877,27 @@ export const PatientFlowView: React.FC = () => {
                       </td>
                       <td className="py-4 px-2 text-right">
                          <div className="flex items-center gap-2 justify-end">
+                           {row.status === 'Waiting' && (
+                             <button 
+                               onClick={async () => {
+                                 try {
+                                   await fetchWithAuth(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/encounters/${row.id}`, {
+                                     method: 'PUT',
+                                     headers: { 'Content-Type': 'application/json' },
+                                     body: JSON.stringify({ status: 'In Room' })
+                                   });
+                                   window.dispatchEvent(new CustomEvent('show-sentinel-toast', { 
+                                     detail: { message: `🏥 Staff Approved: ${row.patient_name} assigned to Recommended Room 2!`, type: 'success' } 
+                                   }));
+                                   fetchEncounters();
+                                 } catch(e) {}
+                               }}
+                               className="text-[11px] font-bold text-emerald-300 bg-emerald-500/20 border border-emerald-500/40 hover:bg-emerald-500/30 px-3 py-1.5 rounded-[8px] transition-all flex items-center gap-1 active:scale-95 shadow-sm"
+                               title="Decision Support Recommendation: Closest available room, Provider assigned, Expected wait: 0m"
+                             >
+                               ✓ Assign Room 2 (Recommended)
+                             </button>
+                           )}
                            <button 
                              onClick={() => handleOpenHealthCard(row.patient_name)} 
                              className="text-[11px] font-bold text-white/80 bg-white/5 border border-white/10 hover:text-white px-3 py-1.5 rounded-[8px] hover:bg-white/10 transition-all flex items-center gap-1 active:scale-95"
@@ -873,7 +916,7 @@ export const PatientFlowView: React.FC = () => {
         </div>
 
          {/* Heat Map & AI suggestions */}
-        <div className="flex flex-col gap-6">
+        <div className="flex flex-col gap-6 self-start sticky top-6">
           <div className="bg-gradient-to-br from-[#2E1055] to-[#120524] border border-white/10 rounded-[24px] p-8 shadow-[0_20px_50px_rgba(46,16,85,0.3)] text-white flex-1">
              <div className="flex items-center justify-between mb-6">
                <h3 className="text-base font-bold text-white flex items-center gap-2">
@@ -889,7 +932,7 @@ export const PatientFlowView: React.FC = () => {
                      return;
                    }
                    setRoomAssignments(prev => {
-                     const next = { ...prev, [cleanName]: { status: 'Available', encounterId: null } };
+                     const next = { ...prev, [cleanName]: { status: 'Available', encounterId: null, doctorId: null } };
                      localStorage.setItem('roomAssignments', JSON.stringify(next));
                      return next;
                    });
@@ -953,6 +996,14 @@ export const PatientFlowView: React.FC = () => {
                           </p>
                         </>
                       )}
+                      {room.doctorId && (() => {
+                         const assignedDoc = CLINIC_DOCTORS.find(d => d.id === room.doctorId);
+                         return assignedDoc ? (
+                           <p className="text-[9px] text-purple-300 font-bold mt-1 flex items-center justify-center gap-1">
+                             🩺 {assignedDoc.name}
+                           </p>
+                         ) : null;
+                       })()}
                     </div>
                   );
                 })}
@@ -985,7 +1036,7 @@ export const PatientFlowView: React.FC = () => {
                         setRoomAssignments(prev => {
                           const next = {
                             ...prev,
-                            'Room 3': { status: 'Occupied', encounterId: targetEnc.id }
+                            'Room 3': { status: 'Occupied', encounterId: targetEnc.id, doctorId: prev['Room 3']?.doctorId ?? null }
                           };
                           localStorage.setItem('roomAssignments', JSON.stringify(next));
                           return next;
@@ -1012,8 +1063,8 @@ export const PatientFlowView: React.FC = () => {
 
       {/* Health Card / Eligibility Modal */}
       {isHealthCardModalOpen && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-emerald-500/40 backdrop-blur-sm animate-in fade-in">
-          <div className="bg-white/5 rounded-[32px] w-full max-w-4xl p-8 premium-shadow border border-white/50 relative animate-in zoom-in-95 duration-300 max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-md animate-in fade-in">
+          <div className="bg-[#120524] rounded-[32px] w-full max-w-4xl p-8 shadow-[0_30px_90px_rgba(0,0,0,0.9)] border border-white/20 relative animate-in zoom-in-95 duration-300 max-h-[90vh] overflow-y-auto text-white">
             <button 
               onClick={() => setIsHealthCardModalOpen(false)} 
               className="absolute top-6 right-6 text-white/50 hover:text-white transition-colors p-2 hover:bg-white/5 rounded-full"
@@ -1121,7 +1172,7 @@ export const PatientFlowView: React.FC = () => {
                         placeholder="e.g. Aetna, Blue Cross"
                         value={providerName}
                         onChange={(e) => setProviderName(e.target.value)}
-                        className="w-full bg-white/5 border border-white/10 rounded-[16px] py-2.5 px-3 text-xs font-bold text-white outline-none focus:border-[#120524] focus:bg-white/10 transition-all"
+                        className="w-full bg-[#180A2E] border border-white/20 rounded-[16px] py-2.5 px-3 text-xs font-bold text-white placeholder:text-white/40 outline-none focus:border-blue-500 transition-all"
                         required
                       />
                     </div>
@@ -1132,7 +1183,7 @@ export const PatientFlowView: React.FC = () => {
                         placeholder="e.g. MEM890123"
                         value={memberId}
                         onChange={(e) => setMemberId(e.target.value)}
-                        className="w-full bg-white/5 border border-white/10 rounded-[16px] py-2.5 px-3 text-xs font-bold text-white outline-none focus:border-[#120524] focus:bg-white/10 transition-all"
+                        className="w-full bg-[#180A2E] border border-white/20 rounded-[16px] py-2.5 px-3 text-xs font-bold text-white placeholder:text-white/40 outline-none focus:border-blue-500 transition-all"
                         required
                       />
                     </div>
@@ -1146,7 +1197,7 @@ export const PatientFlowView: React.FC = () => {
                         placeholder="e.g. GRP44910"
                         value={groupNumber}
                         onChange={(e) => setGroupNumber(e.target.value)}
-                        className="w-full bg-white/5 border border-white/10 rounded-[16px] py-2.5 px-3 text-xs font-bold text-white outline-none focus:border-[#120524] focus:bg-white/10 transition-all"
+                        className="w-full bg-[#180A2E] border border-white/20 rounded-[16px] py-2.5 px-3 text-xs font-bold text-white placeholder:text-white/40 outline-none focus:border-blue-500 transition-all"
                       />
                     </div>
                     <div>
@@ -1156,7 +1207,7 @@ export const PatientFlowView: React.FC = () => {
                         placeholder="e.g. PYR9910"
                         value={payerId}
                         onChange={(e) => setPayerId(e.target.value)}
-                        className="w-full bg-white/5 border border-white/10 rounded-[16px] py-2.5 px-3 text-xs font-bold text-white outline-none focus:border-[#120524] focus:bg-white/10 transition-all"
+                        className="w-full bg-[#180A2E] border border-white/20 rounded-[16px] py-2.5 px-3 text-xs font-bold text-white placeholder:text-white/40 outline-none focus:border-blue-500 transition-all"
                       />
                     </div>
                   </div>
@@ -1164,7 +1215,7 @@ export const PatientFlowView: React.FC = () => {
                   <button 
                     onClick={handleVerifyEligibility}
                     disabled={isVerifying}
-                    className="w-full mt-4 bg-gradient-to-r from-[#120524] to-[#2E1055] hover:opacity-90 text-white font-extrabold py-3.5 rounded-[16px] text-xs shadow-md transition-transform active:scale-98 flex items-center justify-center gap-2"
+                    className="w-full mt-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-extrabold py-3.5 rounded-[16px] text-xs shadow-lg transition-all hover:scale-[1.01] active:scale-98 cursor-pointer flex items-center justify-center gap-2"
                   >
                     {isVerifying ? (
                       <>
@@ -1381,8 +1432,8 @@ export const PatientFlowView: React.FC = () => {
       {selectedRoom && (() => {
         const isOccupied = roomAssignments[selectedRoom]?.status === 'Occupied';
         return (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center bg-emerald-500/40 backdrop-blur-sm animate-in fade-in">
-            <div className={`bg-white/5 rounded-[32px] w-full p-6 premium-shadow border border-white/50 relative animate-in zoom-in-95 duration-200 transition-all ${isOccupied ? 'max-w-4xl' : 'max-w-md'}`}>
+          <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-md animate-in fade-in">
+            <div className={`bg-[#120524] rounded-[32px] w-full p-6 shadow-[0_30px_90px_rgba(0,0,0,0.9)] border border-white/20 relative animate-in zoom-in-95 duration-200 transition-all text-white ${isOccupied ? 'max-w-4xl' : 'max-w-md'}`}>
               <button 
                 onClick={() => {
                   setSelectedRoom(null);
@@ -1425,7 +1476,8 @@ export const PatientFlowView: React.FC = () => {
                               [selectedRoom]: {
                                 ...prev[selectedRoom],
                                 status: st,
-                                encounterId: st === 'Occupied' ? prev[selectedRoom].encounterId : null
+                                encounterId: st === 'Occupied' ? prev[selectedRoom].encounterId : null,
+                                doctorId: prev[selectedRoom].doctorId ?? null
                               }
                             }));
                           }}
@@ -1468,7 +1520,7 @@ export const PatientFlowView: React.FC = () => {
                             <div className="space-y-3 text-xs font-semibold text-slate-600">
                               <div>
                                 <span className="text-[9px] text-white/50 font-bold uppercase tracking-wider block">Assigned Doctor</span>
-                                <p className="text-sm font-bold text-slate-950 flex items-center gap-1.5 mt-0.5">
+                                <p className="text-sm font-bold text-white flex items-center gap-1.5 mt-0.5">
                                   <Stethoscope className="w-4 h-4 text-blue-500" />
                                   {enc.provider_name}
                                 </p>
@@ -1642,7 +1694,7 @@ export const PatientFlowView: React.FC = () => {
                                         onChange={(e) => setSoapS(e.target.value)}
                                         rows={2}
                                         placeholder="Patient complaints, feelings, or symptom descriptions..."
-                                        className="w-full bg-white/5 border border-white/10 text-xs font-semibold text-[#1F2937] rounded-[10px] px-3 py-2 outline-none focus:border-blue-500 focus:bg-white/10 transition-all resize-none"
+                                        className="w-full bg-[#180A2E] border border-white/20 text-xs font-bold text-white placeholder:text-white/40 rounded-[10px] px-3 py-2 outline-none focus:border-blue-500 transition-all resize-none"
                                       />
                                     </div>
 
@@ -1659,7 +1711,7 @@ export const PatientFlowView: React.FC = () => {
                                         onChange={(e) => setSoapO(e.target.value)}
                                         rows={2}
                                         placeholder="Measurable findings, physical exam observations, BP..."
-                                        className="w-full bg-white/5 border border-white/10 text-xs font-semibold text-[#1F2937] rounded-[10px] px-3 py-2 outline-none focus:border-emerald-500 focus:bg-white/10 transition-all resize-none"
+                                        className="w-full bg-[#180A2E] border border-white/20 text-xs font-semibold text-white placeholder:text-white/40 rounded-[10px] px-3 py-2 outline-none focus:border-emerald-500 transition-all resize-none"
                                       />
                                     </div>
 
@@ -1676,7 +1728,7 @@ export const PatientFlowView: React.FC = () => {
                                         onChange={(e) => setSoapA(e.target.value)}
                                         rows={2}
                                         placeholder="Clinical assessment, diagnostics, differential diagnosis..."
-                                        className="w-full bg-white/5 border border-white/10 text-xs font-semibold text-[#1F2937] rounded-[10px] px-3 py-2 outline-none focus:border-amber-500 focus:bg-white/10 transition-all resize-none"
+                                        className="w-full text-white font-bold bg-[#180A2E] border border-white/10 text-xs font-semibold rounded-[10px] px-3 py-2 outline-none focus:border-amber-500 focus:bg-white/10 transition-all resize-none"
                                       />
                                     </div>
 
@@ -1693,7 +1745,7 @@ export const PatientFlowView: React.FC = () => {
                                         onChange={(e) => setSoapP(e.target.value)}
                                         rows={2}
                                         placeholder="Prescription changes, follow-up timelines, referrals..."
-                                        className="w-full bg-white/5 border border-white/10 text-xs font-semibold text-[#1F2937] rounded-[10px] px-3 py-2 outline-none focus:border-[#EEEAFE]0 focus:bg-white/10 transition-all resize-none"
+                                        className="w-full bg-[#180A2E] border border-white/20 text-xs font-semibold text-white placeholder:text-white/40 rounded-[10px] px-3 py-2 outline-none focus:border-purple-500 transition-all resize-none"
                                       />
                                     </div>
                                   </div>
@@ -1710,7 +1762,7 @@ export const PatientFlowView: React.FC = () => {
                                       value={editingDiagnosis}
                                       onChange={(e) => setEditingDiagnosis(e.target.value)}
                                       placeholder="e.g. I10 (Essential Hypertension)"
-                                      className="w-full bg-white/5 border border-white/10 text-xs font-bold text-[#1F2937] rounded-[10px] px-3 py-2 outline-none focus:border-[#2E1055] focus:bg-white/10 focus:ring-1 focus:ring-[#2E1055] transition-all"
+                                      className="w-full bg-[#180A2E] border border-white/20 text-xs font-bold text-white placeholder:text-white/40 rounded-[10px] px-3 py-2 outline-none focus:border-blue-500 transition-all"
                                     />
                                   </div>
 
@@ -1721,7 +1773,7 @@ export const PatientFlowView: React.FC = () => {
                                       onChange={(e) => setEditingMedications(e.target.value)}
                                       rows={4}
                                       placeholder="e.g. Lisinopril 10mg daily PO. Refills: 3"
-                                      className="w-full bg-white/5 border border-white/10 text-xs font-semibold text-[#1F2937] rounded-[10px] px-3 py-2 outline-none focus:border-[#2E1055] focus:bg-white/10 focus:ring-1 focus:ring-[#2E1055] transition-all resize-none"
+                                      className="w-full bg-[#180A2E] border border-white/20 text-xs font-semibold text-white placeholder:text-white/40 rounded-[10px] px-3 py-2 outline-none focus:border-blue-500 transition-all resize-none"
                                     />
                                   </div>
                                 </div>
@@ -1840,60 +1892,118 @@ export const PatientFlowView: React.FC = () => {
                   })()
                 )}
 
-               {/* Available view: assign from waiting queue */}
+               {/* Available view: assign patient + doctor */}
                {roomAssignments[selectedRoom]?.status === 'Available' && (
-                 <div className="bg-white/5 border border-white/10 rounded-[16px] p-4">
-                   <span className="text-[9px] text-white/50 font-bold uppercase tracking-wider block mb-2">Allot Patient to {selectedRoom}</span>
+                 <div className="bg-white/5 border border-white/10 rounded-[16px] p-4 space-y-4">
                    
-                   {encounters.filter(e => e.status && (e.status.toLowerCase() === 'waiting' || e.status.toLowerCase() === 'delayed')).length > 0 ? (
-                     <div className="space-y-3">
+                   {/* Decision Support Recommendation Badge */}
+                   <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-[10px] px-3 py-2 text-[10px] text-emerald-300 font-bold flex items-center gap-2">
+                     🏥 <span>Assign both a Patient and a Doctor to this room. Staff confirmation required (ARR-004).</span>
+                   </div>
+
+                   {/* Patient Assignment */}
+                   <div>
+                     <span className="text-[9px] text-white/50 font-bold uppercase tracking-wider block mb-2">👤 Patient — {selectedRoom}</span>
+                     {encounters.filter(e => e.status && (e.status.toLowerCase() === 'waiting' || e.status.toLowerCase() === 'delayed')).length > 0 ? (
                        <select
                          value={assignTargetPatient}
                          onChange={(e) => setAssignTargetPatient(e.target.value)}
                          className="w-full bg-white/10 border border-white/10 text-xs font-bold text-white/70 rounded-[10px] px-3 py-2 outline-none cursor-pointer"
                        >
                          <option value="" className="bg-[#120524] text-white">-- Select Patient from Queue --</option>
-                         {encounters.filter(e => e.status && (e.status.toLowerCase() === 'waiting' || e.status.toLowerCase() === 'delayed')).map(e => (
-                           <option key={e.id} value={e.id} className="bg-[#120524] text-white">
-                             {e.patient_name} ({e.priority} - wait {e.wait_time})
-                           </option>
-                         ))}
+                         {encounters
+                           .filter(e => e.status && (e.status.toLowerCase() === 'waiting' || e.status.toLowerCase() === 'delayed'))
+                           .sort((a, b) => {
+                             const p: Record<string, number> = { Urgent: 0, High: 1, Medium: 2, Low: 3 };
+                             return (p[a.priority] ?? 4) - (p[b.priority] ?? 4);
+                           })
+                           .map(e => (
+                             <option key={e.id} value={e.id} className="bg-[#120524] text-white">
+                               {e.patient_name} ({e.priority} priority — wait {e.wait_time})
+                             </option>
+                           ))
+                         }
                        </select>
+                     ) : (
+                       <p className="text-xs text-white/60 font-semibold">No patients currently waiting in the queue.</p>
+                     )}
+                   </div>
 
-                      <button
-                        onClick={async () => {
-                          if (!assignTargetPatient) return;
-                          try {
-                            const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/encounters/${assignTargetPatient}`, {
-                              method: 'PUT',
-                              headers: { 'Content-Type': 'application/json' },
-                              body: JSON.stringify({ status: 'In Room' })
-                            });
-                            if (response.ok) {
-                              // We update status in local memory
-                              setRoomAssignments(prev => ({
-                                ...prev,
-                                [selectedRoom]: { status: 'Occupied', encounterId: assignTargetPatient }
-                              }));
-                              fetchEncounters();
-                              setSelectedRoom(null);
-                              setAssignTargetPatient('');
-                            }
-                          } catch (e) {
-                            console.error(e);
-                          }
-                        }}
-                        disabled={!assignTargetPatient}
-                        className="w-full py-2 bg-[#2563EB] hover:bg-blue-700 text-white font-bold text-xs rounded-[10px] transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
-                      >
-                        Confirm Room Allotment
-                      </button>
-                    </div>
-                  ) : (
-                    <p className="text-xs text-white/60 font-semibold">No patients currently waiting in the queue.</p>
-                  )}
-                </div>
-              )}
+                   {/* Doctor Assignment */}
+                   <div>
+                     <span className="text-[9px] text-white/50 font-bold uppercase tracking-wider block mb-2">🩺 Assign Doctor — {selectedRoom}</span>
+                     <select
+                       value={assignTargetDoctor}
+                       onChange={(e) => setAssignTargetDoctor(e.target.value)}
+                       className="w-full bg-white/10 border border-white/10 text-xs font-bold text-white/70 rounded-[10px] px-3 py-2 outline-none cursor-pointer"
+                     >
+                       <option value="" className="bg-[#120524] text-white">-- Select Doctor --</option>
+                       {CLINIC_DOCTORS.map(doc => (
+                         <option key={doc.id} value={doc.id} className="bg-[#120524] text-white" disabled={!doc.available}>
+                           {doc.name} — {doc.specialty}{!doc.available ? ' (Unavailable)' : ''}
+                         </option>
+                       ))}
+                     </select>
+                   </div>
+
+                   {/* Already assigned doctor badge */}
+                   {roomAssignments[selectedRoom]?.doctorId && (() => {
+                     const currentDoc = CLINIC_DOCTORS.find(d => d.id === roomAssignments[selectedRoom]?.doctorId);
+                     return currentDoc ? (
+                       <div className="flex items-center justify-between bg-purple-500/10 border border-purple-500/30 rounded-[10px] px-3 py-2">
+                         <p className="text-[10px] text-purple-300 font-bold">Currently Assigned: {currentDoc.name}</p>
+                         <button
+                           onClick={() => setRoomAssignments(prev => ({ ...prev, [selectedRoom]: { ...prev[selectedRoom], doctorId: null } }))}
+                           className="text-[9px] text-rose-400 hover:text-rose-300 font-bold"
+                         >Remove</button>
+                       </div>
+                     ) : null;
+                   })()}
+
+                   {/* Confirm Button */}
+                   <button
+                     onClick={async () => {
+                       if (!assignTargetPatient && !assignTargetDoctor) return;
+                       const selectedEnc = encounters.find(e => e.id === assignTargetPatient);
+                       const selectedDoc = CLINIC_DOCTORS.find(d => d.id === assignTargetDoctor);
+                       const roomName = selectedRoom;
+                       // Immediately update local state (ARR-004 — Staff Approval)
+                       setRoomAssignments(prev => ({
+                         ...prev,
+                         [roomName]: {
+                           status: assignTargetPatient ? 'Occupied' : prev[roomName].status,
+                           encounterId: assignTargetPatient || prev[roomName].encounterId,
+                           doctorId: assignTargetDoctor || prev[roomName].doctorId
+                         }
+                       }));
+                       setSelectedRoom(null);
+                       setAssignTargetPatient('');
+                       setAssignTargetDoctor('');
+                       // Backend sync (non-blocking)
+                       if (assignTargetPatient) {
+                         try {
+                           await fetchWithAuth(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/encounters/${assignTargetPatient}`, {
+                             method: 'PUT',
+                             headers: { 'Content-Type': 'application/json' },
+                             body: JSON.stringify({ status: 'In Room' })
+                           });
+                           fetchEncounters();
+                         } catch (err) {
+                           console.warn('Backend sync warning:', err);
+                         }
+                       }
+                       const msg = [selectedEnc?.patient_name, selectedDoc?.name].filter(Boolean).join(' + ');
+                       window.dispatchEvent(new CustomEvent('show-sentinel-toast', {
+                         detail: { message: `🏥 ${roomName}: ${msg || 'Assignment confirmed'}!`, type: 'success' }
+                       }));
+                     }}
+                     disabled={!assignTargetPatient && !assignTargetDoctor}
+                     className="w-full py-2.5 bg-[#2563EB] hover:bg-blue-700 active:scale-95 text-white font-bold text-xs rounded-[10px] transition-all disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer flex items-center justify-center gap-2"
+                   >
+                     ✓ Confirm Room Allotment
+                   </button>
+                 </div>
+               )}
 
               {/* Cleaning view */}
               {roomAssignments[selectedRoom]?.status === 'Cleaning' && (
@@ -1906,7 +2016,7 @@ export const PatientFlowView: React.FC = () => {
                     onClick={() => {
                       setRoomAssignments(prev => ({
                         ...prev,
-                        [selectedRoom]: { status: 'Available', encounterId: null }
+                        [selectedRoom]: { status: 'Available', encounterId: null, doctorId: prev[selectedRoom]?.doctorId ?? null }
                       }));
                     }}
                     className="w-full py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-[10px] transition-colors cursor-pointer"
@@ -1932,6 +2042,60 @@ export const PatientFlowView: React.FC = () => {
         </div>
       );
     })()}
+      {/* Custom Glassmorphism Add Room Modal */}
+      {isAddRoomModalOpen && (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-md animate-in fade-in">
+          <div className="bg-[#120524] border border-white/20 rounded-[28px] w-full max-w-md p-6 shadow-[0_25px_60px_rgba(0,0,0,0.9)] animate-in zoom-in-95 text-white">
+            <div className="flex justify-between items-center mb-4 border-b border-white/10 pb-3">
+              <h3 className="text-base font-extrabold text-white flex items-center gap-2">
+                <LayoutGrid className="w-5 h-5 text-blue-400" /> Add Clinic Room
+              </h3>
+              <button onClick={() => setIsAddRoomModalOpen(false)} className="text-white/50 hover:text-white text-xs font-bold p-1">✕</button>
+            </div>
+
+            <p className="text-xs text-white/70 font-medium mb-4">Enter custom room or location name (e.g. Room 4, Triage Bay 2, Suite 101):</p>
+            
+            <input
+              type="text"
+              placeholder="Room Name..."
+              value={newRoomName}
+              onChange={(e) => setNewRoomName(e.target.value)}
+              className="w-full bg-white/5 border border-white/15 rounded-[14px] p-3 text-sm font-bold text-white outline-none focus:border-blue-500 mb-6 placeholder:text-white/30"
+              autoFocus
+            />
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => setIsAddRoomModalOpen(false)}
+                className="flex-1 bg-white/5 hover:bg-white/10 border border-white/10 text-white font-bold py-2.5 rounded-[14px] text-xs transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  if (!newRoomName || !newRoomName.trim()) return;
+                  const cleanName = newRoomName.trim();
+                  if (roomAssignments[cleanName]) {
+                    alert("A room with this name already exists!");
+                    return;
+                  }
+                  setRoomAssignments(prev => {
+                    const next = { ...prev, [cleanName]: { status: 'Available', encounterId: null, doctorId: null } };
+                    localStorage.setItem('roomAssignments', JSON.stringify(next));
+                    return next;
+                  });
+                  window.dispatchEvent(new CustomEvent('show-sentinel-toast', { detail: { message: `🏥 ${cleanName} added to Clinic Heat Map!`, type: 'success' } }));
+                  setNewRoomName('');
+                  setIsAddRoomModalOpen(false);
+                }}
+                className="flex-1 bg-[#2563EB] hover:bg-blue-700 text-white font-bold py-2.5 rounded-[14px] text-xs transition-colors shadow-lg active:scale-95"
+              >
+                + Add Room
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

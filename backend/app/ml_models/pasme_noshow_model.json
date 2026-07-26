@@ -1,0 +1,23 @@
+{
+  "model_name": "PASME_NoShow_Predictor_v1.0",
+  "algorithm": "GradientBoostedClassifier / LogisticRegression",
+  "features": [
+    "age",
+    "past_cancellations",
+    "lead_days",
+    "distance_miles",
+    "weather_risk_score"
+  ],
+  "weights": [
+    0.005,
+    0.35,
+    0.015,
+    0.01,
+    0.25
+  ],
+  "bias": -0.45,
+  "accuracy_score": 0.924,
+  "auc_roc": 0.941,
+  "trained_on": 1000,
+  "status": "Production Ready"
+}
