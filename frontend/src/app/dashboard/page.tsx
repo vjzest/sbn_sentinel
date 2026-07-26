@@ -77,7 +77,20 @@ export default function Dashboard() {
       localStorage.setItem('sentinel_team_chats', JSON.stringify(chatMessages));
     }
   }, [chatMessages]);
-  const [newMessageText, setNewMessageText] = useState('');
+  const [toastMessage, setToastMessage] = useState<{ msg: string; type?: string } | null>(null);
+
+  useEffect(() => {
+    const handleToast = (e: any) => {
+      if (e.detail) {
+        setToastMessage({ msg: e.detail.message || e.detail.msg || 'Action completed successfully!', type: e.detail.type || 'success' });
+        setTimeout(() => {
+          setToastMessage(null);
+        }, 4000);
+      }
+    };
+    window.addEventListener('show-sentinel-toast', handleToast);
+    return () => window.removeEventListener('show-sentinel-toast', handleToast);
+  }, []);
 
   const stats = useSelector((state: RootState) => state.signals.stats);
   const signals = useSelector((state: RootState) => state.signals.events);
@@ -268,6 +281,15 @@ export default function Dashboard() {
           }
         `}} />
       )}
+      {/* Global Toast Banner */}
+      {toastMessage && (
+        <div className="fixed top-6 right-8 z-[9999] animate-in fade-in slide-in-from-top-4 duration-300 flex items-center gap-3 bg-[#120524] border border-white/20 text-white px-5 py-3.5 rounded-[18px] shadow-[0_20px_50px_rgba(0,0,0,0.8)] backdrop-blur-2xl">
+          <div className={`w-3 h-3 rounded-full flex-shrink-0 ${toastMessage.type === 'alert' ? 'bg-rose-500 animate-ping' : toastMessage.type === 'info' ? 'bg-blue-400 animate-pulse' : 'bg-emerald-400'}`}></div>
+          <p className="text-xs font-bold tracking-wide">{toastMessage.msg}</p>
+          <button onClick={() => setToastMessage(null)} className="ml-3 text-white/50 hover:text-white text-xs font-bold cursor-pointer">✕</button>
+        </div>
+      )}
+
       <div className="flex h-screen bg-white/10 text-white font-sans overflow-hidden w-full absolute inset-0 p-3 gap-3">
         
         {/* Mobile Sidebar Overlay */}
