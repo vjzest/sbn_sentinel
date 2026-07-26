@@ -55,10 +55,10 @@ export const PatientFlowView: React.FC = () => {
 
   const fetchEncounters = async () => {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/encounters`);
+      const response = await fetchWithAuth(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/encounters`);
       if (response.ok) {
         const data = await response.json();
-        setEncounters(data);
+        setEncounters(Array.isArray(data) ? data : []);
       }
     } catch (error) {
       console.error("Failed to fetch encounters:", error);
@@ -875,9 +875,31 @@ export const PatientFlowView: React.FC = () => {
          {/* Heat Map & AI suggestions */}
         <div className="flex flex-col gap-6">
           <div className="bg-gradient-to-br from-[#2E1055] to-[#120524] border border-white/10 rounded-[24px] p-8 shadow-[0_20px_50px_rgba(46,16,85,0.3)] text-white flex-1">
-             <h3 className="text-base font-bold text-white mb-6 flex items-center gap-2">
-               <LayoutGrid className="w-5 h-5 text-[#A78BFA]" /> Clinic Heat Map
-             </h3>
+             <div className="flex items-center justify-between mb-6">
+               <h3 className="text-base font-bold text-white flex items-center gap-2">
+                 <LayoutGrid className="w-5 h-5 text-[#A78BFA]" /> Clinic Heat Map
+               </h3>
+               <button
+                 onClick={() => {
+                   const roomName = prompt("Enter new room name (e.g. Room 4, Triage Bay 2, Suite 101):");
+                   if (!roomName || !roomName.trim()) return;
+                   const cleanName = roomName.trim();
+                   if (roomAssignments[cleanName]) {
+                     alert("A room with this name already exists!");
+                     return;
+                   }
+                   setRoomAssignments(prev => {
+                     const next = { ...prev, [cleanName]: { status: 'Available', encounterId: null } };
+                     localStorage.setItem('roomAssignments', JSON.stringify(next));
+                     return next;
+                   });
+                   window.dispatchEvent(new CustomEvent('show-sentinel-toast', { detail: { message: `🏥 ${cleanName} added to Clinic Heat Map!`, type: 'success' } }));
+                 }}
+                 className="bg-white/10 hover:bg-white/20 border border-white/20 text-white font-bold text-xs px-3 py-1.5 rounded-[12px] transition-all hover:scale-105 active:scale-95 cursor-pointer flex items-center gap-1.5"
+               >
+                 + Add Room
+               </button>
+             </div>
              <div className="grid grid-cols-2 gap-4">
                 {Object.keys(roomAssignments).map((roomName) => {
                   const room = roomAssignments[roomName];
@@ -900,8 +922,25 @@ export const PatientFlowView: React.FC = () => {
                     <div 
                       key={roomName} 
                       onClick={() => setSelectedRoom(roomName)}
-                      className={`${bgClass} border rounded-[16px] p-4 text-center cursor-pointer transition-all duration-300 transform hover:scale-[1.03] active:scale-95 premium-shadow`}
+                      className={`${bgClass} border rounded-[16px] p-4 text-center cursor-pointer transition-all duration-300 transform hover:scale-[1.03] active:scale-95 premium-shadow relative group`}
                     >
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (!confirm(`Are you sure you want to remove ${roomName}?`)) return;
+                          setRoomAssignments(prev => {
+                            const next = { ...prev };
+                            delete next[roomName];
+                            localStorage.setItem('roomAssignments', JSON.stringify(next));
+                            return next;
+                          });
+                          window.dispatchEvent(new CustomEvent('show-sentinel-toast', { detail: { message: `🗑️ ${roomName} removed from layout.`, type: 'info' } }));
+                        }}
+                        className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 text-white/40 hover:text-rose-400 text-xs font-bold transition-opacity p-1"
+                        title="Delete Room"
+                      >
+                        ✕
+                      </button>
                       <p className={`text-[10px] font-extrabold ${colorClass} uppercase mb-1 tracking-wider`}>{roomName}</p>
                       <p className="text-sm font-bold text-white truncate">{stateLabel}</p>
                       {room.status === 'Occupied' && assignedEnc && (
