@@ -1,3 +1,4 @@
+import { fetchWithAuth } from '@/utils/fetchWithAuth';
 import React, { useState, useEffect } from 'react';
 import { Plus, Database, Phone, Mail, FileText, CheckCircle2, RefreshCw, AlertTriangle, CreditCard, Video, Activity, Server, Clock, Trash2, ShieldCheck, Key, X, ShieldAlert } from 'lucide-react';
 import { useSelector } from 'react-redux';
@@ -66,7 +67,7 @@ export const ConnectorsView: React.FC = () => {
   const fetchConnectors = async () => {
     try {
       setIsLoading(true);
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/reality/health`);
+      const response = await fetchWithAuth(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/reality/health`);
       if (response.ok) {
         const data = await response.json();
         setConnectors(data);
@@ -87,7 +88,7 @@ export const ConnectorsView: React.FC = () => {
       // Send the real authorization code to our FastAPI backend to exchange for an Access Token
       const exchangeRealToken = async () => {
         try {
-          await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/reality/connect`, {
+          await fetchWithAuth(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/reality/connect`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -118,7 +119,7 @@ export const ConnectorsView: React.FC = () => {
   const handleSync = async (id: string) => {
     try {
       setSyncingId(id);
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/reality/sync`, {
+      const response = await fetchWithAuth(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/reality/sync`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ connector_id: id })
@@ -136,7 +137,7 @@ export const ConnectorsView: React.FC = () => {
   // Handle Disconnect action
   const handleDisconnect = async (id: string) => {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/reality/disconnect/${id}`, {
+      const response = await fetchWithAuth(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/reality/disconnect/${id}`, {
         method: 'DELETE'
       });
       if (response.ok) {
@@ -195,7 +196,7 @@ export const ConnectorsView: React.FC = () => {
       setIsSubmitting(true);
       try {
         const generatedId = `conn_${connName.toLowerCase().replace(/[^a-z0-9]/g, '_')}_${Date.now().toString().slice(-4)}`;
-        const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/reality/connect`, {
+        const response = await fetchWithAuth(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/reality/connect`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({

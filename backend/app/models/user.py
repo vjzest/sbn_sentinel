@@ -2,6 +2,16 @@ from sqlalchemy import Column, Integer, String, Boolean, DateTime
 from sqlalchemy.sql import func
 from app.db.database import Base
 
+from enum import Enum
+
+class UserRole(str, Enum):
+    SYSTEM_ADMINISTRATOR = "System Administrator"
+    ORGANIZATION_ADMINISTRATOR = "Organization Administrator"
+    OPERATIONS_MANAGER = "Operations Manager"
+    REVENUE_MANAGER = "Revenue Manager"
+    EXECUTIVE_VIEWER = "Executive Viewer"
+    READ_ONLY_AUDITOR = "Read-Only Auditor"
+
 class User(Base):
     __tablename__ = "users"
 
@@ -9,6 +19,6 @@ class User(Base):
     email = Column(String, unique=True, index=True, nullable=False)
     hashed_password = Column(String, nullable=False)
     full_name = Column(String, index=True)
-    role = Column(String, default="admin")  # admin, doctor, staff
+    role = Column(String, default=UserRole.SYSTEM_ADMINISTRATOR.value)  # Defaulting to System Admin for now
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())

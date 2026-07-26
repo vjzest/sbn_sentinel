@@ -1,3 +1,4 @@
+import { fetchWithAuth } from '@/utils/fetchWithAuth';
 import React, { useState, useEffect } from 'react';
 import { CalendarDays, ArrowRight, Zap, Users, Clock, CheckCircle2, ChevronDown, Move, Sparkles, Check } from 'lucide-react';
 import { createPortal } from 'react-dom';
@@ -24,7 +25,7 @@ export const ScheduleOptimizerView: React.FC = () => {
   const [encounters, setEncounters] = useState<any[]>([]);
 
   useEffect(() => {
-    fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/encounters`)
+    fetchWithAuth(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/encounters`)
       .then(res => res.json())
       .then(data => {
         setEncounters(data);

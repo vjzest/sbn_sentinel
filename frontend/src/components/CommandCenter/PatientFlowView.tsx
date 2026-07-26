@@ -101,10 +101,10 @@ export const PatientFlowView: React.FC = () => {
       }
     }
     return {
-      'Room 1': { status: 'Occupied', encounterId: 'enc_02' }, // Sarah J.
+      'Room 1': { status: 'Available', encounterId: null },
       'Room 2': { status: 'Available', encounterId: null },
       'Room 3': { status: 'Cleaning', encounterId: null },
-      'Lab': { status: 'Occupied', encounterId: 'enc_07' }    // Jessica M.
+      'Lab': { status: 'Available', encounterId: null }
     };
   });
   const [selectedRoom, setSelectedRoom] = useState<string | null>(null);
@@ -129,6 +129,19 @@ export const PatientFlowView: React.FC = () => {
             };
             changed = true;
           }
+        }
+      });
+
+      // Find unassigned "In Room" encounters
+      const assignedEncIds = Object.values(next).map(r => r.encounterId).filter(Boolean);
+      const unassignedInRoom = encounters.filter(e => e.status && e.status.toLowerCase() === 'in room' && !assignedEncIds.includes(e.id));
+      
+      // Assign them to Available rooms
+      unassignedInRoom.forEach(enc => {
+        const availableRoom = Object.keys(next).find(roomName => next[roomName].status === 'Available' && !next[roomName].encounterId);
+        if (availableRoom) {
+            next[availableRoom] = { status: 'Occupied', encounterId: enc.id };
+            changed = true;
         }
       });
 

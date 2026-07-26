@@ -1,9 +1,10 @@
+import { fetchWithAuth } from '@/utils/fetchWithAuth';
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { Activity, Phone, Mail, Calendar, ChevronRight, X, Clock, Database, Sparkles, Check, Shield } from 'lucide-react';
+import { Activity, Phone, Mail, Calendar, ChevronRight, X, Clock, Database, Sparkles, Check, Shield, ArrowRight } from 'lucide-react';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '@/store';
-import { incrementActionsTaken, SignalEvent } from '@/store/slices/signalSlice';
+import { incrementActionsTaken, SignalEvent, acknowledgeSignal } from '@/store/slices/signalSlice';
 
 interface SignalFeedProps {
   setActiveTab?: (tab: string) => void;
@@ -19,7 +20,7 @@ export const SignalFeed: React.FC<SignalFeedProps> = ({ setActiveTab }) => {
   
   useEffect(() => {
     setMounted(true);
-    fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/settings`)
+    fetchWithAuth(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/settings`)
       .then(res => res.json())
       .then(data => {
         if (data.ai_model === 'claude') {
@@ -33,32 +34,19 @@ export const SignalFeed: React.FC<SignalFeedProps> = ({ setActiveTab }) => {
 
   const [autopilot, setAutopilot] = useState(false);
   const signals = useSelector((state: RootState) => state.signals.events);
-
-  useEffect(() => {
-    setMounted(true);
-    fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/settings`)
-      .then(res => res.json())
-      .then(data => {
-        if (data.ai_model === 'claude') {
-          setActiveModelName('Claude 3.5 Sonnet');
-        } else {
-          setActiveModelName('GPT-4o');
-        }
-      })
-      .catch(() => {});
-  }, []);
+  const activeSignals = signals.filter(s => s.status !== 'acknowledged');
 
   // Autopilot execution engine
   useEffect(() => {
-    if (autopilot && signals.length > 0) {
-      const latestSignal = signals[0];
+    if (autopilot && activeSignals.length > 0) {
+      const latestSignal = activeSignals[0];
       if (latestSignal && latestSignal.recommended_action) {
         const alreadyDispatched = localStorage.getItem(`auto-${latestSignal.id}`);
         if (!alreadyDispatched) {
           localStorage.setItem(`auto-${latestSignal.id}`, 'true');
           
           // Post auto-dispatch log to DB
-          fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/audit/`, {
+          fetchWithAuth(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/audit/`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -73,7 +61,7 @@ export const SignalFeed: React.FC<SignalFeedProps> = ({ setActiveTab }) => {
         }
       }
     }
-  }, [signals, autopilot]);
+  }, [activeSignals, autopilot]);
 
   const getIcon = (type: string) => {
     switch (type) {
@@ -101,7 +89,6 @@ export const SignalFeed: React.FC<SignalFeedProps> = ({ setActiveTab }) => {
           Live Signal Feed
         </h3>
         
-        {/* Simplified Autopilot Toggle */}
         <div className="flex items-center gap-2">
           <span className={`text-[10px] font-extrabold uppercase tracking-wider ${autopilot ? 'text-[#2E1055] animate-pulse' : 'text-slate-400'}`}>
             {autopilot ? '⚡ Autopilot' : 'Autopilot'}
@@ -118,26 +105,68 @@ export const SignalFeed: React.FC<SignalFeedProps> = ({ setActiveTab }) => {
       </div>
 
       <div className="flex-1 overflow-y-auto space-y-0 pr-2 custom-scrollbar">
-        {signals.length === 0 && (
+        {activeSignals.length === 0 && (
           <div className="flex items-center justify-center h-full text-[#9CA3AF] text-sm font-medium">
             Waiting for live signals...
           </div>
         )}
-        {signals.map((signal) => {
+        {activeSignals.map((signal) => {
           const hasAction = !!signal.recommended_action;
           const isApproved = localStorage.getItem(`auto-${signal.id}`) === 'true';
 
           return (
             <div 
               key={signal.id} 
-              onClick={() => {
-                setSelectedSignal(signal);
-                setIsDispatched(false);
-                setIsDispatching(false);
-              }}
-              className="p-4 border-b border-white/10 last:border-0 hover:bg-white/5 transition-colors cursor-pointer group rounded-[16px] mb-1 flex justify-between items-center"
+              className="p-4 border-b border-white/10 last:border-0 hover:bg-white/5 transition-colors cursor-pointer group rounded-[16px] mb-1"
             >
-              <div className="flex items-start gap-4 flex-1">
+              <div className="flex items-start justify-between mb-1">
+                <div className="flex items-center gap-2 mb-1">
+                  <span className={`text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-[6px] border ${
+                    (signal as any).risk_level === 'Critical' ? 'bg-[#EF4444]/20 text-[#EF4444] border-[#EF4444]/30' : 
+                    (signal as any).risk_level === 'High' ? 'bg-[#F59E0B]/20 text-[#F59E0B] border-[#F59E0B]/30' : 
+                    'bg-white/10 text-white border-white/20'
+                  }`}>
+                    {(signal as any).risk_level || 'Normal'} Priority
+                  </span>
+                  <span className="text-[10px] text-white/50 font-mono">{new Date(signal.timestamp).toLocaleTimeString()}</span>
+                </div>
+                
+                <div className="flex gap-2">
+                  <button 
+                    onClick={(e) => { 
+                      e.stopPropagation(); 
+                      
+                      // Log to MS-010 DMAE
+                      fetchWithAuth(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/audit/`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                          user_email: "executive@sbnsentinel.com",
+                          action: "Acknowledged Alert",
+                          resource: `Signal: ${signal.id}`,
+                          ip_address: "127.0.0.1"
+                        })
+                      }).catch(err => console.error("Audit log failed", err));
+
+                      dispatch(acknowledgeSignal(signal.id)); 
+                    }}
+                    className="text-[10px] font-bold text-white/50 hover:text-white px-2 py-1 bg-white/5 hover:bg-white/10 rounded border border-white/10 transition-colors"
+                  >
+                    Acknowledge
+                  </button>
+                  <button onClick={() => setSelectedSignal(signal)} className="text-[#2563EB] hover:text-white transition-colors cursor-pointer" title="View Details">
+                    <ArrowRight className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+              <div 
+                onClick={() => {
+                  setSelectedSignal(signal);
+                  setIsDispatched(false);
+                  setIsDispatching(false);
+                }}
+                className="flex items-start gap-4 flex-1"
+              >
                 <div className={`p-2.5 ${getBgColor(signal.type)} rounded-[16px] flex-shrink-0`}>
                   {getIcon(signal.type)}
                 </div>
@@ -153,41 +182,6 @@ export const SignalFeed: React.FC<SignalFeedProps> = ({ setActiveTab }) => {
                   )}
                 </div>
               </div>
-              <div className="flex flex-col items-end gap-2 shrink-0 ml-4">
-                <span className="text-[10px] font-bold text-[#9CA3AF]">
-                  {new Date(signal.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
-                </span>
-                
-                {hasAction && !isApproved ? (
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      dispatch(incrementActionsTaken());
-                      localStorage.setItem(`auto-${signal.id}`, 'true');
-                      
-                      fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/audit/`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                          user_email: "doctor-oneclick@sbnsentinel.com",
-                          action: `Approved Sentinel Action: ${signal.recommended_action}`,
-                          resource: `Signal: ${signal.id} (${signal.type})`,
-                          ip_address: "127.0.0.1"
-                        })
-                      }).catch(e => console.error(e));
-                    }}
-                    className="bg-[#10B981] hover:bg-[#059669] text-white text-[10px] font-extrabold px-3 py-1.5 rounded-[8px] transition-all active:scale-95 flex items-center gap-1 cursor-pointer shadow-sm hover:scale-105"
-                  >
-                    <Check className="w-3 h-3" /> Quick Approve
-                  </button>
-                ) : hasAction && isApproved ? (
-                  <span className="text-[10px] font-bold text-[#34D399] bg-[#10B981]/20 px-2.5 py-1 rounded-full border border-[#A7F3D0] uppercase tracking-wider flex items-center gap-1">
-                    <Check className="w-3 h-3" /> Dispatched
-                  </span>
-                ) : (
-                  <ChevronRight className="w-4 h-4 text-[#D1D5DB] group-hover:text-[#A78BFA] transition-colors" />
-                )}
-              </div>
             </div>
           );
         })}
@@ -197,11 +191,9 @@ export const SignalFeed: React.FC<SignalFeedProps> = ({ setActiveTab }) => {
         View All Signals <ChevronRight className="w-3 h-3" />
       </button>
 
-      {/* Styled Signal Diagnostic Report Modal */}
       {mounted && selectedSignal && createPortal(
         <div className="fixed inset-0 z-[1000] bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in">
           <div className="bg-white/10 border-white/10 text-white border-white/10 w-full max-w-lg rounded-[28px] overflow-hidden premium-shadow animate-in zoom-in-95 duration-200">
-            {/* Header */}
             <div className="bg-white/5 border-b border-white/10 px-6 py-4 flex justify-between items-center">
               <div className="flex items-center gap-2">
                 <div className="p-1.5 rounded-lg bg-[#120524]/50 border border-white/10 text-blue-400">
@@ -220,9 +212,7 @@ export const SignalFeed: React.FC<SignalFeedProps> = ({ setActiveTab }) => {
               </button>
             </div>
 
-            {/* Content Body */}
             <div className="p-6 space-y-5">
-              {/* Message Details */}
               <div>
                 <span className="text-[10px] font-extrabold text-[#9CA3AF] uppercase tracking-wider block mb-1.5">Signal Content</span>
                 <div className="bg-white/5 border border-white/10 rounded-[16px] p-4 text-sm font-bold text-white leading-relaxed">
@@ -258,11 +248,12 @@ export const SignalFeed: React.FC<SignalFeedProps> = ({ setActiveTab }) => {
               {/* AI Intelligence Block */}
               <div className="bg-[#2E1055]/20 border border-[#2E1055]/50 rounded-[20px] p-4">
                 <div className="flex items-center gap-2 mb-2">
-                  <Sparkles className="w-4 h-4 text-[#2E1055] animate-pulse" />
-                  <span className="text-[10px] font-extrabold text-[#A78BFA] uppercase tracking-widest">Sentinel AI Insight</span>
+                  <Activity className="w-4 h-4 text-[#2E1055]" />
+                  <span className="text-[10px] font-extrabold text-blue-400 uppercase tracking-widest">Deterministic Impact</span>
                 </div>
                 <p className="text-xs text-white/90 font-bold leading-relaxed mb-3">
-                  {selectedSignal.ai_insight || `Critical clinical feed event analyzed by ${activeModelName}. Action recommendation is ready for dispatch.`}
+                  <span className="text-white/50">Problem:</span> {selectedSignal.problem || 'None'}<br/>
+                  <span className="text-white/50">Impact:</span> {selectedSignal.business_impact || 'None'}
                 </p>
                 <div className="bg-white/5 border border-white/10 rounded-lg p-2.5 text-[11px] text-white font-bold">
                   <span className="text-[9px] uppercase font-bold text-[#EEEAFE]0 block mb-0.5">Recommended Action</span>
@@ -289,7 +280,7 @@ export const SignalFeed: React.FC<SignalFeedProps> = ({ setActiveTab }) => {
                     const user = userStr ? JSON.parse(userStr) : null;
                     const userEmail = user?.email || "admin@sbnsentinel.com";
                     
-                    await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/audit/`, {
+                    await fetchWithAuth(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/audit/`, {
                       method: 'POST',
                       headers: { 'Content-Type': 'application/json' },
                       body: JSON.stringify({

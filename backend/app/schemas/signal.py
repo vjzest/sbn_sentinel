@@ -9,5 +9,17 @@ class SignalEvent(BaseModel):
     message: str
     timestamp: str
     metadata: Optional[Dict[str, Any]] = None
-    ai_insight: Optional[str] = None
+    risk_level: Optional[str] = None
+    problem: Optional[str] = None
+    reason: Optional[str] = None
+    business_impact: Optional[str] = None
     recommended_action: Optional[str] = None
+    expected_outcome: Optional[str] = None
+    primary_context: Optional[str] = None
+    secondary_context: Optional[str] = None
+    context_confidence: Optional[str] = None
+    context_reason: Optional[str] = None
+    revenue_risk_category: Optional[str] = None
+    estimated_financial_exposure: Optional[str] = None
+    revenue_confidence: Optional[str] = None
+    operational_dependency: Optional[str] = None

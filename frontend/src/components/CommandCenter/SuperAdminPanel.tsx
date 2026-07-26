@@ -1,3 +1,4 @@
+import { fetchWithAuth } from '@/utils/fetchWithAuth';
 import React, { useState, useEffect } from 'react';
 import { 
   Building2, Users, Activity, DollarSign, BrainCircuit, 
@@ -23,21 +24,33 @@ export const SuperAdminPanel: React.FC<SuperAdminProps> = ({ onLogout, user }) =
   const [auditLogs, setAuditLogs] = useState<any[]>([]);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [pendingApprovals, setPendingApprovals] = useState<any[]>([]);
+  const [pasmeHealth, setPasmeHealth] = useState<any>(null);
+  const [pasmeRules, setPasmeRules] = useState<any[]>([]);
 
   // Fetch Super Admin Stats
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const statsRes = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/super-admin/stats`);
-        const usersRes = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/super-admin/users`);
-        const approvalsRes = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/super-admin/pending-approvals`);
-        const auditRes = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/super-admin/audit-logs`);
+        const statsRes = await fetchWithAuth(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/super-admin/stats`);
+        const usersRes = await fetchWithAuth(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/super-admin/users`);
+        const approvalsRes = await fetchWithAuth(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/super-admin/pending-approvals`);
+        const auditRes = await fetchWithAuth(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/super-admin/audit-logs`);
+        const pasmeHealthRes = await fetchWithAuth(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/pasme/health`);
+        const pasmeRulesRes = await fetchWithAuth(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/pasme/rules`);
         
         if (approvalsRes.ok) {
             setPendingApprovals(await approvalsRes.json());
         }
         if (auditRes.ok) {
             setAuditLogs(await auditRes.json());
+        }
+        if (pasmeHealthRes.ok) {
+            const h = await pasmeHealthRes.json();
+            setPasmeHealth(h);
+            setMaintenanceMode(h.maintenance_mode);
+        }
+        if (pasmeRulesRes.ok) {
+            setPasmeRules(await pasmeRulesRes.json());
         }
         
         if (statsRes.ok) setStats(await statsRes.json());
@@ -80,7 +93,7 @@ export const SuperAdminPanel: React.FC<SuperAdminProps> = ({ onLogout, user }) =
     e.preventDefault();
     setInviteMsg('');
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/super-admin/users/invite`, {
+      const res = await fetchWithAuth(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/super-admin/users/invite`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(inviteForm)
@@ -101,7 +114,7 @@ export const SuperAdminPanel: React.FC<SuperAdminProps> = ({ onLogout, user }) =
 
   const toggleUserStatus = async (userId: number) => {
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/super-admin/users/${userId}/toggle`, {
+      const res = await fetchWithAuth(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/super-admin/users/${userId}/toggle`, {
         method: 'PATCH'
       });
       if (res.ok) {
@@ -122,6 +135,37 @@ export const SuperAdminPanel: React.FC<SuperAdminProps> = ({ onLogout, user }) =
       }
       return c;
     }));
+  };
+
+  const togglePasmeRule = async (ruleId: string) => {
+    try {
+      const res = await fetchWithAuth(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/pasme/rules/${ruleId}/toggle`, {
+        method: 'PATCH'
+      });
+      if (res.ok) {
+        const updated = await res.json();
+        setPasmeRules(pasmeRules.map(r => r.rule_id === updated.rule_id ? { ...r, is_active: updated.is_active } : r));
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const togglePasmeMaintenance = async () => {
+    try {
+      const res = await fetchWithAuth(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/pasme/maintenance/toggle`, {
+        method: 'POST'
+      });
+      if (res.ok) {
+        const updated = await res.json();
+        setMaintenanceMode(updated.maintenance_mode);
+        if (pasmeHealth) {
+            setPasmeHealth({ ...pasmeHealth, maintenance_mode: updated.maintenance_mode, status: updated.maintenance_mode ? 'maintenance' : 'healthy' });
+        }
+      }
+    } catch (e) {
+      console.error(e);
+    }
   };
 
   if (isLoading) {
@@ -164,13 +208,13 @@ export const SuperAdminPanel: React.FC<SuperAdminProps> = ({ onLogout, user }) =
 
         <div className="flex-1 overflow-y-auto px-4 py-6 space-y-1">
           <p className="text-[9px] font-black text-white/40 uppercase tracking-[0.2em] mb-3 px-4">Platform</p>
-          <button onClick={() => setActiveTab('overview')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-bold transition-all ${activeTab === 'overview' ? 'bg-white/10 text-white font-extrabold shadow-lg' : 'text-white/60 hover:text-white hover:bg-white/5'}`}>
+          <button onClick={() => { setActiveTab('overview'); setIsMobileMenuOpen(false); }} className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-bold transition-all ${activeTab === 'overview' ? 'bg-white/10 text-white font-extrabold shadow-lg' : 'text-white/60 hover:text-white hover:bg-white/5'}`}>
             <Activity className="w-4 h-4" /> Overview
           </button>
-          <button onClick={() => setActiveTab('clinics')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-bold transition-all ${activeTab === 'clinics' ? 'bg-white/10 text-white font-extrabold shadow-lg' : 'text-white/60 hover:text-white hover:bg-white/5'}`}>
+          <button onClick={() => { setActiveTab('clinics'); setIsMobileMenuOpen(false); }} className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-bold transition-all ${activeTab === 'clinics' ? 'bg-white/10 text-white font-extrabold shadow-lg' : 'text-white/60 hover:text-white hover:bg-white/5'}`}>
             <Building2 className="w-4 h-4" /> Clinics (Tenants)
           </button>
-          <button onClick={() => setActiveTab('approvals')} className={`w-full flex items-center justify-between px-4 py-3 rounded-2xl text-sm font-bold transition-all ${activeTab === 'approvals' ? 'bg-white/10 text-white font-extrabold shadow-lg' : 'text-white/60 hover:text-white hover:bg-white/5'}`}>
+          <button onClick={() => { setActiveTab('approvals'); setIsMobileMenuOpen(false); }} className={`w-full flex items-center justify-between px-4 py-3 rounded-2xl text-sm font-bold transition-all ${activeTab === 'approvals' ? 'bg-white/10 text-white font-extrabold shadow-lg' : 'text-white/60 hover:text-white hover:bg-white/5'}`}>
             <div className="flex items-center gap-3">
               <CheckCircle2 className="w-4 h-4" /> Pending Approvals
             </div>
@@ -178,21 +222,21 @@ export const SuperAdminPanel: React.FC<SuperAdminProps> = ({ onLogout, user }) =
               <span className="bg-rose-500 text-white text-[10px] font-black px-2 py-0.5 rounded-full">{pendingApprovals.length}</span>
             )}
           </button>
-          <button onClick={() => setActiveTab('users')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-bold transition-all ${activeTab === 'users' ? 'bg-white/10 text-white font-extrabold shadow-lg' : 'text-white/60 hover:text-white hover:bg-white/5'}`}>
+          <button onClick={() => { setActiveTab('users'); setIsMobileMenuOpen(false); }} className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-bold transition-all ${activeTab === 'users' ? 'bg-white/10 text-white font-extrabold shadow-lg' : 'text-white/60 hover:text-white hover:bg-white/5'}`}>
             <Users className="w-4 h-4" /> Platform Users
           </button>
-          <button onClick={() => setActiveTab('billing')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-bold transition-all ${activeTab === 'billing' ? 'bg-white/10 text-white font-extrabold shadow-lg' : 'text-white/60 hover:text-white hover:bg-white/5'}`}>
+          <button onClick={() => { setActiveTab('billing'); setIsMobileMenuOpen(false); }} className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-bold transition-all ${activeTab === 'billing' ? 'bg-white/10 text-white font-extrabold shadow-lg' : 'text-white/60 hover:text-white hover:bg-white/5'}`}>
             <DollarSign className="w-4 h-4" /> Subscriptions & Revenue
           </button>
 
           <p className="text-[9px] font-black text-white/40 uppercase tracking-[0.2em] mb-3 px-4 mt-8">System</p>
-          <button onClick={() => setActiveTab('ai-usage')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-bold transition-all ${activeTab === 'ai-usage' ? 'bg-white/10 text-white font-extrabold shadow-lg' : 'text-white/60 hover:text-white hover:bg-white/5'}`}>
+          <button onClick={() => { setActiveTab('ai-usage'); setIsMobileMenuOpen(false); }} className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-bold transition-all ${activeTab === 'ai-usage' ? 'bg-white/10 text-white font-extrabold shadow-lg' : 'text-white/60 hover:text-white hover:bg-white/5'}`}>
             <BrainCircuit className="w-4 h-4" /> AI Costs & Usage
           </button>
-          <button onClick={() => setActiveTab('settings')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-bold transition-all ${activeTab === 'settings' ? 'bg-white/10 text-white font-extrabold shadow-lg' : 'text-white/60 hover:text-white hover:bg-white/5'}`}>
+          <button onClick={() => { setActiveTab('settings'); setIsMobileMenuOpen(false); }} className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-bold transition-all ${activeTab === 'settings' ? 'bg-white/10 text-white font-extrabold shadow-lg' : 'text-white/60 hover:text-white hover:bg-white/5'}`}>
             <Server className="w-4 h-4" /> Infrastructure Settings
           </button>
-          <button onClick={() => setActiveTab('audit-logs')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-bold transition-all ${activeTab === 'audit-logs' ? 'bg-white/10 text-white font-extrabold shadow-lg' : 'text-white/60 hover:text-white hover:bg-white/5'}`}>
+          <button onClick={() => { setActiveTab('audit-logs'); setIsMobileMenuOpen(false); }} className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-bold transition-all ${activeTab === 'audit-logs' ? 'bg-white/10 text-white font-extrabold shadow-lg' : 'text-white/60 hover:text-white hover:bg-white/5'}`}>
             <ShieldCheck className="w-4 h-4" /> Platform Audit Logs
           </button>
         </div>
@@ -637,17 +681,57 @@ export const SuperAdminPanel: React.FC<SuperAdminProps> = ({ onLogout, user }) =
                   <label className="block text-sm font-bold text-white mb-2">Maintenance Mode</label>
                   <div className="flex items-center gap-3">
                     <div 
-                      onClick={() => setMaintenanceMode(!maintenanceMode)}
-                      className={`w-12 h-6 rounded-full relative cursor-pointer transition-colors ${maintenanceMode ? 'bg-rose-500' : 'bg-white/20'}`}
+                      onClick={togglePasmeMaintenance}
+                      className={`w-12 h-6 rounded-full relative cursor-pointer transition-colors ${maintenanceMode ? 'bg-rose-500' : 'bg-[#2E1055]'}`}
                     >
-                      <div className={`w-5 h-5 bg-white/5 rounded-full absolute top-0.5 shadow-sm transition-all ${maintenanceMode ? 'left-[26px]' : 'left-0.5'}`}></div>
+                      <div className={`w-5 h-5 bg-white rounded-full absolute top-0.5 shadow-sm transition-all ${maintenanceMode ? 'left-[26px]' : 'left-0.5'}`}></div>
                     </div>
                     <span className="text-sm font-bold text-white">{maintenanceMode ? 'System Offline (Updates Active)' : 'Currently Live'}</span>
                   </div>
+                  <p className="text-xs text-white/40 mt-1">Stops background processing across the platform.</p>
                 </div>
-                <button className="bg-[#2E1055] text-white px-6 py-3 rounded-2xl text-sm font-bold hover:bg-[#120524] transition-colors">
-                  Save Global Settings
-                </button>
+                
+                <div className="pt-6 border-t border-white/10 mt-6">
+                  <h4 className="text-sm font-bold text-white mb-4">Business Rules Engine (PASME Config)</h4>
+                  <div className="space-y-3">
+                    {pasmeRules.map(rule => (
+                      <div key={rule.rule_id} className="flex items-center justify-between p-4 bg-white/5 border border-white/10 rounded-2xl">
+                        <div>
+                          <p className="text-sm font-bold text-white">{rule.name} <span className="text-xs text-white/40 ml-2 font-mono">{rule.rule_id}</span></p>
+                          <p className="text-xs text-white/60">{rule.description}</p>
+                        </div>
+                        <button 
+                          onClick={() => togglePasmeRule(rule.rule_id)}
+                          className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors ${rule.is_active ? 'bg-[#2E1055] text-white' : 'bg-white/10 text-white/40 hover:bg-white/20 hover:text-white'}`}
+                        >
+                          {rule.is_active ? 'Active' : 'Disabled'}
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="pt-6 border-t border-white/10 mt-6">
+                  <h4 className="text-sm font-bold text-white mb-4">Platform Health Monitor</h4>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div className="p-3 bg-white/5 border border-white/10 rounded-xl">
+                      <p className="text-[10px] text-white/50 uppercase font-black mb-1">CPU Usage</p>
+                      <p className="text-lg font-bold text-white">{pasmeHealth?.metrics?.cpu_percent || 0}%</p>
+                    </div>
+                    <div className="p-3 bg-white/5 border border-white/10 rounded-xl">
+                      <p className="text-[10px] text-white/50 uppercase font-black mb-1">Memory</p>
+                      <p className="text-lg font-bold text-white">{pasmeHealth?.metrics?.memory_usage_mb || 0} MB</p>
+                    </div>
+                    <div className="p-3 bg-white/5 border border-white/10 rounded-xl">
+                      <p className="text-[10px] text-white/50 uppercase font-black mb-1">DMAE Status</p>
+                      <p className="text-sm font-bold text-emerald-400 capitalize">{pasmeHealth?.modules?.dmae || 'unknown'}</p>
+                    </div>
+                    <div className="p-3 bg-white/5 border border-white/10 rounded-xl">
+                      <p className="text-[10px] text-white/50 uppercase font-black mb-1">SIAME Status</p>
+                      <p className="text-sm font-bold text-emerald-400 capitalize">{pasmeHealth?.modules?.siame || 'unknown'}</p>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           )}

@@ -1,3 +1,4 @@
+import { fetchWithAuth } from '@/utils/fetchWithAuth';
 import React, { useState, useEffect } from 'react';
 import { Download, Filter, TrendingUp, DollarSign, Activity, FileText, AlertCircle, BrainCircuit, ArrowRight, ShieldCheck, PieChart, Check, X, CheckCircle2 } from 'lucide-react';
 import { createPortal } from 'react-dom';
@@ -24,7 +25,7 @@ export const RevenueReportsView: React.FC = () => {
 
   const fetchEncounters = async () => {
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/encounters`);
+      const res = await fetchWithAuth(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/encounters`);
       if (res.ok) {
         const data = await res.json();
         setEncounters(data);
@@ -74,9 +75,13 @@ export const RevenueReportsView: React.FC = () => {
   // Real backend calculations
   const paidOrBilled = encounters.filter(e => e.billing_status === 'Paid' || e.billing_status === 'Billed' || e.status === 'Completed');
   const baseRevenue = paidOrBilled.reduce((sum, e) => sum + getBillingDetails(e).amount, 0);
-  const dailyRevenue = Math.round((baseRevenue || 650) * filterMultiplier) + (claimsReviewed ? 540 : 0);
   
-  const savedRevenue = Math.round((encounters.filter(e => e.billing_status === 'Paid').length * 85 + (claimsReviewed ? 540 : 0)) * filterMultiplier);
+  const pendingAmountList = encounters.filter(e => e.billing_status === 'Pending' || e.billing_status === 'Claim Denied');
+  const pendingAmount = pendingAmountList.length > 0 ? pendingAmountList.reduce((sum, e) => sum + getBillingDetails(e).amount, 0) : 540;
+
+  const dailyRevenue = Math.round((baseRevenue || 650) * filterMultiplier) + (claimsReviewed ? pendingAmount : 0);
+  
+  const savedRevenue = Math.round((encounters.filter(e => e.billing_status === 'Paid').length * 85 + (claimsReviewed ? pendingAmount : 0)) * filterMultiplier);
   const pendingClaims = encounters.filter(e => e.billing_status === 'Pending' || e.status === 'Waiting').length;
   const claimDenials = encounters.filter(e => e.billing_status === 'Claim Denied' || e.billing_status === 'Denied').length;
 
@@ -117,7 +122,7 @@ export const RevenueReportsView: React.FC = () => {
   const handleApproveRecode = () => {
     setClaimsReviewed(true);
     setShowClaimsModal(false);
-    showToast("✨ AI Suggestion Approved: Undercoded claim recoded from 99213 to 99214 (+$540 revenue recovered)!");
+    showToast(`✨ AI Suggestion Approved: Undercoded claim recoded from 99213 to 99214 (+$${pendingAmount} revenue recovered)!`);
   };
 
   return (
@@ -250,7 +255,7 @@ export const RevenueReportsView: React.FC = () => {
                   
                   <g transform="translate(730, 15)">
                      <rect width="80" height="30" rx="12" fill="rgba(255,255,255,0.1)" />
-                     <text x="40" y="20" fill="white" fontSize="12" fontWeight="bold" textAnchor="middle">${(78400 + stats.actionsTaken * 100 + eLen * 50 + (claimsReviewed ? 540 : 0)).toLocaleString()}</text>
+                     <text x="40" y="20" fill="white" fontSize="12" fontWeight="bold" textAnchor="middle">${(78400 + stats.actionsTaken * 100 + eLen * 50 + (claimsReviewed ? pendingAmount : 0)).toLocaleString()}</text>
                   </g>
                 </g>
              </svg>
@@ -305,9 +310,9 @@ export const RevenueReportsView: React.FC = () => {
                 <p className="text-[10px] text-[#A7F3D0] uppercase font-extrabold tracking-widest mb-1">Opportunity Detected</p>
                 <p className="text-sm font-medium text-white leading-relaxed">
                   {claimsReviewed ? (
-                    <span>All detected undercoded claims have been successfully optimized. $540 recovered.</span>
+                    <span>All detected undercoded claims have been successfully optimized. ${pendingAmount} recovered.</span>
                   ) : (
-                    <span>Sentinel identified <span className="font-bold text-emerald-400 animate-pulse">$540</span> in undercoded claims for Dr. Jenkins' visits today.</span>
+                    <span>Sentinel identified <span className="font-bold text-emerald-400 animate-pulse">${pendingAmount}</span> in undercoded claims for Dr. Jenkins' visits today.</span>
                   )}
                 </p>
              </div>
@@ -496,7 +501,7 @@ export const RevenueReportsView: React.FC = () => {
                 <div className="h-px bg-blue-500/30"></div>
                 <div className="flex justify-between items-center">
                   <span className="text-xs text-slate-800 font-extrabold">Estimated Revenue Gain</span>
-                  <span className="text-sm font-extrabold text-emerald-400">+$540.00</span>
+                  <span className="text-sm font-extrabold text-emerald-400">+${pendingAmount.toFixed(2)}</span>
                 </div>
               </div>
  

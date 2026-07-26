@@ -152,9 +152,9 @@ def get_audit_logs(db: Session = Depends(get_db)):
         {
             "id": log.id,
             "action": log.action,
-            "resource": log.resource or "-",
-            "time": log.timestamp.isoformat() + "Z",
-            "ip": log.ip_address
+            "resource": log.module or "-",
+            "time": log.timestamp.isoformat() + "Z" if log.timestamp else "",
+            "ip": log.user_system or "System"
         }
         for log in logs
     ]

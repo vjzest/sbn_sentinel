@@ -1,12 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { ClipboardList, Search, Filter, ShieldAlert } from 'lucide-react';
+import { fetchWithAuth } from '@/utils/fetchWithAuth';
 
 interface AuditLog {
   id: string;
-  user_email: string;
-  action: string;
-  resource: string;
-  ip_address: string;
+  user_system?: string;
+  user_email?: string;
+  action?: string;
+  module?: string;
+  resource?: string;
+  correlation_id?: string;
+  ip_address?: string;
   timestamp: string;
 }
 
@@ -21,10 +25,10 @@ export const AuditLogsView: React.FC = () => {
 
   const fetchLogs = async () => {
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/audit/`);
+      const res = await fetchWithAuth(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/audit/`);
       if (res.ok) {
         const data = await res.json();
-        setLogs(data);
+        setLogs(Array.isArray(data) ? data : []);
       }
     } catch (err) {
       console.error('Failed to fetch audit logs:', err);
@@ -33,11 +37,17 @@ export const AuditLogsView: React.FC = () => {
     }
   };
 
-  const filteredLogs = logs.filter(log => 
-    log.user_email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    log.action.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    log.resource.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredLogs = logs.filter(log => {
+    const userStr = log.user_system || log.user_email || '';
+    const actionStr = log.action || '';
+    const moduleStr = log.module || log.resource || '';
+    const term = searchTerm.toLowerCase();
+    return (
+      userStr.toLowerCase().includes(term) ||
+      actionStr.toLowerCase().includes(term) ||
+      moduleStr.toLowerCase().includes(term)
+    );
+  });
 
   return (
     <div className="animate-in fade-in duration-500 max-w-[1600px] mx-auto space-y-8">
@@ -57,7 +67,7 @@ export const AuditLogsView: React.FC = () => {
             <Search className="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-white/40" />
             <input 
               type="text" 
-              placeholder="Search logs by user, action, or resource..." 
+              placeholder="Search logs by user, action, or module..." 
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full bg-black/20 border border-white/10 rounded-[12px] py-2.5 pl-11 pr-4 text-sm font-medium text-white outline-none focus:border-[#2E1055] transition-colors"
@@ -73,10 +83,10 @@ export const AuditLogsView: React.FC = () => {
             <thead>
               <tr className="border-b border-white/10 bg-white/[0.02]">
                 <th className="py-4 px-6 text-[10px] font-extrabold text-white/40 uppercase tracking-wider">Timestamp</th>
-                <th className="py-4 px-6 text-[10px] font-extrabold text-white/40 uppercase tracking-wider">User</th>
+                <th className="py-4 px-6 text-[10px] font-extrabold text-white/40 uppercase tracking-wider">User / System</th>
                 <th className="py-4 px-6 text-[10px] font-extrabold text-white/40 uppercase tracking-wider">Action</th>
-                <th className="py-4 px-6 text-[10px] font-extrabold text-white/40 uppercase tracking-wider">Resource</th>
-                <th className="py-4 px-6 text-[10px] font-extrabold text-white/40 uppercase tracking-wider">IP Address</th>
+                <th className="py-4 px-6 text-[10px] font-extrabold text-white/40 uppercase tracking-wider">Module</th>
+                <th className="py-4 px-6 text-[10px] font-extrabold text-white/40 uppercase tracking-wider">Correlation ID</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-white/10">
@@ -88,21 +98,21 @@ export const AuditLogsView: React.FC = () => {
                 filteredLogs.map((log) => (
                   <tr key={log.id} className="hover:bg-white/[0.02] transition-colors">
                     <td className="py-4 px-6 text-sm text-white/70 whitespace-nowrap">
-                      {new Date(log.timestamp).toLocaleString()}
+                      {log.timestamp ? new Date(log.timestamp).toLocaleString() : 'N/A'}
                     </td>
                     <td className="py-4 px-6">
-                      <p className="text-sm font-bold text-white">{log.user_email}</p>
+                      <p className="text-sm font-bold text-white">{log.user_system || log.user_email || 'System'}</p>
                     </td>
                     <td className="py-4 px-6">
                       <span className="px-2.5 py-1 rounded-md text-[11px] font-bold bg-[#2563EB]/10 text-[#2563EB] border border-[#2563EB]/20">
-                        {log.action}
+                        {log.action || 'N/A'}
                       </span>
                     </td>
                     <td className="py-4 px-6 text-sm text-white/70">
-                      {log.resource}
+                      {log.module || log.resource || 'System Core'}
                     </td>
                     <td className="py-4 px-6 text-xs font-mono text-white/50">
-                      {log.ip_address}
+                      {log.correlation_id || log.ip_address || 'sys-local'}
                     </td>
                   </tr>
                 ))

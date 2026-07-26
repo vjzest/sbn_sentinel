@@ -7,9 +7,21 @@ export interface SignalEvent {
   message: string;
   timestamp: string;
   metadata?: any;
-  ai_insight?: string;
+  risk_level?: string;
+  problem?: string;
+  reason?: string;
+  business_impact?: string;
   recommended_action?: string;
-  priority?: string;
+  expected_outcome?: string;
+  primary_context?: string;
+  secondary_context?: string;
+  context_confidence?: string;
+  context_reason?: string;
+  revenue_risk_category?: string;
+  estimated_financial_exposure?: string;
+  revenue_confidence?: string;
+  operational_dependency?: string;
+  status?: 'active' | 'acknowledged';
 }
 
 interface SignalState {
@@ -52,12 +64,18 @@ const signalSlice = createSlice({
         state.stats.patientFlow += 1;
       }
       
-      if (signal.ai_insight && signal.ai_insight.toLowerCase().includes('loss')) {
+      if (signal.risk_level === 'Critical' || signal.risk_level === 'High') {
         state.stats.criticalEvents += 1;
       }
     },
     setConnectionStatus(state, action: PayloadAction<boolean>) {
       state.isConnected = action.payload;
+    },
+    acknowledgeSignal: (state, action: PayloadAction<string>) => {
+      const signal = state.events.find(s => s.id === action.payload);
+      if (signal) {
+        signal.status = 'acknowledged';
+      }
     },
     incrementActionsTaken(state) {
       state.stats.actionsTaken += 1;
@@ -68,5 +86,5 @@ const signalSlice = createSlice({
   }
 });
 
-export const { addSignal, setConnectionStatus, incrementActionsTaken, removeSignal } = signalSlice.actions;
+export const { addSignal, setConnectionStatus, acknowledgeSignal, incrementActionsTaken, removeSignal } = signalSlice.actions;
 export default signalSlice.reducer;
