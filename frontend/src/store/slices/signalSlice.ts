@@ -21,6 +21,7 @@ export interface SignalEvent {
   estimated_financial_exposure?: string;
   revenue_confidence?: string;
   operational_dependency?: string;
+  ai_insight?: string;
   status?: 'active' | 'acknowledged';
 }
 

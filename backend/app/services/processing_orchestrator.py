@@ -30,8 +30,12 @@ from app.models.intelligence import (
     RuleFindingModel, DecisionContextModel, 
     OperationalIntelligenceModel, RevenueIntelligenceModel
 )
-from app.services.rules_engine import rules_engine
+from app.models.decision_record import DecisionRecordModel
+from app.services.connector_manager import connector_manager
+from app.services.evidence_engine import evidence_engine
 from app.services.decision_context_engine import decision_context_engine
+from app.services.policy_engine import policy_engine
+from app.services.rules_engine import rules_engine
 from app.services.intelligence_engine import intelligence_engine
 from app.services.revenue_intelligence_engine import revenue_intelligence_engine
 from app.services.data_audit_engine import data_audit_engine
@@ -139,8 +143,8 @@ class ProcessingOrchestrator:
             if event.state == "Failed":
                 return event
 
-            # ── Layer 3: Rules Engine ──────────────────────────────────
-            event = self._layer3_rules(event, db)
+            # ── Layer 3: Evidence Engine ────────────────────────────────
+            event = self._layer3_evidence(event, db)
             if event.state == "Failed":
                 return event
 
@@ -149,23 +153,33 @@ class ProcessingOrchestrator:
             if event.state == "Failed":
                 return event
 
-            # ── Layer 5: Operational Intelligence Engine ───────────────
-            event = self._layer5_intelligence(event, db)
+            # ── Layer 5: Policy Engine (Governance) ─────────────────────
+            event = self._layer5_policy(event, db)
             if event.state == "Failed":
                 return event
 
-            # ── Layer 6: Revenue Intelligence Engine ──────────────────
-            event = self._layer6_revenue(event, db)
+            # ── Layer 6: Rules Engine ──────────────────────────────────
+            event = self._layer6_rules(event, db)
             if event.state == "Failed":
                 return event
 
-            # ── Layer 7: Data Management & Audit Storage ───────────────
-            event = self._layer7_storage(event, db)
+            # ── Layer 7: Operational Intelligence Engine ───────────────
+            event = self._layer7_intelligence(event, db)
             if event.state == "Failed":
                 return event
 
-            # ── Layer 8: Dashboard Publication ────────────────────────
-            event = self._layer8_publish(event, db)
+            # ── Layer 8: Revenue Intelligence Engine ──────────────────
+            event = self._layer8_revenue(event, db)
+            if event.state == "Failed":
+                return event
+
+            # ── Layer 9: Data Management & Audit Storage ───────────────
+            event = self._layer9_storage(event, db)
+            if event.state == "Failed":
+                return event
+
+            # ── Layer 10: Dashboard Publication ────────────────────────
+            event = self._layer10_publish(event, db)
 
             # Mark Completed
             event.state = "Completed"
@@ -221,77 +235,49 @@ class ProcessingOrchestrator:
             return self._fail_event(event, db, layer="L2-Normalize", error=str(e))
 
     # ─────────────────────────────────────────────
-    # LAYER 3 — Rules Engine
+    # LAYER 3 — Evidence Engine
     # ─────────────────────────────────────────────
-    def _layer3_rules(self, event: OperationalEventModel, db) -> OperationalEventModel:
+    def _layer3_evidence(self, event: OperationalEventModel, db) -> OperationalEventModel:
         """
-        Evaluates the normalized event against all active rules in the DB via SES-003 standard contract.
+        Gathers raw event data and translates it into an EvidencePackage of operational facts.
         """
+        t_start = time.time()
         try:
             payload_data = event.raw_payload or {}
-            detail = payload_data.get("detail", payload_data.get("message", payload_data.get("content", "")))
             
-            request = ServiceRequest(
-                correlation_id=event.correlation_id,
-                calling_module="EventPipeline",
-                target_service="RulesEngine",
-                payload={
-                    "event_type": event.event_type,
-                    "metadata": {"detail": detail}
-                }
-            )
-            
-            response = rules_engine.invoke(request)
-            
-            if response.status != ServiceStatus.SUCCESS:
-                error_msg = response.error_details.message if response.error_details else "Unknown error"
-                return self._fail_event(event, db, layer="L3-Rules", error=error_msg)
-                
-            finding = response.result_payload
-            
-            # SES-004: Insert Relational Record
-            db_finding = RuleFindingModel(
+            # Construct EvidencePackage directly
+            evidence_package = evidence_engine.build_evidence_package(
                 event_id=event.id,
-                rule_id=finding.get("rule_id", "UNKNOWN"),
-                severity=finding.get("severity", "Information"),
-                description=finding.get("description", "No description")
+                event_type=event.event_type,
+                canonical_metadata={"detail": payload_data.get("detail", payload_data.get("message", payload_data.get("content", "")))},
+                source_connector=event.source
             )
-            db.add(db_finding)
             
-            event.layer3_duration_ms = response.processing_time_ms
+            event.evidence_package = evidence_package.__dict__
+            event.layer3_duration_ms = (time.time() - t_start) * 1000
+            
             db.commit()
-
-            self.logger.debug(
-                f"[L3] Event {event.id} rule={finding.get('rule_id')} "
-                f"severity={finding.get('severity')}"
-            )
+            self.logger.debug(f"[L3] Evidence Engine completed for event {event.id}")
             return event
-
         except Exception as e:
-            return self._fail_event(event, db, layer="L3-Rules", error=str(e))
+            return self._fail_event(event, db, layer="L3-Evidence", error=str(e))
 
     # ─────────────────────────────────────────────
     # LAYER 4 — Decision Context Engine
     # ─────────────────────────────────────────────
     def _layer4_context(self, event: OperationalEventModel, db) -> OperationalEventModel:
         """
-        Classifies the operational context of the event via SES-003 standard contract.
+        Classifies operational context based on the EvidencePackage.
         """
+        t_start = time.time()
         try:
-            # Reconstruct finding for payload since it's no longer JSON on event
-            finding_model = db.query(RuleFindingModel).filter(RuleFindingModel.event_id == event.id).first()
-            finding = {"rule_id": finding_model.rule_id} if finding_model else {}
-            
-            payload_data = event.raw_payload or {}
-            detail = payload_data.get("detail", payload_data.get("message", payload_data.get("content", "")))
-            
             request = ServiceRequest(
                 correlation_id=event.correlation_id,
                 calling_module="EventPipeline",
                 target_service="DecisionContextEngine",
                 payload={
-                    "finding": finding,
-                    "metadata": {"detail": detail}
+                    "evidence_package": getattr(event, "evidence_package", {}),
+                    "event_type": event.event_type
                 }
             )
             
@@ -301,50 +287,89 @@ class ProcessingOrchestrator:
                 error_msg = response.error_details.message if response.error_details else "Unknown error"
                 return self._fail_event(event, db, layer="L4-Context", error=error_msg)
                 
-            context = response.result_payload
-
-            event.layer4_context_output = context
-            event.layer4_duration_ms = response.processing_time_ms
+            event.decision_context = response.result_payload
+            event.layer4_duration_ms = (time.time() - t_start) * 1000
+            
             db.commit()
-
-            self.logger.debug(
-                f"[L4] Event {event.id} context={context.get('primary_context')}"
-            )
+            self.logger.debug(f"[L4] DCE resolved context for event {event.id}: {event.decision_context.get('primary_context')}")
             return event
-
         except Exception as e:
             return self._fail_event(event, db, layer="L4-Context", error=str(e))
 
     # ─────────────────────────────────────────────
-    # LAYER 5 — Operational Intelligence Engine
+    # LAYER 5 — Policy Engine
     # ─────────────────────────────────────────────
-    def _layer5_intelligence(self, event: OperationalEventModel, db) -> OperationalEventModel:
+    def _layer5_policy(self, event: OperationalEventModel, db) -> OperationalEventModel:
         """
-        Generates the operational intelligence recommendation via SES-003 standard contract.
+        Enforces governance boundaries by evaluating the Decision Context.
         """
+        t_start = time.time()
         try:
-            finding_model = db.query(RuleFindingModel).filter(RuleFindingModel.event_id == event.id).first()
-            context_model = db.query(DecisionContextModel).filter(DecisionContextModel.event_id == event.id).first()
+            decision_context = getattr(event, "decision_context", {})
+            decision_context["event_type"] = event.event_type
             
-            finding = {
-                "rule_id": finding_model.rule_id if finding_model else "",
-                "severity": finding_model.severity if finding_model else "Information",
-                "description": finding_model.description if finding_model else ""
-            }
-            context = {
-                "primary_context": context_model.primary_context if context_model else "",
-                "secondary_context": context_model.secondary_context if context_model else "",
-                "confidence": context_model.confidence if context_model else "",
-                "reason": context_model.reason if context_model else ""
-            }
+            policy_result = policy_engine.evaluate(decision_context=decision_context)
+            
+            event.policy_result = policy_result.__dict__
+            event.layer5_duration_ms = (time.time() - t_start) * 1000
+            
+            db.commit()
+            self.logger.debug(f"[L5] Policy Engine completed for event {event.id}. Permitted: {policy_result.is_permitted}")
+            return event
+        except Exception as e:
+            return self._fail_event(event, db, layer="L5-Policy", error=str(e))
 
+    # ─────────────────────────────────────────────
+    # LAYER 6 — Rules Engine
+    # ─────────────────────────────────────────────
+    def _layer6_rules(self, event: OperationalEventModel, db) -> OperationalEventModel:
+        """
+        Evaluates the operational context against active business rules ONLY if permitted by Policy Engine.
+        """
+        t_start = time.time()
+        try:
+            request = ServiceRequest(
+                correlation_id=event.correlation_id,
+                calling_module="EventPipeline",
+                target_service="RulesEngine",
+                payload={
+                    "decision_context": getattr(event, "decision_context", {}),
+                    "policy_result": getattr(event, "policy_result", {})
+                }
+            )
+            
+            response = rules_engine.invoke(request)
+            
+            if response.status != ServiceStatus.SUCCESS:
+                error_msg = response.error_details.message if response.error_details else "Unknown error"
+                return self._fail_event(event, db, layer="L6-Rules", error=error_msg)
+                
+            event.rule_findings = response.result_payload
+            event.layer6_duration_ms = (time.time() - t_start) * 1000
+            
+            db.commit()
+            self.logger.debug(f"[L6] Rules Engine evaluated event {event.id} -> finding: {event.rule_findings.get('rule_id')}")
+            return event
+
+        except Exception as e:
+            return self._fail_event(event, db, layer="L6-Rules", error=str(e))
+
+    # ─────────────────────────────────────────────
+    # LAYER 7 — Operational Intelligence Engine
+    # ─────────────────────────────────────────────
+    def _layer7_intelligence(self, event: OperationalEventModel, db) -> OperationalEventModel:
+        """
+        Takes objective rule findings and generates executive recommendations.
+        """
+        t_start = time.time()
+        try:
             request = ServiceRequest(
                 correlation_id=event.correlation_id,
                 calling_module="EventPipeline",
                 target_service="IntelligenceEngine",
                 payload={
-                    "finding": finding,
-                    "context": context
+                    "finding": event.rule_findings or {},
+                    "context": getattr(event, "decision_context", {})
                 }
             )
             
@@ -352,51 +377,34 @@ class ProcessingOrchestrator:
             
             if response.status != ServiceStatus.SUCCESS:
                 error_msg = response.error_details.message if response.error_details else "Unknown error"
-                return self._fail_event(event, db, layer="L5-Intelligence", error=error_msg)
-
-            intelligence = response.result_payload
-
-            # SES-004: Insert Relational Record
-            db_intel = OperationalIntelligenceModel(
-                event_id=event.id,
-                priority=intelligence.get("risk_level", "Normal"),
-                operational_impact=intelligence.get("business_impact", ""),
-                recommendation=intelligence.get("action", "")
-            )
-            db.add(db_intel)
-
-            event.layer5_duration_ms = response.processing_time_ms
+                return self._fail_event(event, db, layer="L7-Intelligence", error=error_msg)
+                
+            event.intelligence_result = response.result_payload
+            event.layer7_duration_ms = (time.time() - t_start) * 1000
+            
             db.commit()
-
-            self.logger.debug(
-                f"[L5] Event {event.id} risk={intelligence.get('risk_level')} action={intelligence.get('action', '')[:60]}"
-            )
+            self.logger.debug(f"[L7] OIE generated recommendations for event {event.id}")
             return event
 
         except Exception as e:
-            return self._fail_event(event, db, layer="L5-Intelligence", error=str(e))
+            return self._fail_event(event, db, layer="L7-Intelligence", error=str(e))
 
     # ─────────────────────────────────────────────
-    # LAYER 6 — Revenue Intelligence Engine
+    # LAYER 8 — Revenue Intelligence Engine
     # ─────────────────────────────────────────────
-    def _layer6_revenue(self, event: OperationalEventModel, db) -> OperationalEventModel:
+    def _layer8_revenue(self, event: OperationalEventModel, db) -> OperationalEventModel:
         """
-        Calculates the financial exposure associated with this event via SES-003 standard contract.
+        Generates revenue impact estimates based on the context and rule findings.
         """
+        t_start = time.time()
         try:
-            finding_model = db.query(RuleFindingModel).filter(RuleFindingModel.event_id == event.id).first()
-            context_model = db.query(DecisionContextModel).filter(DecisionContextModel.event_id == event.id).first()
-            
-            finding = {"rule_id": finding_model.rule_id if finding_model else ""}
-            context = {"primary_context": context_model.primary_context if context_model else ""}
-            
             request = ServiceRequest(
                 correlation_id=event.correlation_id,
                 calling_module="EventPipeline",
                 target_service="RevenueIntelligenceEngine",
                 payload={
-                    "finding": finding,
-                    "context": context
+                    "finding": event.rule_findings or {},
+                    "context": getattr(event, "decision_context", {})
                 }
             )
             
@@ -404,35 +412,22 @@ class ProcessingOrchestrator:
             
             if response.status != ServiceStatus.SUCCESS:
                 error_msg = response.error_details.message if response.error_details else "Unknown error"
-                return self._fail_event(event, db, layer="L6-Revenue", error=error_msg)
-
-            revenue = response.result_payload
-
-            # SES-004: Insert Relational Record
-            db_revenue = RevenueIntelligenceModel(
-                event_id=event.id,
-                estimated_exposure=revenue.get("estimated_financial_exposure", "$0.00"),
-                opportunity_category=revenue.get("revenue_risk_category", "None"),
-                financial_priority=revenue.get("revenue_confidence", "High")
-            )
-            db.add(db_revenue)
-
-            event.layer6_duration_ms = response.processing_time_ms
+                return self._fail_event(event, db, layer="L8-Revenue", error=error_msg)
+                
+            event.revenue_result = response.result_payload
+            event.layer8_duration_ms = (time.time() - t_start) * 1000
+            
             db.commit()
-
-            self.logger.debug(
-                f"[L6] Event {event.id} revenue_risk={revenue.get('revenue_risk_category')} "
-                f"exposure={revenue.get('estimated_financial_exposure')}"
-            )
+            self.logger.debug(f"[L8] RIE processed event {event.id}")
             return event
 
         except Exception as e:
-            return self._fail_event(event, db, layer="L6-Revenue", error=str(e))
+            return self._fail_event(event, db, layer="L8-Revenue", error=str(e))
 
     # ─────────────────────────────────────────────
-    # LAYER 7 — Data Management & Audit Storage
+    # LAYER 9 — Data Management & Audit Storage
     # ─────────────────────────────────────────────
-    def _layer7_storage(self, event: OperationalEventModel, db) -> OperationalEventModel:
+    def _layer9_storage(self, event: OperationalEventModel, db) -> OperationalEventModel:
         """
         Stores the enriched event as a Signal intelligence record.
         Writes an immutable audit log entry.
@@ -469,6 +464,19 @@ class ProcessingOrchestrator:
 
             success = data_audit_engine.save_intelligence_record(signal_event)
             event.layer7_storage_ref = event.id if success else "FAILED"
+            
+            # Save Decision Record Audit Trail
+            intel_result = getattr(event, "intelligence_result", {})
+            if intel_result:
+                decision_record = DecisionRecordModel(
+                    event_id=event.id,
+                    evidence=getattr(event, "evidence_package", {}),
+                    rule_id=getattr(event, "rule_findings", {}).get("rule_id", "SYS-BLOCKED"),
+                    policy_status=getattr(event, "policy_result", {}).get("is_permitted", False),
+                    recommendation=intel_result
+                )
+                db.add(decision_record)
+                
             event.layer7_duration_ms = (time.time() - t_start) * 1000
             db.commit()
 
@@ -478,12 +486,12 @@ class ProcessingOrchestrator:
             return event
 
         except Exception as e:
-            return self._fail_event(event, db, layer="L7-Storage", error=str(e))
+            return self._fail_event(event, db, layer="L9-Storage", error=str(e))
 
     # ─────────────────────────────────────────────
-    # LAYER 8 — Dashboard Publication
+    # LAYER 10 — Dashboard Publication
     # ─────────────────────────────────────────────
-    def _layer8_publish(self, event: OperationalEventModel, db) -> OperationalEventModel:
+    def _layer10_publish(self, event: OperationalEventModel, db) -> OperationalEventModel:
         """
         Marks the event as published to the dashboard.
         In V1: data is available via REST API poll.
@@ -501,7 +509,7 @@ class ProcessingOrchestrator:
             return event
 
         except Exception as e:
-            return self._fail_event(event, db, layer="L8-Publish", error=str(e))
+            return self._fail_event(event, db, layer="L10-Publish", error=str(e))
 
     # ─────────────────────────────────────────────
     # STATE MANAGEMENT — Failure Handler (SES-007)

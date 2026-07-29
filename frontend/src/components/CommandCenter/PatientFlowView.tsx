@@ -108,11 +108,36 @@ export const PatientFlowView: React.FC = () => {
       'Lab': { status: 'Available', encounterId: null, doctorId: null }
     };
   });
+  const [pendingAssignments, setPendingAssignments] = useState<Array<{ encounterId: string, roomName: string, patientName: string }>>([]);
   const [selectedRoom, setSelectedRoom] = useState<string | null>(null);
   const [assignTargetPatient, setAssignTargetPatient] = useState<string>('');
   const [assignTargetDoctor, setAssignTargetDoctor] = useState<string>('');
   const [isAddRoomModalOpen, setIsAddRoomModalOpen] = useState(false);
   const [newRoomName, setNewRoomName] = useState('');
+  const [newRoomDoctor, setNewRoomDoctor] = useState<string | null>(null);
+
+  const handleApproveAssignment = (encounterId: string, roomName: string) => {
+    setRoomAssignments(prev => {
+      const next = { ...prev };
+      if (next[roomName]) {
+        next[roomName] = { ...next[roomName], status: 'Occupied', encounterId };
+        localStorage.setItem('roomAssignments', JSON.stringify(next));
+      }
+      return next;
+    });
+    setPendingAssignments(prev => prev.filter(p => p.encounterId !== encounterId));
+    
+    window.dispatchEvent(new CustomEvent('show-sentinel-toast', { 
+      detail: { message: `✅ Governance Check Passed: Room assignment approved.`, type: 'success' } 
+    }));
+  };
+
+  const handleRejectAssignment = (encounterId: string) => {
+    setPendingAssignments(prev => prev.filter(p => p.encounterId !== encounterId));
+    window.dispatchEvent(new CustomEvent('show-sentinel-toast', { 
+      detail: { message: `❌ Assignment rejected by staff.`, type: 'info' } 
+    }));
+  };
 
   // Available Doctors (fetched from encounters or static roster)
   const CLINIC_DOCTORS = [
@@ -146,19 +171,6 @@ export const PatientFlowView: React.FC = () => {
         }
       });
 
-      // Find unassigned "In Room" encounters
-      const assignedEncIds = Object.values(next).map(r => r.encounterId).filter(Boolean);
-      const unassignedInRoom = encounters.filter(e => e.status && e.status.toLowerCase() === 'in room' && !assignedEncIds.includes(e.id));
-      
-      // Assign them to Available rooms
-      unassignedInRoom.forEach(enc => {
-        const availableRoom = Object.keys(next).find(roomName => next[roomName].status === 'Available' && !next[roomName].encounterId);
-        if (availableRoom) {
-            next[availableRoom] = { status: 'Occupied', encounterId: enc.id, doctorId: next[availableRoom].doctorId ?? null };
-            changed = true;
-        }
-      });
-
       if (changed) {
         localStorage.setItem('roomAssignments', JSON.stringify(next));
         return next;
@@ -166,6 +178,43 @@ export const PatientFlowView: React.FC = () => {
       return prev;
     });
   }, [encounters]);
+
+  // Governance Boundary: Generate Recommendations instead of auto-executing
+  useEffect(() => {
+    if (encounters.length === 0) return;
+    
+    setPendingAssignments(prevPending => {
+      const assignedEncIds = Object.values(roomAssignments).map(r => r.encounterId).filter(Boolean);
+      const unassignedInRoom = encounters.filter(e => e.status && e.status.toLowerCase() === 'in room' && !assignedEncIds.includes(e.id));
+      
+      let newPending = [...prevPending];
+      let changed = false;
+
+      // Remove pending items if they are no longer "In Room" or already assigned
+      const validPending = newPending.filter(p => unassignedInRoom.some(u => u.id === p.encounterId));
+      if (validPending.length !== newPending.length) {
+        newPending = validPending;
+        changed = true;
+      }
+
+      unassignedInRoom.forEach(enc => {
+        if (newPending.some(p => p.encounterId === enc.id)) return;
+        
+        const availableRoom = Object.keys(roomAssignments).find(roomName => 
+          roomAssignments[roomName].status === 'Available' && 
+          !roomAssignments[roomName].encounterId &&
+          !newPending.some(p => p.roomName === roomName)
+        );
+        
+        if (availableRoom) {
+          newPending.push({ encounterId: enc.id, roomName: availableRoom, patientName: enc.patient_name });
+          changed = true;
+        }
+      });
+
+      return changed ? newPending : prevPending;
+    });
+  }, [encounters, roomAssignments]);
 
   // Sync editing fields when a room is clicked
   useEffect(() => {
@@ -796,9 +845,48 @@ export const PatientFlowView: React.FC = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
         {/* Live Waiting Queue */}
-        <div className="bg-gradient-to-br from-[#2E1055] to-[#120524] border border-white/10 rounded-[24px] p-8 shadow-[0_20px_50px_rgba(46,16,85,0.3)] col-span-2 text-white">
-          <div className="flex items-center justify-between mb-6">
-            <h3 className="text-base font-bold text-white">Live Waiting Queue</h3>
+        <div className="flex flex-col gap-6 col-span-2">
+          {/* Governance Boundary: Pending Approvals UI */}
+          {pendingAssignments.length > 0 && (
+            <div className="bg-gradient-to-r from-amber-500/20 to-orange-500/10 border border-amber-500/30 rounded-[24px] p-6 shadow-lg">
+              <div className="flex items-center gap-2 mb-4">
+                <AlertCircle className="w-5 h-5 text-amber-400" />
+                <h3 className="text-base font-bold text-amber-400">Action Recommended: Pending Approval</h3>
+              </div>
+              <div className="space-y-3">
+                {pendingAssignments.map((assignment, idx) => (
+                  <div key={idx} className="bg-[#120524]/60 rounded-xl p-4 border border-amber-500/20 flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-semibold text-white/90">
+                        Assign <span className="font-bold text-white">{assignment.patientName}</span> to <span className="font-bold text-amber-300">{assignment.roomName}</span>
+                      </p>
+                      <p className="text-[11px] text-white/50 mt-1">
+                        Reason: Closest available room. Execution paused pending human review.
+                      </p>
+                    </div>
+                    <div className="flex gap-2">
+                      <button 
+                        onClick={() => handleRejectAssignment(assignment.encounterId)}
+                        className="px-4 py-1.5 rounded-lg text-xs font-bold text-red-400 bg-red-500/10 hover:bg-red-500/20 transition-colors"
+                      >
+                        Reject
+                      </button>
+                      <button 
+                        onClick={() => handleApproveAssignment(assignment.encounterId, assignment.roomName)}
+                        className="px-4 py-1.5 rounded-lg text-xs font-bold text-emerald-400 bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-500/40 transition-colors flex items-center gap-1"
+                      >
+                        <Check className="w-3.5 h-3.5" /> Approve Action
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <div className="bg-gradient-to-br from-[#2E1055] to-[#120524] border border-white/10 rounded-[24px] p-8 shadow-[0_20px_50px_rgba(46,16,85,0.3)] text-white">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-base font-bold text-white">Live Waiting Queue</h3>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
@@ -914,6 +1002,7 @@ export const PatientFlowView: React.FC = () => {
             </table>
           </div>
         </div>
+        </div>
 
          {/* Heat Map & AI suggestions */}
         <div className="flex flex-col gap-6 self-start sticky top-6">
@@ -923,21 +1012,7 @@ export const PatientFlowView: React.FC = () => {
                  <LayoutGrid className="w-5 h-5 text-[#A78BFA]" /> Clinic Heat Map
                </h3>
                <button
-                 onClick={() => {
-                   const roomName = prompt("Enter new room name (e.g. Room 4, Triage Bay 2, Suite 101):");
-                   if (!roomName || !roomName.trim()) return;
-                   const cleanName = roomName.trim();
-                   if (roomAssignments[cleanName]) {
-                     alert("A room with this name already exists!");
-                     return;
-                   }
-                   setRoomAssignments(prev => {
-                     const next = { ...prev, [cleanName]: { status: 'Available', encounterId: null, doctorId: null } };
-                     localStorage.setItem('roomAssignments', JSON.stringify(next));
-                     return next;
-                   });
-                   window.dispatchEvent(new CustomEvent('show-sentinel-toast', { detail: { message: `🏥 ${cleanName} added to Clinic Heat Map!`, type: 'success' } }));
-                 }}
+                 onClick={() => setIsAddRoomModalOpen(true)}
                  className="bg-white/10 hover:bg-white/20 border border-white/20 text-white font-bold text-xs px-3 py-1.5 rounded-[12px] transition-all hover:scale-105 active:scale-95 cursor-pointer flex items-center gap-1.5"
                >
                  + Add Room
@@ -2064,6 +2139,20 @@ export const PatientFlowView: React.FC = () => {
               autoFocus
             />
 
+            <p className="text-xs text-white/70 font-medium mb-4">Assign Doctor (Optional):</p>
+            <select
+              value={newRoomDoctor || ''}
+              onChange={(e) => setNewRoomDoctor(e.target.value || null)}
+              className="w-full bg-[#120524] border border-white/20 rounded-[12px] p-3 text-xs font-bold text-white outline-none cursor-pointer mb-8"
+            >
+              <option value="">-- No Doctor Assigned --</option>
+              {CLINIC_DOCTORS.map(doc => (
+                <option key={doc.id} value={doc.id}>
+                  🩺 {doc.name} — {doc.specialty}
+                </option>
+              ))}
+            </select>
+
             <div className="flex gap-3">
               <button
                 onClick={() => setIsAddRoomModalOpen(false)}
@@ -2080,12 +2169,13 @@ export const PatientFlowView: React.FC = () => {
                     return;
                   }
                   setRoomAssignments(prev => {
-                    const next = { ...prev, [cleanName]: { status: 'Available', encounterId: null, doctorId: null } };
+                    const next = { ...prev, [cleanName]: { status: 'Available', encounterId: null, doctorId: newRoomDoctor } };
                     localStorage.setItem('roomAssignments', JSON.stringify(next));
                     return next;
                   });
                   window.dispatchEvent(new CustomEvent('show-sentinel-toast', { detail: { message: `🏥 ${cleanName} added to Clinic Heat Map!`, type: 'success' } }));
                   setNewRoomName('');
+                  setNewRoomDoctor(null);
                   setIsAddRoomModalOpen(false);
                 }}
                 className="flex-1 bg-[#2563EB] hover:bg-blue-700 text-white font-bold py-2.5 rounded-[14px] text-xs transition-colors shadow-lg active:scale-95"

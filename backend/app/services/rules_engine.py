@@ -49,16 +49,23 @@ class RulesEngine(BaseService):
 
     def _process(self, payload: Dict[str, Any]) -> Dict[str, Any]:
         """
-        Evaluates incoming operational events against defined rules.
-        Payload expects: {"event_type": str, "metadata": Dict}
+        Evaluates operational context against business rules.
+        Payload expects: {"decision_context": Dict, "policy_result": Dict}
         """
-        event_type = payload.get("event_type")
-        metadata = payload.get("metadata", {})
+        decision_context = payload.get("decision_context", {})
+        policy_result = payload.get("policy_result", {})
         
-        if not event_type:
-            raise ValueError("event_type is required in RulesEngine payload")
-
-        detail = metadata.get("detail", "").lower()
+        event_type = decision_context.get("event_type", "Unknown")
+        
+        if not policy_result.get("is_permitted", False):
+            # Policy engine blocked this execution. Rule engine returns a blocked finding.
+            return {
+                "rule_id": "SYS-BLOCKED",
+                "category": "Governance",
+                "severity": "Information",
+                "trigger": "Action blocked by Policy Engine.",
+                "description": policy_result.get("governance_notes", "Blocked by governance policy.")
+            }
         
         # Default finding
         finding = {
@@ -74,8 +81,11 @@ class RulesEngine(BaseService):
         active_ids = {r["rule_id"]: r for r in active_rules}
         
         # Determine violation based on event source
+        primary_context = decision_context.get("primary_context", "")
+        secondary_context = decision_context.get("secondary_context", "")
+        
         if event_type == "EHR":
-            if "no-show" in detail and "SCH-001" in active_ids:
+            if secondary_context == "Provider Schedule Gap" and "SCH-001" in active_ids:
                 rule = active_ids["SCH-001"]
                 finding = {
                     "rule_id": rule["rule_id"],
@@ -84,7 +94,7 @@ class RulesEngine(BaseService):
                     "trigger": "Appointment marked as No-Show in EHR.",
                     "description": "Patient did not arrive for scheduled appointment."
                 }
-            elif "wait time" in detail and "SCH-002" in active_ids:
+            elif secondary_context == "Queue Congestion" and "SCH-002" in active_ids:
                 rule = active_ids["SCH-002"]
                 finding = {
                     "rule_id": rule["rule_id"],
@@ -93,7 +103,7 @@ class RulesEngine(BaseService):
                     "trigger": "Provider running behind schedule.",
                     "description": "Patient wait time exceeded threshold (45 mins)."
                 }
-            elif "booked" in detail and "SCH-003" in active_ids:
+            elif secondary_context == "Routine Booking" and "SCH-003" in active_ids:
                 rule = active_ids["SCH-003"]
                 finding = {
                     "rule_id": rule["rule_id"],
@@ -104,7 +114,7 @@ class RulesEngine(BaseService):
                 }
                 
         elif event_type == "Phone":
-            if "missed call" in detail and "OPS-001" in active_ids:
+            if secondary_context == "Staff Overload" and "OPS-001" in active_ids:
                 rule = active_ids["OPS-001"]
                 finding = {
                     "rule_id": rule["rule_id"],
@@ -115,7 +125,7 @@ class RulesEngine(BaseService):
                 }
             
         elif event_type == "Email":
-            if "lab" in detail and "CLIN-001" in active_ids:
+            if secondary_context == "Documentation Dependency" and "CLIN-001" in active_ids:
                 rule = active_ids["CLIN-001"]
                 finding = {
                     "rule_id": rule["rule_id"],

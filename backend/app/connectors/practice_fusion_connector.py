@@ -85,7 +85,7 @@ class PracticeFusionConnector(BaseConnector):
             patient_name = f"{first} {last}".strip()
 
         # Generate a Canonical Detail String
-        detail = f"Patient {patient_name} (ID: {patient_id}) updated in Practice Fusion."
+        detail = f"Patient {patient_name} (ID: {patient_id}) record synchronized from EHR."
 
         return {
             "event_type": "EHR_Update",

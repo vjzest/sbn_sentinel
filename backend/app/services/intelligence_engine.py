@@ -56,7 +56,7 @@ class IntelligenceEngine(BaseService):
             expected_outcome = "Issue resolved, patient retained."
         elif rule_id == "CLIN-001":
             business_impact = "Delay in clinical decision if unread."
-            action = "Mark for immediate doctor signature in Practice Fusion."
+            action = "Mark for immediate doctor signature in EHR."
             expected_outcome = "Timely diagnosis and patient notification."
         result = {
             "risk_level": risk_level,

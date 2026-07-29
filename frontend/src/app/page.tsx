@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { AuthScreen } from '@/components/Auth/AuthScreen';
+import { BootScreen } from '@/components/CommandCenter/BootScreen';
 
 export default function RootPage() {
   const router = useRouter();
@@ -23,11 +24,7 @@ export default function RootPage() {
   }, [router]);
 
   if (isLoading) {
-    return (
-      <div className="h-screen w-screen bg-[#0B1121] flex items-center justify-center">
-        <div className="w-10 h-10 border-4 border-slate-700 border-t-[#EEEAFE]0 rounded-full animate-spin"></div>
-      </div>
-    );
+    return <BootScreen onComplete={() => setIsLoading(false)} />;
   }
 
   return (

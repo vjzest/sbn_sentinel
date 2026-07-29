@@ -64,7 +64,7 @@ class RevenueIntelligenceEngine(BaseService):
                 "revenue_risk_category": "Documentation Risk",
                 "estimated_financial_exposure": "Claim Hold (100% of Encounter)",
                 "revenue_confidence": "High",
-                "operational_dependency": "Provider must sign the pending lab report in Practice Fusion."
+                "operational_dependency": "Provider must sign the pending lab report in EHR."
             }
             
         return revenue

@@ -20,7 +20,7 @@ api_router.include_router(encounters.router, prefix="/encounters", tags=["005_Pa
 
 # Super Admin requires specific role
 api_router.include_router(super_admin.router, prefix="/super-admin", tags=["006_Super_Admin"], dependencies=[Depends(RoleChecker(["super_admin"]))])
-api_router.include_router(pasme.router, prefix="/pasme", tags=["009_PASME"], dependencies=[Depends(RoleChecker(["super_admin"]))])
+api_router.include_router(pasme.router, prefix="/pasme", tags=["009_PASME"])
 
 api_router.include_router(billing.router, prefix="/billing", tags=["007_Billing"], dependencies=protected)
 api_router.include_router(clinics.router, prefix="/clinics", tags=["008_Clinics"], dependencies=protected)

@@ -48,13 +48,31 @@ export const ExecutiveDashboardView: React.FC<Props> = ({ setActiveTab }) => {
   return (
     <div className="max-w-[1600px] mx-auto space-y-6 animate-in fade-in duration-500">
       
-      {/* 1. Executive Summary Landing */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between mb-4 gap-4">
-        <div>
-          <h2 className="text-3xl font-extrabold text-white mb-1">Executive Intelligence Dashboard</h2>
-          <p className="text-sm text-white/70 font-medium">Real-time operational health, revenue risk, and decision-support summary.</p>
+      {/* LEVEL 1: Operational Status Banner (SXS-004) */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between bg-gradient-to-r from-[#2E1055] via-[#1E0B3B] to-[#120524] p-5 rounded-[24px] border border-white/10 shadow-[0_20px_50px_rgba(46,16,85,0.3)] mb-4 gap-4">
+        <div className="flex items-center gap-4">
+          <div className={`px-4 py-2 rounded-[16px] border font-black text-xs uppercase tracking-widest flex items-center gap-2 ${
+            criticalIssuesCount > 2 
+              ? 'bg-rose-500/20 text-rose-400 border-rose-500/30 animate-pulse' 
+              : criticalIssuesCount > 0 
+                ? 'bg-amber-500/20 text-amber-400 border-amber-500/30' 
+                : 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30'
+          }`}>
+            <Shield className="w-4 h-4" />
+            <span>
+              {criticalIssuesCount > 2 
+                ? 'Level 1: Critical Attention Required' 
+                : criticalIssuesCount > 0 
+                  ? 'Level 1: Moderate Operational Risk' 
+                  : 'Level 1: Operational Stability'}
+            </span>
+          </div>
+          <div>
+            <h2 className="text-xl font-extrabold text-white">Executive Operational Decision Center</h2>
+            <p className="text-xs text-white/70 font-medium">Real-time operational health, priority action items, and intelligence rationale.</p>
+          </div>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 shrink-0">
           <div className="bg-white/5 border border-white/10 rounded-[16px] px-4 py-2.5 premium-shadow flex items-center gap-3">
             <div className={`w-2.5 h-2.5 rounded-full ${isConnected ? 'bg-emerald-500 shadow-[0_0_8px_#10B981] animate-pulse' : 'bg-red-500'}`}></div>
             <span className="text-sm font-bold text-white">{isConnected ? 'System Live' : 'Disconnected'}</span>

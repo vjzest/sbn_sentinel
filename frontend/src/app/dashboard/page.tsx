@@ -2,7 +2,7 @@
 import { fetchWithAuth } from '@/utils/fetchWithAuth';
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { Search, Bell, Mail, Sun, LayoutDashboard, BrainCircuit, Users, Calendar, DollarSign, FileText, BarChart2, Settings, HelpCircle, LogOut, ChevronDown, CheckCircle2, Clock, AlertTriangle, ChevronRight, Plus, Moon, User, Activity, X, Cpu, Check, Menu, Shield, CreditCard, Database, Building2, ClipboardList } from 'lucide-react';
+import { Search, Bell, Mail, Sun, LayoutDashboard, BrainCircuit, Users, Calendar, DollarSign, FileText, BarChart2, Settings, HelpCircle, LogOut, ChevronDown, CheckCircle2, Clock, AlertTriangle, ChevronRight, Plus, Moon, User, Activity, X, Cpu, Check, Menu, Shield, CreditCard, Database, Building2, ClipboardList, MessageSquare } from 'lucide-react';
 import { StatCard } from '@/components/CommandCenter/StatCard';
 import { SignalFeed } from '@/components/CommandCenter/SignalFeed';
 import { RevenueImpact } from '@/components/CommandCenter/RevenueImpact';
@@ -12,6 +12,7 @@ import { PatientFlowView } from '@/components/CommandCenter/PatientFlowView';
 import { ScheduleOptimizerView } from '@/components/CommandCenter/ScheduleOptimizerView';
 import { ClinicalLogsView } from '@/components/CommandCenter/ClinicalLogsView';
 import { RevenueReportsView } from '@/components/CommandCenter/RevenueReportsView';
+import { TeamMessagingView } from '@/components/CommandCenter/TeamMessagingView';
 import { SettingsView } from '@/components/CommandCenter/SettingsView';
 import { HelpSupportView } from '@/components/CommandCenter/HelpSupportView';
 import { AuditLogsView } from '@/components/CommandCenter/AuditLogsView';
@@ -43,7 +44,13 @@ export default function Dashboard() {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [userRole, setUserRole] = useState('org_admin');
   const [currentUser, setCurrentUser] = useState<any>(null);
-  const [isDarkMode, setIsDarkMode] = useState(false);
+  const [isDarkMode, setIsDarkMode] = useState(() => {
+    // Set dark class immediately to avoid flash of light mode
+    if (typeof document !== 'undefined') {
+      document.documentElement.classList.add('dark');
+    }
+    return true; // dark mode on by default
+  });
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isNotifOpen, setIsNotifOpen] = useState(false);
   const [isMsgOpen, setIsMsgOpen] = useState(false);
@@ -57,6 +64,7 @@ export default function Dashboard() {
   
   // Interactive Chat States
   const [activeChat, setActiveChat] = useState<any | null>(null);
+  const [newMessageText, setNewMessageText] = useState('');
   const [chatMessages, setChatMessages] = useState<any[]>(() => {
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem('sentinel_team_chats');
@@ -236,12 +244,14 @@ export default function Dashboard() {
         } else {
           setActiveModelName('GPT-4o');
         }
-        if (data.theme_mode === 'dark') {
-          setIsDarkMode(true);
-          document.documentElement.classList.add('dark');
-        } else if (data.theme_mode === 'light') {
+        // Default: set dark mode ON (our UI is dark by design)
+        if (data.theme_mode === 'light') {
           setIsDarkMode(false);
           document.documentElement.classList.remove('dark');
+        } else {
+          // dark or system → dark mode on (our default)
+          setIsDarkMode(true);
+          document.documentElement.classList.add('dark');
         }
       })
       .catch(() => {});
@@ -338,11 +348,13 @@ export default function Dashboard() {
                   <SidebarItem icon={Users} label="Patient Flow" active={activeTab === 'patient-flow'} onClick={() => setActiveTab('patient-flow')} />
                 )}
                 {['org_admin', 'clinic_admin', 'practice_manager'].includes(userRole) && (
-                  <SidebarItem icon={FileText} label="Clinical Logs" active={activeTab === 'clinical-logs'} onClick={() => setActiveTab('clinical-logs')} />
+                  <>
+                    <SidebarItem icon={FileText} label="Clinical Logs" active={activeTab === 'clinical-logs'} onClick={() => { setActiveTab('clinical-logs'); setIsMobileMenuOpen(false); }} />
+                    <SidebarItem icon={DollarSign} label="Revenue Reports" active={activeTab === 'revenue-reports'} onClick={() => { setActiveTab('revenue-reports'); setIsMobileMenuOpen(false); }} />
+                  </>
                 )}
-                {['org_admin', 'clinic_admin', 'ops_manager'].includes(userRole) && (
-                  <SidebarItem icon={DollarSign} label="Revenue Reports" active={activeTab === 'revenue-reports'} onClick={() => setActiveTab('revenue-reports')} />
-                )}
+                {/* Team Messaging is available to ALL staff */}
+                <SidebarItem icon={MessageSquare} label="Team Messaging" active={activeTab === 'team-messaging'} onClick={() => { setActiveTab('team-messaging'); setIsMobileMenuOpen(false); }} />
               </div>
             </div>
 
@@ -489,11 +501,22 @@ export default function Dashboard() {
                 </div>
 
                 <button
-                  onClick={() => {
+                  onClick={async () => {
                     const newMode = !isDarkMode;
                     setIsDarkMode(newMode);
-                    if (newMode) document.documentElement.classList.add('dark');
-                    else document.documentElement.classList.remove('dark');
+                    if (newMode) {
+                      document.documentElement.classList.add('dark');
+                    } else {
+                      document.documentElement.classList.remove('dark');
+                    }
+                    // Save to backend
+                    try {
+                      await fetchWithAuth(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/settings`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ theme_mode: newMode ? 'dark' : 'light' })
+                      });
+                    } catch {}
                   }}
                   className="hidden md:block hover:text-white transition-colors cursor-pointer"
                   title={isDarkMode ? "Disable Dark Mode" : "Enable Dark Mode"}
@@ -593,12 +616,25 @@ export default function Dashboard() {
                         </div>
                         <ChevronDown className="w-4 h-4 text-white/70" />
                       </div>
-                      <div id="providerDropdown" className="hidden absolute right-0 mt-3 w-56 bg-white/5 border border-white/10 rounded-[16px] premium-shadow z-50 animate-in fade-in slide-in-from-top-2">
+                      <div id="providerDropdown" className="hidden absolute right-0 mt-3 w-[320px] bg-[#120524] border border-white/20 rounded-[16px] shadow-2xl z-50 animate-in fade-in slide-in-from-top-2">
                         <div className="p-2 space-y-1">
                           <button onClick={(e) => { document.getElementById('selectedProviderText')!.innerText = 'All Providers'; e.currentTarget.parentElement?.parentElement?.classList.add('hidden'); }} className="w-full text-left px-3 py-2 text-sm font-bold text-white hover:bg-white/10 rounded-[10px] transition-colors">All Providers</button>
-                          <button onClick={(e) => { document.getElementById('selectedProviderText')!.innerText = 'Dr. Smith (Cardio)'; e.currentTarget.parentElement?.parentElement?.classList.add('hidden'); }} className="w-full text-left px-3 py-2 text-sm font-bold text-[#4B5563] hover:text-white hover:bg-white/10 rounded-[10px] transition-colors">Dr. Smith (Cardio)</button>
-                          <button onClick={(e) => { document.getElementById('selectedProviderText')!.innerText = 'Dr. Patel (General)'; e.currentTarget.parentElement?.parentElement?.classList.add('hidden'); }} className="w-full text-left px-3 py-2 text-sm font-bold text-[#4B5563] hover:text-white hover:bg-white/10 rounded-[10px] transition-colors">Dr. Patel (General)</button>
-                          <button onClick={(e) => { document.getElementById('selectedProviderText')!.innerText = 'Dr. Chen (X-Ray)'; e.currentTarget.parentElement?.parentElement?.classList.add('hidden'); }} className="w-full text-left px-3 py-2 text-sm font-bold text-[#4B5563] hover:text-white hover:bg-white/10 rounded-[10px] transition-colors">Dr. Chen (X-Ray)</button>
+                          {[
+                            { name: 'Dr. Sarah Mitchell', specialty: 'Internal Medicine' },
+                            { name: 'Dr. James Okafor', specialty: 'Family Medicine' },
+                            { name: 'Dr. Priya Sharma', specialty: 'Urgent Care' },
+                            { name: 'Dr. Carlos Rivera', specialty: 'Pediatrics' },
+                            { name: 'Dr. Emily Chen', specialty: 'Cardiology' }
+                          ].map((doc) => (
+                            <button 
+                              key={doc.name} 
+                              onClick={(e) => { document.getElementById('selectedProviderText')!.innerText = doc.name; e.currentTarget.parentElement?.parentElement?.classList.add('hidden'); }} 
+                              className="w-full flex items-center justify-between px-3 py-2.5 text-sm font-bold text-[#9CA3AF] hover:text-white hover:bg-white/10 rounded-[10px] transition-colors"
+                            >
+                              <span>{doc.name}</span>
+                              <span className="text-xs font-normal opacity-50 whitespace-nowrap">{doc.specialty}</span>
+                            </button>
+                          ))}
                         </div>
                       </div>
                     </div>
@@ -613,7 +649,7 @@ export default function Dashboard() {
                         </div>
                         <ChevronDown className="w-4 h-4 text-white/70" />
                       </button>
-                      <div id="dateDropdown" className="hidden absolute right-0 mt-3 w-48 bg-white/5 border border-white/10 rounded-[16px] premium-shadow z-50 animate-in fade-in slide-in-from-top-2">
+                      <div id="dateDropdown" className="hidden absolute right-0 mt-3 w-48 bg-[#120524] border border-white/20 rounded-[16px] shadow-2xl z-50 animate-in fade-in slide-in-from-top-2">
                         <div className="p-2 space-y-1">
                           <button onClick={(e) => { document.getElementById('selectedDateText')!.innerText = 'Today'; e.currentTarget.parentElement?.parentElement?.classList.add('hidden'); }} className="w-full text-left px-3 py-2 text-sm font-bold text-white hover:bg-white/10 rounded-[10px] transition-colors">Today</button>
                           <button onClick={(e) => { document.getElementById('selectedDateText')!.innerText = 'Yesterday'; e.currentTarget.parentElement?.parentElement?.classList.add('hidden'); }} className="w-full text-left px-3 py-2 text-sm font-bold text-[#4B5563] hover:text-white hover:bg-white/10 rounded-[10px] transition-colors">Yesterday</button>
@@ -888,6 +924,7 @@ export default function Dashboard() {
             {activeTab === 'schedule' && <ScheduleOptimizerView />}
             {activeTab === 'clinical-logs' && <ClinicalLogsView />}
             {activeTab === 'revenue-reports' && (['practice_manager', 'staff'].includes(userRole) ? <AccessDeniedView onReturn={() => setActiveTab('dashboard')} /> : <RevenueReportsView />)}
+            {activeTab === 'team-messaging' && <TeamMessagingView currentUser={currentUser} />}
             {activeTab === 'audit-logs' && (['practice_manager', 'staff', 'ops_manager'].includes(userRole) ? <AccessDeniedView onReturn={() => setActiveTab('dashboard')} /> : <AuditLogsView />)}
             {activeTab.startsWith('settings-') && (
               (['practice_manager', 'staff', 'ops_manager'].includes(userRole) && ['settings-integrations', 'settings-clinics', 'settings-billing', 'settings-security', 'settings-team', 'settings-general'].includes(activeTab)) 

@@ -58,14 +58,27 @@
   border: 1px solid rgba(255, 255, 255, 0.5);
 }
 
-/* Instant Dark Mode Hack */
-.dark-mode-active {
-  filter: invert(1) hue-rotate(180deg);
-  background-color: #050505 !important;
+/* =============================================
+   DARK MODE (default): rich dark purple — no filter needed
+   ============================================= */
+html.dark {
+  filter: none;
+  transition: filter 0.5s ease;
 }
 
-.dark-mode-active img,
-.dark-mode-active video,
-.dark-mode-active .no-invert {
+/* =============================================
+   LIGHT MODE: bright clinical white theme
+   Strong invert so the switch is clearly visible
+   ============================================= */
+html:not(.dark) {
+  filter: invert(0.93) hue-rotate(180deg) brightness(1.05) saturate(0.9);
+  transition: filter 0.5s ease;
+}
+
+/* Re-invert images & avatars so they look correct in light mode */
+html:not(.dark) img,
+html:not(.dark) video,
+html:not(.dark) canvas,
+html:not(.dark) svg image {
   filter: invert(1) hue-rotate(180deg);
 }

@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, WebSocket, WebSocketDisconnect
 from sqlalchemy.orm import Session
 from typing import List, Dict, Any
 import time
@@ -15,6 +15,42 @@ router = APIRouter()
 
 # Global maintenance mode flag (in-memory for V1)
 MAINTENANCE_MODE = False
+
+# WebSocket Connection Manager for PASME Real-Time Chat
+class ConnectionManager:
+    def __init__(self):
+        self.active_connections: List[WebSocket] = []
+
+    async def connect(self, websocket: WebSocket):
+        await websocket.accept()
+        self.active_connections.append(websocket)
+
+    def disconnect(self, websocket: WebSocket):
+        if websocket in self.active_connections:
+            self.active_connections.remove(websocket)
+
+    async def broadcast(self, message: dict):
+        for connection in self.active_connections:
+            try:
+                await connection.send_json(message)
+            except Exception:
+                pass
+
+manager = ConnectionManager()
+
+@router.websocket("/chat/ws")
+async def websocket_chat(websocket: WebSocket):
+    """
+    PASME Real-Time WebSocket for cross-browser Team Messaging.
+    """
+    await manager.connect(websocket)
+    try:
+        while True:
+            data = await websocket.receive_json()
+            await manager.broadcast(data)
+    except WebSocketDisconnect:
+        manager.disconnect(websocket)
+
 
 @router.get("/health")
 def get_platform_health(current_user: User = Depends(RoleChecker(["super_admin"]))):
@@ -80,10 +116,9 @@ def toggle_rule(rule_id: str, db: Session = Depends(get_db), current_user: User 
     # MS-012/MS-010 Audit Requirement: Administrative actions are permanently traceable
     data_audit_engine._log_internal(
         db,
-        user_email=current_user.email,
+        user_system=current_user.email,
         action=f"{'Enabled' if rule.is_active else 'Disabled'} Rule",
-        resource=f"Rule: {rule.rule_id}",
-        ip_address="127.0.0.1"
+        module=f"Rule: {rule.rule_id}"
     )
     
     db.commit()
@@ -100,10 +135,9 @@ def toggle_maintenance_mode(db: Session = Depends(get_db), current_user: User = 
     # Audit log
     data_audit_engine._log_internal(
         db,
-        user_email=current_user.email,
+        user_system=current_user.email,
         action=f"{'Enabled' if MAINTENANCE_MODE else 'Disabled'} Maintenance Mode",
-        resource="Platform System",
-        ip_address="127.0.0.1"
+        module="Platform System"
     )
     
     return {"maintenance_mode": MAINTENANCE_MODE}
