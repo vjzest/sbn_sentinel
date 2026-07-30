@@ -7,7 +7,7 @@ class DecisionRecordModel(Base):
     __tablename__ = "decision_records"
 
     id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
-    event_id = Column(String(36), ForeignKey("operational_events.id"), index=True, nullable=False)
+    event_id = Column(String(36), ForeignKey("pipeline_events.id"), index=True, nullable=False)
     
     # Audit Trail Information
     evidence = Column(JSON, nullable=True)         # Facts from Evidence Engine
