@@ -31,7 +31,7 @@ from app.models.intelligence import (
     OperationalIntelligenceModel, RevenueIntelligenceModel
 )
 from app.models.decision_record import DecisionRecordModel
-from app.services.connector_manager import connector_manager
+
 from app.services.evidence_engine import evidence_engine
 from app.services.decision_context_engine import decision_context_engine
 from app.services.policy_engine import policy_engine

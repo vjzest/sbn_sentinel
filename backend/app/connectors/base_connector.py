@@ -87,7 +87,7 @@ class BaseConnector(ABC):
                 canonical = await self.transform_to_canonical(record)
                 
                 # 5. Submit to Pipeline (SES-002 / SES-006)
-                processing_orchestrator.submit_event(
+                processing_orchestrator.create_event(
                     event_type=canonical.get("event_type", "Unknown"),
                     source=self.name,
                     raw_payload={"detail": canonical.get("detail", str(record)), **record},
