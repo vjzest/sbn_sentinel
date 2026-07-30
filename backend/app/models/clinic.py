@@ -1,10 +1,11 @@
-from sqlalchemy import Column, Integer, String, Boolean
+import uuid
+from sqlalchemy import Column, String, Boolean
 from app.db.database import Base
 
 class ClinicModel(Base):
     __tablename__ = "clinics"
 
-    id = Column(Integer, primary_key=True, index=True)
+    id = Column(String(36), primary_key=True, index=True, default=lambda: str(uuid.uuid4()))
     name = Column(String, index=True)
     address = Column(String)
     phone = Column(String)

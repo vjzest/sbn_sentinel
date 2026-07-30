@@ -264,7 +264,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onLogin }) => {
 
             {!isOtpMode ? (
               <>
-                {!isLogin && !isForgotPassword && (
+                {!isLogin && !isForgotPassword && !isInviteMode && (
                   <div className="space-y-3 mb-3">
                     <div className="grid grid-cols-2 gap-3">
                       <div>

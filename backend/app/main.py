@@ -1,7 +1,8 @@
 from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
+from starlette.middleware.cors import CORSMiddleware
 
 from app.core.config import settings
+from app.core.logging import setup_logging
 from app.api.v1.api import api_router
 from app.db.database import engine
 from app.models.signal import Base
@@ -13,9 +14,19 @@ from app.models.settings import SettingsModel
 from app.models.encounter import EncounterModel
 from app.models.integration import IntegrationModel
 from app.models.otp import OTPModel
+from app.models.rule import RuleModel, RuleExecutionLog
+from app.models.event import OperationalEventModel
+from app.models.organization import OrganizationModel, OrganizationClinicModel
+from app.models.intelligence import (
+    RuleFindingModel, DecisionContextModel, 
+    OperationalIntelligenceModel, RevenueIntelligenceModel
+)
 
 # Create tables in SQLite/PostgreSQL (if they don't exist)
 Base.metadata.create_all(bind=engine)
+
+# SES-010: Initialize structured JSON logging for observability
+setup_logging(settings.LOG_LEVEL if hasattr(settings, "LOG_LEVEL") else "INFO")
 
 
 def create_app() -> FastAPI:

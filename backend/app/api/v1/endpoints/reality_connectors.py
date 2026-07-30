@@ -8,7 +8,8 @@ from app.db.database import get_db
 from app.models.connector import ConnectorModel
 from app.schemas.reality import ConnectorHealthResponse, ConnectorSyncRequest
 from app.schemas.connector import ConnectorCreate
-from app.services.practice_fusion_client import PracticeFusionClient
+from app.services.connector_manager import connector_manager
+from app.connectors.practice_fusion_connector import PracticeFusionConnector
 
 router = APIRouter()
 
@@ -68,12 +69,13 @@ async def connect_new_system(connector_in: ConnectorCreate, db: Session = Depend
     # Live Verification for Practice Fusion
     if "Practice Fusion" in connector_in.name and connector_in.config and connector_in.config.get('api_key'):
         try:
-            client = PracticeFusionClient(
-                api_key=connector_in.config.get('api_key'),
-                base_url=connector_in.config.get('endpoint', "https://api.practicefusion.com/v1")
-            )
-            # Test authentication immediately
-            await client.get_patients()
+            # SES-005 Direct Authentication Test
+            pf_connector = PracticeFusionConnector(connector_id=connector_in.id)
+            if not await pf_connector.authenticate(connector_in.config):
+                raise HTTPException(status_code=401, detail="Invalid Practice Fusion Credentials")
+            
+            # Optionally do a quick retrieval to verify
+            await pf_connector.retrieve_data()
         except Exception as e:
             # Prevent saving the connection if authentication fails
             raise HTTPException(status_code=401, detail=f"Invalid Practice Fusion Credentials: {str(e)}")
@@ -95,46 +97,14 @@ async def connect_new_system(connector_in: ConnectorCreate, db: Session = Depend
 @router.post("/sync")
 async def trigger_connector_sync(request: ConnectorSyncRequest, db: Session = Depends(get_db)):
     """
-    Manually trigger data synchronization from a specific Reality Source using Real Integrations.
+    Manually trigger data synchronization from a specific Reality Source.
+    Uses the SES-005 canonical sync framework.
     """
-    connector = db.query(ConnectorModel).filter(ConnectorModel.id == request.connector_id).first()
-    if not connector:
-        raise HTTPException(status_code=404, detail="Connector not found")
+    result = await connector_manager.sync_connector(request.connector_id)
+    if result.get("status") == "Failed":
+        raise HTTPException(status_code=400, detail=result.get("error"))
     
-    # Update status to Syncing
-    connector.status = "Syncing"
-    db.commit()
-    
-    # Check if this is Practice Fusion and we have Developer Keys
-    if "Practice Fusion" in connector.name and connector.config and connector.config.get('api_key'):
-        try:
-            client = PracticeFusionClient(
-                api_key=connector.config.get('api_key'),
-                base_url=connector.config.get('endpoint', "https://api.practicefusion.com/v1")
-            )
-            # This will make the REAL internet HTTP request to the EHR!
-            # It will fail with 401 Unauthorized if the Developer API Key is a dummy.
-            patients = await client.get_patients()
-            
-            # If successful, we update status
-            connector.status = "Connected"
-            connector.last_sync = datetime.utcnow()
-            connector.latency_ms = random.randint(10, 30)
-            db.commit()
-            return {"message": f"Successfully pulled {len(patients)} records from Practice Fusion EHR!"}
-        
-        except Exception as e:
-            # Revert status on failure
-            connector.status = "Needs attention"
-            db.commit()
-            raise HTTPException(status_code=401, detail=str(e))
-    else:
-        # Fallback simulation for other connectors (Twilio, Zoom, etc.)
-        connector.status = "Connected"
-        connector.last_sync = datetime.utcnow()
-        connector.latency_ms = random.randint(15, 60)
-        db.commit()
-        return {"message": f"Sync triggered successfully for {connector.name}"}
+    return {"message": "Sync complete", "details": result}
 
 @router.delete("/disconnect/{connector_id}")
 def disconnect_system(connector_id: str, db: Session = Depends(get_db)):
@@ -148,3 +118,5 @@ def disconnect_system(connector_id: str, db: Session = Depends(get_db)):
     db.delete(connector)
     db.commit()
     return {"message": f"Successfully disconnected {connector_id}"}
+
+

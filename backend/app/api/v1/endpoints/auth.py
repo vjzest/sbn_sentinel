@@ -5,7 +5,10 @@ from app.db.database import get_db
 from app.models.user import User
 from pydantic import BaseModel, EmailStr
 from app.schemas.user import UserCreate, UserLogin, Token, UserResponse
-from app.core.security import verify_password, get_password_hash, create_access_token, ACCESS_TOKEN_EXPIRE_MINUTES
+from app.core.security import verify_password, get_password_hash, create_access_token
+from app.core.config import settings
+from app.services.data_audit_engine import data_audit_engine
+from app.api.deps import get_current_user
 
 router = APIRouter()
 
@@ -82,21 +85,17 @@ def register_user(user_in: RegisterVerifyRequest, db: Session = Depends(get_db))
 def login_access_token(user_in: UserLogin, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.email == user_in.email).first()
     if not user or not verify_password(user_in.password, user.hashed_password):
+        # SIAME / SES-008: Log failed authentication attempt
+        data_audit_engine._log_internal(db, user_system=user_in.email, action="SECURITY:FAILED_LOGIN", module="Authentication", correlation_id="Auth")
         raise HTTPException(status_code=400, detail="Incorrect email or password")
     elif not user.is_active:
+        data_audit_engine._log_internal(db, user_system=user_in.email, action="SECURITY:FAILED_LOGIN_INACTIVE", module="Authentication", correlation_id="Auth")
         raise HTTPException(status_code=400, detail="Inactive user")
     
-    # Audit log entry
-    from app.models.audit import AuditLogModel
-    db_audit = AuditLogModel(
-        user_email=user.email,
-        action="USER_LOGIN",
-        resource="Dashboard Authentication",
-        ip_address="127.0.0.1"
-    )
-    db.add(db_audit)
+    # SIAME / SES-008: Log successful authentication
+    data_audit_engine._log_internal(db, user_system=user.email, action="SECURITY:USER_LOGIN", module="Authentication", correlation_id="Auth")
     
-    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(
         data={"sub": str(user.id), "role": user.role}, expires_delta=access_token_expires
     )
@@ -169,7 +168,7 @@ def accept_invite(payload: ResetPasswordRequest, db: Session = Depends(get_db)):
     otp_record = db.query(OTPModel).filter(
         OTPModel.email == payload.email, 
         OTPModel.otp_code == payload.otp,
-        OTPModel.purpose == "invite",
+        OTPModel.purpose.in_(["invite", "reset_password"]),
         OTPModel.is_used == False
     ).order_by(OTPModel.created_at.desc()).first()
     
@@ -185,3 +184,10 @@ def accept_invite(payload: ResetPasswordRequest, db: Session = Depends(get_db)):
     otp_record.is_used = True
     db.commit()
     return {"message": "Account has been successfully activated."}
+
+@router.get("/me", response_model=UserResponse)
+def read_user_me(current_user: User = Depends(get_current_user)):
+    """
+    Returns the secure profile of the currently authenticated user.
+    """
+    return current_user

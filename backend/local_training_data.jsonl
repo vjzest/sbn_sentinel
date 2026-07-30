@@ -18513,3 +18513,7 @@
 {"text": "Missed call from John Doe (+1-555-0198).", "priority": "Medium", "insight": "Patient likely calling to reschedule.", "action": "Trigger callback task for front desk."}
 {"text": "Email received from Lab Corp regarding John Doe results.", "priority": "High", "insight": "Lab results available for review.", "action": "Notify Dr. Smith to review."}
 {"text": "New appointment booked by Robert Brown.", "priority": "Low", "insight": "High priority walk-in expected.", "action": "Prepare intake forms."}
+{"text": "Patient John Doe appointment marked as No-Show.", "priority": "High", "insight": "Revenue loss of $150.", "action": "Auto-send rescheduling SMS to patient."}
+{"text": "Email received from Lab Corp regarding Michael Johnson results.", "priority": "High", "insight": "Lab results available for review.", "action": "Notify Dr. Smith to review."}
+{"text": "Patient Emily Davis appointment marked as No-Show.", "priority": "High", "insight": "Revenue loss of $150.", "action": "Auto-send rescheduling SMS to patient."}
+{"text": "New appointment booked by Emily Davis.", "priority": "Low", "insight": "High priority walk-in expected.", "action": "Prepare intake forms."}

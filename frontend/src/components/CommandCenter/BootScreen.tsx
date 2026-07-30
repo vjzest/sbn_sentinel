@@ -81,10 +81,10 @@ export const BootScreen: React.FC<BootScreenProps> = ({ onComplete }) => {
 
       {/* Signature Bottom Bar (Founded by Iftikhar Ali Khan) */}
       <div className="absolute bottom-10 left-0 right-0 text-center">
-        <p className="text-[10px] tracking-[0.25em] text-slate-500 uppercase font-bold">
-          Founded by <span className="text-[#120524] font-extrabold">Iftikhar Ali Khan</span>
+        <p className="text-[10px] tracking-[0.25em] text-slate-400 uppercase font-bold">
+          Founded by <span className="text-[#A78BFA] font-extrabold drop-shadow-[0_0_12px_rgba(167,139,250,0.5)]">Iftikhar Ali Khan</span>
         </p>
-        <p className="text-[9px] text-slate-600 mt-1">SBN Sentinel Command Center V1.0</p>
+        <p className="text-[9px] text-slate-500 mt-1">SBN Sentinel Command Center V1.0</p>
       </div>
     </div>
   );

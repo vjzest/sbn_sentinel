@@ -1,3 +1,4 @@
+import { fetchWithAuth } from '@/utils/fetchWithAuth';
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { Activity, Phone, Mail, Calendar, ChevronRight, X, Clock, Database, Sparkles, Check, Shield, Search, Filter, Cpu, CheckCircle2, ShieldCheck, RefreshCw, AlertTriangle, AlertCircle, ArrowUpRight, Copy } from 'lucide-react';
@@ -23,7 +24,7 @@ export const SignalsDetailView: React.FC = () => {
   const fetchDbSignals = async () => {
     try {
       setIsRefreshing(true);
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/signals`);
+      const response = await fetchWithAuth(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/signals`);
       if (response.ok) {
         const data = await response.json();
         setDbSignals(data);
@@ -37,7 +38,7 @@ export const SignalsDetailView: React.FC = () => {
 
   const fetchAuditLogs = async () => {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/audit/`);
+      const response = await fetchWithAuth(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/audit/`);
       if (response.ok) {
         const data = await response.json();
         const filtered = data.filter((log: any) => log.action.startsWith('Approved Sentinel Action'));
@@ -102,7 +103,7 @@ export const SignalsDetailView: React.FC = () => {
   const ehrCount = signalsList.filter(s => s.type === 'EHR').length;
   const phoneCount = signalsList.filter(s => s.type === 'Phone').length;
   const emailCount = signalsList.filter(s => s.type === 'Email').length;
-  const lossRiskCount = signalsList.filter(s => s.ai_insight?.toLowerCase().includes('loss')).length;
+  const lossRiskCount = signalsList.filter(s => s.risk_level === 'Critical' || s.risk_level === 'High').length;
 
   const triggerAction = async () => {
     if (!selectedSignal) return;
@@ -113,7 +114,7 @@ export const SignalsDetailView: React.FC = () => {
       const user = userStr ? JSON.parse(userStr) : null;
       const userEmail = user?.email || "admin@sbnsentinel.com";
       
-      await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/audit/`, {
+      await fetchWithAuth(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/audit/`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -375,7 +376,7 @@ export const SignalsDetailView: React.FC = () => {
                   </tr>
                 ) : (
                   filteredSignals.map((signal) => {
-                    const isRisk = signal.ai_insight?.toLowerCase().includes('loss');
+                    const isRisk = signal.risk_level === 'Critical' || signal.risk_level === 'High';
                     return (
                       <tr 
                         key={signal.id}
@@ -540,18 +541,77 @@ export const SignalsDetailView: React.FC = () => {
                 </div>
               </div>
 
-              {/* AI Assistant Insight */}
-              <div className="bg-[#A78BFA]/10 border border-[#A78BFA]/30 rounded-[18px] p-4 flex gap-3">
-                <Sparkles className="w-5 h-5 text-[#8B5CF6] flex-shrink-0 mt-0.5 animate-pulse" />
-                <div>
-                  <h5 className="text-xs font-extrabold text-[#C4B5FD] uppercase tracking-wider mb-1">AI Recommendation Insight</h5>
-                  <p className="text-xs text-white/90 font-semibold leading-relaxed">{selectedSignal.ai_insight || "AI Engine evaluated this event. No immediate critical clinical or revenue leakage identified. Status: Clean."}</p>
+              {/* Deterministic Evaluation */}
+              <div className="bg-white/5 border border-white/10 rounded-[18px] p-4 flex gap-3">
+                <div className="flex-1">
+                  <h5 className="text-xs font-extrabold text-white uppercase tracking-wider mb-2">Deterministic Evaluation</h5>
+                  <div className="space-y-2 mb-3">
+                    <p className="text-xs text-white/90 font-semibold"><span className="text-white/50">Problem:</span> {selectedSignal.problem || 'None'}</p>
+                    <p className="text-xs text-white/90 font-semibold"><span className="text-white/50">Reason:</span> {selectedSignal.reason || 'None'}</p>
+                  </div>
                   
                   {selectedSignal.recommended_action && (
-                    <div className="mt-2.5 p-2 bg-[#A78BFA]/20 border border-[#A78BFA]/40 rounded-2xl inline-block text-[11px] text-[#C4B5FD] font-bold">
-                      Recommendation: {selectedSignal.recommended_action}
+                    <div className="mt-2.5 p-2 bg-emerald-500/10 border border-emerald-500/30 rounded-2xl inline-block text-[11px] text-emerald-400 font-bold w-full">
+                      Action: {selectedSignal.recommended_action}
+                      <div className="text-[10px] text-emerald-600 mt-1">Expected Outcome: {selectedSignal.expected_outcome || 'Issue resolved.'}</div>
                     </div>
                   )}
+                </div>
+              </div>
+
+              {/* Decision Context Engine Block */}
+              <div className="bg-white/5 border border-white/10 rounded-[18px] p-4 flex gap-3 relative">
+                <div className="flex-1">
+                  <h5 className="text-xs font-extrabold text-[#A78BFA] uppercase tracking-wider mb-2 flex items-center gap-1">
+                    <Activity className="w-3.5 h-3.5" /> Decision Context Engine
+                  </h5>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-[10px] text-white/50 uppercase tracking-widest font-bold">Primary Context</p>
+                      <p className="text-xs font-bold text-white">{selectedSignal.primary_context || 'Unknown'}</p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] text-white/50 uppercase tracking-widest font-bold">Secondary Context</p>
+                      <p className="text-xs font-bold text-white">{selectedSignal.secondary_context || 'Unknown'}</p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] text-white/50 uppercase tracking-widest font-bold">Confidence</p>
+                      <p className={`text-xs font-bold ${selectedSignal.context_confidence === 'High' ? 'text-emerald-400' : 'text-amber-400'}`}>
+                        {selectedSignal.context_confidence || 'Low'}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] text-white/50 uppercase tracking-widest font-bold">Reasoning</p>
+                      <p className="text-[11px] font-semibold text-white/70 leading-snug">{selectedSignal.context_reason || 'N/A'}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Revenue Intelligence Engine Block */}
+              <div className="bg-amber-500/10 border border-amber-500/30 rounded-[18px] p-4 flex gap-3 relative">
+                <div className="flex-1">
+                  <h5 className="text-xs font-extrabold text-amber-400 uppercase tracking-wider mb-2 flex items-center gap-1">
+                    <Shield className="w-3.5 h-3.5" /> Revenue Intelligence Engine
+                  </h5>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-[10px] text-amber-500/50 uppercase tracking-widest font-bold">Risk Category</p>
+                      <p className="text-xs font-bold text-amber-100">{selectedSignal.revenue_risk_category || 'None'}</p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] text-amber-500/50 uppercase tracking-widest font-bold">Financial Exposure</p>
+                      <p className="text-lg font-black text-amber-400">{selectedSignal.estimated_financial_exposure || '$0.00'}</p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] text-amber-500/50 uppercase tracking-widest font-bold">Confidence</p>
+                      <p className="text-xs font-bold text-amber-300">{selectedSignal.revenue_confidence || 'High'}</p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] text-amber-500/50 uppercase tracking-widest font-bold">Operational Dependency</p>
+                      <p className="text-[11px] font-semibold text-amber-100/70 leading-snug">{selectedSignal.operational_dependency || 'N/A'}</p>
+                    </div>
+                  </div>
                 </div>
               </div>
 

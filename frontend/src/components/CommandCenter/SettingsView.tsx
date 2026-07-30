@@ -1,3 +1,4 @@
+import { fetchWithAuth } from '@/utils/fetchWithAuth';
 import React, { useState, useEffect } from 'react';
 import { 
   User, Bell, Shield, Database, BrainCircuit, CreditCard, Users, 
@@ -121,7 +122,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onSaveSettings, acti
   const fetchAudits = async () => {
     setLoadingAudits(true);
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/audit`);
+      const res = await fetchWithAuth(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/audit`);
       if (res.ok) {
         const data = await res.json();
         setAuditLogs(data);
@@ -137,7 +138,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onSaveSettings, acti
 
   const fetchTeam = async () => {
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/settings/team`);
+      const res = await fetchWithAuth(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/settings/team`);
       if (res.ok) {
         const data = await res.json();
         if (data.length > 0) setTeamMembers(data);
@@ -149,14 +150,14 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onSaveSettings, acti
 
   const fetchIntegrations = async () => {
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/settings/integrations`);
+      const res = await fetchWithAuth(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/settings/integrations`);
       if (res.ok) {
         const data = await res.json();
         setIntegrationsList(data);
       }
       
       // Fetch Clinics
-      const clinicsRes = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/clinics`);
+      const clinicsRes = await fetchWithAuth(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/clinics`);
       if (clinicsRes.ok) {
         const clinicsData = await clinicsRes.json();
         setClinicsList(clinicsData);
@@ -176,7 +177,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onSaveSettings, acti
   useEffect(() => {
     const fetchSettings = async () => {
       try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/settings`);
+        const res = await fetchWithAuth(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/settings`);
         if (res.ok) {
           const data = await res.json();
           setPracticeName(data.practice_name || '');
@@ -208,7 +209,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onSaveSettings, acti
   // Handle Save All Changes to clinical SQLite server
   const handleSaveChanges = async () => {
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/settings`, {
+      const res = await fetchWithAuth(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/settings`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -256,7 +257,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onSaveSettings, acti
     if (!inviteName || !inviteEmail) return;
 
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/settings/team/invite`, {
+      const res = await fetchWithAuth(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/settings/team/invite`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name: inviteName, email: inviteEmail, role: inviteRole })
@@ -280,7 +281,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onSaveSettings, acti
   // Toggle Integration Status
   const handleToggleIntegration = async (id: string) => {
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/settings/integrations/${id}/toggle`, {
+      const res = await fetchWithAuth(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/settings/integrations/${id}/toggle`, {
         method: 'POST'
       });
       if (res.ok) {
@@ -303,7 +304,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onSaveSettings, acti
       return;
     }
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/clinics`, {
+      const res = await fetchWithAuth(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/clinics`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -339,6 +340,70 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onSaveSettings, acti
     showToast(`Downloading receipt for ${invId}...`);
   };
 
+  const handleSubscribe = async (plan: any) => {
+    if (activePlan === plan.id) {
+      showToast(`Already on ${plan.name} plan`);
+      return;
+    }
+    const amountNum = parseInt(plan.price.replace(/[^0-9]/g, '')) || 199;
+    
+    setIsProcessingPayment(true);
+    showToast(`Initiating checkout for ${plan.name}...`);
+    try {
+      const res = await fetchWithAuth(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/billing/create-order`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ plan_id: plan.id, amount: amountNum * 100, currency: 'USD' })
+      });
+      if (!res.ok) throw new Error('Order creation failed');
+      const data = await res.json();
+      
+      const options = {
+        key: data.key_id,
+        amount: data.amount,
+        currency: data.currency,
+        name: 'Sentinel Health',
+        description: `Upgrade to ${plan.name}`,
+        order_id: data.order_id,
+        handler: async function (response: any) {
+          const verifyRes = await fetchWithAuth(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/billing/verify-payment`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_payment_id: response.razorpay_payment_id || 'mock_pay_id',
+              razorpay_signature: response.razorpay_signature || 'mock_sig'
+            })
+          });
+          if (verifyRes.ok) {
+            setActivePlan(plan.id);
+            showToast(`Successfully upgraded to ${plan.name}!`);
+            setInvoices([{ id: data.invoice_id, date: new Date().toLocaleDateString(), amount: amountNum, status: 'Paid' }, ...invoices]);
+          } else {
+            showToast('Payment verification failed', 'error');
+          }
+        },
+        prefill: {
+          name: practiceName,
+          contact: '9999999999'
+        },
+        theme: {
+          color: '#2563EB'
+        }
+      };
+      
+      const rzp = new (window as any).Razorpay(options);
+      rzp.on('payment.failed', function (response: any) {
+        showToast('Payment failed', 'error');
+      });
+      rzp.open();
+    } catch (err) {
+      showToast('Error initiating checkout', 'error');
+    } finally {
+      setIsProcessingPayment(false);
+    }
+  };
+
   const renderContent = () => {
     switch (localActiveMenu) {
       case 'settings-clinics':
@@ -357,7 +422,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onSaveSettings, acti
               </button>
             </div>
 
-            <div className="bg-white/5 border border-white/10 rounded-[24px] overflow-hidden">
+            <div className="bg-white/5 border border-white/10 rounded-[24px] overflow-x-auto">
               <table className="w-full text-left border-collapse">
                 <thead>
                   <tr className="border-b border-white/10 bg-white/[0.02]">
@@ -432,9 +497,9 @@ document.body
       )}
 
       {/* Header */}
-      <div className="flex items-end justify-between mb-2">
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 md:gap-0 mb-4 md:mb-2">
         <div>
-          <h2 className="text-3xl font-extrabold text-white mb-1">
+          <h2 className="text-2xl md:text-3xl font-extrabold text-white mb-1">
             {localActiveMenu === 'general' ? 'Organization Details' :
              localActiveMenu === 'clinics' || localActiveMenu === 'settings-clinics' ? 'Clinics & Facilities' :
              localActiveMenu === 'team' ? 'Users & Roles' :
@@ -447,7 +512,7 @@ document.body
         </div>
         <button 
           onClick={handleSaveChanges}
-          className="flex items-center gap-2 bg-white/10 border border-white/20 hover:bg-white/15 text-white font-bold text-xs px-6 py-3 rounded-[14px] transition-all active:scale-95 cursor-pointer"
+          className="flex items-center justify-center gap-2 bg-white/10 border border-white/20 hover:bg-white/15 text-white font-bold text-xs px-6 py-3 rounded-[14px] transition-all active:scale-95 cursor-pointer w-full md:w-auto"
         >
           <Save className="w-4 h-4" /> Save Changes
         </button>
@@ -637,7 +702,7 @@ document.body
                             <button 
                               onClick={async () => {
                                 try {
-                                  const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/settings/team/${member.id}`, { method: 'DELETE' });
+                                  const res = await fetchWithAuth(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/settings/team/${member.id}`, { method: 'DELETE' });
                                   if (res.ok) {
                                     setTeamMembers(prev => prev.filter(m => m.id !== member.id));
                                     showToast(`Revoked clinical access for ${member.name}.`);
@@ -846,8 +911,7 @@ document.body
                       <div 
                         key={plan.id}
                         onClick={() => {
-                          setActivePlan(plan.id);
-                          showToast(`Switched package to ${plan.name}`);
+                          handleSubscribe(plan);
                         }}
                         className={`p-5 rounded-[20px] border cursor-pointer transition-all flex flex-col justify-between premium-shadow ${
                           activePlan === plan.id 

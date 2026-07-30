@@ -1,7 +1,8 @@
 'use client';
+import { fetchWithAuth } from '@/utils/fetchWithAuth';
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { Search, Bell, Mail, Sun, LayoutDashboard, BrainCircuit, Users, Calendar, DollarSign, FileText, BarChart2, Settings, HelpCircle, LogOut, ChevronDown, CheckCircle2, Clock, AlertTriangle, ChevronRight, Plus, Moon, User, Activity, X, Cpu, Check, Menu, Shield, CreditCard, Database, Building2, ClipboardList } from 'lucide-react';
+import { Search, Bell, Mail, Sun, LayoutDashboard, BrainCircuit, Users, Calendar, DollarSign, FileText, BarChart2, Settings, HelpCircle, LogOut, ChevronDown, CheckCircle2, Clock, AlertTriangle, ChevronRight, Plus, Moon, User, Activity, X, Cpu, Check, Menu, Shield, CreditCard, Database, Building2, ClipboardList, MessageSquare } from 'lucide-react';
 import { StatCard } from '@/components/CommandCenter/StatCard';
 import { SignalFeed } from '@/components/CommandCenter/SignalFeed';
 import { RevenueImpact } from '@/components/CommandCenter/RevenueImpact';
@@ -11,6 +12,7 @@ import { PatientFlowView } from '@/components/CommandCenter/PatientFlowView';
 import { ScheduleOptimizerView } from '@/components/CommandCenter/ScheduleOptimizerView';
 import { ClinicalLogsView } from '@/components/CommandCenter/ClinicalLogsView';
 import { RevenueReportsView } from '@/components/CommandCenter/RevenueReportsView';
+import { TeamMessagingView } from '@/components/CommandCenter/TeamMessagingView';
 import { SettingsView } from '@/components/CommandCenter/SettingsView';
 import { HelpSupportView } from '@/components/CommandCenter/HelpSupportView';
 import { AuditLogsView } from '@/components/CommandCenter/AuditLogsView';
@@ -42,7 +44,13 @@ export default function Dashboard() {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [userRole, setUserRole] = useState('org_admin');
   const [currentUser, setCurrentUser] = useState<any>(null);
-  const [isDarkMode, setIsDarkMode] = useState(false);
+  const [isDarkMode, setIsDarkMode] = useState(() => {
+    // Set dark class immediately to avoid flash of light mode
+    if (typeof document !== 'undefined') {
+      document.documentElement.classList.add('dark');
+    }
+    return true; // dark mode on by default
+  });
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isNotifOpen, setIsNotifOpen] = useState(false);
   const [isMsgOpen, setIsMsgOpen] = useState(false);
@@ -56,12 +64,41 @@ export default function Dashboard() {
   
   // Interactive Chat States
   const [activeChat, setActiveChat] = useState<any | null>(null);
-  const [chatMessages, setChatMessages] = useState<any[]>([
-    { sender: 'Dr. Alan Grant', text: 'Can we review the Q3 revenue projections and the undercoding claims today?', time: '10:42 AM', isMe: false },
-    { sender: 'Me', text: 'Yes, I just approved the AI recode recommendations which recovered $540.', time: '10:45 AM', isMe: true },
-    { sender: 'Dr. Alan Grant', text: 'Excellent! That is a significant recovery. Let me know when the billing batch is completed.', time: '10:47 AM', isMe: false }
-  ]);
   const [newMessageText, setNewMessageText] = useState('');
+  const [chatMessages, setChatMessages] = useState<any[]>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('sentinel_team_chats');
+      if (saved) {
+        try {
+          return JSON.parse(saved);
+        } catch (e) {}
+      }
+    }
+    return [
+      { sender: 'City Heart - Dr Jenkins', text: 'Daily encounter charts auto-coded and submitted.', time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), isMe: false },
+      { sender: 'Vijay Maurya', text: 'Operations and patient flow running smoothly.', time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), isMe: false }
+    ];
+  });
+
+  useEffect(() => {
+    if (typeof window !== 'undefined' && chatMessages.length > 0) {
+      localStorage.setItem('sentinel_team_chats', JSON.stringify(chatMessages));
+    }
+  }, [chatMessages]);
+  const [toastMessage, setToastMessage] = useState<{ msg: string; type?: string } | null>(null);
+
+  useEffect(() => {
+    const handleToast = (e: any) => {
+      if (e.detail) {
+        setToastMessage({ msg: e.detail.message || e.detail.msg || 'Action completed successfully!', type: e.detail.type || 'success' });
+        setTimeout(() => {
+          setToastMessage(null);
+        }, 4000);
+      }
+    };
+    window.addEventListener('show-sentinel-toast', handleToast);
+    return () => window.removeEventListener('show-sentinel-toast', handleToast);
+  }, []);
 
   const stats = useSelector((state: RootState) => state.signals.stats);
   const signals = useSelector((state: RootState) => state.signals.events);
@@ -76,6 +113,9 @@ export default function Dashboard() {
 
   useEffect(() => {
     setMounted(true);
+    const handleCloseMenu = () => setIsMobileMenuOpen(false);
+    window.addEventListener('close-mobile-menu', handleCloseMenu);
+    return () => window.removeEventListener('close-mobile-menu', handleCloseMenu);
   }, []);
 
   const loadRemindersFromStorage = () => {
@@ -194,7 +234,7 @@ export default function Dashboard() {
     setIsBooting(false);
     
     // Load practice configuration from database
-    fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/settings`)
+    fetchWithAuth(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/settings`)
       .then(res => res.json())
       .then(data => {
         if (data.practice_name) setPracticeName(data.practice_name);
@@ -204,12 +244,14 @@ export default function Dashboard() {
         } else {
           setActiveModelName('GPT-4o');
         }
-        if (data.theme_mode === 'dark') {
-          setIsDarkMode(true);
-          document.documentElement.classList.add('dark');
-        } else if (data.theme_mode === 'light') {
+        // Default: set dark mode ON (our UI is dark by design)
+        if (data.theme_mode === 'light') {
           setIsDarkMode(false);
           document.documentElement.classList.remove('dark');
+        } else {
+          // dark or system → dark mode on (our default)
+          setIsDarkMode(true);
+          document.documentElement.classList.add('dark');
         }
       })
       .catch(() => {});
@@ -231,24 +273,15 @@ export default function Dashboard() {
 
   return (
     <>
-      {isDarkMode && (
-        <style dangerouslySetInnerHTML={{
-          __html: `
-          html {
-            /* 
-              invert(0.93) turns white into dark grey (#121212) instead of pure black.
-              sepia(0.4) adds a warm brownish tint.
-              hue-rotate(195deg) shifts that brown into a beautiful rich dark blue/slate!
-              saturate(1.2) boosts the blue slightly.
-            */
-            filter: invert(0.93) sepia(0.4) hue-rotate(195deg) saturate(1.2) !important;
-            background-color: #0B1121 !important;
-          }
-          img, video {
-            filter: invert(1) hue-rotate(180deg) !important;
-          }
-        `}} />
+      {/* Global Toast Banner */}
+      {toastMessage && (
+        <div className="fixed top-6 right-8 z-[9999] animate-in fade-in slide-in-from-top-4 duration-300 flex items-center gap-3 bg-[#120524] border border-white/20 text-white px-5 py-3.5 rounded-[18px] shadow-[0_20px_50px_rgba(0,0,0,0.8)] backdrop-blur-2xl">
+          <div className={`w-3 h-3 rounded-full flex-shrink-0 ${toastMessage.type === 'alert' ? 'bg-rose-500 animate-ping' : toastMessage.type === 'info' ? 'bg-blue-400 animate-pulse' : 'bg-emerald-400'}`}></div>
+          <p className="text-xs font-bold tracking-wide">{toastMessage.msg}</p>
+          <button onClick={() => setToastMessage(null)} className="ml-3 text-white/50 hover:text-white text-xs font-bold cursor-pointer">✕</button>
+        </div>
       )}
+
       <div className="flex h-screen bg-white/10 text-white font-sans overflow-hidden w-full absolute inset-0 p-3 gap-3">
         
         {/* Mobile Sidebar Overlay */}
@@ -315,11 +348,13 @@ export default function Dashboard() {
                   <SidebarItem icon={Users} label="Patient Flow" active={activeTab === 'patient-flow'} onClick={() => setActiveTab('patient-flow')} />
                 )}
                 {['org_admin', 'clinic_admin', 'practice_manager'].includes(userRole) && (
-                  <SidebarItem icon={FileText} label="Clinical Logs" active={activeTab === 'clinical-logs'} onClick={() => setActiveTab('clinical-logs')} />
+                  <>
+                    <SidebarItem icon={FileText} label="Clinical Logs" active={activeTab === 'clinical-logs'} onClick={() => { setActiveTab('clinical-logs'); setIsMobileMenuOpen(false); }} />
+                    <SidebarItem icon={DollarSign} label="Revenue Reports" active={activeTab === 'revenue-reports'} onClick={() => { setActiveTab('revenue-reports'); setIsMobileMenuOpen(false); }} />
+                  </>
                 )}
-                {['org_admin', 'clinic_admin', 'ops_manager'].includes(userRole) && (
-                  <SidebarItem icon={DollarSign} label="Revenue Reports" active={activeTab === 'revenue-reports'} onClick={() => setActiveTab('revenue-reports')} />
-                )}
+                {/* Team Messaging is available to ALL staff */}
+                <SidebarItem icon={MessageSquare} label="Team Messaging" active={activeTab === 'team-messaging'} onClick={() => { setActiveTab('team-messaging'); setIsMobileMenuOpen(false); }} />
               </div>
             </div>
 
@@ -368,115 +403,120 @@ export default function Dashboard() {
             </div>
             <div className="flex items-center gap-5">
               <div className="flex items-center gap-4 text-white/70">
-                {/* Notifications */}
+                {/* Notifications - Live Backend Signals */}
                 <div className="relative">
                   <button
                     onClick={() => { setIsNotifOpen(!isNotifOpen); setIsMsgOpen(false); setIsProfileOpen(false); }}
                     className="relative hover:text-white transition-colors cursor-pointer"
                   >
-                    <Bell className="w-5 h-5" />
-                    <span className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-[#EF4444] text-white text-[9px] font-bold rounded-full flex items-center justify-center border-2 border-[#F7F9FC]">3</span>
+                    <Bell className="w-5 h-5 text-white/80 hover:text-white" />
+                    {signals.length > 0 && (
+                      <span className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-[#EF4444] text-white text-[9px] font-bold rounded-full flex items-center justify-center border-2 border-[#120524]">
+                        {signals.length > 99 ? '99+' : signals.length}
+                      </span>
+                    )}
                   </button>
                   {isNotifOpen && (
-                    <div className="absolute right-0 mt-4 w-80 bg-white/5 border border-white/10 rounded-[16px] premium-shadow z-50 animate-in fade-in slide-in-from-top-2">
-                      <div className="p-3 border-b border-[#F3F4F6] flex justify-between items-center">
-                        <p className="text-sm font-bold text-white">Notifications</p>
-                        <span className="text-xs text-[#2E1055] font-bold cursor-pointer hover:underline">Mark all as read</span>
+                    <div className="absolute right-0 mt-4 w-80 bg-[#120524] border border-white/10 rounded-[16px] premium-shadow z-50 animate-in fade-in slide-in-from-top-2">
+                      <div className="p-3 border-b border-white/10 flex justify-between items-center">
+                        <p className="text-sm font-bold text-white">Live Signals & Notifications ({signals.length})</p>
+                        <span onClick={() => setIsNotifOpen(false)} className="text-xs text-blue-400 font-bold cursor-pointer hover:underline">Close</span>
                       </div>
                       <div className="max-h-80 overflow-y-auto custom-scrollbar">
-                        {[
-                          { title: 'Critical Wait Time', msg: 'ED wait times exceeded 45 mins.', time: '2 mins ago', type: 'alert' },
-                          { title: 'Schedule Optimized', msg: 'Dr. Smith\'s afternoon schedule was auto-balanced.', time: '1 hr ago', type: 'success' },
-                          { title: 'New Signal Source', msg: 'Epic EHR connector is now active.', time: '3 hrs ago', type: 'info' }
-                        ].map((n, i) => (
-                          <div key={i} className="p-3 border-b border-[#F3F4F6] hover:bg-white/10 cursor-pointer transition-colors flex gap-3">
-                            <div className={`mt-0.5 w-2 h-2 rounded-full flex-shrink-0 ${n.type === 'alert' ? 'bg-[#EF4444]' : n.type === 'success' ? 'bg-[#10B981]' : 'bg-[#3B82F6]'}`}></div>
-                            <div>
-                              <p className="text-sm font-bold text-white">{n.title}</p>
-                              <p className="text-xs text-white/70 font-medium mt-0.5">{n.msg}</p>
-                              <p className="text-[10px] text-[#9CA3AF] font-bold mt-1">{n.time}</p>
+                        {signals.length === 0 ? (
+                          <div className="p-6 text-center text-xs text-white/50">No backend signals detected.</div>
+                        ) : (
+                          signals.slice(0, 10).map((n: any, i: number) => (
+                            <div key={n.id || i} onClick={() => { setActiveTab('signals'); setIsNotifOpen(false); }} className="p-3 border-b border-white/10 hover:bg-white/10 cursor-pointer transition-colors flex gap-3">
+                              <div className={`mt-1 w-2 h-2 rounded-full flex-shrink-0 ${n.risk_level === 'Critical' || n.risk_level === 'High' ? 'bg-[#EF4444]' : n.risk_level === 'Moderate' ? 'bg-[#F59E0B]' : 'bg-[#10B981]'}`}></div>
+                              <div className="min-w-0 flex-1">
+                                <p className="text-xs font-bold text-white truncate">{n.source} • {n.type}</p>
+                                <p className="text-xs text-white/70 font-medium mt-0.5 line-clamp-2">{n.message}</p>
+                                <p className="text-[10px] text-white/40 font-bold mt-1">{n.timestamp ? new Date(n.timestamp).toLocaleTimeString() : 'Live Stream'}</p>
+                              </div>
                             </div>
-                          </div>
-                        ))}
+                          ))
+                        )}
                       </div>
-                      <div className="p-2 border-t border-[#F3F4F6] text-center">
-                        <button onClick={() => { setActiveTab('intelligence'); setIsNotifOpen(false); }} className="text-xs font-bold text-white/70 hover:text-white cursor-pointer">View All Notifications</button>
+                      <div className="p-2 border-t border-white/10 text-center">
+                        <button onClick={() => { setActiveTab('signals'); setIsNotifOpen(false); }} className="text-xs font-bold text-blue-400 hover:text-blue-300 cursor-pointer">View Signals Hub</button>
                       </div>
                     </div>
                   )}
                 </div>
 
-                {/* Messages */}
+                {/* Messages - Live Team Communications */}
                 <div className="relative">
                   <button
                     onClick={() => { setIsMsgOpen(!isMsgOpen); setIsNotifOpen(false); setIsProfileOpen(false); }}
                     className="relative hover:text-white transition-colors cursor-pointer"
                   >
-                    <Mail className="w-5 h-5" />
-                    <span className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-[#2563EB] text-white text-[9px] font-bold rounded-full flex items-center justify-center border-2 border-[#F7F9FC]">5</span>
+                    <Mail className="w-5 h-5 text-white/80 hover:text-white" />
+                    {chatMessages.length > 0 && (
+                      <span className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-[#2563EB] text-white text-[9px] font-bold rounded-full flex items-center justify-center border-2 border-[#120524]">
+                        {chatMessages.length}
+                      </span>
+                    )}
                   </button>
                   {isMsgOpen && (
-                    <div className="absolute right-0 mt-4 w-80 bg-white/5 border border-white/10 rounded-[16px] premium-shadow z-50 animate-in fade-in slide-in-from-top-2">
-                      <div className="p-3 border-b border-[#F3F4F6] flex justify-between items-center">
-                        <p className="text-sm font-bold text-white">Messages</p>
-                        <span className="text-xs text-[#2E1055] font-bold cursor-pointer hover:underline">New Message</span>
+                    <div className="absolute right-0 mt-4 w-80 bg-[#120524] border border-white/10 rounded-[16px] premium-shadow z-50 animate-in fade-in slide-in-from-top-2">
+                      <div className="p-3 border-b border-white/10 flex justify-between items-center">
+                        <p className="text-sm font-bold text-white">Team Chat ({chatMessages.length})</p>
+                        <span onClick={() => setIsMsgOpen(false)} className="text-xs text-blue-400 font-bold cursor-pointer hover:underline">Close</span>
                       </div>
                       <div className="max-h-80 overflow-y-auto custom-scrollbar">
-                        {[
-                          { name: 'Dr. Alan Grant', msg: 'Can we review the Q3 revenue projections?', time: '10:42 AM', unread: true },
-                          { name: 'System Admin', msg: 'Server maintenance scheduled for tonight.', time: 'Yesterday', unread: true },
-                          { name: 'Jane Doe (Billing)', msg: 'Insurance claims batch processed successfully.', time: 'Yesterday', unread: false }
-                        ].map((m, i) => (
-                          <div key={i} onClick={() => { setActiveChat(m.name); setIsMsgOpen(false); }} className="p-3 border-b border-[#F3F4F6] hover:bg-white/10 cursor-pointer transition-colors flex gap-3 items-center">
-                            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-gray-100 to-gray-200 border border-gray-300 flex items-center justify-center text-gray-600 font-bold text-xs flex-shrink-0">
-                              {m.name.charAt(0)}
+                        {chatMessages.length === 0 ? (
+                          <div className="p-6 text-center text-xs text-white/50">No messages in team inbox.</div>
+                        ) : (
+                          chatMessages.map((m: any, i: number) => (
+                            <div key={i} onClick={() => { setActiveChat(m.sender); setIsMsgOpen(false); }} className="p-3 border-b border-white/10 hover:bg-white/10 cursor-pointer transition-colors flex gap-3 items-center">
+                              <div className="w-8 h-8 rounded-full bg-blue-500/20 border border-blue-500/30 flex items-center justify-center text-blue-400 font-bold text-xs flex-shrink-0">
+                                {m.sender ? m.sender.charAt(0) : 'T'}
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="text-xs font-bold text-white truncate">{m.sender}</p>
+                                <p className="text-xs truncate mt-0.5 text-white/70">{m.text}</p>
+                              </div>
+                              <span className="text-[9px] text-white/40">{m.time}</span>
                             </div>
-                            <div className="flex-1 min-w-0">
-                              <p className={`text-sm text-white truncate ${m.unread ? 'font-bold' : 'font-medium'}`}>{m.name}</p>
-                              <p className={`text-xs truncate mt-0.5 ${m.unread ? 'text-[#4B5563] font-semibold' : 'text-white/70'}`}>{m.msg}</p>
-                            </div>
-                            {m.unread && <div className="w-2 h-2 rounded-full bg-[#2563EB]"></div>}
-                          </div>
-                        ))}
+                          ))
+                        )}
                       </div>
-                      <div className="p-2 border-t border-[#F3F4F6] text-center">
-                        <button onClick={() => { setActiveChat('Dr. Alan Grant'); setIsMsgOpen(false); }} className="text-xs font-bold text-white/70 hover:text-white cursor-pointer">Open Inbox</button>
+                      <div className="p-2 border-t border-white/10 text-center">
+                        <button onClick={() => { setActiveTab('clinical-logs'); setIsMsgOpen(false); }} className="text-xs font-bold text-blue-400 hover:text-blue-300 cursor-pointer">Open Clinical Workspace</button>
                       </div>
                     </div>
                   )}
                 </div>
 
-                <div className="relative mr-2">
-                  <select 
-                    value={userRole} 
-                    onChange={(e) => {
-                      const newRole = e.target.value;
-                      setUserRole(newRole);
-                      // Reset tab if role doesn't have access
-                      if (['practice_manager'].includes(newRole) && ['intelligence', 'signals', 'connectors', 'revenue-reports'].includes(activeTab)) {
-                        setActiveTab('dashboard');
-                      } else if (['staff'].includes(newRole) && ['intelligence', 'signals', 'connectors', 'revenue-reports', 'clinical-logs'].includes(activeTab)) {
-                        setActiveTab('dashboard');
-                      } else if (['ops_manager'].includes(newRole) && ['intelligence', 'signals', 'connectors', 'clinical-logs'].includes(activeTab)) {
-                        setActiveTab('dashboard');
-                      }
-                    }}
-                    className="bg-white/10 border border-[#E8EDF5] text-xs font-bold text-[#4B5563] rounded-[10px] px-2.5 py-1.5 outline-none cursor-pointer hover:bg-gray-100 hover:text-white transition-colors"
-                  >
-                    <option value="org_admin">Organization Admin</option>
-                    <option value="clinic_admin">Clinic Admin</option>
-                    <option value="ops_manager">Operations Manager</option>
-                    <option value="practice_manager">Practice Manager</option>
-                    <option value="staff">Staff User</option>
-                  </select>
+                <div className="relative mr-2 px-3 py-1.5 bg-white/10 border border-white/10 rounded-[10px] text-xs font-bold text-white flex items-center gap-1.5 select-none">
+                  <Shield className="w-3.5 h-3.5 text-blue-400" />
+                  <span>
+                    {userRole === 'org_admin' && 'Organization Admin'}
+                    {userRole === 'clinic_admin' && 'Clinic Admin'}
+                    {userRole === 'ops_manager' && 'Operations Manager'}
+                    {userRole === 'practice_manager' && 'Practice Manager'}
+                    {userRole === 'staff' && 'Staff User'}
+                  </span>
                 </div>
 
                 <button
-                  onClick={() => {
+                  onClick={async () => {
                     const newMode = !isDarkMode;
                     setIsDarkMode(newMode);
-                    if (newMode) document.documentElement.classList.add('dark');
-                    else document.documentElement.classList.remove('dark');
+                    if (newMode) {
+                      document.documentElement.classList.add('dark');
+                    } else {
+                      document.documentElement.classList.remove('dark');
+                    }
+                    // Save to backend
+                    try {
+                      await fetchWithAuth(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/settings`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ theme_mode: newMode ? 'dark' : 'light' })
+                      });
+                    } catch {}
                   }}
                   className="hidden md:block hover:text-white transition-colors cursor-pointer"
                   title={isDarkMode ? "Disable Dark Mode" : "Enable Dark Mode"}
@@ -515,23 +555,26 @@ export default function Dashboard() {
 
                 {/* Profile Dropdown */}
                 {isProfileOpen && (
-                  <div className="absolute right-0 mt-3 w-56 bg-white/5 border border-white/10 rounded-[16px] premium-shadow z-50 animate-in fade-in slide-in-from-top-2">
-                    <div className="p-3 border-b border-[#F3F4F6]">
-                      <p className="text-sm font-bold text-white">{currentUser?.full_name || 'Admin User'}</p>
-                      <p className="text-xs font-medium text-white/70">{currentUser?.email || 'admin@sbnsentinel.com'}</p>
+                  <div className="absolute right-0 mt-3 w-60 bg-[#120524] border border-white/15 rounded-[20px] shadow-[0_20px_50px_rgba(0,0,0,0.8)] backdrop-blur-2xl z-50 animate-in fade-in slide-in-from-top-2 p-2">
+                    <div className="p-3 border-b border-white/10 mb-1">
+                      <p className="text-sm font-bold text-white tracking-wide">{currentUser?.full_name || 'Admin User'}</p>
+                      <p className="text-xs font-medium text-white/60 truncate mt-0.5">{currentUser?.email || 'admin@sbnsentinel.com'}</p>
                     </div>
-                    <div className="p-2 space-y-1">
-                      <button onClick={() => { setActiveTab('profile'); setIsProfileOpen(false); }} className="w-full flex items-center gap-2 px-3 py-2 text-sm font-bold text-[#4B5563] hover:text-white hover:bg-white/10 rounded-[10px] transition-colors">
-                        <User className="w-4 h-4" /> Profile Details
+                    <div className="space-y-1">
+                      <button 
+                        onClick={() => { setActiveTab('profile'); setIsProfileOpen(false); }} 
+                        className="w-full flex items-center gap-2.5 px-3 py-2.5 text-xs font-bold text-white/80 hover:text-white hover:bg-white/10 rounded-[12px] transition-all cursor-pointer"
+                      >
+                        <User className="w-4 h-4 text-blue-400" /> Profile Details
                       </button>
                       <button
                         onClick={() => { setActiveTab('settings'); setIsProfileOpen(false); }}
-                        className="w-full flex items-center gap-2 px-3 py-2 text-sm font-bold text-[#4B5563] hover:text-white hover:bg-white/10 rounded-[10px] transition-colors"
+                        className="w-full flex items-center gap-2.5 px-3 py-2.5 text-xs font-bold text-white/80 hover:text-white hover:bg-white/10 rounded-[12px] transition-all cursor-pointer"
                       >
-                        <Settings className="w-4 h-4" /> Account Settings
+                        <Settings className="w-4 h-4 text-purple-400" /> Account Settings
                       </button>
                     </div>
-                    <div className="p-2 border-t border-[#F3F4F6]">
+                    <div className="mt-1 pt-1 border-t border-white/10">
                       <button
                         onClick={() => {
                           localStorage.removeItem('token');
@@ -539,9 +582,9 @@ export default function Dashboard() {
                           localStorage.removeItem('userRole');
                           router.push('/');
                         }}
-                        className="w-full flex items-center gap-2 px-3 py-2 text-sm font-bold text-rose-600 hover:bg-rose-50 rounded-[10px] transition-colors"
+                        className="w-full flex items-center gap-2.5 px-3 py-2.5 text-xs font-bold text-rose-400 hover:text-rose-300 hover:bg-rose-500/20 rounded-[12px] transition-all cursor-pointer"
                       >
-                        <LogOut className="w-4 h-4" /> Sign Out
+                        <LogOut className="w-4 h-4 text-rose-400" /> Sign Out
                       </button>
                     </div>
                   </div>
@@ -573,12 +616,25 @@ export default function Dashboard() {
                         </div>
                         <ChevronDown className="w-4 h-4 text-white/70" />
                       </div>
-                      <div id="providerDropdown" className="hidden absolute right-0 mt-3 w-56 bg-white/5 border border-white/10 rounded-[16px] premium-shadow z-50 animate-in fade-in slide-in-from-top-2">
+                      <div id="providerDropdown" className="hidden absolute right-0 mt-3 w-[320px] bg-[#120524] border border-white/20 rounded-[16px] shadow-2xl z-50 animate-in fade-in slide-in-from-top-2">
                         <div className="p-2 space-y-1">
                           <button onClick={(e) => { document.getElementById('selectedProviderText')!.innerText = 'All Providers'; e.currentTarget.parentElement?.parentElement?.classList.add('hidden'); }} className="w-full text-left px-3 py-2 text-sm font-bold text-white hover:bg-white/10 rounded-[10px] transition-colors">All Providers</button>
-                          <button onClick={(e) => { document.getElementById('selectedProviderText')!.innerText = 'Dr. Smith (Cardio)'; e.currentTarget.parentElement?.parentElement?.classList.add('hidden'); }} className="w-full text-left px-3 py-2 text-sm font-bold text-[#4B5563] hover:text-white hover:bg-white/10 rounded-[10px] transition-colors">Dr. Smith (Cardio)</button>
-                          <button onClick={(e) => { document.getElementById('selectedProviderText')!.innerText = 'Dr. Patel (General)'; e.currentTarget.parentElement?.parentElement?.classList.add('hidden'); }} className="w-full text-left px-3 py-2 text-sm font-bold text-[#4B5563] hover:text-white hover:bg-white/10 rounded-[10px] transition-colors">Dr. Patel (General)</button>
-                          <button onClick={(e) => { document.getElementById('selectedProviderText')!.innerText = 'Dr. Chen (X-Ray)'; e.currentTarget.parentElement?.parentElement?.classList.add('hidden'); }} className="w-full text-left px-3 py-2 text-sm font-bold text-[#4B5563] hover:text-white hover:bg-white/10 rounded-[10px] transition-colors">Dr. Chen (X-Ray)</button>
+                          {[
+                            { name: 'Dr. Sarah Mitchell', specialty: 'Internal Medicine' },
+                            { name: 'Dr. James Okafor', specialty: 'Family Medicine' },
+                            { name: 'Dr. Priya Sharma', specialty: 'Urgent Care' },
+                            { name: 'Dr. Carlos Rivera', specialty: 'Pediatrics' },
+                            { name: 'Dr. Emily Chen', specialty: 'Cardiology' }
+                          ].map((doc) => (
+                            <button 
+                              key={doc.name} 
+                              onClick={(e) => { document.getElementById('selectedProviderText')!.innerText = doc.name; e.currentTarget.parentElement?.parentElement?.classList.add('hidden'); }} 
+                              className="w-full flex items-center justify-between px-3 py-2.5 text-sm font-bold text-[#9CA3AF] hover:text-white hover:bg-white/10 rounded-[10px] transition-colors"
+                            >
+                              <span>{doc.name}</span>
+                              <span className="text-xs font-normal opacity-50 whitespace-nowrap">{doc.specialty}</span>
+                            </button>
+                          ))}
                         </div>
                       </div>
                     </div>
@@ -593,7 +649,7 @@ export default function Dashboard() {
                         </div>
                         <ChevronDown className="w-4 h-4 text-white/70" />
                       </button>
-                      <div id="dateDropdown" className="hidden absolute right-0 mt-3 w-48 bg-white/5 border border-white/10 rounded-[16px] premium-shadow z-50 animate-in fade-in slide-in-from-top-2">
+                      <div id="dateDropdown" className="hidden absolute right-0 mt-3 w-48 bg-[#120524] border border-white/20 rounded-[16px] shadow-2xl z-50 animate-in fade-in slide-in-from-top-2">
                         <div className="p-2 space-y-1">
                           <button onClick={(e) => { document.getElementById('selectedDateText')!.innerText = 'Today'; e.currentTarget.parentElement?.parentElement?.classList.add('hidden'); }} className="w-full text-left px-3 py-2 text-sm font-bold text-white hover:bg-white/10 rounded-[10px] transition-colors">Today</button>
                           <button onClick={(e) => { document.getElementById('selectedDateText')!.innerText = 'Yesterday'; e.currentTarget.parentElement?.parentElement?.classList.add('hidden'); }} className="w-full text-left px-3 py-2 text-sm font-bold text-[#4B5563] hover:text-white hover:bg-white/10 rounded-[10px] transition-colors">Yesterday</button>
@@ -802,6 +858,62 @@ export default function Dashboard() {
                   </div>
 
                 </div>
+
+                {/* MS-008 Executive Dashboard Row */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+                  {/* Decision Context */}
+                  <div className="bg-gradient-to-br from-[#2E1055] to-[#120524] border border-white/10 rounded-[24px] p-6 shadow-[0_20px_50px_rgba(46,16,85,0.3)]">
+                    <h3 className="text-base font-bold text-white flex items-center gap-2 mb-4">
+                      <Users className="w-5 h-5 text-[#A78BFA]" /> Decision Context Summary
+                    </h3>
+                    <div className="space-y-3">
+                      {signals.length === 0 ? (
+                        <p className="text-xs text-[#9CA3AF] font-medium">No context data available.</p>
+                      ) : (
+                        Object.entries(signals.reduce((acc: any, curr) => {
+                          const ctx = curr.primary_context || 'Unknown';
+                          acc[ctx] = (acc[ctx] || 0) + 1;
+                          return acc;
+                        }, {})).map(([ctx, count]: [string, any]) => (
+                          <div key={ctx} className="flex items-center justify-between border-b border-white/10 pb-3 last:border-0 last:pb-0">
+                            <span className="text-sm font-semibold text-white/80">{ctx}</span>
+                            <span className="bg-white/10 text-white text-xs font-bold px-2 py-0.5 rounded-[6px]">{count}</span>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </div>
+
+                  {/* System Health */}
+                  <div className="bg-gradient-to-br from-[#2E1055] to-[#120524] border border-white/10 rounded-[24px] p-6 shadow-[0_20px_50px_rgba(46,16,85,0.3)]">
+                    <h3 className="text-base font-bold text-white flex items-center gap-2 mb-4">
+                      <Database className="w-5 h-5 text-[#10B981]" /> System Health
+                    </h3>
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between border-b border-white/10 pb-3">
+                        <div className="flex items-center gap-2">
+                          <Database className="w-4 h-4 text-emerald-400" />
+                          <span className="text-sm font-semibold text-white/90">Practice Fusion API</span>
+                        </div>
+                        <span className="text-[10px] bg-emerald-500/20 text-emerald-400 font-bold px-2 py-0.5 rounded-[6px]">Healthy</span>
+                      </div>
+                      <div className="flex items-center justify-between border-b border-white/10 pb-3">
+                        <div className="flex items-center gap-2">
+                          <Activity className="w-4 h-4 text-emerald-400" />
+                          <span className="text-sm font-semibold text-white/90">Twilio Webhooks</span>
+                        </div>
+                        <span className="text-[10px] bg-emerald-500/20 text-emerald-400 font-bold px-2 py-0.5 rounded-[6px]">Healthy</span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <Clock className="w-4 h-4 text-blue-400" />
+                          <span className="text-sm font-semibold text-white/90">Last Sync</span>
+                        </div>
+                        <span className="text-xs font-mono text-white/50">Just now</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
             )}
             {activeTab === 'intelligence' && (['practice_manager', 'staff', 'ops_manager'].includes(userRole) ? <AccessDeniedView onReturn={() => setActiveTab('dashboard')} /> : <IntelligenceView />)}
@@ -812,6 +924,7 @@ export default function Dashboard() {
             {activeTab === 'schedule' && <ScheduleOptimizerView />}
             {activeTab === 'clinical-logs' && <ClinicalLogsView />}
             {activeTab === 'revenue-reports' && (['practice_manager', 'staff'].includes(userRole) ? <AccessDeniedView onReturn={() => setActiveTab('dashboard')} /> : <RevenueReportsView />)}
+            {activeTab === 'team-messaging' && <TeamMessagingView currentUser={currentUser} />}
             {activeTab === 'audit-logs' && (['practice_manager', 'staff', 'ops_manager'].includes(userRole) ? <AccessDeniedView onReturn={() => setActiveTab('dashboard')} /> : <AuditLogsView />)}
             {activeTab.startsWith('settings-') && (
               (['practice_manager', 'staff', 'ops_manager'].includes(userRole) && ['settings-integrations', 'settings-clinics', 'settings-billing', 'settings-security', 'settings-team', 'settings-general'].includes(activeTab)) 
@@ -942,7 +1055,10 @@ export default function Dashboard() {
 }
 const SidebarItem = ({ icon: Icon, label, active, onClick, className = '' }: { icon: any, label: string, active: boolean, onClick: () => void, className?: string }) => (
   <button
-    onClick={onClick}
+    onClick={(e) => {
+      onClick();
+      if (typeof window !== 'undefined') window.dispatchEvent(new Event('close-mobile-menu'));
+    }}
     className={`group relative w-full flex items-center gap-3 px-4 py-2.5 rounded-[16px] transition-all duration-300 ${
       active 
         ? 'bg-white/10 text-white font-extrabold border border-white/20 shadow-[0_4px_12px_rgba(0,0,0,0.1)]' 

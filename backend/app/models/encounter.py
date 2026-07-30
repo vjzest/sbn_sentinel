@@ -6,8 +6,9 @@ class EncounterModel(Base):
     __tablename__ = "encounters"
 
     id = Column(String, primary_key=True, index=True)
-    patient_name = Column(String, index=True, nullable=False)
-    provider_name = Column(String, nullable=False)
+    patient_id = Column(String(36), index=True, nullable=False)
+    provider_id = Column(String(36), index=True, nullable=False)
+    clinic_id = Column(String(36), index=True, nullable=True)
     date = Column(String, nullable=False)
     diagnosis = Column(String, nullable=True)
     type = Column(String, nullable=False)  # Consultation, Urgent Care, Checkup, etc.

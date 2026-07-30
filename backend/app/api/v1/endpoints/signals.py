@@ -1,5 +1,4 @@
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Depends
-from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 import asyncio
 
@@ -22,34 +21,22 @@ def get_historical_signals(db: Session = Depends(get_db)):
             "message": s.message,
             "timestamp": s.timestamp.isoformat() if s.timestamp else None,
             "metadata": s.metadata_data,
-            "ai_insight": s.ai_insight,
-            "recommended_action": s.recommended_action
+            "risk_level": s.risk_level,
+            "problem": s.problem,
+            "reason": s.reason,
+            "business_impact": s.business_impact,
+            "recommended_action": s.recommended_action,
+            "expected_outcome": s.expected_outcome,
+            "primary_context": s.primary_context,
+            "secondary_context": s.secondary_context,
+            "context_confidence": s.context_confidence,
+            "context_reason": s.context_reason,
+            "revenue_risk_category": s.revenue_risk_category,
+            "estimated_financial_exposure": s.estimated_financial_exposure,
+            "revenue_confidence": s.revenue_confidence,
+            "operational_dependency": s.operational_dependency
         })
     return result
-
-import threading
-from app.services.ml_trainer import train_and_save_models
-from app.services.ml_engine import ml_engine
-
-@router.post("/retrain-ai")
-def trigger_ai_retraining():
-    """
-    Advanced Feature: Manually trigger the Local ML Engine to retrain itself
-    using all the newly accumulated 'Teacher Model' recommendations.
-    """
-    def background_train():
-        try:
-            train_and_save_models()
-            ml_engine.load_models() # Reload into memory
-            print("AI Retraining complete and models reloaded.")
-        except Exception as e:
-            print(f"Retraining failed: {e}")
-            
-    # Run in a separate thread so it doesn't block the API
-    thread = threading.Thread(target=background_train)
-    thread.start()
-    
-    return {"status": "success", "message": "Local Machine Learning model retraining has started in the background."}
 
 @router.on_event("startup")
 async def startup_event():

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
+import { fetchWithAuth } from '@/utils/fetchWithAuth';
 import { FileText, Search, Filter, Download, CheckCircle2, FileSignature, Receipt, CreditCard, ChevronRight, AlertTriangle, ShieldCheck, ShieldAlert, Check, Sparkles, Info, Printer, Plus, X, FileSpreadsheet, Users } from 'lucide-react';
 
 export const ClinicalLogsView: React.FC = () => {
@@ -11,7 +12,7 @@ export const ClinicalLogsView: React.FC = () => {
   // Form states for adding new encounter
   const [showAddModal, setShowAddModal] = useState(false);
   const [patientName, setPatientName] = useState('');
-  const [providerName, setProviderName] = useState('Dr. Sarah Jenkins');
+  const [providerName, setProviderName] = useState('City Heart - Dr Jenkins');
   const [diagnosis, setDiagnosis] = useState('');
   const [visitType, setVisitType] = useState('Consultation');
   const [clinicalNotes, setClinicalNotes] = useState('');
@@ -26,13 +27,44 @@ export const ClinicalLogsView: React.FC = () => {
 
   // Dynamic state for encounters loaded from database
   const [encounters, setEncounters] = useState<any[]>([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [clinicDoctors, setClinicDoctors] = useState<string[]>(() => {
+    const defaults = ['City Heart - Dr Jenkins', 'Vijay Maurya'];
+    if (typeof window !== 'undefined') {
+      try {
+        const saved = localStorage.getItem('user');
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (parsed.full_name) defaults.unshift(parsed.full_name);
+        }
+      } catch (e) {}
+    }
+    return Array.from(new Set(defaults));
+  });
+
+  useEffect(() => {
+    const fetchDoctors = async () => {
+      try {
+        const userRole = typeof window !== 'undefined' ? localStorage.getItem('userRole') : '';
+        if (userRole === 'super_admin') {
+          const res = await fetchWithAuth(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/super-admin/users`);
+          if (res.ok) {
+            const users = await res.json();
+            const names = users.map((u: any) => u.full_name).filter(Boolean);
+            if (names.length > 0) setClinicDoctors(prev => Array.from(new Set([...names, ...prev])));
+          }
+        }
+      } catch (e) {}
+    };
+    fetchDoctors();
+  }, []);
 
   const fetchEncounters = async () => {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/encounters`);
+      const response = await fetchWithAuth(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/encounters`);
       if (response.ok) {
         const data = await response.json();
-        setEncounters(data);
+        setEncounters(Array.isArray(data) ? [...data].reverse() : []);
       }
     } catch (err) {
       console.error(err);
@@ -42,6 +74,18 @@ export const ClinicalLogsView: React.FC = () => {
   useEffect(() => {
     fetchEncounters();
   }, []);
+
+  const filteredEncounters = encounters.filter(e => {
+    const q = searchTerm.toLowerCase().trim();
+    if (!q) return true;
+    return (
+      (e.patient_name || '').toLowerCase().includes(q) ||
+      (e.id || '').toLowerCase().includes(q) ||
+      (e.diagnosis || '').toLowerCase().includes(q) ||
+      (e.provider_name || '').toLowerCase().includes(q) ||
+      (e.billing_status || '').toLowerCase().includes(q)
+    );
+  });
 
   const activeEncounter = encounters.find(e => e.id === activeBillId);
 
@@ -532,6 +576,7 @@ export const ClinicalLogsView: React.FC = () => {
       });
       if (response.ok) {
         setBillingSuccess('Billed');
+        window.dispatchEvent(new CustomEvent('show-sentinel-toast', { detail: { message: '💰 Claim submitted & billed successfully to insurance clearinghouse!', type: 'success' } }));
         await fetchEncounters();
       }
     } catch (err) {
@@ -553,7 +598,7 @@ export const ClinicalLogsView: React.FC = () => {
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2 bg-white/5 border border-white/10 rounded-[16px] px-3 py-2 premium-shadow">
             <Search className="w-4 h-4 text-white/70" />
-            <input type="text" placeholder="Search encounters..." className="bg-transparent border-none outline-none text-xs text-white w-48 placeholder:text-[#9CA3AF]" />
+            <input type="text" placeholder="Search encounters..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="bg-transparent border-none outline-none text-xs text-white w-48 placeholder:text-[#9CA3AF]" />
           </div>
           <button className="flex items-center gap-2 bg-white/5 border border-white/10 text-white font-bold text-xs px-4 py-2.5 rounded-[16px] premium-shadow hover:bg-white/5 transition-colors">
             <Filter className="w-4 h-4 text-white/70" /> Filter
@@ -573,7 +618,7 @@ export const ClinicalLogsView: React.FC = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
 
         {/* Logs Table */}
         <div className="lg:col-span-2 bg-gradient-to-br from-[#2E1055] to-[#120524] border border-white/10 rounded-[24px] p-8 shadow-[0_20px_50px_rgba(46,16,85,0.3)] text-white">
@@ -592,14 +637,14 @@ export const ClinicalLogsView: React.FC = () => {
                 </tr>
               </thead>
               <tbody className="text-sm font-semibold text-white">
-                {encounters.length === 0 ? (
+                {filteredEncounters.length === 0 ? (
                   <tr>
                     <td colSpan={5} className="py-12 text-center">
                       <p className="text-sm text-white/50 font-bold">No clinical records found.</p>
                     </td>
                   </tr>
                 ) : null}
-                {encounters.map((log) => (
+                {filteredEncounters.map((log) => (
                   <tr
                     key={log.id}
                     className={`border-b border-white/10 hover:bg-transparent/5 transition-colors last:border-0 cursor-pointer ${activeBillId === log.id ? 'bg-blue-500/20/50 border-l-4 border-l-[#2E1055]' : ''}`}
@@ -645,7 +690,7 @@ export const ClinicalLogsView: React.FC = () => {
         </div>
 
         {/* AI Billing Assistant Widget */}
-        <div className="bg-gradient-to-br from-[#2E1055] to-[#120524] border border-white/10 rounded-[24px] p-8 shadow-[0_20px_50px_rgba(46,16,85,0.3)] text-white flex flex-col relative overflow-hidden min-h-[500px]">
+        <div className="bg-gradient-to-br from-[#2E1055] to-[#120524] border border-white/10 rounded-[24px] p-8 shadow-[0_20px_50px_rgba(46,16,85,0.3)] text-white flex flex-col relative overflow-hidden self-start sticky top-6">
           {/* Background decorative blob */}
           <div className="absolute -top-20 -right-20 w-64 h-64 bg-blue-500/20 rounded-full blur-[60px] pointer-events-none"></div>
 
@@ -653,7 +698,7 @@ export const ClinicalLogsView: React.FC = () => {
             <FileSignature className="w-5 h-5 text-blue-400" /> AI Billing Assistant
           </h3>
 
-          {!activeBillId ? (
+          {!activeEncounter ? (
             <div className="flex-1 flex flex-col items-center justify-center text-center relative z-10 opacity-70">
               <div className="w-16 h-16 bg-transparent/5 border border-white/10 rounded-full flex items-center justify-center mb-4">
                 <Receipt className="w-8 h-8 text-white/50" />
@@ -1078,9 +1123,14 @@ export const ClinicalLogsView: React.FC = () => {
                     onChange={(e) => setProviderName(e.target.value)}
                     className="w-full bg-transparent/5 border border-white/10 rounded-[16px] px-3 py-2.5 text-sm font-bold text-white outline-none focus:border-[#2E1055] focus:ring-1 focus:ring-[#2E1055] transition-all cursor-pointer"
                   >
-                    <option value="Dr. Sarah Jenkins" className="bg-[#120524] text-white">Dr. Sarah Jenkins</option>
-                    <option value="Dr. Alan Grant" className="bg-[#120524] text-white">Dr. Alan Grant</option>
-                    <option value="Dr. Emily Chen" className="bg-[#120524] text-white">Dr. Emily Chen</option>
+                    {Array.from(new Set([
+                      ...clinicDoctors,
+                      ...encounters.map(e => e.provider_name).filter(Boolean)
+                    ])).map((docName) => (
+                      <option key={docName} value={docName} className="bg-[#120524] text-white">
+                        {docName}
+                      </option>
+                    ))}
                   </select>
                 </div>
                 <div>

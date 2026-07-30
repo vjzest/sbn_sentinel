@@ -1,0 +1,67 @@
+from fastapi import APIRouter, Depends
+from sqlalchemy.orm import Session
+from sqlalchemy import text
+from typing import Dict, Any
+
+from app.db.database import SessionLocal
+from app.api.deps import get_current_user
+from app.models.user import User
+
+router = APIRouter()
+
+# Dependency
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
+@router.get("/verify", summary="SES-012 Post-Deployment Health Check")
+def verify_health(
+    db: Session = Depends(get_db)
+) -> Dict[str, Any]:
+    """
+    SES-012: Deep Post-Deployment Verification
+    Validates that the database, caching, and core engines are operational in the current environment.
+    """
+    health_status = {
+        "status": "Healthy",
+        "database": "Unknown",
+        "connectors": "Unknown",
+        "rules_engine_cache": "Unknown"
+    }
+
+    # 1. Database Connectivity
+    try:
+        db.execute(text("SELECT 1"))
+        health_status["database"] = "Connected"
+    except Exception as e:
+        health_status["database"] = f"Failed: {str(e)}"
+        health_status["status"] = "Degraded"
+
+    # 2. Connector Manager State
+    try:
+        from app.services.connector_manager import connector_manager
+        # In python a dict has length, verify the manager initialized the registry
+        if hasattr(connector_manager, '_connector_registry') and len(connector_manager._connector_registry) > 0:
+            health_status["connectors"] = "Initialized"
+        else:
+            health_status["connectors"] = "Warning: No connectors registered"
+    except Exception as e:
+        health_status["connectors"] = f"Failed: {str(e)}"
+        health_status["status"] = "Degraded"
+
+    # 3. Rules Engine Cache State
+    try:
+        from app.services.rules_engine import rules_engine
+        # Ensure rules engine is instantiated and cache variables exist
+        if hasattr(rules_engine, '_cache_ttl_seconds'):
+            health_status["rules_engine_cache"] = f"Enabled (TTL: {rules_engine._cache_ttl_seconds}s)"
+        else:
+            health_status["rules_engine_cache"] = "Warning: Cache disabled or uninitialized"
+    except Exception as e:
+        health_status["rules_engine_cache"] = f"Failed: {str(e)}"
+        health_status["status"] = "Degraded"
+
+    return health_status

@@ -1,20 +1,21 @@
 from pydantic import BaseModel
+from typing import Optional, Dict, Any
 from datetime import datetime
-from typing import Optional
 
 class AuditLogCreate(BaseModel):
-    user_email: str
+    user_system: str
     action: str
-    resource: Optional[str] = None
-    ip_address: Optional[str] = "127.0.0.1"
+    module: Optional[str] = None
+    correlation_id: Optional[str] = None
+    error_category: Optional[str] = None
+    severity: Optional[str] = None
+    retry_attempts: Optional[int] = None
+    recovery_outcome: Optional[str] = None
+    resolution_status: Optional[str] = None
 
-class AuditLog(BaseModel):
-    id: int
-    user_email: str
-    action: str
-    resource: Optional[str]
+class AuditLogResponse(AuditLogCreate):
+    id: str
     timestamp: datetime
-    ip_address: str
 
     class Config:
         from_attributes = True

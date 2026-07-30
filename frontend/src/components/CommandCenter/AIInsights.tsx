@@ -1,3 +1,4 @@
+import { fetchWithAuth } from '@/utils/fetchWithAuth';
 import React, { useState, useEffect } from 'react';
 import { BrainCircuit, TrendingDown, TrendingUp, CheckCircle2, ChevronRight, Loader2 } from 'lucide-react';
 import { useSelector, useDispatch } from 'react-redux';
@@ -15,7 +16,7 @@ export const AIInsights: React.FC = () => {
 
   // Load settings on mount
   useEffect(() => {
-    fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/settings`)
+    fetchWithAuth(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/settings`)
       .then(res => res.json())
       .then(data => {
         if (data.ai_model === 'claude') {
@@ -37,7 +38,7 @@ export const AIInsights: React.FC = () => {
       const user = userStr ? JSON.parse(userStr) : null;
       const userEmail = user?.email || "admin@sbnsentinel.com";
       
-      await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/audit/`, {
+      await fetchWithAuth(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/audit/`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
