@@ -26,7 +26,7 @@ export const StatCard: React.FC<StatCardProps> = ({ title, value, icon: Icon, tr
     <div 
       onClick={onClick}
       className={`bg-gradient-to-br from-[#2E1055] to-[#120524] border border-white/10 rounded-[24px] p-6 relative overflow-hidden group card-hover shadow-[0_8px_30px_rgba(46,16,85,0.4)] flex flex-col justify-between h-[160px] ${onClick ? 'cursor-pointer select-none hover:border-white/30 hover:-translate-y-1 transition-all duration-300' : 'cursor-default'}`}
-    >
+     role="button" tabIndex={0} onKeyDown={(e) => { if(e.key === "Enter" || e.key === " ") { e.preventDefault(); e.currentTarget.click(); } }} >
       <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-white/10 to-transparent"></div>
       
       <div className="flex justify-between items-start z-10">

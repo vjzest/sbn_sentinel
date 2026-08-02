@@ -65,7 +65,7 @@ export const HelpSupportView: React.FC = () => {
                    <ChevronRight className="w-5 h-5 text-white/50 group-hover:text-blue-400" />
                 </div>
               )) : (
-                <div className="p-8 text-center text-white/50 font-medium">No results found for "{searchQuery}"</div>
+                <div className="p-8 text-center text-white/50 font-medium">No matching help articles found for "{searchQuery}". Try adjusting your search terms, or open a support ticket for enterprise assistance.</div>
               )}
             </div>
             <button className="mt-6 text-sm font-bold text-blue-400 hover:underline flex items-center gap-1">

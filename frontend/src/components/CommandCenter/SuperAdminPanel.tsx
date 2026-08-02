@@ -170,8 +170,9 @@ export const SuperAdminPanel: React.FC<SuperAdminProps> = ({ onLogout, user }) =
 
   if (isLoading) {
     return (
-      <div className="min-h-screen w-full bg-[#0B1121] flex items-center justify-center">
-        <div className="w-10 h-10 border-4 border-slate-700 border-t-[#EEEAFE]0 rounded-full animate-spin"></div>
+      <div className="min-h-screen w-full bg-[#0B1121] flex flex-col gap-4 items-center justify-center">
+        <div className="w-10 h-10 border-4 border-slate-700 border-t-[#6C4CF6] rounded-full animate-spin"></div>
+        <span className="text-white/70 font-medium text-lg">Initializing Super Admin environment...</span>
       </div>
     );
   }
@@ -683,7 +684,7 @@ export const SuperAdminPanel: React.FC<SuperAdminProps> = ({ onLogout, user }) =
                     <div 
                       onClick={togglePasmeMaintenance}
                       className={`w-12 h-6 rounded-full relative cursor-pointer transition-colors ${maintenanceMode ? 'bg-rose-500' : 'bg-[#2E1055]'}`}
-                    >
+                     role="button" tabIndex={0} onKeyDown={(e) => { if(e.key === "Enter" || e.key === " ") { e.preventDefault(); e.currentTarget.click(); } }} >
                       <div className={`w-5 h-5 bg-white rounded-full absolute top-0.5 shadow-sm transition-all ${maintenanceMode ? 'left-[26px]' : 'left-0.5'}`}></div>
                     </div>
                     <span className="text-sm font-bold text-white">{maintenanceMode ? 'System Offline (Updates Active)' : 'Currently Live'}</span>

@@ -3,25 +3,18 @@ import { Activity, CheckCircle2, AlertTriangle, ArrowRight, UserCircle2, FileTex
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '@/store';
 import { removeSignal, incrementActionsTaken } from '@/store/slices/signalSlice';
-
 export const IntelligenceView: React.FC = () => {
   const rawEvents = useSelector((state: RootState) => state.signals.events);
-
-  // Filter events that actually have recommendations to show in the inbox
   const actionableEvents = rawEvents.filter(e => e.recommended_action && e.recommended_action !== "None required." && e.recommended_action !== "Monitor progress.").reverse();
-
   const [selectedEventIndex, setSelectedEventIndex] = useState<number>(0);
   const selectedEvent = actionableEvents.length > 0 && selectedEventIndex < actionableEvents.length ? actionableEvents[selectedEventIndex] : (actionableEvents.length > 0 ? actionableEvents[0] : null);
-
   const dispatch = useDispatch();
-
   const handleDismiss = () => {
     if (selectedEvent) {
       dispatch(removeSignal(selectedEvent.id));
       setSelectedEventIndex(0);
     }
   };
-
   const handleApply = () => {
     if (selectedEvent) {
       dispatch(incrementActionsTaken());
@@ -29,9 +22,8 @@ export const IntelligenceView: React.FC = () => {
       setSelectedEventIndex(0);
     }
   };
-
   const getRiskColor = (risk: string) => {
-    switch(risk) {
+    switch (risk) {
       case 'Critical': return 'bg-red-500/20 text-red-400 border-red-500/30';
       case 'High': return 'bg-orange-500/20 text-orange-400 border-orange-500/30';
       case 'Moderate': return 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30';
@@ -42,7 +34,7 @@ export const IntelligenceView: React.FC = () => {
   };
 
   const getRiskIcon = (risk: string) => {
-    switch(risk) {
+    switch (risk) {
       case 'Critical': return <AlertOctagon className="w-5 h-5" />;
       case 'High': return <AlertTriangle className="w-5 h-5" />;
       case 'Moderate': return <AlertCircle className="w-5 h-5" />;

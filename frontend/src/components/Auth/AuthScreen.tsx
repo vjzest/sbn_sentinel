@@ -399,7 +399,10 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onLogin }) => {
               className="w-full bg-[#2E1055] hover:bg-[#4527A0] text-white font-bold py-4 rounded-[16px] transition-all flex items-center justify-center gap-2 shadow-[0_10px_20px_rgba(108,76,245,0.2)] hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-70"
             >
               {isLoading ? (
-                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                <span className="flex items-center gap-2">
+                  <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+                  Authenticating credentials...
+                </span>
               ) : (
                 <>
                   {isInviteMode ? (isOtpMode ? 'Activate Account' : 'Send Activation OTP') : isForgotPassword ? (isOtpMode ? 'Reset Password' : 'Send Reset OTP') : isLogin ? 'Sign In to Dashboard' : (isOtpMode ? 'Verify & Register' : 'Submit Registration')}

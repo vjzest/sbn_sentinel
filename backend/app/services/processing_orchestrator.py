@@ -253,7 +253,8 @@ class ProcessingOrchestrator:
                 source_connector=event.source
             )
             
-            event.evidence_package = evidence_package.__dict__
+            import dataclasses
+            event.evidence_package = dataclasses.asdict(evidence_package)
             event.layer3_duration_ms = (time.time() - t_start) * 1000
             
             db.commit()
@@ -287,11 +288,17 @@ class ProcessingOrchestrator:
                 error_msg = response.error_details.message if response.error_details else "Unknown error"
                 return self._fail_event(event, db, layer="L4-Context", error=error_msg)
                 
-            event.decision_context = response.result_payload
+            from app.models.intelligence import DecisionContextModel
+            event.decision_context = DecisionContextModel(
+                primary_context=response.result_payload.get("primary_context", "Unknown"),
+                secondary_context=response.result_payload.get("secondary_context"),
+                confidence=response.result_payload.get("confidence", "Low"),
+                reason=response.result_payload.get("reason")
+            )
             event.layer4_duration_ms = (time.time() - t_start) * 1000
             
             db.commit()
-            self.logger.debug(f"[L4] DCE resolved context for event {event.id}: {event.decision_context.get('primary_context')}")
+            self.logger.debug(f"[L4] DCE resolved context for event {event.id}: {event.decision_context.primary_context}")
             return event
         except Exception as e:
             return self._fail_event(event, db, layer="L4-Context", error=str(e))
@@ -305,8 +312,11 @@ class ProcessingOrchestrator:
         """
         t_start = time.time()
         try:
-            decision_context = getattr(event, "decision_context", {})
-            decision_context["event_type"] = event.event_type
+            decision_context = {
+                "evidence_package": getattr(event, "evidence_package", {}),
+                "event_type": event.event_type,
+                "primary_context": event.decision_context.primary_context if event.decision_context else "Unknown"
+            }
             
             policy_result = policy_engine.evaluate(decision_context=decision_context)
             
@@ -333,7 +343,10 @@ class ProcessingOrchestrator:
                 calling_module="EventPipeline",
                 target_service="RulesEngine",
                 payload={
-                    "decision_context": getattr(event, "decision_context", {}),
+                    "decision_context": {
+                        "primary_context": event.decision_context.primary_context,
+                        "secondary_context": event.decision_context.secondary_context
+                    } if event.decision_context else {},
                     "policy_result": getattr(event, "policy_result", {})
                 }
             )
@@ -344,11 +357,16 @@ class ProcessingOrchestrator:
                 error_msg = response.error_details.message if response.error_details else "Unknown error"
                 return self._fail_event(event, db, layer="L6-Rules", error=error_msg)
                 
-            event.rule_findings = response.result_payload
+            from app.models.intelligence import RuleFindingModel
+            event.rule_findings = [RuleFindingModel(
+                rule_id=response.result_payload.get("rule_id", "Unknown"),
+                severity=response.result_payload.get("severity", "Information"),
+                description=response.result_payload.get("description", "")
+            )]
             event.layer6_duration_ms = (time.time() - t_start) * 1000
             
             db.commit()
-            self.logger.debug(f"[L6] Rules Engine evaluated event {event.id} -> finding: {event.rule_findings.get('rule_id')}")
+            self.logger.debug(f"[L6] Rules Engine evaluated event {event.id} -> finding: {event.rule_findings[0].rule_id if event.rule_findings else 'Unknown'}")
             return event
 
         except Exception as e:
@@ -368,8 +386,11 @@ class ProcessingOrchestrator:
                 calling_module="EventPipeline",
                 target_service="IntelligenceEngine",
                 payload={
-                    "finding": event.rule_findings or {},
-                    "context": getattr(event, "decision_context", {})
+                    "finding": [{"rule_id": rf.rule_id, "severity": rf.severity} for rf in event.rule_findings] if event.rule_findings else {},
+                    "context": {
+                        "primary_context": event.decision_context.primary_context,
+                        "secondary_context": event.decision_context.secondary_context
+                    } if event.decision_context else {}
                 }
             )
             
@@ -379,7 +400,13 @@ class ProcessingOrchestrator:
                 error_msg = response.error_details.message if response.error_details else "Unknown error"
                 return self._fail_event(event, db, layer="L7-Intelligence", error=error_msg)
                 
-            event.intelligence_result = response.result_payload
+            from app.models.intelligence import OperationalIntelligenceModel
+            event.operational_intelligence = OperationalIntelligenceModel(
+                priority=response.result_payload.get("priority", "Information"),
+                operational_impact=response.result_payload.get("operational_impact", ""),
+                recommendation=response.result_payload.get("recommendation", "")
+            )
+            event.intelligence_result = response.result_payload # Keep dynamic attr just in case
             event.layer7_duration_ms = (time.time() - t_start) * 1000
             
             db.commit()
@@ -403,8 +430,11 @@ class ProcessingOrchestrator:
                 calling_module="EventPipeline",
                 target_service="RevenueIntelligenceEngine",
                 payload={
-                    "finding": event.rule_findings or {},
-                    "context": getattr(event, "decision_context", {})
+                    "finding": [{"rule_id": rf.rule_id, "severity": rf.severity} for rf in event.rule_findings] if event.rule_findings else {},
+                    "context": {
+                        "primary_context": event.decision_context.primary_context,
+                        "secondary_context": event.decision_context.secondary_context
+                    } if event.decision_context else {}
                 }
             )
             
@@ -414,7 +444,13 @@ class ProcessingOrchestrator:
                 error_msg = response.error_details.message if response.error_details else "Unknown error"
                 return self._fail_event(event, db, layer="L8-Revenue", error=error_msg)
                 
-            event.revenue_result = response.result_payload
+            from app.models.intelligence import RevenueIntelligenceModel
+            event.revenue_intelligence = RevenueIntelligenceModel(
+                estimated_exposure=response.result_payload.get("estimated_exposure", ""),
+                opportunity_category=response.result_payload.get("opportunity_category", ""),
+                financial_priority=response.result_payload.get("financial_priority", "")
+            )
+            event.revenue_result = response.result_payload # Keep dynamic attr just in case
             event.layer8_duration_ms = (time.time() - t_start) * 1000
             
             db.commit()
@@ -444,7 +480,7 @@ class ProcessingOrchestrator:
                 source=event.source,
                 type=event.event_type,
                 message=payload.get("detail", ""),
-                timestamp=datetime.utcnow(),
+                timestamp=datetime.utcnow().isoformat(),
                 metadata={"pipeline_event_id": event.id, "priority": event.priority},
                 risk_level=intel_model.priority if intel_model else "Information",
                 problem="", 
@@ -470,8 +506,8 @@ class ProcessingOrchestrator:
             if intel_result:
                 decision_record = DecisionRecordModel(
                     event_id=event.id,
-                    evidence=getattr(event, "evidence_package", {}),
-                    rule_id=getattr(event, "rule_findings", {}).get("rule_id", "SYS-BLOCKED"),
+                    evidence=__import__("json").loads(__import__("json").dumps(event.evidence_package, default=str)) if event.evidence_package else {},
+                    rule_id=event.rule_findings[0].rule_id if event.rule_findings else "SYS-BLOCKED",
                     policy_status=getattr(event, "policy_result", {}).get("is_permitted", False),
                     recommendation=intel_result
                 )

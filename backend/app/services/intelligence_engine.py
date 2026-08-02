@@ -27,6 +27,8 @@ class IntelligenceEngine(BaseService):
         Takes 'finding' and 'context' and generates recommendations.
         """
         finding = payload.get("finding", {})
+        if isinstance(finding, list):
+            finding = finding[0] if finding else {}
         context = payload.get("context", {})
         
         risk_level = finding.get("severity", "Information")
