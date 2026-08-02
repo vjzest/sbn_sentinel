@@ -307,7 +307,7 @@ export const ScheduleOptimizerView: React.FC = () => {
                        <div 
                          onClick={handleOptimize}
                          className="w-full border-2 border-dashed border-purple-500/30 bg-purple-500/20/20 hover:bg-purple-500/20/50 rounded-[16px] flex flex-col items-center justify-center cursor-pointer transition-all duration-300 hover:scale-[1.02]"
-                       >
+                        role="button" tabIndex={0} onKeyDown={(e) => { if(e.key === "Enter" || e.key === " ") { e.preventDefault(); e.currentTarget.click(); } }} >
                           <span className="text-[10px] font-extrabold text-[#8B5CF6] flex items-center gap-1">
                             <Sparkles className="w-3.5 h-3.5 animate-pulse text-yellow-500" /> Open Target
                           </span>
@@ -420,7 +420,7 @@ export const ScheduleOptimizerView: React.FC = () => {
                      ? 'border-emerald-200 bg-emerald-50/20 opacity-75 cursor-default' 
                      : 'border-white/10 bg-white/5 hover:border-[#BFDBFE] hover:bg-blue-500/20/30 cursor-pointer hover:scale-[1.01]'
                  }`}
-               >
+                role="button" tabIndex={0} onKeyDown={(e) => { if(e.key === "Enter" || e.key === " ") { e.preventDefault(); e.currentTarget.click(); } }} >
                  <div className="flex items-center justify-between mb-1.5">
                    <div className="flex items-center gap-2.5">
                      <div className="p-1.5 bg-blue-500/20 rounded-lg"><Move className="w-3.5 h-3.5 text-blue-400" /></div>
@@ -449,7 +449,7 @@ export const ScheduleOptimizerView: React.FC = () => {
                      ? 'border-emerald-200 bg-emerald-50/20 opacity-75 cursor-default' 
                      : 'border-white/10 bg-white/5 hover:border-[#A7F3D0] hover:bg-emerald-500/30 cursor-pointer hover:scale-[1.01]'
                  }`}
-               >
+                role="button" tabIndex={0} onKeyDown={(e) => { if(e.key === "Enter" || e.key === " ") { e.preventDefault(); e.currentTarget.click(); } }} >
                  <div className="flex items-center justify-between mb-1.5">
                    <div className="flex items-center gap-2.5">
                      <div className="p-1.5 bg-emerald-500/20 rounded-lg"><Clock className="w-3.5 h-3.5 text-emerald-400" /></div>

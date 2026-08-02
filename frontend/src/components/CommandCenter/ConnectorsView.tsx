@@ -298,7 +298,7 @@ export const ConnectorsView: React.FC = () => {
       {isLoading ? (
         <div className="flex items-center justify-center py-20">
           <div className="w-12 h-12 border-4 border-[#EEF4FF] border-t-[#2E1055] rounded-full animate-spin mb-4"></div>
-          <span className="ml-4 font-bold text-white/70">Loading active connectors...</span>
+          <span className="ml-4 font-bold text-white/70">Synchronizing connector status...</span>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">

@@ -26,6 +26,8 @@ class RevenueIntelligenceEngine(BaseService):
         Returns: revenue_risk_category, estimated_financial_exposure, revenue_confidence, operational_dependency
         """
         rule_finding = payload.get("finding", {})
+        if isinstance(rule_finding, list):
+            rule_finding = rule_finding[0] if rule_finding else {}
         dce_context = payload.get("context", {})
         
         rule_id = rule_finding.get("rule_id", "")

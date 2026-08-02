@@ -28,12 +28,14 @@ class DecisionContextEngine(BaseService):
         evidence_items = evidence_package.get("evidence_items", [])
         event_type = payload.get("event_type", "Unknown")
         
-        # We look at the evidence facts to determine context.
-        has_no_show = any(e.get("fact_value") == "NO_SHOW" for e in evidence_items)
-        has_wait_time = any(e.get("fact_value") == "WAIT_TIME_EXCEEDED" for e in evidence_items)
-        has_booked = any(e.get("fact_value") == "BOOKED" for e in evidence_items)
-        has_missed_call = any(e.get("fact_value") == "MISSED_CALL" for e in evidence_items)
-        has_pending_review = any(e.get("fact_value") == "PENDING_REVIEW" for e in evidence_items)
+        def get_fact_value(e):
+            return getattr(e, 'fact_value', None) if not isinstance(e, dict) else e.get('fact_value')
+            
+        has_no_show = any(get_fact_value(e) == "NO_SHOW" for e in evidence_items)
+        has_wait_time = any(get_fact_value(e) == "WAIT_TIME_EXCEEDED" for e in evidence_items)
+        has_booked = any(get_fact_value(e) == "BOOKED" for e in evidence_items)
+        has_missed_call = any(get_fact_value(e) == "MISSED_CALL" for e in evidence_items)
+        has_pending_review = any(get_fact_value(e) == "PENDING_REVIEW" for e in evidence_items)
         
         # Default Context
         context = {

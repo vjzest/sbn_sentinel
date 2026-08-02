@@ -19,11 +19,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" className="dark">
       <body className={`${inter.className} antialiased bg-[#F7F9FC] text-[#111827]`}>
         <StoreProvider>
           <ErrorScreen>
-            <div className="min-h-screen relative w-full overflow-hidden">
+            <div className="min-h-screen relative w-full overflow-hidden animate-fade-in">
               {children}
             </div>
           </ErrorScreen>

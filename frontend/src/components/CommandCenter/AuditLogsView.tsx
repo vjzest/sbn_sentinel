@@ -123,7 +123,7 @@ export const AuditLogsView: React.FC = () => {
             <tbody className="divide-y divide-white/10">
               {isLoading ? (
                 <tr>
-                  <td colSpan={5} className="py-12 text-center text-sm text-white/50">Loading audit logs...</td>
+                  <td colSpan={5} className="py-12 text-center text-sm text-white/50">Retrieving secure audit trail...</td>
                 </tr>
               ) : filteredLogs.length > 0 ? (
                 filteredLogs.map((log) => (
@@ -149,7 +149,7 @@ export const AuditLogsView: React.FC = () => {
                 <tr>
                   <td colSpan={5} className="py-12 text-center">
                     <ShieldAlert className="w-8 h-8 text-white/20 mx-auto mb-3" />
-                    <p className="text-sm text-white/50">No audit logs found matching your criteria.</p>
+                    <p className="text-sm text-white/50">No audit logs found matching your criteria. Adjust your search or filters to view historical records.</p>
                   </td>
                 </tr>
               )}

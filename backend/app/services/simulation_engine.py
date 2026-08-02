@@ -122,8 +122,8 @@ class SimulationEngine:
                     new_id = f"enc_{random.randint(1000, 99999)}"
                     new_enc = EncounterModel(
                         id=new_id,
-                        patient_name=random.choice(["Alex M.", "Brian K.", "Chloe T.", "Daniel S.", "Eva R.", "Fiona W.", "Liam H.", "Zoe P."]),
-                        provider_name=random.choice(["Dr. Smith", "Dr. Patel", "Dr. Chen", "Dr. Sarah Jenkins"]),
+                        patient_id=random.choice(["Alex M.", "Brian K.", "Chloe T.", "Daniel S.", "Eva R.", "Fiona W.", "Liam H.", "Zoe P."]),
+                        provider_id=random.choice(["Dr. Smith", "Dr. Patel", "Dr. Chen", "Dr. Sarah Jenkins"]),
                         date=datetime.now().strftime("%Y-%m-%d"),
                         diagnosis=random.choice(["Routine checkup", "Mild fever", "Back pain", "Hypertension followup", "Allergy evaluation"]),
                         type=random.choice(["Checkup", "Consultation", "Urgent Care"]),
