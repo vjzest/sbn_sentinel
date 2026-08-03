@@ -293,7 +293,7 @@ export default function Dashboard() {
         )}
 
         {/* Sidebar - Floating Premium SaaS Style */}
-        <aside className={`w-[260px] bg-gradient-to-br from-[#2E1055] to-[#120524] shadow-[0_20px_60px_rgba(46,16,85,0.3)] border border-white/10 rounded-[24px] flex flex-col fixed md:relative z-[60] h-full transition-transform duration-300 ease-in-out text-white shrink-0 ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}`}>
+        <aside className={`w-[260px] bg-gradient-to-br from-[#2E1055] to-[#120524] shadow-[0_20px_60px_rgba(46,16,85,0.3)] border border-white/10 rounded-[24px] flex flex-col fixed md:relative z-[60] h-full transition-transform duration-300 ease-in-out text-white shrink-0 ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-[300px] md:translate-x-0'}`}>
           <div className="p-5 border-b border-white/10 relative overflow-hidden group flex justify-between items-center shrink-0">
             {/* Subtle premium gradient indicator at the top border */}
             <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-white/30 to-transparent"></div>

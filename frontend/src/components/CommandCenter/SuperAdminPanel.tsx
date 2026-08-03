@@ -189,7 +189,7 @@ export const SuperAdminPanel: React.FC<SuperAdminProps> = ({ onLogout, user }) =
       )}
 
       {/* Admin Sidebar */}
-      <aside className={`w-[260px] bg-gradient-to-br from-[#2E1055] to-[#120524] shadow-[0_20px_60px_rgba(46,16,85,0.3)] rounded-[24px] text-white border border-white/10 flex flex-col fixed md:relative z-[60] h-full transition-transform duration-300 ease-in-out shrink-0 ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}`}>
+      <aside className={`w-[260px] bg-gradient-to-br from-[#2E1055] to-[#120524] shadow-[0_20px_60px_rgba(46,16,85,0.3)] rounded-[24px] text-white border border-white/10 flex flex-col fixed md:relative z-[60] h-full transition-transform duration-300 ease-in-out shrink-0 ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-[300px] md:translate-x-0'}`}>
         <div className="p-6 pb-5 border-b border-white/10 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-[16px] bg-white/10 border border-white/10 flex items-center justify-center font-black text-xl shadow-lg">
