@@ -590,28 +590,28 @@ export const ClinicalLogsView: React.FC = () => {
     <div className="animate-in fade-in duration-500 max-w-[1600px] mx-auto space-y-8">
 
       {/* Header */}
-      <div className="flex items-end justify-between relative">
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 md:gap-0 relative">
         <div>
           <h2 className="text-3xl font-extrabold text-white mb-1">Clinical Logs & Billing</h2>
           <p className="text-sm text-white/70 font-medium">Review patient encounters, finalize charts, and generate automated bills.</p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3 w-full md:w-auto">
           <div className="flex items-center gap-2 bg-white/5 border border-white/10 rounded-[16px] px-3 py-2 premium-shadow">
             <Search className="w-4 h-4 text-white/70" />
-            <input type="text" placeholder="Search encounters..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="bg-transparent border-none outline-none text-xs text-white w-48 placeholder:text-[#9CA3AF]" />
+            <input type="text" placeholder="Search encounters..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="bg-transparent border-none outline-none text-xs text-white w-full sm:w-48 placeholder:text-[#9CA3AF]" />
           </div>
-          <button className="flex items-center gap-2 bg-white/5 border border-white/10 text-white font-bold text-xs px-4 py-2.5 rounded-[16px] premium-shadow hover:bg-white/5 transition-colors">
+          <button className="flex items-center justify-center gap-2 bg-white/5 border border-white/10 text-white font-bold text-xs px-4 py-2.5 rounded-[16px] premium-shadow whitespace-nowrap shrink-0 hover:bg-white/5 transition-colors">
             <Filter className="w-4 h-4 text-white/70" /> Filter
           </button>
           <button
             onClick={handleExportAllLogs}
-            className="flex items-center gap-2 bg-white/5 border border-white/10 text-white font-bold text-xs px-4 py-2.5 rounded-[16px] premium-shadow hover:bg-white/5 transition-colors"
+            className="flex items-center justify-center gap-2 bg-white/5 border border-white/10 text-white font-bold text-xs px-4 py-2.5 rounded-[16px] premium-shadow whitespace-nowrap shrink-0 hover:bg-white/5 transition-colors"
           >
             <Download className="w-4 h-4 text-white/70" /> Export Logs
           </button>
           <button
             onClick={() => setShowAddModal(true)}
-            className="flex items-center gap-2 bg-[#2E1055] hover:bg-[#120524] text-white font-bold text-xs px-4 py-2.5 rounded-[16px] premium-shadow transition-all hover:scale-105 active:scale-95"
+            className="flex items-center justify-center gap-2 bg-[#2E1055] hover:bg-[#120524] text-white font-bold text-xs px-4 py-2.5 rounded-[16px] whitespace-nowrap shrink-0 premium-shadow transition-all hover:scale-105 active:scale-95"
           >
             <Plus className="w-4 h-4" /> Add Encounter
           </button>

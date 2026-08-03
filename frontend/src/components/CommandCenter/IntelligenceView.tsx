@@ -47,7 +47,7 @@ export const IntelligenceView: React.FC = () => {
   return (
     <div className="animate-in fade-in duration-500 max-w-[1400px] mx-auto space-y-8">
       {/* Header */}
-      <div className="flex items-end justify-between">
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 md:gap-0">
         <div>
           <div className="flex items-center gap-3 mb-2">
             <div className="p-2 bg-gradient-to-br from-[#EEEAFE] to-indigo-600 rounded-2xl shadow-lg">

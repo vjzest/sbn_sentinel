@@ -83,7 +83,7 @@ export const ExecutiveDashboardView: React.FC<Props> = ({ setActiveTab }) => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <div className="bg-gradient-to-br from-[#2E1055] to-[#120524] p-6 rounded-[24px] border border-white/10 shadow-[0_20px_50px_rgba(46,16,85,0.3)]">
           <p className="text-xs text-white/50 uppercase tracking-widest font-bold mb-2">Active Op Risks</p>
-          <div className="flex items-end justify-between">
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 md:gap-0">
             <h3 className="text-4xl font-black text-white">{activeSignals.length}</h3>
             <Activity className="w-8 h-8 text-[#3B82F6] opacity-80" />
           </div>
@@ -91,7 +91,7 @@ export const ExecutiveDashboardView: React.FC<Props> = ({ setActiveTab }) => {
         
         <div className="bg-gradient-to-br from-rose-900/40 to-[#120524] p-6 rounded-[24px] border border-rose-500/20 shadow-[0_20px_50px_rgba(225,29,72,0.15)]">
           <p className="text-xs text-rose-300/70 uppercase tracking-widest font-bold mb-2">Critical Issues</p>
-          <div className="flex items-end justify-between">
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 md:gap-0">
             <h3 className="text-4xl font-black text-rose-400">{criticalIssuesCount}</h3>
             <AlertTriangle className="w-8 h-8 text-rose-500 opacity-80" />
           </div>
@@ -99,7 +99,7 @@ export const ExecutiveDashboardView: React.FC<Props> = ({ setActiveTab }) => {
 
         <div className="bg-gradient-to-br from-amber-900/40 to-[#120524] p-6 rounded-[24px] border border-amber-500/20 shadow-[0_20px_50px_rgba(245,158,11,0.15)]">
           <p className="text-xs text-amber-300/70 uppercase tracking-widest font-bold mb-2">Revenue At Risk</p>
-          <div className="flex items-end justify-between">
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 md:gap-0">
             <h3 className="text-4xl font-black text-amber-400">${revenueAtRisk.toLocaleString()}</h3>
             <FileText className="w-8 h-8 text-amber-500 opacity-80" />
           </div>
