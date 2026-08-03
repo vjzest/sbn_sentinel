@@ -255,7 +255,7 @@ export const ConnectorsView: React.FC = () => {
     <div className="animate-in fade-in duration-500 max-w-[1600px] mx-auto space-y-8">
       
       {/* Header */}
-      <div className="flex items-end justify-between">
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 md:gap-0">
         <div>
           <h2 className="text-3xl font-extrabold text-white mb-1">Connections & Connectors</h2>
           <p className="text-sm text-white/70 font-medium">Manage connected health systems, Twilio voice gateways, and billing APIs.</p>
@@ -273,7 +273,7 @@ export const ConnectorsView: React.FC = () => {
       </div>
 
       {/* Top Stats */}
-      <div className="grid grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
         {[
           { title: 'Connected Systems', value: isLoading ? '...' : `${connectors.length}`, color: 'blue', line: '#3B82F6' },
           { title: 'Healthy Connections', value: isLoading ? '...' : `${connectedCount}`, color: 'green', line: '#10B981' },
@@ -476,7 +476,7 @@ export const ConnectorsView: React.FC = () => {
                        onClick={() => handleSelectSystem(sys.name)}
                        className="flex items-center justify-between p-4 border border-white/10 rounded-[16px] hover:border-[#A78BFA]/50 hover:bg-white/10 cursor-pointer transition-all group"
                      >
-                        <div className="flex items-center gap-3">
+                        <div className="flex flex-wrap items-center gap-2 sm:gap-3 w-full md:w-auto">
                           <div className="w-10 h-10 bg-white/5 border border-white/10 rounded-full flex items-center justify-center group-hover:border-[#2E1055] bg-white/5 transition-all">
                             <Database className="w-4 h-4 text-white/70 group-hover:text-[#A78BFA]" />
                           </div>

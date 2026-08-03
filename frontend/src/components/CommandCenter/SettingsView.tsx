@@ -437,7 +437,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onSaveSettings, acti
                   {clinicsList.map((clinic, idx) => (
                     <tr key={idx} className="hover:bg-white/[0.02] transition-colors">
                       <td className="py-4 px-6">
-                        <div className="flex items-center gap-3">
+                        <div className="flex flex-wrap items-center gap-2 sm:gap-3 w-full md:w-auto">
                           <div className="w-8 h-8 rounded-full bg-[#2E1055] flex items-center justify-center">
                             <Building className="w-4 h-4 text-white/70" />
                           </div>
@@ -593,7 +593,7 @@ document.body
                       <h4 className="text-sm font-bold text-white mb-1">Standard Operating Hours</h4>
                       <p className="text-xs text-white/70 leading-relaxed">Establish check-in periods for patients waitlists.</p>
                     </div>
-                    <div className="flex items-center gap-3">
+                    <div className="flex flex-wrap items-center gap-2 sm:gap-3 w-full md:w-auto">
                       <input 
                         type="time" 
                         value={openTime} 
@@ -936,7 +936,7 @@ document.body
 
                 {/* Payment Card Details */}
                 <div className="flex justify-between items-center bg-white/5 p-5 border border-white/10 rounded-[18px]">
-                  <div className="flex items-center gap-3">
+                  <div className="flex flex-wrap items-center gap-2 sm:gap-3 w-full md:w-auto">
                     <div className="w-10 h-10 bg-[#120524] border border-white/10 rounded-full flex items-center justify-center text-[#2563EB]">
                       <CreditCard className="w-5 h-5" />
                     </div>

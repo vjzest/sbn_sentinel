@@ -267,12 +267,12 @@ export const SignalsDetailView: React.FC = () => {
   return (
     <div className="animate-in fade-in duration-500 max-w-[1600px] mx-auto space-y-8">
       {/* Header */}
-      <div className="flex items-end justify-between relative">
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 md:gap-0 relative">
         <div>
           <h2 className="text-3xl font-extrabold text-white mb-1">Signals Intelligence Hub</h2>
           <p className="text-sm text-white/70 font-medium">Real-time Secure Data EHR connections, Twilio hooks, and automated audit stream logs.</p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3 w-full md:w-auto">
           <button 
             onClick={fetchDbSignals} 
             disabled={isRefreshing}
@@ -508,7 +508,7 @@ export const SignalsDetailView: React.FC = () => {
           <div className="bg-white/5 border border-white/10 w-full max-w-2xl rounded-[28px] overflow-hidden premium-shadow animate-in zoom-in-95 duration-200 flex flex-col max-h-[90vh]">
             {/* Header */}
             <div className="px-6 py-4 bg-white/5 border-b border-white/10 flex items-center justify-between">
-              <div className="flex items-center gap-3">
+              <div className="flex flex-wrap items-center gap-2 sm:gap-3 w-full md:w-auto">
                 <div className={`p-2.5 ${getBgColor(selectedSignal.type)} rounded-[16px] flex-shrink-0`}>
                   {getIcon(selectedSignal.type)}
                 </div>
@@ -622,7 +622,7 @@ export const SignalsDetailView: React.FC = () => {
                     {viewMode === 'doctor' ? 'SYSTEM STATUS (CLINICAL VIEW)' : 'RAW SYSTEM LOGS (DEVELOPER VIEW)'}
                   </h5>
                   
-                  <div className="flex items-center gap-3">
+                  <div className="flex flex-wrap items-center gap-2 sm:gap-3 w-full md:w-auto">
                     {/* View Mode Toggle */}
                     <div className="bg-white/5 p-0.5 rounded-[8px] flex items-center border border-white/10">
                       <button 

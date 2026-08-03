@@ -142,13 +142,13 @@ export const RevenueReportsView: React.FC = () => {
       )}
 
       {/* Header */}
-      <div className="flex items-end justify-between relative">
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 md:gap-0 relative">
         <div>
           <h2 className="text-3xl font-extrabold text-white mb-1">Revenue Intelligence</h2>
           <p className="text-sm text-white/70 font-medium">Financial insights and real-time claim audits processed directly from clinic encounters.</p>
         </div>
-        <div className="flex gap-3 relative">
-          <button onClick={() => setShowFilter(!showFilter)} className="flex items-center gap-2 bg-white/5 border border-white/10 text-white font-bold text-xs px-4 py-2.5 rounded-[16px] premium-shadow hover:bg-white/5 transition-colors relative z-20 select-none">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3 relative w-full md:w-auto">
+          <button onClick={() => setShowFilter(!showFilter)} className="flex items-center justify-center gap-2 bg-white/5 border border-white/10 text-white font-bold text-xs px-4 py-2.5 rounded-[16px] premium-shadow whitespace-nowrap shrink-0 hover:bg-white/5 transition-colors relative z-20 select-none">
             <Filter className="w-4 h-4 text-white/70" /> Filter: {filterRange}
           </button>
           

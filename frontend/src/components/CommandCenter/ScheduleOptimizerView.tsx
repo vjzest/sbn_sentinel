@@ -80,7 +80,7 @@ export const ScheduleOptimizerView: React.FC = () => {
       )}
 
       {/* Header */}
-      <div className="flex items-end justify-between">
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 md:gap-0">
         <div>
           <h2 className="text-3xl font-extrabold text-white mb-1">Appointment Schedule Optimizer</h2>
           <p className="text-sm text-white/70 font-medium">AI-driven patient routing, provider workload balancing, and clinic capacity manager.</p>

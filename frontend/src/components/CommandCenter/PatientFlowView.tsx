@@ -737,12 +737,12 @@ export const PatientFlowView: React.FC = () => {
     <div className="animate-in fade-in duration-500 max-w-[1600px] mx-auto space-y-8">
 
       {/* Header */}
-      <div className="flex items-end justify-between relative">
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 md:gap-0 relative">
         <div>
           <h2 className="text-3xl font-extrabold text-white mb-1">Patient Waitlist Monitor</h2>
           <p className="text-sm text-white/70 font-medium">Real-time tracking of patients across clinic locations.</p>
         </div>
-        <div className="flex items-center gap-3 relative">
+        <div className="flex flex-wrap items-center gap-2 lg:gap-3 relative w-full lg:w-auto">
           <button onClick={() => setShowFilter(!showFilter)} className={`flex items-center gap-2 border text-white font-bold text-xs px-4 py-2.5 rounded-[16px] premium-shadow hover:bg-white/10 transition-colors relative z-20 ${activeFilter ? 'bg-white/20 border-white/40 text-white shadow-md' : 'bg-white/5 border-white/10'}`}>
             <Filter className="w-4 h-4" /> {activeFilter || 'Filter'}
           </button>
@@ -765,7 +765,7 @@ export const PatientFlowView: React.FC = () => {
           <button onClick={handleExport} className={`flex items-center gap-2 font-bold text-xs px-4 py-2.5 rounded-[16px] premium-shadow transition-colors ${isExporting ? 'bg-[#10B981] text-white hover:bg-[#059669]' : 'bg-white/5 border border-white/10 text-white hover:bg-white/10 active:scale-95'}`}>
             {isExporting ? <Check className="w-4 h-4 animate-bounce" /> : <Download className="w-4 h-4 text-white/70" />} {isExporting ? 'Exported!' : 'Export'}
           </button>
-          <button onClick={() => setDateFilter(dateFilter === 'Today' ? 'Yesterday' : dateFilter === 'Yesterday' ? 'Last 7 Days' : 'Today')} className="flex items-center gap-2 bg-white/5 border border-white/10 text-white font-bold text-xs px-4 py-2.5 rounded-[16px] premium-shadow hover:bg-white/10 transition-colors active:scale-95">
+          <button onClick={() => setDateFilter(dateFilter === 'Today' ? 'Yesterday' : dateFilter === 'Yesterday' ? 'Last 7 Days' : 'Today')} className="flex items-center justify-center gap-2 bg-white/5 border border-white/10 text-white font-bold text-xs px-4 py-2.5 rounded-[16px] premium-shadow whitespace-nowrap shrink-0 hover:bg-white/10 transition-colors active:scale-95">
             <Calendar className="w-4 h-4 text-white/70" /> {dateFilter}
           </button>
           <div className="flex items-center gap-2 bg-[#ECFDF5] text-[#10B981] border border-emerald-500/30 font-bold text-xs px-4 py-2.5 rounded-[16px] premium-shadow">
@@ -923,7 +923,7 @@ export const PatientFlowView: React.FC = () => {
                     return (
                       <tr key={row.id || i} className="border-b border-white/10 hover:bg-white/10 transition-colors last:border-0 cursor-pointer">
                         <td className="py-4 px-2">
-                          <div className="flex items-center gap-3">
+                          <div className="flex flex-wrap items-center gap-2 sm:gap-3 w-full md:w-auto">
                             <img src={row.avatar || 'https://i.pravatar.cc/150?img=1'} className="w-8 h-8 rounded-full border border-white/10" alt="" />
                             <div>
                               <p className="text-sm font-bold text-white leading-tight transition-all">{row.patient_name}</p>

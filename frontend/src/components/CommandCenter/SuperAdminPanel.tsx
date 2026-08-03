@@ -191,7 +191,7 @@ export const SuperAdminPanel: React.FC<SuperAdminProps> = ({ onLogout, user }) =
       {/* Admin Sidebar */}
       <aside className={`w-[260px] bg-gradient-to-br from-[#2E1055] to-[#120524] shadow-[0_20px_60px_rgba(46,16,85,0.3)] rounded-[24px] text-white border border-white/10 flex flex-col fixed md:relative z-[60] h-full transition-transform duration-300 ease-in-out shrink-0 ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-[300px] md:translate-x-0'}`}>
         <div className="p-6 pb-5 border-b border-white/10 flex items-center justify-between">
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3 w-full md:w-auto">
             <div className="w-10 h-10 rounded-[16px] bg-white/10 border border-white/10 flex items-center justify-center font-black text-xl shadow-lg">
               S
             </div>
@@ -216,7 +216,7 @@ export const SuperAdminPanel: React.FC<SuperAdminProps> = ({ onLogout, user }) =
             <Building2 className="w-4 h-4" /> Clinics (Tenants)
           </button>
           <button onClick={() => { setActiveTab('approvals'); setIsMobileMenuOpen(false); }} className={`w-full flex items-center justify-between px-4 py-3 rounded-2xl text-sm font-bold transition-all ${activeTab === 'approvals' ? 'bg-white/10 text-white font-extrabold shadow-lg' : 'text-white/60 hover:text-white hover:bg-white/5'}`}>
-            <div className="flex items-center gap-3">
+            <div className="flex flex-wrap items-center gap-2 sm:gap-3 w-full md:w-auto">
               <CheckCircle2 className="w-4 h-4" /> Pending Approvals
             </div>
             {pendingApprovals.length > 0 && (
@@ -253,7 +253,7 @@ export const SuperAdminPanel: React.FC<SuperAdminProps> = ({ onLogout, user }) =
       <main className="flex-1 flex flex-col relative overflow-hidden bg-white/5 backdrop-blur-3xl rounded-[24px] border border-white/10 premium-shadow">
         {/* Header */}
         <header className="h-20 flex items-center justify-between px-4 md:px-8 bg-transparent border-b border-white/10 z-10 shrink-0">
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3 w-full md:w-auto">
             <button onClick={() => setIsMobileMenuOpen(true)} className="md:hidden text-white/40 hover:text-white">
               <Menu className="w-6 h-6" />
             </button>
@@ -483,7 +483,7 @@ export const SuperAdminPanel: React.FC<SuperAdminProps> = ({ onLogout, user }) =
                    {clinics.map((c, i) => (
                      <tr key={i} className="hover:bg-white/5 border-b border-white/10 last:border-0 cursor-pointer">
                        <td className="p-4">
-                         <div className="flex items-center gap-3">
+                         <div className="flex flex-wrap items-center gap-2 sm:gap-3 w-full md:w-auto">
                             <div className="w-8 h-8 rounded bg-white/10 flex items-center justify-center font-bold text-white/70 text-xs">
                               {c.name.charAt(0)}
                             </div>
@@ -680,7 +680,7 @@ export const SuperAdminPanel: React.FC<SuperAdminProps> = ({ onLogout, user }) =
                 </div>
                 <div>
                   <label className="block text-sm font-bold text-white mb-2">Maintenance Mode</label>
-                  <div className="flex items-center gap-3">
+                  <div className="flex flex-wrap items-center gap-2 sm:gap-3 w-full md:w-auto">
                     <div 
                       onClick={togglePasmeMaintenance}
                       className={`w-12 h-6 rounded-full relative cursor-pointer transition-colors ${maintenanceMode ? 'bg-rose-500' : 'bg-[#2E1055]'}`}
