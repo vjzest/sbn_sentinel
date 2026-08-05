@@ -74,7 +74,7 @@ export const AuditLogsView: React.FC = () => {
 
   return (
     <div className="animate-in fade-in duration-500 max-w-[1600px] mx-auto space-y-8">
-      <div className="flex justify-between items-end">
+      <div className="flex flex-col md:flex-row justify-between md:items-end gap-4 md:gap-0">
         <div>
           <h2 className="text-3xl font-extrabold text-white tracking-tight flex items-center gap-3">
             <ClipboardList className="w-8 h-8 text-blue-400" />
@@ -85,7 +85,7 @@ export const AuditLogsView: React.FC = () => {
         <div className="flex flex-wrap items-center gap-2 sm:gap-3 w-full md:w-auto">
           <button
             onClick={handleExportAudit}
-            className="flex items-center gap-2 bg-[#2E1055] hover:bg-[#120524] border border-white/10 text-white font-bold text-xs px-4 py-2.5 rounded-[16px] premium-shadow transition-all hover:scale-105 active:scale-95"
+            className="flex items-center justify-center gap-2 bg-[#2E1055] hover:bg-[#120524] border border-white/10 text-white font-bold text-xs px-4 py-2.5 rounded-[16px] premium-shadow transition-all hover:scale-105 active:scale-95 whitespace-nowrap shrink-0"
           >
             Export HIPAA Audit
           </button>
@@ -93,7 +93,7 @@ export const AuditLogsView: React.FC = () => {
       </div>
 
       <div className="bg-gradient-to-br from-[#2E1055] to-[#120524] border border-white/10 rounded-[24px] overflow-hidden p-6 shadow-[0_20px_50px_rgba(46,16,85,0.3)] text-white">
-        <div className="flex gap-4 mb-6">
+        <div className="flex flex-col md:flex-row gap-4 mb-6">
           <div className="flex-1 relative">
             <Search className="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-white/40" />
             <input 
@@ -104,7 +104,7 @@ export const AuditLogsView: React.FC = () => {
               className="w-full bg-white/5 border border-white/10 rounded-[12px] py-2.5 pl-11 pr-4 text-sm font-medium text-white placeholder:text-white/40 outline-none focus:border-blue-500/50 transition-colors"
             />
           </div>
-          <div className="bg-white/5 border border-white/10 text-white/80 px-4 py-2.5 rounded-[12px] text-xs font-bold flex items-center gap-2">
+          <div className="bg-white/5 border border-white/10 text-white/80 px-4 py-2.5 rounded-[12px] text-xs font-bold flex items-center justify-center gap-2 whitespace-nowrap shrink-0">
             <Filter className="w-4 h-4 text-blue-400" /> Total Logs: <span className="text-white font-extrabold">{logs.length}</span>
           </div>
         </div>

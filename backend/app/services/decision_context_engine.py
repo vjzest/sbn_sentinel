@@ -91,6 +91,30 @@ class DecisionContextEngine(BaseService):
                 "event_type": event_type
             }
             
+        # AIS-002: Build New Decision Context Package
+        from app.services.context_builder import ContextBuilder
+        from app.services.context_validator import ContextValidator
+        from app.services.context_serializer import ContextSerializer
+        
+        # We run this synchronously to avoid breaking the existing BaseService caller
+        import asyncio
+        builder = ContextBuilder(None)
+        validator = ContextValidator(None)
+        serializer = ContextSerializer()
+        
+        try:
+            # Create a simple event loop to run the async stubs if necessary, 
+            # or just call them if we make them synchronous. 
+            # Since we made them async, we use asyncio.run
+            new_package = asyncio.run(builder.build(event_type, evidence_items))
+            new_package = asyncio.run(validator.validate(new_package))
+            serialized_package = serializer.serialize(new_package)
+        except Exception:
+            serialized_package = {"error": "Failed to build AIS-002 context"}
+
+        # Inject AIS-002 Package into the legacy response to avoid breaking downstream
+        context["ais_002_decision_context_package"] = serialized_package
+        
         return context
 
 decision_context_engine = DecisionContextEngine()
