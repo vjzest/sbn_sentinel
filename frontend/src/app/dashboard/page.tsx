@@ -363,7 +363,7 @@ export default function Dashboard() {
                 <p className="text-[9px] font-black text-white/40 uppercase tracking-[0.2em] mb-3 px-4">Administration</p>
                 <div className="space-y-1">
                   <SidebarItem icon={Users} label="User Management" active={activeTab === 'settings-team'} onClick={() => { setActiveTab('settings-team'); setIsMobileMenuOpen(false); }} />
-                  {['super_admin', 'org_admin'].includes(userRole) && (
+                  {['super_admin', 'org_admin', 'clinic_admin'].includes(userRole) && (
                     <SidebarItem icon={Database} label="Connectors" active={activeTab === 'settings-integrations' || activeTab === 'connectors'} onClick={() => { setActiveTab('settings-integrations'); setIsMobileMenuOpen(false); }} />
                   )}
                   <SidebarItem icon={ClipboardList} label="Audit Logs" active={activeTab === 'audit-logs'} onClick={() => { setActiveTab('audit-logs'); setIsMobileMenuOpen(false); }} />
