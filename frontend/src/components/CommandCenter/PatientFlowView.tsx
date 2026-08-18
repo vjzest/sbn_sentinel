@@ -362,10 +362,10 @@ export const PatientFlowView: React.FC = () => {
 
   // Verify Eligibility
   const handleVerifyEligibility = async () => {
-    let prov = providerName || "BlueCross BlueShield";
-    let mem = memberId || "BCBS-9940251";
-    let grp = groupNumber || "GRP44910";
-    let pyr = payerId || "PYR9910";
+    const prov = providerName || "BlueCross BlueShield";
+    const mem = memberId || "BCBS-9940251";
+    const grp = groupNumber || "GRP44910";
+    const pyr = payerId || "PYR9910";
 
     if (!providerName) setProviderName(prov);
     if (!memberId) setMemberId(mem);

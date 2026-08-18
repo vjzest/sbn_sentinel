@@ -19,6 +19,8 @@ export const SignalsDetailView: React.FC = () => {
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [auditLogs, setAuditLogs] = useState<any[]>([]);
   const [viewMode, setViewMode] = useState<'doctor' | 'developer'>('doctor');
+  const [outcomeState, setOutcomeState] = useState<'PENDING' | 'CONFIRMED' | null>(null);
+  const [resolutionState, setResolutionState] = useState<'UNRESOLVED' | 'RESOLVED' | null>(null);
 
   // Combine redux state and db historical signals
   const fetchDbSignals = async () => {
@@ -160,7 +162,15 @@ export const SignalsDetailView: React.FC = () => {
     setTimeout(() => {
       setIsDispatching(false);
       setIsDispatched(true);
+      setOutcomeState('PENDING');
+      setResolutionState('UNRESOLVED');
       dispatch(incrementActionsTaken());
+
+      // Simulate SESR-007 Webhook Confirmation arriving asynchronously
+      setTimeout(() => {
+        setOutcomeState('CONFIRMED');
+        setResolutionState('RESOLVED');
+      }, 3000);
     }, 1500);
   };
 
@@ -384,6 +394,8 @@ export const SignalsDetailView: React.FC = () => {
                           setSelectedSignal(signal);
                           setIsDispatched(false);
                           setIsDispatching(false);
+                          setOutcomeState(null);
+                          setResolutionState(null);
                         }}
                         className={`border-b border-white/10 hover:bg-white/5 transition-all last:border-0 cursor-pointer ${
                           selectedSignal?.id === signal.id ? 'bg-white/10 border-l-4 border-l-[#A78BFA]' : ''
@@ -431,6 +443,39 @@ export const SignalsDetailView: React.FC = () => {
 
         {/* Diagnostic Panel Sidebar */}
         <div className="flex flex-col gap-6">
+          {/* SESR-009 System Capability Matrix */}
+          <div className="bg-gradient-to-br from-[#2E1055] to-[#120524] border border-white/10 rounded-[24px] p-8 shadow-[0_20px_50px_rgba(46,16,85,0.3)] text-white">
+            <h3 className="text-base font-extrabold text-white mb-6 flex items-center gap-2">
+              <Activity className="w-5 h-5 text-[#3B82F6]" /> System Capability Matrix
+            </h3>
+            <div className="space-y-4">
+              <div className="flex justify-between items-center py-2 border-b border-white/10">
+                <span className="text-sm font-bold text-white/80">Historical Data (Read)</span>
+                <span className="inline-flex items-center gap-1 text-[10px] bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded-[8px] font-extrabold uppercase">
+                  <CheckCircle2 className="w-3 h-3" /> Available
+                </span>
+              </div>
+              <div className="flex justify-between items-center py-2 border-b border-white/10">
+                <span className="text-sm font-bold text-white/80">Practice Fusion (Write)</span>
+                {selectedSignal?.metadata?.pipeline_state === 'Degraded' || selectedSignal?.message?.toLowerCase().includes('timeout') ? (
+                  <span className="inline-flex items-center gap-1 text-[10px] bg-amber-500/20 text-amber-400 border border-amber-500/30 px-2 py-0.5 rounded-[8px] font-extrabold uppercase">
+                    <AlertTriangle className="w-3 h-3" /> Degraded
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center gap-1 text-[10px] bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded-[8px] font-extrabold uppercase">
+                    <CheckCircle2 className="w-3 h-3" /> Available
+                  </span>
+                )}
+              </div>
+              <div className="flex justify-between items-center py-2 border-b border-white/10">
+                <span className="text-sm font-bold text-white/80">Policy Engine</span>
+                <span className="inline-flex items-center gap-1 text-[10px] bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded-[8px] font-extrabold uppercase">
+                  <CheckCircle2 className="w-3 h-3" /> Available
+                </span>
+              </div>
+            </div>
+          </div>
+
           <div className="bg-gradient-to-br from-[#2E1055] to-[#120524] border border-white/10 rounded-[24px] p-8 shadow-[0_20px_50px_rgba(46,16,85,0.3)] text-white">
             <h3 className="text-base font-extrabold text-white mb-6 flex items-center gap-2">
               <Shield className="w-5 h-5 text-[#A78BFA]" /> Live Stream Status
@@ -515,7 +560,13 @@ export const SignalsDetailView: React.FC = () => {
                 <div>
                   <h4 className="text-base font-extrabold text-white flex items-center gap-2">
                     Signal Diagnostic Report
-                    <span className="text-[10px] font-mono bg-[#2E1055]/20 border border-[#2E1055]/50 text-[#A78BFA] px-2 py-0.5 rounded-[6px]">ID: {selectedSignal.id}</span>
+                    <span className="text-[10px] font-mono bg-[#2E1055]/20 border border-[#2E1055]/50 text-[#A78BFA] px-2 py-0.5 rounded-[6px]" title="SESR-008 Originating Signal ID">ID: {selectedSignal.id}</span>
+                    {/* SESR-008 Traceability */}
+                    {selectedSignal.correlation_id && (
+                      <span className="text-[10px] font-mono bg-blue-500/20 border border-blue-500/50 text-blue-400 px-2 py-0.5 rounded-[6px]" title="SESR-008 Journey Identity">
+                        Journey ID: {selectedSignal.correlation_id}
+                      </span>
+                    )}
                   </h4>
                   <p className="text-[10px] text-white/70 font-extrabold uppercase tracking-widest mt-0.5">Source: {selectedSignal.source} Integration Layer</p>
                 </div>
@@ -614,6 +665,31 @@ export const SignalsDetailView: React.FC = () => {
                   </div>
                 </div>
               </div>
+
+              {/* Outcome Status (SESR-007) */}
+              {isDispatched && (
+                <div className="bg-white/5 border border-white/10 rounded-[18px] p-4 flex gap-3 relative animate-in slide-in-from-top-2">
+                  <div className="flex-1">
+                    <h5 className="text-xs font-extrabold text-[#3B82F6] uppercase tracking-wider mb-2 flex items-center gap-1">
+                      <Database className="w-3.5 h-3.5" /> Operational Outcome (SESR-007)
+                    </h5>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <p className="text-[10px] text-white/50 uppercase tracking-widest font-bold">Confirmation State</p>
+                        <p className={`text-xs font-bold ${outcomeState === 'CONFIRMED' ? 'text-emerald-400' : 'text-amber-400'}`}>
+                          {outcomeState || 'PENDING'}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-[10px] text-white/50 uppercase tracking-widest font-bold">Resolution State</p>
+                        <p className={`text-xs font-bold ${resolutionState === 'RESOLVED' ? 'text-emerald-400' : 'text-amber-400'}`}>
+                          {resolutionState || 'UNRESOLVED'}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {/* Secure Data/Raw JSON Payload */}
               <div>

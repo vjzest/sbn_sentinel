@@ -6,8 +6,8 @@ export const useSignalStream = () => {
   const dispatch = useDispatch();
 
   useEffect(() => {
-    const wsUrl = process.env.NEXT_PUBLIC_BACKEND_WS_URL || `${process.env.NEXT_PUBLIC_BACKEND_WS_URL}`;
-    let ws = new WebSocket(`${wsUrl}/api/v1/signals/ws`);
+    const wsUrl = process.env.NEXT_PUBLIC_BACKEND_WS_URL || "ws://localhost:8000";
+    const ws = new WebSocket(`${wsUrl}/api/v1/signals/ws`);
     
     ws.onopen = () => {
       dispatch(setConnectionStatus(true));

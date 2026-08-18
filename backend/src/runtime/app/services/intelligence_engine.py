@@ -1,0 +1,142 @@
+import logging
+import uuid
+from typing import Dict, Any
+from datetime import datetime
+from app.services.base_service import BaseService
+from app.services.governance_registry import (
+    governance_registry, RecommendationStatus, AuthorityRequirement,
+    RecommendationRecord
+)
+
+logger = logging.getLogger(__name__)
+
+class IntelligenceEngine(BaseService):
+    """
+    Operational Intelligence Engine (OIE).
+    Receives objective findings and context.
+    Calculates priority, estimates impact, and generates executive recommendations per MS-004.
+    """
+    
+    @property
+    def service_name(self) -> str:
+        return "IntelligenceEngine"
+
+    @property
+    def version(self) -> str:
+        return "v1.0"
+
+    def __init__(self):
+        self.mode = "Deterministic Rules Engine via OIE"
+
+    def _process(self, payload: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Takes 'finding' and 'context' and generates recommendations using the GovernanceRegistry.
+        """
+        finding = payload.get("finding", {})
+        if isinstance(finding, list):
+            finding = finding[0] if finding else {}
+        context = payload.get("context", {})
+        
+        rule_id = finding.get("rule_id", "UNKNOWN")
+        # In SESR-004, finding severity or other fields can serve as 'result'
+        # In absence of a true rule result field, we'll map 'Information', 'Warning', 'Error', etc.
+        # But we seeded `CONDITION_MET` and `NOT_EVALUABLE` in registry.
+        # The rules engine in processing_orchestrator L6 currently returns "rule_id" and "severity".
+        # We will assume if it produced a finding, the rule result was "CONDITION_MET".
+        # Let's check for 'NOT_EVALUABLE' in the severity just in case.
+        result = "NOT_EVALUABLE" if finding.get("severity") == "NOT_EVALUABLE" else "CONDITION_MET"
+        
+        eval_time = datetime.utcnow()
+        mapping = governance_registry.get_applicable_recommendation_mapping(rule_id, result, eval_time)
+        
+        if not mapping:
+            # Safe Non-Generation (RGV-031)
+            logger.info(f"[IntelligenceEngine] No applicable mapping for rule {rule_id} and result {result}. Generating safe NO_RECOMMENDATION.")
+            return {
+                "risk_level": "Information",
+                "priority": "Information",
+                "priority_score": 0,
+                "problem": "Unmapped Event",
+                "reason": f"Event triggered rule {rule_id} but no governed recommendation mapping exists.",
+                "operational_impact": "None",
+                "business_impact": "None",
+                "action": "NO_RECOMMENDATION",
+                "recommendation": "NO_RECOMMENDATION",
+                "expected_outcome": "No operational action recommended.",
+                "explainability_log": f"Because: No mapping in registry for {rule_id}.",
+                "primary_context": context.get("primary_context", "General"),
+                "secondary_context": context.get("secondary_context", ""),
+                "context_confidence": context.get("confidence", "High"),
+                "context_reason": context.get("reason", ""),
+                "decision_record": {}
+            }
+        
+        # Governed Variable Substitution (RGV-011)
+        # We can implement basic formatting if needed, assuming the context contains the keys.
+        try:
+            formatted_recommendation = mapping.recommendation_template.format(**context)
+            formatted_impact = mapping.business_impact_template.format(**context)
+            formatted_outcome = mapping.expected_outcome_template.format(**context)
+            formatted_problem = mapping.problem_template.format(**context)
+        except KeyError as e:
+            logger.warning(f"Missing governed variable in context for template: {e}")
+            formatted_recommendation = mapping.recommendation_template
+            formatted_impact = mapping.business_impact_template
+            formatted_outcome = mapping.expected_outcome_template
+            formatted_problem = mapping.problem_template
+
+        rec_id = f"REC-{uuid.uuid4().hex[:8].upper()}"
+        
+        # RCO-001: Create and persist Recommendation Record
+        record = RecommendationRecord(
+            recommendation_id=rec_id,
+            mapping_id=mapping.mapping_id,
+            mapping_version=mapping.version,
+            decision_context_id=context.get("id", "UNKNOWN_CONTEXT"),
+            rule_evaluation_id=finding.get("evaluation_id", "UNKNOWN_EVALUATION"),
+            recommendation_content=formatted_recommendation,
+            status=RecommendationStatus.ACTIVE,
+            authority_requirement=mapping.authority_requirement,
+            priority=mapping.priority,
+            business_impact=formatted_impact,
+            expected_outcome=formatted_outcome,
+            problem=formatted_problem
+        )
+        governance_registry.record_recommendation(record)
+        
+        explainability_log = f"Governed by {mapping.mapping_id} (Version {mapping.version}) for {rule_id} ({result}). Authority: {mapping.authority_requirement.value}"
+
+        decision_record = {
+            "evidence": payload.get("evidence", "Evidence not provided to L7"),
+            "context": context,
+            "policy": payload.get("policy", "Policy result not provided to L7"),
+            "rule": rule_id,
+            "recommendation": formatted_recommendation,
+            "explainability": explainability_log,
+            "recommendation_id": rec_id
+        }
+
+        # Keep legacy dict shape for UI compatibility
+        result_payload = {
+            "risk_level": mapping.priority,
+            "priority": mapping.priority,
+            "priority_score": 50, # Optional: calculate based on priority
+            "problem": formatted_problem,
+            "reason": f"Governed Mapping {mapping.mapping_id}",
+            "operational_impact": formatted_impact,
+            "business_impact": formatted_impact,
+            "action": formatted_recommendation,
+            "recommendation": formatted_recommendation,
+            "expected_outcome": formatted_outcome,
+            "explainability_log": explainability_log,
+            "primary_context": context.get("primary_context", "General"),
+            "secondary_context": context.get("secondary_context", ""),
+            "context_confidence": context.get("confidence", "High"),
+            "context_reason": context.get("reason", ""),
+            "mapping_version": mapping.version,
+            "decision_record": decision_record
+        }
+        
+        return result_payload
+
+intelligence_engine = IntelligenceEngine()

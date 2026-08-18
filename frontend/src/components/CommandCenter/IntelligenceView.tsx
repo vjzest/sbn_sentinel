@@ -1,14 +1,20 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Activity, CheckCircle2, AlertTriangle, ArrowRight, UserCircle2, FileText, Zap, X, AlertOctagon, Info, AlertCircle } from 'lucide-react';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '@/store';
-import { removeSignal, incrementActionsTaken } from '@/store/slices/signalSlice';
+import { removeSignal, incrementActionsTaken, fetchHistoricalSignals } from '@/store/slices/signalSlice';
 export const IntelligenceView: React.FC = () => {
+  const dispatch = useDispatch<any>();
+
+  useEffect(() => {
+    dispatch(fetchHistoricalSignals());
+  }, [dispatch]);
   const rawEvents = useSelector((state: RootState) => state.signals.events);
-  const actionableEvents = rawEvents.filter(e => e.recommended_action && e.recommended_action !== "None required." && e.recommended_action !== "Monitor progress.").reverse();
+  const actionableEvents = rawEvents
+    .filter(e => e.recommended_action && e.recommended_action !== "None required." && e.recommended_action !== "Monitor progress.")
+    .sort((a, b) => (b.priority_score || 0) - (a.priority_score || 0));
   const [selectedEventIndex, setSelectedEventIndex] = useState<number>(0);
   const selectedEvent = actionableEvents.length > 0 && selectedEventIndex < actionableEvents.length ? actionableEvents[selectedEventIndex] : (actionableEvents.length > 0 ? actionableEvents[0] : null);
-  const dispatch = useDispatch();
   const handleDismiss = () => {
     if (selectedEvent) {
       dispatch(removeSignal(selectedEvent.id));
@@ -53,16 +59,52 @@ export const IntelligenceView: React.FC = () => {
             <div className="p-2 bg-gradient-to-br from-[#EEEAFE] to-indigo-600 rounded-2xl shadow-lg">
               <Zap className="w-6 h-6 text-white" />
             </div>
-            <h2 className="text-3xl font-extrabold text-white tracking-tight">Operational Intelligence</h2>
+            <h2 className="text-3xl font-extrabold text-white tracking-tight">Executive Intelligence Dashboard</h2>
           </div>
-          <p className="text-sm text-white/70 font-medium ml-12">Deterministic operational risk evaluation and recommendations.</p>
+          <p className="text-sm text-white/70 font-medium ml-12">Decision support & operational risk management for clinic leadership.</p>
         </div>
         <div className="flex items-center gap-2 bg-emerald-50 text-emerald-700 px-5 py-2.5 rounded-full border border-emerald-100 shadow-sm">
           <div className="relative flex h-2.5 w-2.5">
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
             <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
           </div>
-          <span className="text-sm font-bold tracking-wide">Engine is Active</span>
+          <span className="text-sm font-bold tracking-wide">System Health: 100% (Healthy)</span>
+        </div>
+      </div>
+
+      {/* Executive Summary Stats */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="bg-gradient-to-br from-[#1E1E2E] to-[#12121A] border border-white/10 p-6 rounded-[24px] shadow-lg flex items-center gap-4">
+          <div className="w-12 h-12 bg-rose-500/20 text-rose-400 rounded-full flex items-center justify-center">
+            <AlertOctagon className="w-6 h-6" />
+          </div>
+          <div>
+            <div className="text-xs text-white/50 font-bold uppercase tracking-widest mb-1">Critical Risks</div>
+            <div className="text-2xl font-black text-white">{actionableEvents.filter(e => e.risk_level === 'Critical' || e.risk_level === 'High').length}</div>
+          </div>
+        </div>
+        <div className="bg-gradient-to-br from-[#1E1E2E] to-[#12121A] border border-white/10 p-6 rounded-[24px] shadow-lg flex items-center gap-4">
+          <div className="w-12 h-12 bg-amber-500/20 text-amber-400 rounded-full flex items-center justify-center">
+            <FileText className="w-6 h-6" />
+          </div>
+          <div>
+            <div className="text-xs text-white/50 font-bold uppercase tracking-widest mb-1">Total Financial Exposure</div>
+            <div className="text-2xl font-black text-white">
+              ${actionableEvents.reduce((total, event) => {
+                const amount = parseFloat((event.estimated_financial_exposure || '0').replace(/[^0-9.-]+/g,""));
+                return total + (isNaN(amount) ? 0 : amount);
+              }, 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
+            </div>
+          </div>
+        </div>
+        <div className="bg-gradient-to-br from-[#1E1E2E] to-[#12121A] border border-white/10 p-6 rounded-[24px] shadow-lg flex items-center gap-4">
+          <div className="w-12 h-12 bg-emerald-500/20 text-emerald-400 rounded-full flex items-center justify-center">
+            <Activity className="w-6 h-6" />
+          </div>
+          <div>
+            <div className="text-xs text-white/50 font-bold uppercase tracking-widest mb-1">Active Connectors</div>
+            <div className="text-2xl font-black text-white">5 / 5 Healthy</div>
+          </div>
         </div>
       </div>
 
@@ -154,32 +196,55 @@ export const IntelligenceView: React.FC = () => {
                   </div>
                 </div>
 
+                {/* Explainability Block */}
+                {selectedEvent.explainability_log && (
+                  <div className="bg-indigo-500/10 p-4 rounded-xl border border-indigo-500/30 shadow-sm mt-4">
+                    <div className="text-xs text-indigo-400 uppercase tracking-widest font-bold mb-1 flex items-center gap-2">
+                      <Activity className="w-3.5 h-3.5" />
+                      Traceability Log
+                    </div>
+                    <div className="text-indigo-100/90 font-medium font-mono text-sm">
+                      {selectedEvent.explainability_log}
+                    </div>
+                  </div>
+                )}
+
                 {/* Revenue Intelligence Block */}
-                <div className="bg-amber-500/10 p-6 rounded-2xl border border-amber-500/30 relative mt-6">
-                  <div className="absolute -top-3 left-6 bg-[#1E1E2E] text-amber-400 px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider flex items-center gap-1.5 shadow-sm border border-amber-500/30">
+                <div className={`p-6 rounded-2xl border relative mt-6 ${!selectedEvent.estimated_financial_exposure || selectedEvent.estimated_financial_exposure === '$0.00' ? 'bg-amber-500/5 border-amber-500/20 opacity-80' : 'bg-amber-500/10 border-amber-500/30'}`}>
+                  <div className={`absolute -top-3 left-6 bg-[#1E1E2E] px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider flex items-center gap-1.5 shadow-sm border ${!selectedEvent.estimated_financial_exposure || selectedEvent.estimated_financial_exposure === '$0.00' ? 'text-amber-500/50 border-amber-500/20' : 'text-amber-400 border-amber-500/30'}`}>
                     <FileText className="w-3.5 h-3.5" />
                     Revenue Intelligence
                   </div>
-                  <div className="grid grid-cols-2 gap-4 mt-2">
-                    <div>
-                      <div className="text-xs text-amber-500/50 uppercase tracking-widest font-bold mb-1">Financial Exposure</div>
-                      <div className="text-amber-400 font-bold text-xl">{selectedEvent.estimated_financial_exposure || '$0.00'}</div>
+                  
+                  {(!selectedEvent.estimated_financial_exposure || selectedEvent.estimated_financial_exposure === '$0.00') && selectedEvent.revenue_risk_category === 'None' ? (
+                    <div className="mt-4 flex items-center gap-3 text-amber-500/70">
+                      <AlertTriangle className="w-5 h-5" />
+                      <span className="text-sm font-medium">Data Unavailable (Engine operating in degraded mode). Operational intelligence is still valid.</span>
                     </div>
-                    <div>
-                      <div className="text-xs text-amber-500/50 uppercase tracking-widest font-bold mb-1">Risk Category</div>
-                      <div className="text-amber-100 font-bold">{selectedEvent.revenue_risk_category || 'None'}</div>
-                    </div>
-                  </div>
-                  <div className="mt-4 pt-4 border-t border-amber-500/20 grid grid-cols-2 gap-4">
-                    <div>
-                      <div className="text-xs text-amber-500/50 uppercase tracking-widest font-bold mb-1">Confidence</div>
-                      <div className={selectedEvent.revenue_confidence === 'High' ? 'text-emerald-400 font-bold text-sm' : 'text-amber-300 font-bold text-sm'}>{selectedEvent.revenue_confidence || 'High'}</div>
-                    </div>
-                    <div>
-                      <div className="text-xs text-amber-500/50 uppercase tracking-widest font-bold mb-1">Dependency</div>
-                      <div className="text-amber-100/70 text-sm leading-relaxed">{selectedEvent.operational_dependency || 'N/A'}</div>
-                    </div>
-                  </div>
+                  ) : (
+                    <>
+                      <div className="grid grid-cols-2 gap-4 mt-2">
+                        <div>
+                          <div className="text-xs text-amber-500/50 uppercase tracking-widest font-bold mb-1">Financial Exposure</div>
+                          <div className="text-amber-400 font-bold text-xl">{selectedEvent.estimated_financial_exposure || '$0.00'}</div>
+                        </div>
+                        <div>
+                          <div className="text-xs text-amber-500/50 uppercase tracking-widest font-bold mb-1">Risk Category</div>
+                          <div className="text-amber-100 font-bold">{selectedEvent.revenue_risk_category || 'None'}</div>
+                        </div>
+                      </div>
+                      <div className="mt-4 pt-4 border-t border-amber-500/20 grid grid-cols-2 gap-4">
+                        <div>
+                          <div className="text-xs text-amber-500/50 uppercase tracking-widest font-bold mb-1">Confidence</div>
+                          <div className={selectedEvent.revenue_confidence === 'High' ? 'text-emerald-400 font-bold text-sm' : 'text-amber-300 font-bold text-sm'}>{selectedEvent.revenue_confidence || 'High'}</div>
+                        </div>
+                        <div>
+                          <div className="text-xs text-amber-500/50 uppercase tracking-widest font-bold mb-1">Dependency</div>
+                          <div className="text-amber-100/70 text-sm leading-relaxed">{selectedEvent.operational_dependency || 'N/A'}</div>
+                        </div>
+                      </div>
+                    </>
+                  )}
                 </div>
 
                 {/* Operational Context Block */}

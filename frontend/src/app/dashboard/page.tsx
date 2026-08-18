@@ -275,10 +275,15 @@ export default function Dashboard() {
     <>
       {/* Global Toast Banner */}
       {toastMessage && (
-        <div className="fixed top-6 right-8 z-[9999] animate-in fade-in slide-in-from-top-4 duration-300 flex items-center gap-3 bg-[#120524] border border-white/20 text-white px-5 py-3.5 rounded-[18px] shadow-[0_20px_50px_rgba(0,0,0,0.8)] backdrop-blur-2xl">
-          <div className={`w-3 h-3 rounded-full flex-shrink-0 ${toastMessage.type === 'alert' ? 'bg-rose-500 animate-ping' : toastMessage.type === 'info' ? 'bg-blue-400 animate-pulse' : 'bg-emerald-400'}`}></div>
-          <p className="text-xs font-bold tracking-wide">{toastMessage.msg}</p>
-          <button onClick={() => setToastMessage(null)} className="ml-3 text-white/50 hover:text-white text-xs font-bold cursor-pointer">✕</button>
+        <div className={`fixed top-6 right-8 z-[9999] animate-in fade-in slide-in-from-top-4 duration-300 flex items-center gap-3 bg-[#120524] border ${toastMessage.type === 'critical' ? 'border-rose-500/50' : toastMessage.type === 'warning' ? 'border-amber-500/50' : 'border-white/20'} text-white px-5 py-3.5 rounded-[12px] shadow-lg backdrop-blur-2xl`}>
+          <div className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${toastMessage.type === 'critical' ? 'bg-rose-500' : toastMessage.type === 'warning' ? 'bg-amber-500' : toastMessage.type === 'recommendation' ? 'bg-purple-400' : toastMessage.type === 'info' ? 'bg-blue-400' : 'bg-emerald-400'}`}></div>
+          <div className="flex flex-col">
+            <span className="text-[10px] uppercase font-black tracking-wider text-white/50 mb-0.5">
+              {toastMessage.type === 'critical' ? 'Critical Alert' : toastMessage.type === 'warning' ? 'Warning' : toastMessage.type === 'recommendation' ? 'Recommendation' : toastMessage.type === 'info' ? 'Information' : 'Success'}
+            </span>
+            <p className="text-xs font-bold tracking-wide">{toastMessage.msg}</p>
+          </div>
+          <button onClick={() => setToastMessage(null)} className="ml-4 text-white/50 hover:text-white text-xs font-bold cursor-pointer">✕</button>
         </div>
       )}
 
@@ -293,10 +298,10 @@ export default function Dashboard() {
         )}
 
         {/* Sidebar - Floating Premium SaaS Style */}
-        <aside className={`w-[260px] bg-gradient-to-br from-[#2E1055] to-[#120524] shadow-[0_20px_60px_rgba(46,16,85,0.3)] border border-white/10 rounded-[24px] flex flex-col fixed md:relative z-[60] h-full transition-transform duration-300 ease-in-out text-white shrink-0 ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-[300px] md:translate-x-0'}`}>
+        <aside className={`w-[260px] bg-[#120524] border border-white/10 rounded-[24px] flex flex-col fixed md:relative z-[60] h-full transition-transform duration-300 ease-in-out text-white shrink-0 ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-[300px] md:translate-x-0'}`}>
           <div className="p-5 border-b border-white/10 relative overflow-hidden group flex justify-between items-center shrink-0">
-            {/* Subtle premium gradient indicator at the top border */}
-            <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-white/30 to-transparent"></div>
+            {/* Subtle line at top border */}
+            <div className="absolute top-0 left-0 w-full h-[2px] bg-white/10"></div>
             <div className="flex items-center gap-3 relative z-10 min-w-0 flex-1">
               {/* Logo */}
               <div className="w-10 h-10 rounded-[12px] overflow-hidden shrink-0 group-hover:scale-105 transition-transform duration-300 shadow-[0_4px_15px_rgba(139,61,255,0.3)]">
@@ -317,44 +322,39 @@ export default function Dashboard() {
           <div className="flex-1 overflow-y-auto custom-scrollbar px-4 py-6 space-y-8 bg-transparent">
 
             <div>
-              <p className="text-[9px] font-black text-white/40 uppercase tracking-[0.2em] mb-3 px-4">Core System</p>
+              <p className="text-[9px] font-black text-white/40 uppercase tracking-[0.2em] mb-3 px-4">Dashboard</p>
               <div className="space-y-1">
-                <SidebarItem icon={LayoutDashboard} label="Dashboard" active={activeTab === 'dashboard'} onClick={() => setActiveTab('dashboard')} />
-                <SidebarItem icon={BrainCircuit} label="Intelligence Layer" active={activeTab === 'intelligence'} onClick={() => setActiveTab('intelligence')} />
-                <SidebarItem icon={Cpu} label="Signals Hub" active={activeTab === 'signals'} onClick={() => setActiveTab('signals')} />
-                <SidebarItem icon={Activity} label="Reality Sources" active={activeTab === 'connectors'} onClick={() => setActiveTab('connectors')} />
+                <SidebarItem icon={LayoutDashboard} label="Command Center" active={activeTab === 'dashboard'} onClick={() => setActiveTab('dashboard')} />
               </div>
             </div>
-
-            {['super_admin', 'org_admin', 'clinic_admin'].includes(userRole) && (
-              <div>
-                <p className="text-[9px] font-black text-white/40 uppercase tracking-[0.2em] mb-3 px-4">Organizations</p>
-                <div className="space-y-1">
-                  {['super_admin'].includes(userRole) && (
-                    <SidebarItem icon={Settings} label="Organization Details" active={activeTab === 'settings-general'} onClick={() => setActiveTab('settings-general')} />
-                  )}
-                  {['super_admin', 'org_admin'].includes(userRole) && (
-                    <SidebarItem icon={Building2} label="Clinics & Facilities" active={activeTab === 'settings-clinics'} onClick={() => setActiveTab('settings-clinics')} />
-                  )}
-                  <SidebarItem icon={Users} label="Users & Roles" active={activeTab === 'settings-team'} onClick={() => setActiveTab('settings-team')} />
-                </div>
-              </div>
-            )}
 
             <div>
               <p className="text-[9px] font-black text-white/40 uppercase tracking-[0.2em] mb-3 px-4">Operations</p>
               <div className="space-y-1">
                 {['org_admin', 'clinic_admin', 'ops_manager', 'practice_manager', 'staff'].includes(userRole) && (
-                  <SidebarItem icon={Users} label="Patient Flow" active={activeTab === 'patient-flow'} onClick={() => setActiveTab('patient-flow')} />
+                  <SidebarItem icon={Users} label="Patient Flow" active={activeTab === 'patient-flow'} onClick={() => { setActiveTab('patient-flow'); setIsMobileMenuOpen(false); }} />
                 )}
                 {['org_admin', 'clinic_admin', 'practice_manager'].includes(userRole) && (
-                  <>
-                    <SidebarItem icon={FileText} label="Clinical Logs" active={activeTab === 'clinical-logs'} onClick={() => { setActiveTab('clinical-logs'); setIsMobileMenuOpen(false); }} />
-                    <SidebarItem icon={DollarSign} label="Revenue Reports" active={activeTab === 'revenue-reports'} onClick={() => { setActiveTab('revenue-reports'); setIsMobileMenuOpen(false); }} />
-                  </>
+                  <SidebarItem icon={FileText} label="Clinical Logs" active={activeTab === 'clinical-logs'} onClick={() => { setActiveTab('clinical-logs'); setIsMobileMenuOpen(false); }} />
                 )}
-                {/* Team Messaging is available to ALL staff */}
                 <SidebarItem icon={MessageSquare} label="Team Messaging" active={activeTab === 'team-messaging'} onClick={() => { setActiveTab('team-messaging'); setIsMobileMenuOpen(false); }} />
+              </div>
+            </div>
+
+            {['org_admin', 'clinic_admin', 'practice_manager'].includes(userRole) && (
+              <div>
+                <p className="text-[9px] font-black text-white/40 uppercase tracking-[0.2em] mb-3 px-4">Revenue</p>
+                <div className="space-y-1">
+                  <SidebarItem icon={DollarSign} label="Revenue Risk" active={activeTab === 'revenue-reports'} onClick={() => { setActiveTab('revenue-reports'); setIsMobileMenuOpen(false); }} />
+                </div>
+              </div>
+            )}
+
+            <div>
+              <p className="text-[9px] font-black text-white/40 uppercase tracking-[0.2em] mb-3 px-4">Reports & Insights</p>
+              <div className="space-y-1">
+                <SidebarItem icon={BrainCircuit} label="Intelligence Reports" active={activeTab === 'intelligence'} onClick={() => { setActiveTab('intelligence'); setIsMobileMenuOpen(false); }} />
+                <SidebarItem icon={Cpu} label="Signals History" active={activeTab === 'signals'} onClick={() => { setActiveTab('signals'); setIsMobileMenuOpen(false); }} />
               </div>
             </div>
 
@@ -362,14 +362,27 @@ export default function Dashboard() {
               <div>
                 <p className="text-[9px] font-black text-white/40 uppercase tracking-[0.2em] mb-3 px-4">Administration</p>
                 <div className="space-y-1">
+                  <SidebarItem icon={Users} label="User Management" active={activeTab === 'settings-team'} onClick={() => { setActiveTab('settings-team'); setIsMobileMenuOpen(false); }} />
                   {['super_admin', 'org_admin'].includes(userRole) && (
-                    <SidebarItem icon={Database} label="Integrations" active={activeTab === 'settings-integrations'} onClick={() => setActiveTab('settings-integrations')} />
+                    <SidebarItem icon={Database} label="Connectors" active={activeTab === 'settings-integrations' || activeTab === 'connectors'} onClick={() => { setActiveTab('settings-integrations'); setIsMobileMenuOpen(false); }} />
                   )}
-                  <SidebarItem icon={Bell} label="Notifications" active={activeTab === 'settings-notifications'} onClick={() => setActiveTab('settings-notifications')} />
-                  <SidebarItem icon={ClipboardList} label="Audit Logs" active={activeTab === 'audit-logs'} onClick={() => setActiveTab('audit-logs')} />
+                  <SidebarItem icon={ClipboardList} label="Audit Logs" active={activeTab === 'audit-logs'} onClick={() => { setActiveTab('audit-logs'); setIsMobileMenuOpen(false); }} />
+                </div>
+              </div>
+            )}
+
+            {['super_admin', 'org_admin', 'clinic_admin'].includes(userRole) && (
+              <div>
+                <p className="text-[9px] font-black text-white/40 uppercase tracking-[0.2em] mb-3 px-4">Settings</p>
+                <div className="space-y-1">
+                  {['super_admin'].includes(userRole) && (
+                    <SidebarItem icon={Building2} label="Organization Details" active={activeTab === 'settings-general'} onClick={() => { setActiveTab('settings-general'); setIsMobileMenuOpen(false); }} />
+                  )}
                   {['super_admin', 'org_admin'].includes(userRole) && (
-                    <SidebarItem icon={Settings} label="Settings" active={activeTab === 'settings-security' || activeTab === 'settings-billing'} onClick={() => setActiveTab('settings-security')} />
+                    <SidebarItem icon={Building2} label="Clinics & Facilities" active={activeTab === 'settings-clinics'} onClick={() => { setActiveTab('settings-clinics'); setIsMobileMenuOpen(false); }} />
                   )}
+                  <SidebarItem icon={Bell} label="Notifications" active={activeTab === 'settings-notifications'} onClick={() => { setActiveTab('settings-notifications'); setIsMobileMenuOpen(false); }} />
+                  <SidebarItem icon={Settings} label="Preferences" active={activeTab === 'settings-security'} onClick={() => { setActiveTab('settings-security'); setIsMobileMenuOpen(false); }} />
                 </div>
               </div>
             )}
@@ -382,10 +395,7 @@ export default function Dashboard() {
         </aside>
 
         {/* Main Content Area */}
-        <main className="flex-1 flex flex-col relative overflow-hidden bg-gradient-to-br from-[#2E1055] to-[#120524] backdrop-blur-3xl rounded-[24px] border border-white/10 premium-shadow">
-          {/* Background blobs */}
-          <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-gradient-to-br from-[#2E1055]/5 to-[#120524]/5 rounded-full blur-[100px] pointer-events-none z-0"></div>
-          <div className="absolute top-40 left-0 w-[500px] h-[500px] bg-[#2563EB]/5 rounded-full blur-[100px] pointer-events-none z-0"></div>
+        <main className="flex-1 flex flex-col relative overflow-hidden bg-[#120524] rounded-[24px] border border-white/10 shadow-sm">
           {/* Topbar */}
           <header className="h-20 flex items-center justify-between px-4 md:px-8 relative z-50 shrink-0">
             <div className="flex items-center gap-2 md:gap-4 flex-1">
