@@ -1,0 +1,53 @@
+from fastapi import APIRouter, HTTPException, Depends
+from pydantic import BaseModel
+from typing import Optional, Dict, Any
+from app.services.operational_execution_engine import operational_execution_engine
+from app.api.deps import get_current_user
+
+router = APIRouter()
+
+class CreateActionRequest(BaseModel):
+    decision_id: str
+    action_type: str
+    target_reference: str
+    parameters: Dict[str, Any]
+
+class ExecuteActionRequest(BaseModel):
+    action_id: str
+
+@router.post("/")
+async def create_operational_action(
+    request: CreateActionRequest,
+    current_user: Any = Depends(get_current_user)
+):
+    """
+    SESR-006: Create a Governed Operational Action based on a Human Decision.
+    """
+    result = operational_execution_engine.create_action(
+        decision_id=request.decision_id,
+        action_type_str=request.action_type,
+        target_reference=request.target_reference,
+        parameters=request.parameters
+    )
+    
+    if result["status"] == "ERROR":
+        raise HTTPException(status_code=400, detail=result["message"])
+        
+    return result
+
+@router.post("/execute")
+async def execute_operational_action(
+    request: ExecuteActionRequest,
+    current_user: Any = Depends(get_current_user)
+):
+    """
+    SESR-006: Validate execution eligibility and attempt action.
+    """
+    result = operational_execution_engine.execute_action(action_id=request.action_id)
+    
+    if result["status"] == "ERROR":
+        raise HTTPException(status_code=400, detail=result.get("message", "Execution failed"))
+    if result["status"] == "BLOCKED":
+        raise HTTPException(status_code=409, detail=result.get("message", "Execution blocked"))
+        
+    return result

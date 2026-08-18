@@ -13,7 +13,7 @@ export const BootScreen: React.FC<BootScreenProps> = ({ onComplete }) => {
   const steps = [
     { text: 'Connecting to SBN Sentinel telemetry store...', icon: Database },
     { text: 'Initializing EHR & reality connectors (Practice Fusion, Twilio)...', icon: HardDrive },
-    { text: 'Enforcing HIPAA Shield and active audit logs...', icon: ShieldCheck },
+    { text: 'Enforcing Security Controls and active audit logs...', icon: ShieldCheck },
     { text: 'Starting SBN Rules Engine and anomaly detection...', icon: Cpu },
     { text: 'Boot sequence complete. Opening Command Center...', icon: CheckCircle }
   ];

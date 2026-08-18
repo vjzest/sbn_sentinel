@@ -95,5 +95,5 @@ The frontend follows a "Premium Healthcare SaaS" design system inspired by top-t
 ## 📝 Key Features
 - **Intelligence Hub:** Real-time AI processing of clinical and revenue signals.
 - **Patient Flow Tracker:** Live queue monitoring with WebSockets.
-- **Audit Logs:** Full HIPAA-compliant tracking of team actions.
+- **Audit Logs:** Secure append-only tracking of team actions (Compliance Validation Pending).
 - **Data Integrations:** Connect seamlessly with EHRs and billing software.

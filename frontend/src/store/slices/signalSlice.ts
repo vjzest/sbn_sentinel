@@ -1,4 +1,4 @@
-import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { createSlice, PayloadAction, createAsyncThunk } from '@reduxjs/toolkit';
 
 export interface SignalEvent {
   id: string;
@@ -13,6 +13,8 @@ export interface SignalEvent {
   business_impact?: string;
   recommended_action?: string;
   expected_outcome?: string;
+  explainability_log?: string;
+  priority_score?: number;
   primary_context?: string;
   secondary_context?: string;
   context_confidence?: string;
@@ -23,6 +25,7 @@ export interface SignalEvent {
   operational_dependency?: string;
   ai_insight?: string;
   status?: 'active' | 'acknowledged';
+  correlation_id?: string;
 }
 
 interface SignalState {
@@ -101,26 +104,48 @@ const initialState: SignalState = {
   }
 };
 
+import { fetchWithAuth } from '@/utils/fetchWithAuth';
+
+export const fetchHistoricalSignals = createAsyncThunk(
+  'signals/fetchHistoricalSignals',
+  async () => {
+    try {
+      const response = await fetchWithAuth('http://localhost:8000/api/v1/signals');
+      if (!response.ok) {
+        throw new Error('Failed to fetch signals');
+      }
+      const data = await response.json();
+      return data as SignalEvent[];
+    } catch (error) {
+      console.error("Error fetching signals:", error);
+      throw error;
+    }
+  }
+);
+
 const signalSlice = createSlice({
   name: 'signals',
   initialState,
   reducers: {
     addSignal(state, action: PayloadAction<SignalEvent>) {
       const signal = action.payload;
-      state.events.unshift(signal);
-      if (state.events.length > 50) {
-        state.events.pop(); // Keep only last 50
-      }
-      
-      // Update stats based on incoming signal
-      state.stats.activeSignals += 1;
-      
-      if (signal.type === 'EHR' || signal.type === 'Patient') {
-        state.stats.patientFlow += 1;
-      }
-      
-      if (signal.risk_level === 'Critical' || signal.risk_level === 'High') {
-        state.stats.criticalEvents += 1;
+      // Prevent duplicates
+      if (!state.events.find(e => e.id === signal.id)) {
+        state.events.unshift(signal);
+        if (state.events.length > 50) {
+          state.events.pop(); // Keep only last 50
+        }
+        
+        // Update stats based on incoming signal
+        state.stats.activeSignals += 1;
+        
+        if (signal.type === 'EHR' || signal.type === 'Patient') {
+          state.stats.patientFlow += 1;
+        }
+        
+        if (signal.risk_level === 'Critical' || signal.risk_level === 'High') {
+          state.stats.criticalEvents += 1;
+        }
       }
     },
     setConnectionStatus(state, action: PayloadAction<boolean>) {
@@ -137,7 +162,24 @@ const signalSlice = createSlice({
     },
     removeSignal(state, action: PayloadAction<string>) {
       state.events = state.events.filter(e => e.id !== action.payload);
+      state.stats.activeSignals = Math.max(0, state.stats.activeSignals - 1);
     }
+  },
+  extraReducers: (builder) => {
+    builder.addCase(fetchHistoricalSignals.fulfilled, (state, action) => {
+      if (action.payload && action.payload.length > 0) {
+        // Merge fetched signals, preferring them over default
+        const fetchedIds = new Set(action.payload.map(s => s.id));
+        const keptDefaults = state.events.filter(e => !fetchedIds.has(e.id) && e.id.startsWith("sig_"));
+        
+        state.events = [...action.payload, ...keptDefaults];
+        
+        // Recalculate stats
+        state.stats.activeSignals = state.events.length;
+        state.stats.patientFlow = state.events.filter(e => e.type === 'EHR' || e.type === 'Patient').length;
+        state.stats.criticalEvents = state.events.filter(e => e.risk_level === 'Critical' || e.risk_level === 'High').length;
+      }
+    });
   }
 });
 
