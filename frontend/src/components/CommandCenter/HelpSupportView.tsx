@@ -3,15 +3,17 @@ import { Search, Book, MessageCircle, Phone, FileText, ChevronRight, ExternalLin
 
 export const HelpSupportView: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
+  const [expandedIndex, setExpandedIndex] = useState<number | null>(null);
+
   const allFaqs = [
-    'How do I add a new Kareo billing integration?',
-    'Why is the AI recommendation not auto-filling the waitlist?',
-    'Can I export the patient flow data to a CSV?',
-    'What is the required confidence score for automated actions?',
-    'How do I reset a staff member password?',
-    'Where can I find the API documentation for custom webhooks?'
+    { q: 'How do I add a new Kareo billing integration?', a: 'Go to Administration > Connectors in the sidebar. Click "Add New Integration", select Kareo, and enter your API keys.' },
+    { q: 'Why is the AI recommendation not auto-filling the waitlist?', a: 'The AI requires a confidence score above 85% to auto-fill. Ensure patient preferences and schedule constraints match exactly.' },
+    { q: 'Can I export the patient flow data to a CSV?', a: 'Yes. Navigate to Operations > Patient Flow, and click the Export button in the top right corner.' },
+    { q: 'What is the required confidence score for automated actions?', a: 'By default, automated dispatch (Autopilot) requires a minimum confidence score of 90%. This can be changed in Preferences.' },
+    { q: 'How do I reset a staff member password?', a: 'Go to Administration > User Management, click on the user profile, and select "Send Password Reset Link".' },
+    { q: 'Where can I find the API documentation for custom webhooks?', a: 'Click the "API Reference" card on this page to view full documentation and webhook payload schemas.' }
   ];
-  const filteredFaqs = allFaqs.filter(q => q.toLowerCase().includes(searchQuery.toLowerCase()));
+  const filteredFaqs = allFaqs.filter(faq => faq.q.toLowerCase().includes(searchQuery.toLowerCase()));
 
   return (
     <div className="animate-in fade-in duration-500 max-w-[1200px] mx-auto space-y-8">
@@ -39,12 +41,16 @@ export const HelpSupportView: React.FC = () => {
       {/* Quick Links Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {[
-          { title: 'Documentation', desc: 'Detailed guides on every feature.', icon: Book, color: 'text-blue-400', bg: 'bg-blue-500/20', hover: 'hover:border-[#BFDBFE]' },
-          { title: 'API Reference', desc: 'Endpoints for custom integrations.', icon: FileText, color: 'text-emerald-400', bg: 'bg-emerald-500/20', hover: 'hover:border-[#A7F3D0]' },
-          { title: 'Community Forum', desc: 'Connect with other clinic admins.', icon: MessageCircle, color: 'text-orange-400', bg: 'bg-orange-500/20', hover: 'hover:border-[#FDE68A]' },
-          { title: 'Contact Support', desc: '24/7 enterprise technical support.', icon: Phone, color: 'text-purple-400', bg: 'bg-purple-500/20', hover: 'hover:border-[#DDD6FE]' },
+          { title: 'Documentation', desc: 'Detailed guides on every feature.', icon: Book, color: 'text-blue-400', bg: 'bg-blue-500/20', hover: 'hover:border-[#BFDBFE]', action: 'Opening Sentinel Documentation Portal...' },
+          { title: 'API Reference', desc: 'Endpoints for custom integrations.', icon: FileText, color: 'text-emerald-400', bg: 'bg-emerald-500/20', hover: 'hover:border-[#A7F3D0]', action: 'Loading API Reference & Webhook Schemas...' },
+          { title: 'Community Forum', desc: 'Connect with other clinic admins.', icon: MessageCircle, color: 'text-orange-400', bg: 'bg-orange-500/20', hover: 'hover:border-[#FDE68A]', action: 'Redirecting to SBN Community Forum...' },
+          { title: 'Contact Support', desc: '24/7 enterprise technical support.', icon: Phone, color: 'text-purple-400', bg: 'bg-purple-500/20', hover: 'hover:border-[#DDD6FE]', action: 'Initiating Secure Support Chat...' },
         ].map((card, i) => (
-          <div key={i} className={`bg-gradient-to-br from-[#2E1055] to-[#120524] border border-white/10 rounded-[24px] p-6 premium-shadow cursor-pointer transition-all ${card.hover} group`}>
+          <div 
+            key={i} 
+            onClick={() => window.dispatchEvent(new CustomEvent('show-sentinel-toast', { detail: { msg: card.action, type: 'info' } }))}
+            className={`bg-gradient-to-br from-[#2E1055] to-[#120524] border border-white/10 rounded-[24px] p-6 premium-shadow cursor-pointer transition-all ${card.hover} group`}
+          >
              <div className={`w-12 h-12 ${card.bg} rounded-[14px] flex items-center justify-center mb-5 group-hover:scale-110 transition-transform`}>
                <card.icon className={`w-6 h-6 ${card.color}`} />
              </div>
@@ -59,16 +65,30 @@ export const HelpSupportView: React.FC = () => {
          <div className="bg-gradient-to-br from-[#2E1055] to-[#120524] border border-white/10 rounded-[24px] p-8 premium-shadow col-span-2">
             <h3 className="text-xl font-bold text-white mb-6">Frequently Asked Questions</h3>
             <div className="space-y-4">
-              {filteredFaqs.length > 0 ? filteredFaqs.map((q, i) => (
-                <div key={i} className="flex items-center justify-between p-4 border border-white/10 rounded-[16px] hover:bg-white/10 cursor-pointer transition-colors group">
-                   <p className="text-sm font-bold text-white/60 group-hover:text-white transition-colors">{q}</p>
-                   <ChevronRight className="w-5 h-5 text-white/50 group-hover:text-blue-400" />
+              {filteredFaqs.length > 0 ? filteredFaqs.map((faq, i) => (
+                <div 
+                  key={i} 
+                  onClick={() => setExpandedIndex(expandedIndex === i ? null : i)}
+                  className="p-4 border border-white/10 rounded-[16px] hover:bg-white/10 cursor-pointer transition-colors group"
+                >
+                   <div className="flex items-center justify-between">
+                     <p className={`text-sm font-bold transition-colors ${expandedIndex === i ? 'text-white' : 'text-white/60 group-hover:text-white'}`}>{faq.q}</p>
+                     <ChevronRight className={`w-5 h-5 text-white/50 group-hover:text-blue-400 transition-transform ${expandedIndex === i ? 'rotate-90' : ''}`} />
+                   </div>
+                   {expandedIndex === i && (
+                     <div className="mt-4 pt-4 border-t border-white/10 text-sm text-white/70 font-medium leading-relaxed animate-in fade-in slide-in-from-top-2">
+                       {faq.a}
+                     </div>
+                   )}
                 </div>
               )) : (
                 <div className="p-8 text-center text-white/50 font-medium">No matching help articles found for "{searchQuery}". Try adjusting your search terms, or open a support ticket for enterprise assistance.</div>
               )}
             </div>
-            <button className="mt-6 text-sm font-bold text-blue-400 hover:underline flex items-center gap-1">
+            <button 
+              onClick={() => window.dispatchEvent(new CustomEvent('show-sentinel-toast', { detail: { msg: 'Loading complete Knowledge Base...', type: 'info' } }))}
+              className="mt-6 text-sm font-bold text-blue-400 hover:underline flex items-center gap-1 cursor-pointer"
+            >
               View all FAQs <ExternalLink className="w-4 h-4" />
             </button>
          </div>
@@ -78,7 +98,10 @@ export const HelpSupportView: React.FC = () => {
             <h3 className="text-xl font-bold mb-3">Still need help?</h3>
             <p className="text-sm text-white/50 mb-6 leading-relaxed">Our enterprise support team is available 24/7 to assist with critical integrations and AI behavior.</p>
             
-            <button className="w-full bg-white/5 text-[#120524] font-extrabold py-3.5 rounded-[16px] hover:bg-white/90 transition-colors shadow-lg">
+            <button 
+              onClick={() => window.dispatchEvent(new CustomEvent('show-sentinel-toast', { detail: { msg: 'Creating new high-priority support ticket...', type: 'success' } }))}
+              className="w-full bg-white/5 text-[#120524] bg-white font-extrabold py-3.5 rounded-[16px] hover:bg-gray-200 transition-colors shadow-lg cursor-pointer"
+            >
               Open Support Ticket
             </button>
             <p className="text-[10px] text-center text-white/70 font-bold mt-4 uppercase tracking-widest">Avg Response Time: &lt; 5 mins</p>

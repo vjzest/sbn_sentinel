@@ -318,7 +318,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onLogin }) => {
                       placeholder="doctor@clinic.com" 
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      className="w-full bg-white/5 border border-white/10 rounded-[16px] py-2.5 pl-12 pr-4 text-sm font-bold text-white outline-none focus:border-[#2E1055] focus:bg-white transition-all"
+                      className="w-full bg-white/5 border border-white/10 rounded-[16px] py-2.5 pl-12 pr-4 text-sm font-bold text-white outline-none focus:border-[#2E1055] focus:bg-white/10 transition-all"
                       required 
                     />
                   </div>
@@ -347,7 +347,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onLogin }) => {
                       placeholder="6-digit code"
                       value={otpValue}
                       onChange={(e) => setOtpValue(e.target.value)}
-                      className="w-full bg-white/5 border border-white/10 rounded-[16px] py-2.5 pl-12 pr-4 text-sm font-bold text-white tracking-[0.2em] outline-none focus:border-[#2E1055] focus:bg-white transition-all"
+                      className="w-full bg-white/5 border border-white/10 rounded-[16px] py-2.5 pl-12 pr-4 text-sm font-bold text-white tracking-[0.2em] outline-none focus:border-[#2E1055] focus:bg-white/10 transition-all"
                       required 
                       maxLength={6}
                     />
@@ -368,7 +368,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onLogin }) => {
                     placeholder="••••••••"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="w-full bg-white/5 border border-white/10 rounded-[16px] py-2.5 pl-12 pr-12 text-sm font-bold text-white outline-none focus:border-[#2E1055] focus:bg-white transition-all"
+                    className="w-full bg-white/5 border border-white/10 rounded-[16px] py-2.5 pl-12 pr-12 text-sm font-bold text-white outline-none focus:border-[#2E1055] focus:bg-white/10 transition-all"
                     required={!(isForgotPassword || isInviteMode)} 
                   />
                   <button
