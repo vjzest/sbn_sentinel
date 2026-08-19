@@ -1225,7 +1225,7 @@ export const PatientFlowView: React.FC = () => {
                   {confidence !== null && (
                     <div className="mt-3 bg-[#ECFDF5] text-[#10B981] border border-emerald-500/30 px-3 py-2 rounded-[10px] text-[10px] font-extrabold flex justify-between items-center">
                       <span>OCR EXTRACTION MATCH</span>
-                      <span className="bg-white/5 px-2 py-0.5 rounded-full border border-emerald-500/30">{Math.round(confidence * 100)}% Confidence</span>
+                      <span className="bg-white/5 px-2 py-0.5 rounded-full border border-emerald-500/30">Verified</span>
                     </div>
                   )}
                 </div>

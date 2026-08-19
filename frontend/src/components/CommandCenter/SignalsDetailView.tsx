@@ -259,7 +259,7 @@ export const SignalsDetailView: React.FC = () => {
         security: {
           dkim_verification: "PASS",
           spf_verification: "PASS",
-          hipaa_compliance_check: "SECURE"
+          security_compliance_check: "SECURE"
         }
       };
     }
@@ -484,7 +484,7 @@ export const SignalsDetailView: React.FC = () => {
               <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-[16px] p-4 flex items-start gap-3">
                 <ShieldCheck className="w-5 h-5 text-[#10B981] flex-shrink-0 mt-0.5" />
                 <div>
-                  <h4 className="text-sm font-bold text-emerald-400">HIPAA Compliant Tunnel</h4>
+                  <h4 className="text-sm font-bold text-emerald-400">Secure Compliant Tunnel</h4>
                   <p className="text-xs text-emerald-300 leading-relaxed mt-1 font-semibold">All socket connections utilize TLS 1.3 encryption with OAuth2 API authentication verification tokens.</p>
                 </div>
               </div>
@@ -626,9 +626,9 @@ export const SignalsDetailView: React.FC = () => {
                       <p className="text-xs font-bold text-white">{selectedSignal.secondary_context || 'Unknown'}</p>
                     </div>
                     <div>
-                      <p className="text-[10px] text-white/50 uppercase tracking-widest font-bold">Confidence</p>
+                      <p className="text-[10px] text-white/50 uppercase tracking-widest font-bold">Verification Level</p>
                       <p className={`text-xs font-bold ${selectedSignal.context_confidence === 'High' ? 'text-emerald-400' : 'text-amber-400'}`}>
-                        {selectedSignal.context_confidence || 'Low'}
+                        {selectedSignal.context_confidence === 'High' ? 'Verified' : 'Pending'}
                       </p>
                     </div>
                     <div>
@@ -655,8 +655,8 @@ export const SignalsDetailView: React.FC = () => {
                       <p className="text-lg font-black text-amber-400">{selectedSignal.estimated_financial_exposure || '$0.00'}</p>
                     </div>
                     <div>
-                      <p className="text-[10px] text-amber-500/50 uppercase tracking-widest font-bold">Confidence</p>
-                      <p className="text-xs font-bold text-amber-300">{selectedSignal.revenue_confidence || 'High'}</p>
+                      <p className="text-[10px] text-amber-500/50 uppercase tracking-widest font-bold">Action Readiness</p>
+                      <p className="text-xs font-bold text-amber-300">{selectedSignal.revenue_confidence === 'High' ? 'Ready' : 'Requires Review'}</p>
                     </div>
                     <div>
                       <p className="text-[10px] text-amber-500/50 uppercase tracking-widest font-bold">Operational Dependency</p>
@@ -748,7 +748,7 @@ export const SignalsDetailView: React.FC = () => {
                     <div className="space-y-1">
                       <span className="text-[9px] text-[#9CA3AF] font-bold uppercase block">Security Verification</span>
                       <span className="inline-flex items-center gap-1.5 text-[9px] bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded-[6px] font-extrabold uppercase">
-                        <ShieldCheck className="w-3.5 h-3.5" /> HIPAA SECURE TUNNEL
+                        <ShieldCheck className="w-3.5 h-3.5" /> ENCRYPTED SECURE TUNNEL
                       </span>
                     </div>
                     <div className="space-y-1 col-span-2 pt-2 border-t border-white/10">

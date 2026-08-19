@@ -451,7 +451,7 @@ export const ClinicalLogsView: React.FC = () => {
           </table>
 
           <div class="footer-notes">
-            <strong>HIPAA COMPLIANT SECURE DOCUMENT</strong><br/>
+            <strong>ENCRYPTED SECURE DOCUMENT</strong><br/>
             This record was securely finalized and signed electronically in the SBN Sentinel Database. All data remains encrypted and protected.<br/>
             Generated on ${new Date().toLocaleString()} | System Administrator: Admin User
           </div>
@@ -1004,7 +1004,7 @@ export const ClinicalLogsView: React.FC = () => {
           <div style={{ textAlign: 'center', marginBottom: '24px', borderBottom: '2px solid #111827', paddingBottom: '16px' }}>
             <h2 style={{ fontSize: '20px', fontWeight: 'bold', margin: '0 0 6px 0', textTransform: 'uppercase', letterSpacing: '1px' }}>SBN SENTINEL URGENT CARE</h2>
             <p style={{ fontSize: '11px', color: '#4B5563', margin: '0 0 4px 0' }}>100 Medical Center Parkway, Suite 500 • Tel: (555) 019-2834</p>
-            <p style={{ fontSize: '10px', color: '#6B7280', margin: '0' }}>HIPAA Secure Electronic Billing Receipt</p>
+            <p style={{ fontSize: '10px', color: '#6B7280', margin: '0' }}>Secure Electronic Billing Receipt</p>
           </div>
 
           {/* Metadata Grid */}

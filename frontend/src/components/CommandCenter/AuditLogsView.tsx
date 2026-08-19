@@ -17,6 +17,7 @@ interface AuditLog {
 export const AuditLogsView: React.FC = () => {
   const [logs, setLogs] = useState<AuditLog[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
+  const [logTypeFilter, setLogTypeFilter] = useState<'all' | 'audit' | 'telemetry'>('all');
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -43,9 +44,9 @@ export const AuditLogsView: React.FC = () => {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `HIPAA_Audit_Trail_${new Date().toISOString().slice(0, 10)}.json`;
+    a.download = `System_Audit_Trail_${new Date().toISOString().slice(0, 10)}.json`;
     a.click();
-    window.dispatchEvent(new CustomEvent('show-sentinel-toast', { detail: { message: '📥 HIPAA Audit Trail exported to JSON file successfully!', type: 'info' } }));
+    window.dispatchEvent(new CustomEvent('show-sentinel-toast', { detail: { message: '📥 System Audit Trail exported to JSON file successfully!', type: 'info' } }));
   };
 
   const filteredLogs = logs.filter(log => {
@@ -53,11 +54,21 @@ export const AuditLogsView: React.FC = () => {
     const actionStr = log.action || '';
     const moduleStr = log.module || log.resource || '';
     const term = searchTerm.toLowerCase();
-    return (
+    
+    const matchesSearch = (
       userStr.toLowerCase().includes(term) ||
       actionStr.toLowerCase().includes(term) ||
       moduleStr.toLowerCase().includes(term)
     );
+
+    let matchesType = true;
+    if (logTypeFilter === 'audit') {
+      matchesType = !actionStr.includes('PERFORMANCE_METRIC');
+    } else if (logTypeFilter === 'telemetry') {
+      matchesType = actionStr.includes('PERFORMANCE_METRIC');
+    }
+
+    return matchesSearch && matchesType;
   });
 
   const getActionBadge = (action?: string) => {
@@ -78,7 +89,7 @@ export const AuditLogsView: React.FC = () => {
         <div>
           <h2 className="text-3xl font-extrabold text-white tracking-tight flex items-center gap-3">
             <ClipboardList className="w-8 h-8 text-blue-400" />
-            Audit Logs & HIPAA Compliance
+            System Audit Logs
           </h2>
           <p className="text-white/70 mt-1.5 text-sm font-medium">Immutable, tamper-proof activity logs tracking platform operations, security events, and user logins.</p>
         </div>
@@ -87,7 +98,8 @@ export const AuditLogsView: React.FC = () => {
             onClick={handleExportAudit}
             className="flex items-center justify-center gap-2 bg-[#2E1055] hover:bg-[#120524] border border-white/10 text-white font-bold text-xs px-4 py-2.5 rounded-[16px] premium-shadow transition-all hover:scale-105 active:scale-95 whitespace-nowrap shrink-0"
           >
-            Export HIPAA Audit
+            <Download className="w-4 h-4" />
+            Export Audit Log
           </button>
         </div>
       </div>
@@ -104,6 +116,15 @@ export const AuditLogsView: React.FC = () => {
               className="w-full bg-white/5 border border-white/10 rounded-[12px] py-2.5 pl-11 pr-4 text-sm font-medium text-white placeholder:text-white/40 outline-none focus:border-blue-500/50 transition-colors"
             />
           </div>
+          <select
+            value={logTypeFilter}
+            onChange={(e) => setLogTypeFilter(e.target.value as any)}
+            className="bg-white/5 border border-white/10 rounded-[12px] py-2.5 px-4 text-sm font-medium text-white outline-none focus:border-blue-500/50 transition-colors whitespace-nowrap"
+          >
+            <option value="all" className="bg-[#120524]">All Events</option>
+            <option value="audit" className="bg-[#120524]">Business Audit Only</option>
+            <option value="telemetry" className="bg-[#120524]">System Telemetry Only</option>
+          </select>
           <div className="bg-white/5 border border-white/10 text-white/80 px-4 py-2.5 rounded-[12px] text-xs font-bold flex items-center justify-center gap-2 whitespace-nowrap shrink-0">
             <Filter className="w-4 h-4 text-blue-400" /> Total Logs: <span className="text-white font-extrabold">{logs.length}</span>
           </div>

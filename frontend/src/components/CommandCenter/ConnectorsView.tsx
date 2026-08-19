@@ -501,7 +501,7 @@ export const ConnectorsView: React.FC = () => {
                   </div>
                   <div>
                     <h3 className="text-sm font-bold text-white">{selectedSystem} Secure Auth</h3>
-                    <p className="text-[10px] text-white/70 font-medium">HIPAA Encrypted Portal • Sentinel Secure Link</p>
+                    <p className="text-[10px] text-white/70 font-medium">Encrypted Data Portal • Sentinel Secure Link</p>
                   </div>
                 </div>
 
@@ -616,7 +616,7 @@ export const ConnectorsView: React.FC = () => {
   subsystemType: detailsModalData.type,
   currentStatus: detailsModalData.status,
   pingLatencyMs: detailsModalData.latency,
-  securityEnforcement: "HIPAA Compliant TLS 1.3",
+  securityEnforcement: "Compliant TLS 1.3",
   environment: "Production Gateway Router",
   payloadRoute: `routing_key_${detailsModalData.id}`
 }, null, 2)}
