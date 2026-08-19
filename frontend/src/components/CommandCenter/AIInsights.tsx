@@ -83,7 +83,7 @@ export const AIInsights: React.FC = () => {
           <>
             {/* Context */}
             <div className="bg-white/10 border border-white/20 rounded-[16px] p-4">
-              <h4 className="text-[10px] text-white/70 uppercase tracking-widest font-extrabold mb-3">Context & Prediction</h4>
+              <h4 className="text-[10px] text-white/70 uppercase tracking-widest font-extrabold mb-3">System Evaluation</h4>
               <div className="flex gap-4">
                 <div className="mt-0.5">
                   {latestInsightSignal.ai_insight?.includes('loss') ? (
@@ -97,7 +97,7 @@ export const AIInsights: React.FC = () => {
                     {latestInsightSignal.message}
                   </p>
                   <p className={`text-[13px] font-bold ${latestInsightSignal.ai_insight?.includes('loss') ? 'text-[#EF4444]' : 'text-[#10B981]'}`}>
-                    Predicted Impact: {latestInsightSignal.ai_insight}
+                    Operational Status: Requires Review
                   </p>
                 </div>
               </div>
@@ -106,7 +106,7 @@ export const AIInsights: React.FC = () => {
             {/* Action Box */}
             {actionStatus === 'pending' && (
               <div className="bg-[#3B82F6]/20 border border-white/20 rounded-[16px] p-5 animate-in slide-in-from-bottom-4 flex-1">
-                <h4 className="text-[10px] text-[#2563EB] uppercase tracking-widest font-extrabold mb-3">Action Recommendation</h4>
+                <h4 className="text-[10px] text-[#2563EB] uppercase tracking-widest font-extrabold mb-3">Governed Action</h4>
                 <div className="flex gap-4">
                   <div className="mt-0.5">
                     <div className="w-5 h-5 rounded-full bg-white/5 border border-[#3B82F6] flex items-center justify-center">
@@ -147,7 +147,7 @@ export const AIInsights: React.FC = () => {
       {/* Confidence Footer */}
       <div className="mt-6 pt-4 border-t border-white/10 flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <span className="text-[11px] font-bold text-white/70">AI Confidence Score</span>
+          <span className="text-[11px] font-bold text-white/70">Operational Readiness</span>
           <div className="w-24 h-6 opacity-70">
             <svg viewBox="0 0 100 20" className="w-full h-full">
                <path d="M0,15 C20,15 40,5 60,10 C80,15 90,5 100,5" fill="none" stroke="#2563EB" strokeWidth="2" strokeLinecap="round" />
@@ -155,8 +155,8 @@ export const AIInsights: React.FC = () => {
           </div>
         </div>
         <div className="text-right">
-          <p className="text-2xl font-extrabold text-white leading-none">96%</p>
-          <p className="text-[9px] font-bold text-[#10B981] uppercase tracking-wider">Very High</p>
+          <p className="text-xl font-extrabold text-white leading-none">Verified</p>
+          <p className="text-[9px] font-bold text-[#10B981] uppercase tracking-wider">Ready for Execution</p>
         </div>
       </div>
 

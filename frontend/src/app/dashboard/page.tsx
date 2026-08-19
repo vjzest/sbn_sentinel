@@ -979,7 +979,7 @@ export default function Dashboard() {
                 <div>
                   <h4 className="text-sm font-bold text-white">{activeChat}</h4>
                   <span className="text-[10px] text-emerald-600 font-extrabold uppercase tracking-wider flex items-center gap-1">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> Online • HIPAA Secure
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> Online • Platform Secure
                   </span>
                 </div>
               </div>

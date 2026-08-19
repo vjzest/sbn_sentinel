@@ -233,7 +233,7 @@ export const SignalFeed: React.FC<SignalFeedProps> = ({ setActiveTab }) => {
                   <span className="text-[9px] font-bold text-[#9CA3AF] uppercase tracking-wider block mb-1">Decryption Channel</span>
                   <p className="text-white font-bold flex items-center gap-1.5">
                     <Shield className="w-3.5 h-3.5 text-emerald-600" />
-                    HIPAA Secure
+                    Encrypted & Secure
                   </p>
                 </div>
                 <div className="col-span-2 bg-white/5 rounded-2xl p-3 border border-white/10">

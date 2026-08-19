@@ -1004,7 +1004,7 @@ document.body
              <div className="space-y-6 animate-in fade-in">
                <div>
                  <h3 className="text-xl font-bold text-white mb-2 flex items-center gap-2">
-                   <Shield className="w-5 h-5 text-emerald-600" /> HIPAA Security & Compliance Audit Trails
+                   <Shield className="w-5 h-5 text-emerald-600" /> Security & Compliance Audit Trails
                  </h3>
                  <p className="text-sm text-white/70 font-medium">Review immutable access logs and security policy audit logs.</p>
                </div>

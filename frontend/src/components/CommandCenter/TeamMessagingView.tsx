@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Search, MessageSquare, Send, CheckCircle2 } from 'lucide-react';
 
 const threadKey = (a: string, b: string) =>
@@ -207,7 +207,7 @@ export const TeamMessagingView: React.FC<{ currentUser?: any }> = ({ currentUser
                 <MessageSquare className="w-10 h-10 text-blue-400" />
               </div>
               <h3 className="text-xl font-bold text-white mb-1">Team Messaging</h3>
-              <p className="text-sm text-center max-w-sm">Select a contact from the sidebar to start a HIPAA-compliant secure conversation.</p>
+              <p className="text-sm text-center max-w-sm">Select a contact from the sidebar to start an encrypted secure conversation.</p>
             </div>
           )}
         </div>
