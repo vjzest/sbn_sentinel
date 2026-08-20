@@ -23,19 +23,17 @@ function saveThread(me: string, other: string, messages: Message[]) {
   localStorage.setItem(STORAGE_PREFIX + threadKey(me, other), JSON.stringify(messages));
 }
 
-export const TeamMessagingView: React.FC<{ currentUser?: any }> = ({ currentUser }) => {
+interface Contact {
+  id?: string;
+  name: string;
+  role: string;
+  status: string;
+}
+
+export const TeamMessagingView: React.FC<{ currentUser?: { full_name: string }; activeContact: string | null; onContactSelect: (id: string | null) => void }> = ({ currentUser, activeContact, onContactSelect }) => {
   const myName: string = currentUser?.full_name || 'Clinic Admin';
 
-  const allContacts = [
-    { name: 'Clinic Admin', role: 'System Administrator', status: 'online' },
-    { name: 'Vijay Maurya', role: 'Operations Manager', status: 'online' },
-    { name: 'City Heart - Dr Jenkins', role: 'Attending Physician', status: 'online' },
-    { name: 'Dr. Sarah Mitchell', role: 'Cardiology', status: 'away' },
-    { name: 'Front Desk / Reception', role: 'Staff', status: 'online' },
-    { name: 'Billing Department', role: 'Finance', status: 'offline' },
-  ].filter((c) => c.name.toLowerCase() !== myName.toLowerCase());
-
-  const [activeContact, setActiveContact] = useState<string | null>(null);
+  const [allContacts, setAllContacts] = useState<Contact[]>([]);
   const [activeMessages, setActiveMessages] = useState<Message[]>([]);
   const [unreadMap, setUnreadMap] = useState<Record<string, number>>({});
   const [newMessageText, setNewMessageText] = useState('');
@@ -45,9 +43,38 @@ export const TeamMessagingView: React.FC<{ currentUser?: any }> = ({ currentUser
   const activeContactRef = useRef<string | null>(null);
   const myNameRef = useRef<string>(myName);
 
+  useEffect(() => {
+    // Fetch dynamic contacts
+    const fetchContacts = async () => {
+      try {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/settings/team`, {
+          headers: { 'Authorization': `Bearer ${localStorage.getItem('sentinel_token')}` }
+        });
+        if (response.ok) {
+          const data = await response.json();
+          const mapped: Contact[] = data.map((u: any) => ({
+            id: u.id,
+            name: u.full_name || u.email,
+            role: u.role || 'Staff',
+            status: 'online'
+          }));
+          setAllContacts(mapped.filter((c) => c.name.toLowerCase() !== myName.toLowerCase()));
+        } else {
+          setAllContacts([]);
+          console.warn('Failed to load contacts from API.');
+        }
+      } catch (err) {
+        console.error('Failed to fetch contacts', err);
+        setAllContacts([]);
+      }
+    };
+    fetchContacts();
+  }, [myName]);
+
   useEffect(() => { activeContactRef.current = activeContact; }, [activeContact]);
   useEffect(() => { myNameRef.current = myName; }, [myName]);
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => {
     if (activeContact) {
       setActiveMessages(loadThread(myName, activeContact));
@@ -119,7 +146,7 @@ export const TeamMessagingView: React.FC<{ currentUser?: any }> = ({ currentUser
         <div className="w-80 bg-white/5 border border-white/10 rounded-[20px] premium-shadow flex flex-col flex-shrink-0">
           <div className="p-4 border-b border-white/10">
             <div className="relative">
-              <Search className="w-4 h-4 text-white/40 absolute left-3 top-1/2 -translate-y-1/2" />
+              <Search className="w-4 h-4 text-white/60 absolute left-3 top-1/2 -translate-y-1/2" />
               <input type="text" placeholder="Search staff or departments..." value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full bg-white/5 border border-white/10 rounded-[12px] pl-9 pr-4 py-2.5 text-sm text-white placeholder-white/40 focus:outline-none focus:border-blue-500/50" />
@@ -132,7 +159,7 @@ export const TeamMessagingView: React.FC<{ currentUser?: any }> = ({ currentUser
               const thread = loadThread(myName, contact.name);
               const lastMsg = thread[thread.length - 1];
               return (
-                <button key={contact.name} onClick={() => setActiveContact(contact.name)}
+                <button key={contact.name} onClick={() => onContactSelect(contact.name)}
                   className={`w-full flex items-center gap-3 p-3 rounded-[12px] transition-all text-left ${isActive ? 'bg-blue-600/20 border border-blue-500/30' : 'hover:bg-white/5 border border-transparent'}`}>
                   <div className="relative flex-shrink-0">
                     <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm ${isActive ? 'bg-blue-500/30 text-blue-400' : 'bg-white/10 text-white/70'}`}>
@@ -145,7 +172,7 @@ export const TeamMessagingView: React.FC<{ currentUser?: any }> = ({ currentUser
                       <p className={`text-sm font-bold truncate ${isActive ? 'text-white' : 'text-white/90'}`}>{contact.name}</p>
                       {unread > 0 && <span className="text-[10px] bg-blue-500 text-white px-1.5 py-0.5 rounded-full font-bold">{unread}</span>}
                     </div>
-                    <p className="text-xs text-white/40 truncate mt-0.5">
+                    <p className="text-xs text-white/60 truncate mt-0.5">
                       {lastMsg ? `${lastMsg.isMe ? 'You: ' : ''}${lastMsg.text}` : contact.role}
                     </p>
                   </div>
@@ -168,7 +195,7 @@ export const TeamMessagingView: React.FC<{ currentUser?: any }> = ({ currentUser
 
               <div ref={scrollRef} className="flex-1 overflow-y-auto p-6 space-y-4 custom-scrollbar">
                 {activeMessages.length === 0 ? (
-                  <div className="h-full flex flex-col items-center justify-center text-white/40">
+                  <div className="h-full flex flex-col items-center justify-center text-white/60">
                     <MessageSquare className="w-12 h-12 mb-3 opacity-20" />
                     <p className="text-sm">No messages yet.</p>
                     <p className="text-xs">Start a secure conversation with {activeContact}.</p>
@@ -176,9 +203,9 @@ export const TeamMessagingView: React.FC<{ currentUser?: any }> = ({ currentUser
                 ) : activeMessages.map((msg, i) => (
                   <div key={i} className={`flex ${msg.isMe ? 'justify-end' : 'justify-start'}`}>
                     <div className={`max-w-[70%] p-3 rounded-[16px] ${msg.isMe ? 'bg-blue-600 text-white rounded-br-sm' : 'bg-[#1a0b2e] border border-white/10 text-white/90 rounded-bl-sm'}`}>
-                      {!msg.isMe && <p className="text-[10px] text-white/40 font-semibold mb-1">{msg.from}</p>}
+                      {!msg.isMe && <p className="text-[10px] text-white/60 font-semibold mb-1">{msg.from}</p>}
                       <p className="text-sm">{msg.text}</p>
-                      <p className={`text-[10px] mt-1.5 flex items-center gap-1 ${msg.isMe ? 'text-white/70 justify-end' : 'text-white/40'}`}>
+                      <p className={`text-[10px] mt-1.5 flex items-center gap-1 ${msg.isMe ? 'text-white/70 justify-end' : 'text-white/60'}`}>
                         {msg.time}{msg.isMe && <CheckCircle2 className="w-3 h-3 text-white/70" />}
                       </p>
                     </div>
@@ -202,7 +229,7 @@ export const TeamMessagingView: React.FC<{ currentUser?: any }> = ({ currentUser
               </div>
             </>
           ) : (
-            <div className="h-full flex flex-col items-center justify-center text-white/40">
+            <div className="h-full flex flex-col items-center justify-center text-white/60">
               <div className="w-20 h-20 bg-white/5 rounded-full flex items-center justify-center mb-4">
                 <MessageSquare className="w-10 h-10 text-blue-400" />
               </div>

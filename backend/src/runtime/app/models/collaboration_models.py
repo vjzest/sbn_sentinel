@@ -4,6 +4,13 @@ from sqlalchemy import Column, String, DateTime, ForeignKey, Boolean, Text
 from sqlalchemy.orm import relationship
 from app.db.database import Base
 
+"""
+SESR-012C / CCA-003: Collaboration Engine Legacy Reference
+The Collaboration Engine is NOT required for the approved deterministic V1 lifecycle.
+This file (collaboration_models.py) is retained solely for legacy context and as 
+Future Scope for V2. It does not establish a V1 Collaboration Engine.
+"""
+
 
 class CollabApprovalsModel(Base):
     """

@@ -426,11 +426,11 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onSaveSettings, acti
               <table className="w-full text-left border-collapse">
                 <thead>
                   <tr className="border-b border-white/10 bg-white/[0.02]">
-                    <th className="py-4 px-6 text-[10px] font-extrabold text-white/40 uppercase tracking-wider">Clinic Name</th>
-                    <th className="py-4 px-6 text-[10px] font-extrabold text-white/40 uppercase tracking-wider">Address</th>
-                    <th className="py-4 px-6 text-[10px] font-extrabold text-white/40 uppercase tracking-wider">Phone</th>
-                    <th className="py-4 px-6 text-[10px] font-extrabold text-white/40 uppercase tracking-wider">Status</th>
-                    <th className="py-4 px-6 text-[10px] font-extrabold text-white/40 uppercase tracking-wider text-right">Actions</th>
+                    <th className="py-4 px-6 text-[10px] font-extrabold text-white/60 uppercase tracking-wider">Clinic Name</th>
+                    <th className="py-4 px-6 text-[10px] font-extrabold text-white/60 uppercase tracking-wider">Address</th>
+                    <th className="py-4 px-6 text-[10px] font-extrabold text-white/60 uppercase tracking-wider">Phone</th>
+                    <th className="py-4 px-6 text-[10px] font-extrabold text-white/60 uppercase tracking-wider">Status</th>
+                    <th className="py-4 px-6 text-[10px] font-extrabold text-white/60 uppercase tracking-wider text-right">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-white/10">
@@ -443,7 +443,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onSaveSettings, acti
                           </div>
                           <div>
                             <p className="text-sm font-bold text-white">{clinic.name}</p>
-                            <p className="text-[11px] text-white/40">ID: {clinic.id}</p>
+                            <p className="text-[11px] text-white/60">ID: {clinic.id}</p>
                           </div>
                         </div>
                       </td>
@@ -625,7 +625,7 @@ document.body
                            className={`px-4 py-2 border rounded-[10px] text-xs font-bold transition-all uppercase tracking-wider ${
                              themeMode === mode 
                                ? 'bg-[#111827] text-white border-[#111827]' 
-                               : 'bg-[#120524] text-white/70 border-white/10 hover:bg-white/5'
+                               : 'bg-[#120524] text-white/70 border-white/10 hover:bg-white/10 transition-colors cursor-pointer'
                            }`}
                          >
                            {mode}
@@ -672,7 +672,7 @@ document.body
                     </thead>
                     <tbody className="text-xs font-semibold text-white">
                       {teamMembers.map((member) => (
-                        <tr key={member.id} className="border-b border-white/10 hover:bg-white/5/50 last:border-0">
+                        <tr key={member.id} className="border-b border-white/10 hover:bg-white/10 transition-colors cursor-pointer/50 last:border-0">
                           <td className="py-3.5 px-4">
                             <div className="flex items-center gap-2.5">
                               <div className="w-8 h-8 rounded-full bg-[#EEF4FF] flex items-center justify-center text-[10px] font-bold text-[#A78BFA] border border-[#BFDBFE]">
@@ -852,7 +852,7 @@ document.body
                         <div className={`w-10 h-10 rounded-full flex items-center justify-center border ${
                           integration.connected 
                             ? 'bg-[#ECFDF5] border-emerald-500/30 text-[#10B981]' 
-                            : 'bg-slate-100 border-slate-200 text-slate-400'
+                            : 'bg-slate-100 border-slate-200 text-slate-300'
                         }`}>
                           <Database className="w-5 h-5" />
                         </div>
@@ -972,7 +972,7 @@ document.body
                         </thead>
                         <tbody className="text-xs font-semibold text-white">
                           {invoices.map(inv => (
-                            <tr key={inv.id} className="border-b border-white/10 hover:bg-white/5/50 last:border-0">
+                            <tr key={inv.id} className="border-b border-white/10 hover:bg-white/10 transition-colors cursor-pointer/50 last:border-0">
                               <td className="py-3.5 px-4 font-mono text-[#2563EB] font-bold">{inv.id}</td>
                               <td className="py-3.5 px-4 text-slate-500">{inv.date}</td>
                               <td className="py-3.5 px-4 text-slate-800 font-bold">${inv.amount.toFixed(2)}</td>
@@ -1030,7 +1030,7 @@ document.body
                      </thead>
                      <tbody className="text-xs font-semibold text-white">
                        {auditLogs.map((log) => (
-                         <tr key={log.id} className="border-b border-white/10 hover:bg-white/5/50 last:border-0">
+                         <tr key={log.id} className="border-b border-white/10 hover:bg-white/10 transition-colors cursor-pointer/50 last:border-0">
                            <td className="py-3.5 px-4 text-slate-500 font-mono">{new Date(log.timestamp).toLocaleString()}</td>
                            <td className="py-3.5 px-4 text-[#2563EB] font-bold">{log.user_email}</td>
                            <td className="py-3.5 px-4">
@@ -1039,7 +1039,7 @@ document.body
                              </span>
                            </td>
                            <td className="py-3.5 px-4 text-slate-700">{log.resource || 'N/A'}</td>
-                           <td className="py-3.5 px-4 text-slate-400 font-mono">{log.ip_address}</td>
+                           <td className="py-3.5 px-4 text-slate-300 font-mono">{log.ip_address}</td>
                          </tr>
                        ))}
                      </tbody>
@@ -1145,7 +1145,7 @@ document.body
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowAddClinicModal(false)}></div>
           <div className="relative w-full max-w-md bg-[#120524] border border-white/10 rounded-[24px] shadow-2xl p-6">
-            <button onClick={() => setShowAddClinicModal(false)} className="absolute top-4 right-4 text-white/40 hover:text-white transition-colors">
+            <button onClick={() => setShowAddClinicModal(false)} className="absolute top-4 right-4 text-white/60 hover:text-white transition-colors">
               <X className="w-5 h-5" />
             </button>
             <h3 className="text-xl font-bold text-white mb-2">Add New Clinic</h3>
@@ -1153,7 +1153,7 @@ document.body
             
             <div className="space-y-4">
               <div>
-                <label className="block text-[11px] font-extrabold text-white/40 uppercase tracking-wider mb-2">Clinic Name</label>
+                <label className="block text-[11px] font-extrabold text-white/60 uppercase tracking-wider mb-2">Clinic Name</label>
                 <input 
                   type="text"
                   placeholder="e.g. City Heart North"
@@ -1163,7 +1163,7 @@ document.body
                 />
               </div>
               <div>
-                <label className="block text-[11px] font-extrabold text-white/40 uppercase tracking-wider mb-2">Address</label>
+                <label className="block text-[11px] font-extrabold text-white/60 uppercase tracking-wider mb-2">Address</label>
                 <input 
                   type="text"
                   placeholder="e.g. 456 Medical Parkway, TX"
@@ -1173,7 +1173,7 @@ document.body
                 />
               </div>
               <div>
-                <label className="block text-[11px] font-extrabold text-white/40 uppercase tracking-wider mb-2">Phone</label>
+                <label className="block text-[11px] font-extrabold text-white/60 uppercase tracking-wider mb-2">Phone</label>
                 <input 
                   type="text"
                   placeholder="e.g. (555) 123-4567"
@@ -1185,7 +1185,7 @@ document.body
             </div>
 
             <div className="mt-8 flex justify-end gap-3">
-              <button onClick={() => setShowAddClinicModal(false)} className="px-5 py-2.5 rounded-[12px] text-sm font-bold text-white/70 hover:text-white hover:bg-white/5 transition-colors">
+              <button onClick={() => setShowAddClinicModal(false)} className="px-5 py-2.5 rounded-[12px] text-sm font-bold text-white/70 hover:text-white hover:bg-white/10 transition-colors cursor-pointer transition-colors">
                 Cancel
               </button>
               <button onClick={handleAddClinic} className="bg-[#2563EB] hover:bg-[#1D4ED8] text-white px-5 py-2.5 rounded-[12px] text-sm font-bold transition-colors">

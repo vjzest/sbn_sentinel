@@ -48,7 +48,7 @@ export const StatCard: React.FC<StatCardProps> = ({ title, value, icon: Icon, tr
             <span className={`text-[10px] font-black px-2 py-0.5 rounded-md flex items-center gap-1 shadow-sm ${trendUp ? 'bg-[#10B981]/20 text-[#34D399] border border-[#10B981]/30' : 'bg-[#EF4444]/20 text-[#F87171] border border-[#EF4444]/30'}`}>
               {trendUp ? '↑' : '↓'} {trend}
             </span>
-            <span className="text-[10px] font-bold text-white/40 uppercase tracking-wider">vs yesterday</span>
+            <span className="text-[10px] font-bold text-white/60 uppercase tracking-wider">vs yesterday</span>
           </div>
         )}
         

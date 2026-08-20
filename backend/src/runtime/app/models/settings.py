@@ -13,7 +13,9 @@ class SettingsModel(Base):
     language = Column(String, default="en")
     theme_mode = Column(String, default="system")
     
-    # AI Settings
+    # SESR-012C / CCA-023 Governed Organizational Configuration
+    # AI Settings (Must be governed by Policy/Rule Engine for deterministic behavior)
+    # These fields act as mapped proxies to the authoritative Rule Governance framework.
     scheduling_aggressiveness = Column(Integer, default=2)
     auto_outreach = Column(Boolean, default=True)
     confidence_threshold = Column(String, default="85% (Recommended)")

@@ -205,23 +205,23 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onLogin }) => {
               <div className="space-y-3">
                 <div className="bg-white/[0.03] rounded-[14px] p-3.5 flex justify-between items-start border border-white/[0.05] hover:bg-white/[0.06] transition-colors cursor-pointer">
                   <div className="flex gap-3">
-                    <ShieldCheck className="w-[15px] h-[15px] text-white/40 mt-0.5 flex-shrink-0" />
+                    <ShieldCheck className="w-[15px] h-[15px] text-white/60 mt-0.5 flex-shrink-0" />
                     <div>
                       <p className="text-[13px] font-bold text-white/90">New Clinic Onboarded</p>
                       <p className="text-[11px] text-white/50 mt-0.5">City Heart Nexus just went live!</p>
                     </div>
                   </div>
-                  <span className="text-[10px] text-white/40 font-medium">2m</span>
+                  <span className="text-[10px] text-white/60 font-medium">2m</span>
                 </div>
                 <div className="bg-white/[0.03] rounded-[14px] p-3.5 flex justify-between items-start border border-white/[0.05] hover:bg-white/[0.06] transition-colors cursor-pointer">
                   <div className="flex gap-3">
-                    <ArrowRight className="w-[15px] h-[15px] text-white/40 mt-0.5 flex-shrink-0 rotate-[-45deg]" />
+                    <ArrowRight className="w-[15px] h-[15px] text-white/60 mt-0.5 flex-shrink-0 rotate-[-45deg]" />
                     <div>
                       <p className="text-[13px] font-bold text-white/90">Engagement Peak</p>
                       <p className="text-[11px] text-white/50 mt-0.5">Patient flow up 40% in Central Hub.</p>
                     </div>
                   </div>
-                  <span className="text-[10px] text-white/40 font-medium">15m</span>
+                  <span className="text-[10px] text-white/60 font-medium">15m</span>
                 </div>
               </div>
             </div>

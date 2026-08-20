@@ -1,7 +1,7 @@
 import { fetchWithAuth } from '@/utils/fetchWithAuth';
 import React, { useState, useEffect } from 'react';
-import { 
-  Building2, Users, Activity, DollarSign, BrainCircuit, 
+import {
+  Building2, Users, Activity, DollarSign, BrainCircuit,
   Settings, Server, Search, CheckCircle2, XCircle, MoreVertical,
   LogOut, ShieldCheck, Mail, Calendar, Menu, X
 } from 'lucide-react';
@@ -37,22 +37,22 @@ export const SuperAdminPanel: React.FC<SuperAdminProps> = ({ onLogout, user }) =
         const auditRes = await fetchWithAuth(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/super-admin/audit-logs`);
         const pasmeHealthRes = await fetchWithAuth(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/pasme/health`);
         const pasmeRulesRes = await fetchWithAuth(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/pasme/rules`);
-        
+
         if (approvalsRes.ok) {
-            setPendingApprovals(await approvalsRes.json());
+          setPendingApprovals(await approvalsRes.json());
         }
         if (auditRes.ok) {
-            setAuditLogs(await auditRes.json());
+          setAuditLogs(await auditRes.json());
         }
         if (pasmeHealthRes.ok) {
-            const h = await pasmeHealthRes.json();
-            setPasmeHealth(h);
-            setMaintenanceMode(h.maintenance_mode);
+          const h = await pasmeHealthRes.json();
+          setPasmeHealth(h);
+          setMaintenanceMode(h.maintenance_mode);
         }
         if (pasmeRulesRes.ok) {
-            setPasmeRules(await pasmeRulesRes.json());
+          setPasmeRules(await pasmeRulesRes.json());
         }
-        
+
         if (statsRes.ok) setStats(await statsRes.json());
         if (usersRes.ok) {
           const u = await usersRes.json();
@@ -86,7 +86,7 @@ export const SuperAdminPanel: React.FC<SuperAdminProps> = ({ onLogout, user }) =
     };
     fetchData();
 
-    
+
   }, []);
 
   const handleInvite = async (e: React.FormEvent) => {
@@ -160,7 +160,7 @@ export const SuperAdminPanel: React.FC<SuperAdminProps> = ({ onLogout, user }) =
         const updated = await res.json();
         setMaintenanceMode(updated.maintenance_mode);
         if (pasmeHealth) {
-            setPasmeHealth({ ...pasmeHealth, maintenance_mode: updated.maintenance_mode, status: updated.maintenance_mode ? 'maintenance' : 'healthy' });
+          setPasmeHealth({ ...pasmeHealth, maintenance_mode: updated.maintenance_mode, status: updated.maintenance_mode ? 'maintenance' : 'healthy' });
         }
       }
     } catch (e) {
@@ -179,10 +179,10 @@ export const SuperAdminPanel: React.FC<SuperAdminProps> = ({ onLogout, user }) =
 
   return (
     <div className="flex h-screen bg-[#120524] text-white font-sans overflow-hidden w-full absolute inset-0 p-3 gap-3">
-      
+
       {/* Mobile Sidebar Overlay */}
       {isMobileMenuOpen && (
-        <div 
+        <div
           className="fixed inset-0 bg-gray-900/50 backdrop-blur-sm z-[55] md:hidden"
           onClick={() => setIsMobileMenuOpen(false)}
         ></div>
@@ -208,14 +208,14 @@ export const SuperAdminPanel: React.FC<SuperAdminProps> = ({ onLogout, user }) =
         </div>
 
         <div className="flex-1 overflow-y-auto px-4 py-6 space-y-1">
-          <p className="text-[9px] font-black text-white/40 uppercase tracking-[0.2em] mb-3 px-4">Platform</p>
-          <button onClick={() => { setActiveTab('overview'); setIsMobileMenuOpen(false); }} className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-bold transition-all ${activeTab === 'overview' ? 'bg-white/10 text-white font-extrabold shadow-lg' : 'text-white/60 hover:text-white hover:bg-white/5'}`}>
+          <p className="text-[9px] font-black text-white/60 uppercase tracking-[0.2em] mb-3 px-4">Platform</p>
+          <button onClick={() => { setActiveTab('overview'); setIsMobileMenuOpen(false); }} className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-bold transition-all ${activeTab === 'overview' ? 'bg-white/10 border-l-4 border-emerald-500 text-white font-extrabold shadow-lg' : 'text-white/60 hover:text-white hover:bg-white/10 transition-colors cursor-pointer'}`}>
             <Activity className="w-4 h-4" /> Overview
           </button>
-          <button onClick={() => { setActiveTab('clinics'); setIsMobileMenuOpen(false); }} className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-bold transition-all ${activeTab === 'clinics' ? 'bg-white/10 text-white font-extrabold shadow-lg' : 'text-white/60 hover:text-white hover:bg-white/5'}`}>
+          <button onClick={() => { setActiveTab('clinics'); setIsMobileMenuOpen(false); }} className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-bold transition-all ${activeTab === 'clinics' ? 'bg-white/10 border-l-4 border-emerald-500 text-white font-extrabold shadow-lg' : 'text-white/60 hover:text-white hover:bg-white/10 transition-colors cursor-pointer'}`}>
             <Building2 className="w-4 h-4" /> Clinics (Tenants)
           </button>
-          <button onClick={() => { setActiveTab('approvals'); setIsMobileMenuOpen(false); }} className={`w-full flex items-center justify-between px-4 py-3 rounded-2xl text-sm font-bold transition-all ${activeTab === 'approvals' ? 'bg-white/10 text-white font-extrabold shadow-lg' : 'text-white/60 hover:text-white hover:bg-white/5'}`}>
+          <button onClick={() => { setActiveTab('approvals'); setIsMobileMenuOpen(false); }} className={`w-full flex items-center justify-between px-4 py-3 rounded-2xl text-sm font-bold transition-all ${activeTab === 'approvals' ? 'bg-white/10 border-l-4 border-emerald-500 text-white font-extrabold shadow-lg' : 'text-white/60 hover:text-white hover:bg-white/10 transition-colors cursor-pointer'}`}>
             <div className="flex flex-wrap items-center gap-2 sm:gap-3 w-full md:w-auto">
               <CheckCircle2 className="w-4 h-4" /> Pending Approvals
             </div>
@@ -223,22 +223,25 @@ export const SuperAdminPanel: React.FC<SuperAdminProps> = ({ onLogout, user }) =
               <span className="bg-rose-500 text-white text-[10px] font-black px-2 py-0.5 rounded-full">{pendingApprovals.length}</span>
             )}
           </button>
-          <button onClick={() => { setActiveTab('users'); setIsMobileMenuOpen(false); }} className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-bold transition-all ${activeTab === 'users' ? 'bg-white/10 text-white font-extrabold shadow-lg' : 'text-white/60 hover:text-white hover:bg-white/5'}`}>
+          <button onClick={() => { setActiveTab('users'); setIsMobileMenuOpen(false); }} className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-bold transition-all ${activeTab === 'users' ? 'bg-white/10 border-l-4 border-emerald-500 text-white font-extrabold shadow-lg' : 'text-white/60 hover:text-white hover:bg-white/10 transition-colors cursor-pointer'}`}>
             <Users className="w-4 h-4" /> Platform Users
           </button>
-          <button onClick={() => { setActiveTab('billing'); setIsMobileMenuOpen(false); }} className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-bold transition-all ${activeTab === 'billing' ? 'bg-white/10 text-white font-extrabold shadow-lg' : 'text-white/60 hover:text-white hover:bg-white/5'}`}>
+          <button onClick={() => { setActiveTab('billing'); setIsMobileMenuOpen(false); }} className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-bold transition-all ${activeTab === 'billing' ? 'bg-white/10 border-l-4 border-emerald-500 text-white font-extrabold shadow-lg' : 'text-white/60 hover:text-white hover:bg-white/10 transition-colors cursor-pointer'}`}>
             <DollarSign className="w-4 h-4" /> Subscriptions & Revenue
           </button>
 
-          <p className="text-[9px] font-black text-white/40 uppercase tracking-[0.2em] mb-3 px-4 mt-8">System</p>
-          <button onClick={() => { setActiveTab('ai-usage'); setIsMobileMenuOpen(false); }} className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-bold transition-all ${activeTab === 'ai-usage' ? 'bg-white/10 text-white font-extrabold shadow-lg' : 'text-white/60 hover:text-white hover:bg-white/5'}`}>
+          <p className="text-[9px] font-black text-white/60 uppercase tracking-[0.2em] mb-3 px-4 mt-8">System</p>
+          <button onClick={() => { setActiveTab('ai-usage'); setIsMobileMenuOpen(false); }} className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-bold transition-all ${activeTab === 'ai-usage' ? 'bg-white/10 border-l-4 border-emerald-500 text-white font-extrabold shadow-lg' : 'text-white/60 hover:text-white hover:bg-white/10 transition-colors cursor-pointer'}`}>
             <BrainCircuit className="w-4 h-4" /> AI Costs & Usage
           </button>
-          <button onClick={() => { setActiveTab('settings'); setIsMobileMenuOpen(false); }} className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-bold transition-all ${activeTab === 'settings' ? 'bg-white/10 text-white font-extrabold shadow-lg' : 'text-white/60 hover:text-white hover:bg-white/5'}`}>
+          <button onClick={() => { setActiveTab('settings'); setIsMobileMenuOpen(false); }} className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-bold transition-all ${activeTab === 'settings' ? 'bg-white/10 border-l-4 border-emerald-500 text-white font-extrabold shadow-lg' : 'text-white/60 hover:text-white hover:bg-white/10 transition-colors cursor-pointer'}`}>
             <Server className="w-4 h-4" /> Infrastructure Settings
           </button>
-          <button onClick={() => { setActiveTab('audit-logs'); setIsMobileMenuOpen(false); }} className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-bold transition-all ${activeTab === 'audit-logs' ? 'bg-white/10 text-white font-extrabold shadow-lg' : 'text-white/60 hover:text-white hover:bg-white/5'}`}>
+          <button onClick={() => { setActiveTab('audit-logs'); setIsMobileMenuOpen(false); }} className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-bold transition-all ${activeTab === 'audit-logs' ? 'bg-white/10 border-l-4 border-emerald-500 text-white font-extrabold shadow-lg' : 'text-white/60 hover:text-white hover:bg-white/10 transition-colors cursor-pointer'}`}>
             <ShieldCheck className="w-4 h-4" /> Platform Audit Logs
+          </button>
+          <button onClick={() => { setActiveTab('conformance'); setIsMobileMenuOpen(false); }} className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-bold transition-all ${activeTab === 'conformance' ? 'bg-white/10 border-l-4 border-emerald-500 text-white font-extrabold shadow-lg' : 'text-white/60 hover:text-white hover:bg-white/10 transition-colors cursor-pointer'}`}>
+            <ShieldCheck className="w-4 h-4 text-emerald-400" /> SESR Conformance
           </button>
         </div>
 
@@ -254,7 +257,7 @@ export const SuperAdminPanel: React.FC<SuperAdminProps> = ({ onLogout, user }) =
         {/* Header */}
         <header className="h-20 flex items-center justify-between px-4 md:px-8 bg-transparent border-b border-white/10 z-10 shrink-0">
           <div className="flex flex-wrap items-center gap-2 sm:gap-3 w-full md:w-auto">
-            <button onClick={() => setIsMobileMenuOpen(true)} className="md:hidden text-white/40 hover:text-white">
+            <button onClick={() => setIsMobileMenuOpen(true)} className="md:hidden text-white/60 hover:text-white">
               <Menu className="w-6 h-6" />
             </button>
             <h2 className="text-xl font-extrabold text-white capitalize hidden sm:block">
@@ -280,7 +283,7 @@ export const SuperAdminPanel: React.FC<SuperAdminProps> = ({ onLogout, user }) =
 
         {/* Scrollable Area */}
         <div className="flex-1 overflow-auto p-8 relative z-0 custom-scrollbar">
-          
+
           {/* Overview Tab */}
           {activeTab === 'overview' && (
             <div className="space-y-8 animate-in fade-in duration-500 max-w-[1400px] mx-auto">
@@ -289,28 +292,28 @@ export const SuperAdminPanel: React.FC<SuperAdminProps> = ({ onLogout, user }) =
                   <div className="w-10 h-10 rounded-2xl bg-blue-500/20 text-blue-400 flex items-center justify-center mb-4">
                     <Building2 className="w-5 h-5" />
                   </div>
-                  <p className="text-xs text-white/40 font-bold uppercase tracking-wider">Total Clinics</p>
+                  <p className="text-xs text-white/60 font-bold uppercase tracking-wider">Total Clinics</p>
                   <p className="text-3xl font-black text-white mt-1">{(stats?.total_clinics || 0)}</p>
                 </div>
                 <div className="bg-gradient-to-br from-[#2E1055] to-[#120524] p-6 rounded-2xl border border-white/10 border border-white/10 shadow-sm">
                   <div className="w-10 h-10 rounded-2xl bg-[#2E1055]/20 text-[#A78BFA] flex items-center justify-center mb-4">
                     <Users className="w-5 h-5" />
                   </div>
-                  <p className="text-xs text-white/40 font-bold uppercase tracking-wider">Active Users</p>
+                  <p className="text-xs text-white/60 font-bold uppercase tracking-wider">Active Users</p>
                   <p className="text-3xl font-black text-white mt-1">{(stats?.active_users || 0)}</p>
                 </div>
                 <div className="bg-gradient-to-br from-[#2E1055] to-[#120524] p-6 rounded-2xl border border-white/10 border border-white/10 shadow-sm">
                   <div className="w-10 h-10 rounded-2xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center mb-4">
                     <DollarSign className="w-5 h-5" />
                   </div>
-                  <p className="text-xs text-white/40 font-bold uppercase tracking-wider">Platform Revenue MRR</p>
+                  <p className="text-xs text-white/60 font-bold uppercase tracking-wider">Platform Revenue MRR</p>
                   <p className="text-3xl font-black text-white mt-1">{(stats?.platform_revenue_formatted || '$0.00')}</p>
                 </div>
                 <div className="bg-gradient-to-br from-[#2E1055] to-[#120524] p-6 rounded-2xl border border-white/10 border border-white/10 shadow-sm">
                   <div className="w-10 h-10 rounded-2xl bg-purple-500/20 text-purple-400 flex items-center justify-center mb-4">
                     <BrainCircuit className="w-5 h-5" />
                   </div>
-                  <p className="text-xs text-white/40 font-bold uppercase tracking-wider">AI Tokens Today</p>
+                  <p className="text-xs text-white/60 font-bold uppercase tracking-wider">AI Tokens Today</p>
                   <p className="text-3xl font-black text-white mt-1">{(stats?.ai_token_usage_today || '0')}</p>
                 </div>
               </div>
@@ -320,14 +323,14 @@ export const SuperAdminPanel: React.FC<SuperAdminProps> = ({ onLogout, user }) =
                   <h3 className="text-base font-bold text-white mb-6">Recent Clinic Activity</h3>
                   <div className="space-y-4">
                     {clinics.slice(0, 5).map((clinic, i) => (
-                      <div key={i} className="flex items-center justify-between p-4 border border-white/10 rounded-2xl hover:bg-white/5 transition-colors">
+                      <div key={i} className="flex items-center justify-between p-4 border border-white/10 rounded-2xl hover:bg-white/10 transition-colors cursor-pointer transition-colors">
                         <div className="flex items-center gap-4">
                           <div className="w-10 h-10 rounded-lg bg-white/10 flex items-center justify-center font-bold text-white/70">
                             {clinic.name.charAt(0)}
                           </div>
                           <div>
                             <p className="text-sm font-bold text-white">{clinic.name}</p>
-                            <p className="text-xs text-white/40">{clinic.usersCount} users • {clinic.plan} Plan</p>
+                            <p className="text-xs text-white/60">{clinic.usersCount} users • {clinic.plan} Plan</p>
                           </div>
                         </div>
                         <span className="px-3 py-1 bg-emerald-500/20 text-emerald-400 text-[10px] font-bold rounded-full uppercase tracking-wider">
@@ -337,13 +340,13 @@ export const SuperAdminPanel: React.FC<SuperAdminProps> = ({ onLogout, user }) =
                     ))}
                   </div>
                 </div>
-                
+
                 <div className="bg-gradient-to-br from-[#2E1055] to-[#120524] rounded-2xl p-6 shadow-lg relative overflow-hidden">
                   <div className="absolute top-0 right-0 w-64 h-64 bg-[#2E1055]/20 rounded-full blur-[80px]"></div>
                   <h3 className="text-base font-bold text-white mb-6 flex items-center gap-2">
                     <Server className="w-5 h-5 text-indigo-400" /> System Health
                   </h3>
-                  
+
                   <div className="space-y-6 relative z-10">
                     <div>
                       <div className="flex justify-between text-sm mb-2">
@@ -393,7 +396,7 @@ export const SuperAdminPanel: React.FC<SuperAdminProps> = ({ onLogout, user }) =
               <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse">
                   <thead>
-                    <tr className="bg-white/10 text-[11px] uppercase tracking-wider text-white/40 font-bold">
+                    <tr className="bg-white/10 text-[11px] uppercase tracking-wider text-white/60 font-bold">
                       <th className="p-4 border-b border-white/10">User</th>
                       <th className="p-4 border-b border-white/10">Clinic / Tenant</th>
                       <th className="p-4 border-b border-white/10">Role</th>
@@ -403,20 +406,19 @@ export const SuperAdminPanel: React.FC<SuperAdminProps> = ({ onLogout, user }) =
                   </thead>
                   <tbody>
                     {usersList.map((u, i) => (
-                      <tr key={i} className="hover:bg-white/5 border-b border-white/10 last:border-0">
+                      <tr key={i} className="hover:bg-white/10 transition-colors cursor-pointer border-b border-white/10 last:border-0">
                         <td className="p-4">
                           <div>
                             <p className="text-sm font-bold text-white">{u.full_name}</p>
-                            <p className="text-xs text-white/40">{u.email}</p>
+                            <p className="text-xs text-white/60">{u.email}</p>
                           </div>
                         </td>
                         <td className="p-4 text-sm font-medium text-white/70">{u.clinic}</td>
                         <td className="p-4">
-                          <span className={`px-2.5 py-1 text-[10px] font-bold rounded-full uppercase tracking-wider ${
-                            u.role === 'super_admin' ? 'bg-[#2E1055]/20 text-white' :
-                            u.role === 'clinic_admin' ? 'bg-purple-500/20 text-purple-400' :
-                            'bg-blue-500/20 text-blue-400'
-                          }`}>
+                          <span className={`px-2.5 py-1 text-[10px] font-bold rounded-full uppercase tracking-wider ${u.role === 'super_admin' ? 'bg-[#2E1055]/20 text-white' :
+                              u.role === 'clinic_admin' ? 'bg-purple-500/20 text-purple-400' :
+                                'bg-blue-500/20 text-blue-400'
+                            }`}>
                             {u.role.replace('_', ' ')}
                           </span>
                         </td>
@@ -432,7 +434,7 @@ export const SuperAdminPanel: React.FC<SuperAdminProps> = ({ onLogout, user }) =
                           )}
                         </td>
                         <td className="p-4 text-right">
-                          <button 
+                          <button
                             onClick={() => toggleUserStatus(u.id)}
                             disabled={u.role === 'super_admin'}
                             className="text-xs font-bold text-[#A78BFA] hover:text-indigo-400 disabled:opacity-30 disabled:cursor-not-allowed"
@@ -450,144 +452,143 @@ export const SuperAdminPanel: React.FC<SuperAdminProps> = ({ onLogout, user }) =
 
           {/* Clinics Tab */}
           {activeTab === 'clinics' && (
-             <div className="bg-white/5 border border-white/10 rounded-2xl shadow-sm animate-in fade-in max-w-[1400px] mx-auto">
-             <div className="p-6 border-b border-white/10 flex justify-between items-center">
-               <div>
-                 <h3 className="text-base font-bold text-white">Registered Clinics (Tenants)</h3>
-                 <p className="text-sm text-white/40 mt-1">Manage isolated workspaces and subscriptions.</p>
-               </div>
-               <button onClick={() => setIsInviteOpen(true)} className="bg-[#2E1055] hover:bg-[#120524] text-white px-4 py-2 rounded-2xl text-sm font-bold shadow-sm transition-colors">
-                 + Add Clinic
-               </button>
-             </div>
-             
-             {clinics.length === 0 ? (
-               <div className="p-12 text-center text-white/40 font-medium">
-                 <Building2 className="w-12 h-12 mx-auto mb-4 text-white/40" />
-                 <p>No clinics registered yet.</p>
-                 <button onClick={() => setIsInviteOpen(true)} className="text-[#A78BFA] font-bold mt-2 hover:underline">Register your first clinic</button>
-               </div>
-             ) : (
-               <div className="overflow-x-auto">
-               <table className="w-full text-left border-collapse">
-                 <thead>
-                   <tr className="bg-white/10 text-[11px] uppercase tracking-wider text-white/40 font-bold">
-                     <th className="p-4 border-b border-white/10">Clinic Name</th>
-                     <th className="p-4 border-b border-white/10">Owner</th>
-                     <th className="p-4 border-b border-white/10">Users</th>
-                     <th className="p-4 border-b border-white/10">Plan</th>
-                     <th className="p-4 border-b border-white/10">Status</th>
-                   </tr>
-                 </thead>
-                 <tbody>
-                   {clinics.map((c, i) => (
-                     <tr key={i} className="hover:bg-white/5 border-b border-white/10 last:border-0 cursor-pointer">
-                       <td className="p-4">
-                         <div className="flex flex-wrap items-center gap-2 sm:gap-3 w-full md:w-auto">
-                            <div className="w-8 h-8 rounded bg-white/10 flex items-center justify-center font-bold text-white/70 text-xs">
-                              {c.name.charAt(0)}
+            <div className="bg-white/5 border border-white/10 rounded-2xl shadow-sm animate-in fade-in max-w-[1400px] mx-auto">
+              <div className="p-6 border-b border-white/10 flex justify-between items-center">
+                <div>
+                  <h3 className="text-base font-bold text-white">Registered Clinics (Tenants)</h3>
+                  <p className="text-sm text-white/60 mt-1">Manage isolated workspaces and subscriptions.</p>
+                </div>
+                <button onClick={() => setIsInviteOpen(true)} className="bg-[#2E1055] hover:bg-[#120524] text-white px-4 py-2 rounded-2xl text-sm font-bold shadow-sm transition-colors">
+                  + Add Clinic
+                </button>
+              </div>
+
+              {clinics.length === 0 ? (
+                <div className="p-12 text-center text-white/60 font-medium">
+                  <Building2 className="w-12 h-12 mx-auto mb-4 text-white/60" />
+                  <p>No clinics registered yet.</p>
+                  <button onClick={() => setIsInviteOpen(true)} className="text-[#A78BFA] font-bold mt-2 hover:underline">Register your first clinic</button>
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left border-collapse">
+                    <thead>
+                      <tr className="bg-white/10 text-[11px] uppercase tracking-wider text-white/60 font-bold">
+                        <th className="p-4 border-b border-white/10">Clinic Name</th>
+                        <th className="p-4 border-b border-white/10">Owner</th>
+                        <th className="p-4 border-b border-white/10">Users</th>
+                        <th className="p-4 border-b border-white/10">Plan</th>
+                        <th className="p-4 border-b border-white/10">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {clinics.map((c, i) => (
+                        <tr key={i} className="hover:bg-white/10 transition-colors cursor-pointer border-b border-white/10 last:border-0 cursor-pointer">
+                          <td className="p-4">
+                            <div className="flex flex-wrap items-center gap-2 sm:gap-3 w-full md:w-auto">
+                              <div className="w-8 h-8 rounded bg-white/10 flex items-center justify-center font-bold text-white/70 text-xs">
+                                {c.name.charAt(0)}
+                              </div>
+                              <span className="text-sm font-bold text-white">{c.name}</span>
                             </div>
-                            <span className="text-sm font-bold text-white">{c.name}</span>
-                         </div>
-                       </td>
-                       <td className="p-4 text-sm font-medium text-white/70">{c.owner}</td>
-                       <td className="p-4 text-sm font-medium text-white/70">{c.usersCount} Active</td>
-                       <td className="p-4">
-                         <button 
-                           onClick={() => toggleClinicStatus(c.name)}
-                           className={`px-2.5 py-1 text-[10px] font-bold rounded-full uppercase tracking-wider transition-colors border ${
-                             c.status === 'Active' 
-                               ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/30' 
-                               : 'bg-rose-500/20 text-rose-400 border-rose-500/30 hover:bg-rose-500/30'
-                           }`}
-                         >
-                           {c.status}
-                         </button>
-                       </td>
-                     </tr>
-                   ))}
-                 </tbody>
-               </table>
-             </div>
-             )}
-           </div>
+                          </td>
+                          <td className="p-4 text-sm font-medium text-white/70">{c.owner}</td>
+                          <td className="p-4 text-sm font-medium text-white/70">{c.usersCount} Active</td>
+                          <td className="p-4">
+                            <button
+                              onClick={() => toggleClinicStatus(c.name)}
+                              className={`px-2.5 py-1 text-[10px] font-bold rounded-full uppercase tracking-wider transition-colors border ${c.status === 'Active'
+                                  ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/30'
+                                  : 'bg-rose-500/20 text-rose-400 border-rose-500/30 hover:bg-rose-500/30'
+                                }`}
+                            >
+                              {c.status}
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
           )}
 
-           {/* Approvals Tab */}
+          {/* Approvals Tab */}
           {activeTab === 'approvals' && (
-             <div className="bg-white/5 border border-white/10 rounded-2xl shadow-sm animate-in fade-in max-w-[1400px] mx-auto">
-             <div className="p-6 border-b border-white/10">
-               <h3 className="text-base font-bold text-white">Pending Clinic Registrations</h3>
-               <p className="text-sm text-white/40 mt-1">Review full clinic and doctor details before approving access to the platform.</p>
-             </div>
-             
-             {pendingApprovals.length === 0 ? (
-               <div className="p-12 text-center text-white/40 font-medium">
-                 <CheckCircle2 className="w-12 h-12 mx-auto mb-4 text-emerald-300" />
-                 <p>All caught up! No pending registrations.</p>
-               </div>
-             ) : (
-               <div className="space-y-4 p-6 bg-white/5">
-                 {pendingApprovals.map((req) => (
-                   <div key={req.id} className="bg-gradient-to-br from-[#2E1055] to-[#120524] border border-white/10 rounded-2xl p-6 shadow-sm relative overflow-hidden group">
-                     <div className="absolute top-0 left-0 w-1 h-full bg-orange-400"></div>
-                     <div className="flex justify-between items-start mb-6">
-                       <div className="flex gap-4">
+            <div className="bg-white/5 border border-white/10 rounded-2xl shadow-sm animate-in fade-in max-w-[1400px] mx-auto">
+              <div className="p-6 border-b border-white/10">
+                <h3 className="text-base font-bold text-white">Pending Clinic Registrations</h3>
+                <p className="text-sm text-white/60 mt-1">Review full clinic and doctor details before approving access to the platform.</p>
+              </div>
+
+              {pendingApprovals.length === 0 ? (
+                <div className="p-12 text-center text-white/60 font-medium">
+                  <CheckCircle2 className="w-12 h-12 mx-auto mb-4 text-emerald-300" />
+                  <p>All caught up! No pending registrations.</p>
+                </div>
+              ) : (
+                <div className="space-y-4 p-6 bg-white/5">
+                  {pendingApprovals.map((req) => (
+                    <div key={req.id} className="bg-gradient-to-br from-[#2E1055] to-[#120524] border border-white/10 rounded-2xl p-6 shadow-sm relative overflow-hidden group">
+                      <div className="absolute top-0 left-0 w-1 h-full bg-orange-400"></div>
+                      <div className="flex justify-between items-start mb-6">
+                        <div className="flex gap-4">
                           <div className="w-12 h-12 rounded-xl bg-orange-500/20 text-orange-400 flex items-center justify-center font-bold shadow-sm">
                             {req.name.charAt(0)}
                           </div>
                           <div>
                             <h4 className="text-lg font-black text-white">{req.name}</h4>
-                            <p className="text-sm font-bold text-white/40">{req.owner} • {req.email}</p>
+                            <p className="text-sm font-bold text-white/60">{req.owner} • {req.email}</p>
                             <span className="inline-block mt-2 px-2.5 py-0.5 bg-orange-500/20 text-orange-400 text-[10px] font-black rounded-full uppercase tracking-wider">
                               Awaiting Approval • {req.date}
                             </span>
                           </div>
-                       </div>
-                       <div className="flex gap-2">
-                         <button 
-                           onClick={() => setPendingApprovals(prev => prev.filter(p => p.id !== req.id))}
-                           className="px-4 py-2 bg-rose-50 hover:bg-rose-500/30 text-rose-600 rounded-xl text-xs font-bold transition-colors"
-                         >
-                           Reject
-                         </button>
-                         <button 
-                           onClick={() => {
-                             setClinics([...clinics, { name: req.name, owner: req.owner, usersCount: 1, plan: 'Pro', status: 'Active' }]);
-                             setPendingApprovals(prev => prev.filter(p => p.id !== req.id));
-                           }}
-                           className="px-6 py-2 bg-[#2E1055] hover:bg-[#120524] text-white rounded-xl text-xs font-bold shadow-sm transition-colors"
-                         >
-                           Approve & Provision
-                         </button>
-                       </div>
-                     </div>
-                     <div className="grid grid-cols-2 md:grid-cols-4 gap-6 pt-4 border-t border-white/10">
-                       <div>
-                         <p className="text-[10px] uppercase font-black tracking-wider text-white/50 mb-1">Medical License</p>
-                         <p className="text-sm font-bold text-white">{req.license}</p>
-                       </div>
-                       <div>
-                         <p className="text-[10px] uppercase font-black tracking-wider text-white/50 mb-1">NPI Number</p>
-                         <p className="text-sm font-bold text-white">{req.npi}</p>
-                       </div>
-                       <div>
-                         <p className="text-[10px] uppercase font-black tracking-wider text-white/50 mb-1">Specialty</p>
-                         <p className="text-sm font-bold text-white">{req.specialty}</p>
-                       </div>
-                       <div>
-                         <p className="text-[10px] uppercase font-black tracking-wider text-white/50 mb-1">Phone Contact</p>
-                         <p className="text-sm font-bold text-white">{req.phone}</p>
-                       </div>
-                       <div className="col-span-2 md:col-span-4">
-                         <p className="text-[10px] uppercase font-black tracking-wider text-white/50 mb-1">Registered Address</p>
-                         <p className="text-sm font-bold text-white">{req.address}</p>
-                       </div>
-                     </div>
-                   </div>
-                 ))}
-               </div>
-             )}
+                        </div>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => setPendingApprovals(prev => prev.filter(p => p.id !== req.id))}
+                            className="px-4 py-2 bg-rose-50 hover:bg-rose-500/30 text-rose-600 rounded-xl text-xs font-bold transition-colors"
+                          >
+                            Reject
+                          </button>
+                          <button
+                            onClick={() => {
+                              setClinics([...clinics, { name: req.name, owner: req.owner, usersCount: 1, plan: 'Pro', status: 'Active' }]);
+                              setPendingApprovals(prev => prev.filter(p => p.id !== req.id));
+                            }}
+                            className="px-6 py-2 bg-[#2E1055] hover:bg-[#120524] text-white rounded-xl text-xs font-bold shadow-sm transition-colors"
+                          >
+                            Approve & Provision
+                          </button>
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-6 pt-4 border-t border-white/10">
+                        <div>
+                          <p className="text-[10px] uppercase font-black tracking-wider text-white/50 mb-1">Medical License</p>
+                          <p className="text-sm font-bold text-white">{req.license}</p>
+                        </div>
+                        <div>
+                          <p className="text-[10px] uppercase font-black tracking-wider text-white/50 mb-1">NPI Number</p>
+                          <p className="text-sm font-bold text-white">{req.npi}</p>
+                        </div>
+                        <div>
+                          <p className="text-[10px] uppercase font-black tracking-wider text-white/50 mb-1">Specialty</p>
+                          <p className="text-sm font-bold text-white">{req.specialty}</p>
+                        </div>
+                        <div>
+                          <p className="text-[10px] uppercase font-black tracking-wider text-white/50 mb-1">Phone Contact</p>
+                          <p className="text-sm font-bold text-white">{req.phone}</p>
+                        </div>
+                        <div className="col-span-2 md:col-span-4">
+                          <p className="text-[10px] uppercase font-black tracking-wider text-white/50 mb-1">Registered Address</p>
+                          <p className="text-sm font-bold text-white">{req.address}</p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
 
@@ -601,11 +602,11 @@ export const SuperAdminPanel: React.FC<SuperAdminProps> = ({ onLogout, user }) =
                   <p className="text-3xl font-black">{stats?.platform_revenue_formatted || '$0.00'}</p>
                 </div>
                 <div className="p-5 border border-white/10 rounded-2xl">
-                  <p className="text-white/40 text-xs font-bold uppercase tracking-wider mb-1">Pending Payouts</p>
+                  <p className="text-white/60 text-xs font-bold uppercase tracking-wider mb-1">Pending Payouts</p>
                   <p className="text-3xl font-black text-white">$1,240.00</p>
                 </div>
                 <div className="p-5 border border-white/10 rounded-2xl">
-                  <p className="text-white/40 text-xs font-bold uppercase tracking-wider mb-1">Failed Payments</p>
+                  <p className="text-white/60 text-xs font-bold uppercase tracking-wider mb-1">Failed Payments</p>
                   <p className="text-3xl font-black text-rose-500">0</p>
                 </div>
               </div>
@@ -615,7 +616,7 @@ export const SuperAdminPanel: React.FC<SuperAdminProps> = ({ onLogout, user }) =
                   <div key={i} className="flex justify-between items-center p-4 border border-white/10 rounded-2xl">
                     <div>
                       <p className="text-sm font-bold text-white">INV-2026-00{i}</p>
-                      <p className="text-xs text-white/40">City Heart Clinic • Pro Plan</p>
+                      <p className="text-xs text-white/60">City Heart Clinic • Pro Plan</p>
                     </div>
                     <div className="text-right">
                       <p className="text-sm font-bold text-white">$299.00</p>
@@ -650,10 +651,10 @@ export const SuperAdminPanel: React.FC<SuperAdminProps> = ({ onLogout, user }) =
                 {clinics.slice(0, 3).map((c, i) => (
                   <div key={i} className="flex justify-between items-center p-4 border border-white/10 rounded-2xl">
                     <span className="text-sm font-bold text-white">{c.name}</span>
-                    <span className="text-sm font-medium text-white/40">{(Math.random() * 5 + 1).toFixed(1)}M tokens</span>
+                    <span className="text-sm font-medium text-white/60">{(Math.random() * 5 + 1).toFixed(1)}M tokens</span>
                   </div>
                 ))}
-                {clinics.length === 0 && <p className="text-sm text-white/40">No data available.</p>}
+                {clinics.length === 0 && <p className="text-sm text-white/60">No data available.</p>}
               </div>
             </div>
           )}
@@ -681,29 +682,29 @@ export const SuperAdminPanel: React.FC<SuperAdminProps> = ({ onLogout, user }) =
                 <div>
                   <label className="block text-sm font-bold text-white mb-2">Maintenance Mode</label>
                   <div className="flex flex-wrap items-center gap-2 sm:gap-3 w-full md:w-auto">
-                    <div 
+                    <div
                       onClick={togglePasmeMaintenance}
                       className={`w-12 h-6 rounded-full relative cursor-pointer transition-colors ${maintenanceMode ? 'bg-rose-500' : 'bg-[#2E1055]'}`}
-                     role="button" tabIndex={0} onKeyDown={(e) => { if(e.key === "Enter" || e.key === " ") { e.preventDefault(); e.currentTarget.click(); } }} >
+                      role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); e.currentTarget.click(); } }} >
                       <div className={`w-5 h-5 bg-white rounded-full absolute top-0.5 shadow-sm transition-all ${maintenanceMode ? 'left-[26px]' : 'left-0.5'}`}></div>
                     </div>
                     <span className="text-sm font-bold text-white">{maintenanceMode ? 'System Offline (Updates Active)' : 'Currently Live'}</span>
                   </div>
-                  <p className="text-xs text-white/40 mt-1">Stops background processing across the platform.</p>
+                  <p className="text-xs text-white/60 mt-1">Stops background processing across the platform.</p>
                 </div>
-                
+
                 <div className="pt-6 border-t border-white/10 mt-6">
                   <h4 className="text-sm font-bold text-white mb-4">Business Rules Engine (PASME Config)</h4>
                   <div className="space-y-3">
                     {pasmeRules.map(rule => (
                       <div key={rule.rule_id} className="flex items-center justify-between p-4 bg-white/5 border border-white/10 rounded-2xl">
                         <div>
-                          <p className="text-sm font-bold text-white">{rule.name} <span className="text-xs text-white/40 ml-2 font-mono">{rule.rule_id}</span></p>
+                          <p className="text-sm font-bold text-white">{rule.name} <span className="text-xs text-white/60 ml-2 font-mono">{rule.rule_id}</span></p>
                           <p className="text-xs text-white/60">{rule.description}</p>
                         </div>
-                        <button 
+                        <button
                           onClick={() => togglePasmeRule(rule.rule_id)}
-                          className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors ${rule.is_active ? 'bg-[#2E1055] text-white' : 'bg-white/10 text-white/40 hover:bg-white/20 hover:text-white'}`}
+                          className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors ${rule.is_active ? 'bg-[#2E1055] text-white' : 'bg-white/10 text-white/60 hover:bg-white/20 hover:text-white'}`}
                         >
                           {rule.is_active ? 'Active' : 'Disabled'}
                         </button>
@@ -737,6 +738,23 @@ export const SuperAdminPanel: React.FC<SuperAdminProps> = ({ onLogout, user }) =
             </div>
           )}
 
+          {/* Conformance Validation Tab */}
+          {activeTab === 'conformance' && (
+            <div className="bg-white/5 border border-white/10 rounded-2xl shadow-sm animate-in fade-in max-w-[1400px] mx-auto p-6">
+              <h3 className="text-base font-bold text-white mb-2">SESR Architecture Conformance Validation</h3>
+              <p className="text-sm text-white/60 mb-6">Run automated checks against the backend validation engine to ensure compliance with SESR-001 through SESR-012 standards.</p>
+              
+              <div className="bg-[#120524] border border-emerald-500/30 rounded-2xl p-8 text-center max-w-2xl mx-auto mt-12">
+                <ShieldCheck className="w-16 h-16 text-emerald-500/50 mx-auto mb-4" />
+                <h4 className="text-xl font-bold text-white mb-2">Run Conformance Suite</h4>
+                <p className="text-sm text-white/50 mb-6">Executes `conformance_engine.py` on the backend to verify all decision boundaries, logging traces, and human authority rules are currently enforced.</p>
+                <button className="bg-emerald-600 hover:bg-emerald-500 text-white px-8 py-3 rounded-2xl text-sm font-bold shadow-lg transition-colors">
+                  Initiate SESR Validation Check
+                </button>
+              </div>
+            </div>
+          )}
+
           {/* Audit Logs Tab */}
           {activeTab === 'audit-logs' && (
             <div className="bg-white/5 border border-white/10 rounded-2xl shadow-sm animate-in fade-in max-w-[1400px] mx-auto p-6">
@@ -746,7 +764,7 @@ export const SuperAdminPanel: React.FC<SuperAdminProps> = ({ onLogout, user }) =
               <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse">
                   <thead>
-                    <tr className="bg-white/10 text-[11px] uppercase tracking-wider text-white/40 font-bold border-b border-white/10">
+                    <tr className="bg-white/10 text-[11px] uppercase tracking-wider text-white/60 font-bold border-b border-white/10">
                       <th className="p-4">Timestamp</th>
                       <th className="p-4">Action</th>
                       <th className="p-4">Resource Target</th>
@@ -755,7 +773,7 @@ export const SuperAdminPanel: React.FC<SuperAdminProps> = ({ onLogout, user }) =
                   </thead>
                   <tbody>
                     {auditLogs.map((log) => (
-                      <tr key={log.id} className="border-b border-white/10 hover:bg-white/5">
+                      <tr key={log.id} className="border-b border-white/10 hover:bg-white/10 transition-colors cursor-pointer">
                         <td className="p-4 text-xs font-bold text-white">{log.time}</td>
                         <td className="p-4">
                           <span className="px-2 py-1 text-[10px] font-bold uppercase rounded bg-[#2E1055]/20 text-white border border-[#EEEAFE]">
@@ -763,7 +781,7 @@ export const SuperAdminPanel: React.FC<SuperAdminProps> = ({ onLogout, user }) =
                           </span>
                         </td>
                         <td className="p-4 text-sm font-medium text-white/70">{log.resource}</td>
-                        <td className="p-4 text-xs text-white/40 font-mono">{log.ip}</td>
+                        <td className="p-4 text-xs text-white/60 font-mono">{log.ip}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -779,8 +797,8 @@ export const SuperAdminPanel: React.FC<SuperAdminProps> = ({ onLogout, user }) =
           <div className="fixed inset-0 z-[100] flex items-center justify-center bg-gray-900/40 backdrop-blur-sm animate-in fade-in">
             <div className="bg-[#120524] rounded-[24px] w-full max-w-md p-8 shadow-2xl animate-in zoom-in-95">
               <h3 className="text-xl font-bold text-white mb-2">Register New Clinic</h3>
-              <p className="text-sm text-white/40 mb-6">Create a new tenant workspace and invite the owner.</p>
-              
+              <p className="text-sm text-white/60 mb-6">Create a new tenant workspace and invite the owner.</p>
+
               {inviteMsg && (
                 <div className={`p-3 mb-4 rounded-2xl text-sm font-bold ${inviteMsg.includes('✅') ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700'}`}>
                   {inviteMsg}
@@ -789,24 +807,24 @@ export const SuperAdminPanel: React.FC<SuperAdminProps> = ({ onLogout, user }) =
 
               <form onSubmit={handleInvite} className="space-y-4">
                 <div>
-                  <label className="block text-xs font-bold text-white/40 uppercase mb-1">Clinic Name</label>
-                  <input required type="text" value={inviteForm.clinic_name} onChange={e => setInviteForm({...inviteForm, clinic_name: e.target.value})} className="w-full border border-white/10 rounded-2xl px-4 py-3 text-sm focus:outline-none focus:border-[#2E1055] bg-white/5" placeholder="e.g. City Heart Clinic" />
+                  <label className="block text-xs font-bold text-white/60 uppercase mb-1">Clinic Name</label>
+                  <input required type="text" value={inviteForm.clinic_name} onChange={e => setInviteForm({ ...inviteForm, clinic_name: e.target.value })} className="w-full border border-white/10 rounded-2xl px-4 py-3 text-sm focus:outline-none focus:border-[#2E1055] bg-white/5" placeholder="e.g. City Heart Clinic" />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-white/40 uppercase mb-1">Owner Name</label>
-                  <input required type="text" value={inviteForm.full_name} onChange={e => setInviteForm({...inviteForm, full_name: e.target.value})} className="w-full border border-white/10 rounded-2xl px-4 py-3 text-sm focus:outline-none focus:border-[#2E1055] bg-white/5" placeholder="Dr. John Doe" />
+                  <label className="block text-xs font-bold text-white/60 uppercase mb-1">Owner Name</label>
+                  <input required type="text" value={inviteForm.full_name} onChange={e => setInviteForm({ ...inviteForm, full_name: e.target.value })} className="w-full border border-white/10 rounded-2xl px-4 py-3 text-sm focus:outline-none focus:border-[#2E1055] bg-white/5" placeholder="Dr. John Doe" />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-white/40 uppercase mb-1">Owner Email</label>
-                  <input required type="email" value={inviteForm.email} onChange={e => setInviteForm({...inviteForm, email: e.target.value})} className="w-full border border-white/10 rounded-2xl px-4 py-3 text-sm focus:outline-none focus:border-[#2E1055] bg-white/5" placeholder="doctor@clinic.com" />
+                  <label className="block text-xs font-bold text-white/60 uppercase mb-1">Owner Email</label>
+                  <input required type="email" value={inviteForm.email} onChange={e => setInviteForm({ ...inviteForm, email: e.target.value })} className="w-full border border-white/10 rounded-2xl px-4 py-3 text-sm focus:outline-none focus:border-[#2E1055] bg-white/5" placeholder="doctor@clinic.com" />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-white/40 uppercase mb-1">Temporary Password</label>
-                  <input required type="text" value={inviteForm.temp_password} onChange={e => setInviteForm({...inviteForm, temp_password: e.target.value})} className="w-full border border-white/10 rounded-2xl px-4 py-3 text-sm focus:outline-none focus:border-[#2E1055] bg-white/5" placeholder="e.g. Clinic@2026" />
+                  <label className="block text-xs font-bold text-white/60 uppercase mb-1">Temporary Password</label>
+                  <input required type="text" value={inviteForm.temp_password} onChange={e => setInviteForm({ ...inviteForm, temp_password: e.target.value })} className="w-full border border-white/10 rounded-2xl px-4 py-3 text-sm focus:outline-none focus:border-[#2E1055] bg-white/5" placeholder="e.g. Clinic@2026" />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-white/40 uppercase mb-1">Subscription Plan</label>
-                  <select value={inviteForm.plan} onChange={e => setInviteForm({...inviteForm, plan: e.target.value})} className="w-full border border-white/10 rounded-2xl px-4 py-3 text-sm focus:outline-none focus:border-[#2E1055] bg-white/5">
+                  <label className="block text-xs font-bold text-white/60 uppercase mb-1">Subscription Plan</label>
+                  <select value={inviteForm.plan} onChange={e => setInviteForm({ ...inviteForm, plan: e.target.value })} className="w-full border border-white/10 rounded-2xl px-4 py-3 text-sm focus:outline-none focus:border-[#2E1055] bg-white/5">
                     <option value="Basic" className="bg-[#120524] text-white">Basic Plan</option>
                     <option value="Pro" className="bg-[#120524] text-white">Pro Plan (Most Popular)</option>
                     <option value="Enterprise" className="bg-[#120524] text-white">Enterprise Plan</option>

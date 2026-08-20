@@ -7,6 +7,7 @@ from app.models.connector import ConnectorModel
 from app.connectors.base_connector import BaseConnector
 from app.connectors.practice_fusion_connector import PracticeFusionConnector
 from app.core.encryption import decrypt_value
+from app.services.state_transition_engine import sste
 
 logger = logging.getLogger(__name__)
 
@@ -48,7 +49,7 @@ class ConnectorManager:
                 return {"status": "Success", "message": f"Simulated sync for {db_connector.name}"}
 
             # State Transition: Synchronizing
-            db_connector.status = "Synchronizing"
+            sste.execute_transition(db_connector, "Connector", "Synchronizing")
             db.commit()
 
             # Execute the canonical sync process
@@ -64,11 +65,11 @@ class ConnectorManager:
 
             # Process result and update lifecycle state
             if result.get("status") == "Success":
-                db_connector.status = "Healthy"
+                sste.execute_transition(db_connector, "Connector", "Healthy")
                 db_connector.last_sync = datetime.utcnow()
                 db_connector.latency_ms = int(result.get("duration_ms", 50))
             else:
-                db_connector.status = "Warning" # Transient failure state
+                sste.execute_transition(db_connector, "Connector", "Warning") # Transient failure state
 
             db.commit()
             return result
@@ -76,7 +77,7 @@ class ConnectorManager:
         except Exception as e:
             self.logger.error(f"Sync failed for connector {connector_id}: {e}")
             if 'db_connector' in locals() and db_connector:
-                db_connector.status = "Warning"
+                sste.execute_transition(db_connector, "Connector", "Warning")
                 db.commit()
             return {"status": "Failed", "error": str(e)}
         finally:
