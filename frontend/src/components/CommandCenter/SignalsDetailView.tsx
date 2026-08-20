@@ -18,7 +18,7 @@ export const SignalsDetailView: React.FC = () => {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [auditLogs, setAuditLogs] = useState<any[]>([]);
-  const [viewMode, setViewMode] = useState<'doctor' | 'developer'>('doctor');
+  const [viewMode, setViewMode] = useState<'doctor' | 'developer' | 'inspector'>('doctor');
   const [outcomeState, setOutcomeState] = useState<'PENDING' | 'CONFIRMED' | null>(null);
   const [resolutionState, setResolutionState] = useState<'UNRESOLVED' | 'RESOLVED' | null>(null);
 
@@ -695,7 +695,7 @@ export const SignalsDetailView: React.FC = () => {
               <div>
                 <div className="flex justify-between items-center mb-3">
                   <h5 className="text-[10px] font-extrabold text-white/50 uppercase tracking-widest">
-                    {viewMode === 'doctor' ? 'SYSTEM STATUS (CLINICAL VIEW)' : 'RAW SYSTEM LOGS (DEVELOPER VIEW)'}
+                    {viewMode === 'doctor' ? 'SYSTEM STATUS (CLINICAL VIEW)' : viewMode === 'inspector' ? 'EVIDENCE & LOGIC INSPECTOR (SESR-001/003)' : 'RAW SYSTEM LOGS (DEVELOPER VIEW)'}
                   </h5>
                   
                   <div className="flex flex-wrap items-center gap-2 sm:gap-3 w-full md:w-auto">
@@ -708,6 +708,14 @@ export const SignalsDetailView: React.FC = () => {
                         }`}
                       >
                         Clinical
+                      </button>
+                      <button 
+                        onClick={() => setViewMode('inspector')}
+                        className={`text-[9px] font-black px-2 py-1 rounded-[6px] transition-all cursor-pointer ${
+                          viewMode === 'inspector' ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30 shadow-sm' : 'text-white/50 hover:text-white'
+                        }`}
+                      >
+                        Evidence Inspector
                       </button>
                       <button 
                         onClick={() => setViewMode('developer')}
@@ -763,6 +771,22 @@ export const SignalsDetailView: React.FC = () => {
                         oauth_client_id: pf-oauth-client-88123-prod • scope: patient/*.read appointment/*.write
                       </p>
                     </div>
+                  </div>
+                ) : viewMode === 'inspector' ? (
+                  <div className="bg-[#120524] rounded-[16px] p-4 text-[11px] font-mono text-amber-400 overflow-x-auto max-h-48 custom-scrollbar border border-amber-500/30">
+                    <pre>{JSON.stringify({
+                      decision_context_id: `ctx-${selectedSignal.id}`,
+                      evidence_snapshot: getSimulatedRawPayload(selectedSignal),
+                      rule_evaluation: {
+                        evaluated_at: selectedSignal.timestamp,
+                        policy_version: "v1.2.0-stable",
+                        rules: [
+                          { rule_id: "RULE-001", matched: true, action: "Require Approval" },
+                          { rule_id: "RULE-002", matched: false, action: "Auto-Discard" }
+                        ],
+                        final_decision: selectedSignal.recommended_action || "Pending"
+                      }
+                    }, null, 2)}</pre>
                   </div>
                 ) : (
                   <div className="bg-[#0F172A] rounded-[16px] p-4 text-[11px] font-mono text-[#38BDF8] overflow-x-auto max-h-48 custom-scrollbar border border-slate-800">

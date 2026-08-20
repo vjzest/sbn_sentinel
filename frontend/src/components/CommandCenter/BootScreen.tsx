@@ -48,7 +48,7 @@ export const BootScreen: React.FC<BootScreenProps> = ({ onComplete }) => {
         </div>
 
         <h2 className="text-xl font-bold tracking-[0.15em] uppercase text-slate-100 mb-2">SBN SENTINEL V1</h2>
-        <p className="text-[10px] text-slate-400 tracking-widest uppercase mb-8">System Boot Experience Sequence</p>
+        <p className="text-[10px] text-slate-300 tracking-widest uppercase mb-8">System Boot Experience Sequence</p>
 
         {/* Diagnostic Logs Panel */}
         <div className="w-full bg-[#121B2E] border border-slate-800 rounded-[20px] p-6 shadow-2xl space-y-3 min-h-[220px]">
@@ -81,7 +81,7 @@ export const BootScreen: React.FC<BootScreenProps> = ({ onComplete }) => {
 
       {/* Signature Bottom Bar (Founded by Iftikhar Ali Khan) */}
       <div className="absolute bottom-10 left-0 right-0 text-center">
-        <p className="text-[10px] tracking-[0.25em] text-slate-400 uppercase font-bold">
+        <p className="text-[10px] tracking-[0.25em] text-slate-300 uppercase font-bold">
           Founded by <span className="text-[#A78BFA] font-extrabold drop-shadow-[0_0_12px_rgba(167,139,250,0.5)]">Iftikhar Ali Khan</span>
         </p>
         <p className="text-[9px] text-slate-500 mt-1">SBN Sentinel Command Center V1.0</p>

@@ -11,6 +11,7 @@ export const UserProfileView = () => {
     clinic: 'Sentinel Main Hub'
   });
   
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   React.useEffect(() => {
     const userStr = localStorage.getItem('user');
     if (userStr) {
@@ -25,7 +26,7 @@ export const UserProfileView = () => {
           role: user.role || 'Global Admin',
           clinic: user.full_name?.includes('-') ? user.full_name.split('-')[0].trim() : 'Sentinel Main Hub'
         }));
-      } catch(e) {}
+      } catch (_) {}
     }
   }, []);
   

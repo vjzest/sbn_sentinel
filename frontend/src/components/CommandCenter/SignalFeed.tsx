@@ -90,7 +90,7 @@ export const SignalFeed: React.FC<SignalFeedProps> = ({ setActiveTab }) => {
         </h3>
         
         <div className="flex items-center gap-2">
-          <span className={`text-[10px] font-extrabold uppercase tracking-wider ${autopilot ? 'text-[#2E1055] animate-pulse' : 'text-slate-400'}`}>
+          <span className={`text-[10px] font-extrabold uppercase tracking-wider ${autopilot ? 'text-[#2E1055] animate-pulse' : 'text-slate-300'}`}>
             {autopilot ? '⚡ Autopilot' : 'Autopilot'}
           </span>
           <button 

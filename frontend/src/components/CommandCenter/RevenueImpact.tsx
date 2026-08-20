@@ -44,21 +44,21 @@ export const RevenueImpact: React.FC<RevenueImpactProps> = ({ setActiveTab }) =>
       <div className="grid grid-cols-3 gap-3 mb-6 relative z-10">
         {/* Prevented Loss */}
         <div className="bg-[#0F172A]/40 border border-emerald-500/15 p-3 rounded-[20px] transition-all duration-300 hover:-translate-y-1 hover:border-emerald-500/30 hover:bg-emerald-950/10 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)] cursor-default group/card">
-          <p className="text-[9px] text-slate-400 uppercase tracking-widest font-extrabold mb-2">Prevented Loss</p>
+          <p className="text-[9px] text-slate-300 uppercase tracking-widest font-extrabold mb-2">Prevented Loss</p>
           <p className="text-xl font-black text-[#10B981] mb-1 drop-shadow-[0_0_10px_rgba(16,185,129,0.2)]">+${preventedLoss.toLocaleString()}</p>
           <p className="text-[9px] font-bold text-[#10B981] flex items-center gap-1"><TrendingUp className="w-3 h-3 animate-pulse" /> 18% vs yesterday</p>
         </div>
 
         {/* At Risk Today */}
         <div className="bg-[#0F172A]/40 border border-rose-500/15 p-3 rounded-[20px] transition-all duration-300 hover:-translate-y-1 hover:border-rose-500/30 hover:bg-rose-950/10 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)] cursor-default group/card">
-          <p className="text-[9px] text-slate-400 uppercase tracking-widest font-extrabold mb-2">At Risk Today</p>
+          <p className="text-[9px] text-slate-300 uppercase tracking-widest font-extrabold mb-2">At Risk Today</p>
           <p className="text-xl font-black text-[#EF4444] mb-1 drop-shadow-[0_0_10px_rgba(239,68,68,0.2)]">-${atRisk.toLocaleString()}</p>
           <p className="text-[9px] font-bold text-[#EF4444] flex items-center gap-1"><AlertCircle className="w-3 h-3" /> 5% vs yesterday</p>
         </div>
 
         {/* Optimization */}
         <div className="bg-[#0F172A]/40 border border-[#EEEAFE]0/15 p-3 rounded-[20px] transition-all duration-300 hover:-translate-y-1 hover:border-white/30 hover:bg-indigo-950/10 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)] cursor-default group/card">
-          <p className="text-[9px] text-slate-400 uppercase tracking-widest font-extrabold mb-2">Optimization</p>
+          <p className="text-[9px] text-slate-300 uppercase tracking-widest font-extrabold mb-2">Optimization</p>
           <p className="text-xl font-black text-[#6366F1] mb-1 drop-shadow-[0_0_10px_rgba(99,102,241,0.2)]">{stats.actionsTaken > 0 ? Math.min(99.9, 50 + (stats.actionsTaken) * 0.5).toFixed(1) : "0.0"}%</p>
           <p className="text-[9px] font-bold text-[#10B981] flex items-center gap-1"><CheckCircle className="w-3 h-3" /> {(stats.actionsTaken > 0 ? 7 : 0)}% vs yesterday</p>
         </div>
@@ -66,7 +66,7 @@ export const RevenueImpact: React.FC<RevenueImpactProps> = ({ setActiveTab }) =>
 
       <div className="flex-1 flex flex-col relative z-10 bg-[#070B13] border border-white/5 rounded-[24px] p-4">
         <div className="flex justify-between items-center mb-2">
-          <h4 className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">Revenue Trend (This Week)</h4>
+          <h4 className="text-[10px] font-extrabold text-slate-300 uppercase tracking-widest">Revenue Trend (This Week)</h4>
           <span className="flex items-center gap-1 text-[10px] font-bold text-slate-300 border border-white/10 bg-white/5 hover:bg-white/10 px-2 py-1 rounded-[8px] cursor-pointer transition-colors">
             7 Days <ChevronDown className="w-3 h-3" />
           </span>

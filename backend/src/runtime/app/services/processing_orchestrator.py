@@ -44,6 +44,7 @@ from app.core.exceptions import (
     SentinelError, InputValidationError, ConnectorError, 
     DependencyError, TimeoutError, InvalidResponseError, PersistenceError
 )
+from app.services.state_transition_engine import sste
 
 logger = logging.getLogger(__name__)
 
@@ -97,8 +98,8 @@ class ProcessingOrchestrator:
                 raw_payload=raw_payload,
                 state="Queued",
                 received_at=datetime.utcnow(),
-                initiated_by=initiated_by,
             )
+            sste.execute_transition(event, "OperationalEvent", "Queued")
             db.add(event)
             db.commit()
             db.refresh(event)
@@ -123,7 +124,7 @@ class ProcessingOrchestrator:
                 self.logger.error(f"[SES-009] Cannot process background event {event_id}, not found in DB.")
                 return
 
-            event.state = "Processing"
+            sste.execute_transition(event, "OperationalEvent", "Processing")
             db.commit()
             
             # Run the pipeline
@@ -186,7 +187,7 @@ class ProcessingOrchestrator:
             event = self._layer10_publish(event, db)
 
             # Mark Completed
-            event.state = "Completed"
+            sste.execute_transition(event, "OperationalEvent", "Completed")
             event.completed_at = datetime.utcnow()
             total_duration = event.total_duration_ms()
             db.commit()
@@ -670,7 +671,8 @@ class ProcessingOrchestrator:
 
         if not is_transient or severity == "Critical" or event.retry_count >= event.max_retries:
             # SES-009: Isolate failure. Use "Degraded" if Warning, else "Failed"
-            event.state = "Degraded" if severity == "Warning" else "Failed"
+            new_state = "Degraded" if severity == "Warning" else "Failed"
+            sste.execute_transition(event, "OperationalEvent", new_state)
             event.failed_at = datetime.utcnow()
             resolution = "Administrative Intervention Required" if severity == "Critical" else ("Degraded - Feature Unavailable" if severity == "Warning" else "Failed - No Recovery")
             self.logger.error(
@@ -678,7 +680,7 @@ class ProcessingOrchestrator:
                 f"Cat={category} Sev={severity} Retries={event.retry_count}: {error_str}"
             )
         else:
-            event.state = "Retrying"
+            sste.execute_transition(event, "OperationalEvent", "Retrying")
             resolution = "Retrying - Backoff initiated"
             backoff_seconds = min(2 ** event.retry_count, 10) # max 10s synchronous backoff
             self.logger.warning(

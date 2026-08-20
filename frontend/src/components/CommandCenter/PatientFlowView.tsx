@@ -1054,7 +1054,7 @@ export const PatientFlowView: React.FC = () => {
                         });
                         window.dispatchEvent(new CustomEvent('show-sentinel-toast', { detail: { message: `🗑️ ${roomName} removed from layout.`, type: 'info' } }));
                       }}
-                      className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 text-white/40 hover:text-rose-400 text-xs font-bold transition-opacity p-1"
+                      className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 text-white/60 hover:text-rose-400 text-xs font-bold transition-opacity p-1"
                       title="Delete Room"
                     >
                       ✕
@@ -1247,7 +1247,7 @@ export const PatientFlowView: React.FC = () => {
                         placeholder="e.g. Aetna, Blue Cross"
                         value={providerName}
                         onChange={(e) => setProviderName(e.target.value)}
-                        className="w-full bg-[#180A2E] border border-white/20 rounded-[16px] py-2.5 px-3 text-xs font-bold text-white placeholder:text-white/40 outline-none focus:border-blue-500 transition-all"
+                        className="w-full bg-[#180A2E] border border-white/20 rounded-[16px] py-2.5 px-3 text-xs font-bold text-white placeholder:text-white/60 outline-none focus:border-blue-500 transition-all"
                         required
                       />
                     </div>
@@ -1258,7 +1258,7 @@ export const PatientFlowView: React.FC = () => {
                         placeholder="e.g. MEM890123"
                         value={memberId}
                         onChange={(e) => setMemberId(e.target.value)}
-                        className="w-full bg-[#180A2E] border border-white/20 rounded-[16px] py-2.5 px-3 text-xs font-bold text-white placeholder:text-white/40 outline-none focus:border-blue-500 transition-all"
+                        className="w-full bg-[#180A2E] border border-white/20 rounded-[16px] py-2.5 px-3 text-xs font-bold text-white placeholder:text-white/60 outline-none focus:border-blue-500 transition-all"
                         required
                       />
                     </div>
@@ -1272,7 +1272,7 @@ export const PatientFlowView: React.FC = () => {
                         placeholder="e.g. GRP44910"
                         value={groupNumber}
                         onChange={(e) => setGroupNumber(e.target.value)}
-                        className="w-full bg-[#180A2E] border border-white/20 rounded-[16px] py-2.5 px-3 text-xs font-bold text-white placeholder:text-white/40 outline-none focus:border-blue-500 transition-all"
+                        className="w-full bg-[#180A2E] border border-white/20 rounded-[16px] py-2.5 px-3 text-xs font-bold text-white placeholder:text-white/60 outline-none focus:border-blue-500 transition-all"
                       />
                     </div>
                     <div>
@@ -1282,7 +1282,7 @@ export const PatientFlowView: React.FC = () => {
                         placeholder="e.g. PYR9910"
                         value={payerId}
                         onChange={(e) => setPayerId(e.target.value)}
-                        className="w-full bg-[#180A2E] border border-white/20 rounded-[16px] py-2.5 px-3 text-xs font-bold text-white placeholder:text-white/40 outline-none focus:border-blue-500 transition-all"
+                        className="w-full bg-[#180A2E] border border-white/20 rounded-[16px] py-2.5 px-3 text-xs font-bold text-white placeholder:text-white/60 outline-none focus:border-blue-500 transition-all"
                       />
                     </div>
                   </div>
@@ -1766,7 +1766,7 @@ export const PatientFlowView: React.FC = () => {
                                         onChange={(e) => setSoapS(e.target.value)}
                                         rows={2}
                                         placeholder="Patient complaints, feelings, or symptom descriptions..."
-                                        className="w-full bg-[#180A2E] border border-white/20 text-xs font-bold text-white placeholder:text-white/40 rounded-[10px] px-3 py-2 outline-none focus:border-blue-500 transition-all resize-none"
+                                        className="w-full bg-[#180A2E] border border-white/20 text-xs font-bold text-white placeholder:text-white/60 rounded-[10px] px-3 py-2 outline-none focus:border-blue-500 transition-all resize-none"
                                       />
                                     </div>
 
@@ -1783,7 +1783,7 @@ export const PatientFlowView: React.FC = () => {
                                         onChange={(e) => setSoapO(e.target.value)}
                                         rows={2}
                                         placeholder="Measurable findings, physical exam observations, BP..."
-                                        className="w-full bg-[#180A2E] border border-white/20 text-xs font-semibold text-white placeholder:text-white/40 rounded-[10px] px-3 py-2 outline-none focus:border-emerald-500 transition-all resize-none"
+                                        className="w-full bg-[#180A2E] border border-white/20 text-xs font-semibold text-white placeholder:text-white/60 rounded-[10px] px-3 py-2 outline-none focus:border-emerald-500 transition-all resize-none"
                                       />
                                     </div>
 
@@ -1817,7 +1817,7 @@ export const PatientFlowView: React.FC = () => {
                                         onChange={(e) => setSoapP(e.target.value)}
                                         rows={2}
                                         placeholder="Prescription changes, follow-up timelines, referrals..."
-                                        className="w-full bg-[#180A2E] border border-white/20 text-xs font-semibold text-white placeholder:text-white/40 rounded-[10px] px-3 py-2 outline-none focus:border-purple-500 transition-all resize-none"
+                                        className="w-full bg-[#180A2E] border border-white/20 text-xs font-semibold text-white placeholder:text-white/60 rounded-[10px] px-3 py-2 outline-none focus:border-purple-500 transition-all resize-none"
                                       />
                                     </div>
                                   </div>
@@ -1834,7 +1834,7 @@ export const PatientFlowView: React.FC = () => {
                                       value={editingDiagnosis}
                                       onChange={(e) => setEditingDiagnosis(e.target.value)}
                                       placeholder="e.g. I10 (Essential Hypertension)"
-                                      className="w-full bg-[#180A2E] border border-white/20 text-xs font-bold text-white placeholder:text-white/40 rounded-[10px] px-3 py-2 outline-none focus:border-blue-500 transition-all"
+                                      className="w-full bg-[#180A2E] border border-white/20 text-xs font-bold text-white placeholder:text-white/60 rounded-[10px] px-3 py-2 outline-none focus:border-blue-500 transition-all"
                                     />
                                   </div>
 
@@ -1845,7 +1845,7 @@ export const PatientFlowView: React.FC = () => {
                                       onChange={(e) => setEditingMedications(e.target.value)}
                                       rows={4}
                                       placeholder="e.g. Lisinopril 10mg daily PO. Refills: 3"
-                                      className="w-full bg-[#180A2E] border border-white/20 text-xs font-semibold text-white placeholder:text-white/40 rounded-[10px] px-3 py-2 outline-none focus:border-blue-500 transition-all resize-none"
+                                      className="w-full bg-[#180A2E] border border-white/20 text-xs font-semibold text-white placeholder:text-white/60 rounded-[10px] px-3 py-2 outline-none focus:border-blue-500 transition-all resize-none"
                                     />
                                   </div>
                                 </div>

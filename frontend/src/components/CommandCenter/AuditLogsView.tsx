@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ClipboardList, Search, Filter, ShieldAlert } from 'lucide-react';
+import { ClipboardList, Search, Filter, ShieldAlert, Download } from 'lucide-react';
 import { fetchWithAuth } from '@/utils/fetchWithAuth';
 
 interface AuditLog {
@@ -107,13 +107,13 @@ export const AuditLogsView: React.FC = () => {
       <div className="bg-gradient-to-br from-[#2E1055] to-[#120524] border border-white/10 rounded-[24px] overflow-hidden p-6 shadow-[0_20px_50px_rgba(46,16,85,0.3)] text-white">
         <div className="flex flex-col md:flex-row gap-4 mb-6">
           <div className="flex-1 relative">
-            <Search className="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-white/40" />
+            <Search className="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-white/60" />
             <input 
               type="text" 
               placeholder="Search logs by user, action, or module..." 
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full bg-white/5 border border-white/10 rounded-[12px] py-2.5 pl-11 pr-4 text-sm font-medium text-white placeholder:text-white/40 outline-none focus:border-blue-500/50 transition-colors"
+              className="w-full bg-white/5 border border-white/10 rounded-[12px] py-2.5 pl-11 pr-4 text-sm font-medium text-white placeholder:text-white/60 outline-none focus:border-blue-500/50 transition-colors"
             />
           </div>
           <select
@@ -134,11 +134,11 @@ export const AuditLogsView: React.FC = () => {
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="border-b border-white/10 bg-white/[0.02]">
-                <th className="py-4 px-6 text-[10px] font-extrabold text-white/40 uppercase tracking-wider">Timestamp</th>
-                <th className="py-4 px-6 text-[10px] font-extrabold text-white/40 uppercase tracking-wider">User / System</th>
-                <th className="py-4 px-6 text-[10px] font-extrabold text-white/40 uppercase tracking-wider">Action Event</th>
-                <th className="py-4 px-6 text-[10px] font-extrabold text-white/40 uppercase tracking-wider">Module</th>
-                <th className="py-4 px-6 text-[10px] font-extrabold text-white/40 uppercase tracking-wider">Correlation ID</th>
+                <th className="py-4 px-6 text-[10px] font-extrabold text-white/60 uppercase tracking-wider">Timestamp</th>
+                <th className="py-4 px-6 text-[10px] font-extrabold text-white/60 uppercase tracking-wider">User / System</th>
+                <th className="py-4 px-6 text-[10px] font-extrabold text-white/60 uppercase tracking-wider">Action Event</th>
+                <th className="py-4 px-6 text-[10px] font-extrabold text-white/60 uppercase tracking-wider">Module</th>
+                <th className="py-4 px-6 text-[10px] font-extrabold text-white/60 uppercase tracking-wider">Correlation ID</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-white/10">

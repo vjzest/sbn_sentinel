@@ -42,6 +42,7 @@ export default function Dashboard() {
   const [isLoading, setIsLoading] = useState(true);
   const [isBooting, setIsBooting] = useState(true);
   const [activeTab, setActiveTab] = useState('dashboard');
+  const [activeContact, setActiveContact] = useState<string | null>(null);
   const [userRole, setUserRole] = useState('org_admin');
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [isDarkMode, setIsDarkMode] = useState(() => {
@@ -322,14 +323,14 @@ export default function Dashboard() {
           <div className="flex-1 overflow-y-auto custom-scrollbar px-4 py-6 space-y-8 bg-transparent">
 
             <div>
-              <p className="text-[9px] font-black text-white/40 uppercase tracking-[0.2em] mb-3 px-4">Dashboard</p>
+              <p className="text-[9px] font-black text-white/60 uppercase tracking-[0.2em] mb-3 px-4">Dashboard</p>
               <div className="space-y-1">
                 <SidebarItem icon={LayoutDashboard} label="Command Center" active={activeTab === 'dashboard'} onClick={() => setActiveTab('dashboard')} />
               </div>
             </div>
 
             <div>
-              <p className="text-[9px] font-black text-white/40 uppercase tracking-[0.2em] mb-3 px-4">Operations</p>
+              <p className="text-[9px] font-black text-white/60 uppercase tracking-[0.2em] mb-3 px-4">Operations</p>
               <div className="space-y-1">
                 {['org_admin', 'clinic_admin', 'ops_manager', 'practice_manager', 'staff'].includes(userRole) && (
                   <SidebarItem icon={Users} label="Patient Flow" active={activeTab === 'patient-flow'} onClick={() => { setActiveTab('patient-flow'); setIsMobileMenuOpen(false); }} />
@@ -343,7 +344,7 @@ export default function Dashboard() {
 
             {['org_admin', 'clinic_admin', 'practice_manager'].includes(userRole) && (
               <div>
-                <p className="text-[9px] font-black text-white/40 uppercase tracking-[0.2em] mb-3 px-4">Revenue</p>
+                <p className="text-[9px] font-black text-white/60 uppercase tracking-[0.2em] mb-3 px-4">Revenue</p>
                 <div className="space-y-1">
                   <SidebarItem icon={DollarSign} label="Revenue Risk" active={activeTab === 'revenue-reports'} onClick={() => { setActiveTab('revenue-reports'); setIsMobileMenuOpen(false); }} />
                 </div>
@@ -351,7 +352,7 @@ export default function Dashboard() {
             )}
 
             <div>
-              <p className="text-[9px] font-black text-white/40 uppercase tracking-[0.2em] mb-3 px-4">Reports & Insights</p>
+              <p className="text-[9px] font-black text-white/60 uppercase tracking-[0.2em] mb-3 px-4">Reports & Insights</p>
               <div className="space-y-1">
                 <SidebarItem icon={BrainCircuit} label="Intelligence Reports" active={activeTab === 'intelligence'} onClick={() => { setActiveTab('intelligence'); setIsMobileMenuOpen(false); }} />
                 <SidebarItem icon={Cpu} label="Signals History" active={activeTab === 'signals'} onClick={() => { setActiveTab('signals'); setIsMobileMenuOpen(false); }} />
@@ -360,7 +361,7 @@ export default function Dashboard() {
 
             {['super_admin', 'org_admin', 'clinic_admin'].includes(userRole) && (
               <div>
-                <p className="text-[9px] font-black text-white/40 uppercase tracking-[0.2em] mb-3 px-4">Administration</p>
+                <p className="text-[9px] font-black text-white/60 uppercase tracking-[0.2em] mb-3 px-4">Administration</p>
                 <div className="space-y-1">
                   <SidebarItem icon={Users} label="User Management" active={activeTab === 'settings-team'} onClick={() => { setActiveTab('settings-team'); setIsMobileMenuOpen(false); }} />
                   {['super_admin', 'org_admin', 'clinic_admin'].includes(userRole) && (
@@ -373,7 +374,7 @@ export default function Dashboard() {
 
             {['super_admin', 'org_admin', 'clinic_admin'].includes(userRole) && (
               <div>
-                <p className="text-[9px] font-black text-white/40 uppercase tracking-[0.2em] mb-3 px-4">Settings</p>
+                <p className="text-[9px] font-black text-white/60 uppercase tracking-[0.2em] mb-3 px-4">Settings</p>
                 <div className="space-y-1">
                   {['super_admin'].includes(userRole) && (
                     <SidebarItem icon={Building2} label="Organization Details" active={activeTab === 'settings-general'} onClick={() => { setActiveTab('settings-general'); setIsMobileMenuOpen(false); }} />
@@ -404,7 +405,7 @@ export default function Dashboard() {
               </button>
               <div className="flex items-center gap-2 md:gap-4 bg-white/5 border border-white/10 rounded-[14px] px-3 md:px-4 py-2 w-full max-w-[200px] md:max-w-96 shadow-inner">
                 <Search className="w-4 h-4 text-white/50 shrink-0" />
-                <input type="text" placeholder="Search..." className="bg-transparent border-none outline-none text-sm text-white w-full placeholder:text-white/40" />
+                <input type="text" placeholder="Search..." className="bg-transparent border-none outline-none text-sm text-white w-full placeholder:text-white/60" />
                 <div className="hidden md:flex items-center gap-1">
                   <span className="text-[10px] bg-white/10 text-white/50 px-1.5 py-0.5 rounded border border-white/10 font-mono">⌘</span>
                   <span className="text-[10px] bg-white/10 text-white/50 px-1.5 py-0.5 rounded border border-white/10 font-mono">K</span>
@@ -442,7 +443,7 @@ export default function Dashboard() {
                               <div className="min-w-0 flex-1">
                                 <p className="text-xs font-bold text-white truncate">{n.source} • {n.type}</p>
                                 <p className="text-xs text-white/70 font-medium mt-0.5 line-clamp-2">{n.message}</p>
-                                <p className="text-[10px] text-white/40 font-bold mt-1">{n.timestamp ? new Date(n.timestamp).toLocaleTimeString() : 'Live Stream'}</p>
+                                <p className="text-[10px] text-white/60 font-bold mt-1">{n.timestamp ? new Date(n.timestamp).toLocaleTimeString() : 'Live Stream'}</p>
                               </div>
                             </div>
                           ))
@@ -487,7 +488,7 @@ export default function Dashboard() {
                                 <p className="text-xs font-bold text-white truncate">{m.sender}</p>
                                 <p className="text-xs truncate mt-0.5 text-white/70">{m.text}</p>
                               </div>
-                              <span className="text-[9px] text-white/40">{m.time}</span>
+                              <span className="text-[9px] text-white/60">{m.time}</span>
                             </div>
                           ))
                         )}
@@ -934,7 +935,7 @@ export default function Dashboard() {
             {activeTab === 'schedule' && <ScheduleOptimizerView />}
             {activeTab === 'clinical-logs' && <ClinicalLogsView />}
             {activeTab === 'revenue-reports' && (['practice_manager', 'staff'].includes(userRole) ? <AccessDeniedView onReturn={() => setActiveTab('dashboard')} /> : <RevenueReportsView />)}
-            {activeTab === 'team-messaging' && <TeamMessagingView currentUser={currentUser} />}
+            {activeTab === 'team-messaging' && <TeamMessagingView currentUser={currentUser} activeContact={activeContact} onContactSelect={setActiveContact} />}
             {activeTab === 'audit-logs' && (['practice_manager', 'staff', 'ops_manager'].includes(userRole) ? <AccessDeniedView onReturn={() => setActiveTab('dashboard')} /> : <AuditLogsView />)}
             {activeTab.startsWith('settings-') && (
               (['practice_manager', 'staff', 'ops_manager'].includes(userRole) && ['settings-integrations', 'settings-clinics', 'settings-billing', 'settings-security', 'settings-team', 'settings-general'].includes(activeTab)) 
@@ -1078,7 +1079,7 @@ const SidebarItem = ({ icon: Icon, label, active, onClick, className = '' }: { i
     {active && (
       <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-6 bg-gradient-to-b from-[#2E1055] to-[#120524] rounded-r-full shadow-[0_0_8px_#2E1055]"></div>
     )}
-    <Icon className={`w-5 h-5 transition-transform duration-300 group-hover:scale-110 ${active ? 'text-white/70' : 'text-white/40 group-hover:text-[#475569]'}`} />
+    <Icon className={`w-5 h-5 transition-transform duration-300 group-hover:scale-110 ${active ? 'text-white/70' : 'text-white/60 group-hover:text-[#475569]'}`} />
     <span className="text-sm tracking-wide">{label}</span>
   </button>
 );

@@ -1,10 +1,45 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { fetchWithAuth } from '@/utils/fetchWithAuth';
 
 interface StatusIndicatorProps {
-  status: 'initializing' | 'healthy' | 'offline';
+  initialStatus?: 'initializing' | 'healthy' | 'degraded' | 'offline';
 }
 
-export const StatusIndicator: React.FC<StatusIndicatorProps> = ({ status }) => {
+export const StatusIndicator: React.FC<StatusIndicatorProps> = ({ initialStatus = 'initializing' }) => {
+  const [status, setStatus] = useState(initialStatus);
+
+  useEffect(() => {
+    let intervalId: NodeJS.Timeout;
+
+    const checkHealth = async () => {
+      try {
+        const res = await fetchWithAuth(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/health/verify`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data.status === 'Healthy') {
+            setStatus('healthy');
+          } else if (data.status === 'Degraded') {
+            setStatus('degraded');
+          } else {
+            setStatus('offline');
+          }
+        } else {
+          setStatus('offline');
+        }
+      } catch (err) {
+        setStatus('offline');
+      }
+    };
+
+    // Initial check
+    checkHealth();
+
+    // Poll every 10 seconds
+    intervalId = setInterval(checkHealth, 10000);
+
+    return () => clearInterval(intervalId);
+  }, []);
+
   return (
     <div className="inline-flex items-center gap-3 bg-black/40 px-6 py-3 rounded-full border border-white/5 shadow-inner">
       {status === 'initializing' && (
@@ -21,6 +56,13 @@ export const StatusIndicator: React.FC<StatusIndicatorProps> = ({ status }) => {
         <>
           <div className="w-3 h-3 rounded-full bg-emerald-500 shadow-[0_0_10px_#10B981]"></div>
           <span className="text-emerald-500 font-semibold tracking-wide">Healthy</span>
+        </>
+      )}
+
+      {status === 'degraded' && (
+        <>
+          <div className="w-3 h-3 rounded-full bg-amber-500 shadow-[0_0_10px_#F59E0B]"></div>
+          <span className="text-amber-500 font-semibold tracking-wide">Degraded</span>
         </>
       )}
 
