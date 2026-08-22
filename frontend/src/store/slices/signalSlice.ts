@@ -24,7 +24,7 @@ export interface SignalEvent {
   revenue_confidence?: string;
   operational_dependency?: string;
   ai_insight?: string;
-  status?: 'active' | 'acknowledged';
+  status?: 'active' | 'acknowledged' | 'expired' | 'superseded';
   correlation_id?: string;
 }
 
@@ -39,68 +39,16 @@ interface SignalState {
   };
 }
 
-const defaultInitialSignals: SignalEvent[] = [
-  {
-    id: "sig_101",
-    source: "PASME Engine",
-    type: "Patient No-Show Risk",
-    message: "High Risk No-Show Detected (89% Probability) for Vijay Maurya",
-    timestamp: new Date().toISOString(),
-    risk_level: "High",
-    problem: "Patient has 3 consecutive past missed appointments during rainy weather.",
-    reason: "Historical appointment patterns indicate scheduling vulnerability.",
-    business_impact: "$240 lost revenue slot & physician idle time.",
-    recommended_action: "Dispatch automated SMS confirmation & offer virtual telehealth slot.",
-    expected_outcome: "Recover 90% slot utilization.",
-    primary_context: "PASME Model Prediction",
-    revenue_risk_category: "No-Show Idle Time Loss",
-    estimated_financial_exposure: "$240.00",
-    status: "active"
-  },
-  {
-    id: "sig_102",
-    source: "Revenue Intelligence Engine",
-    type: "CPT Undercoding Detected",
-    message: "Potential $540 Undercoding Recovery Opportunity on Encounter enc_102",
-    timestamp: new Date(Date.now() - 15 * 60000).toISOString(),
-    risk_level: "Critical",
-    problem: "SOAP note documents complex multi-system evaluation but coded as 99213.",
-    reason: "Medical NLP detected 45-minute consultation & complex medical decision making.",
-    business_impact: "Losing $540 reimbursement per claim.",
-    recommended_action: "Coding review required — encounter may require verification against documented coding criteria.",
-    expected_outcome: "Immediate $540 revenue recovery.",
-    primary_context: "AI Medical Coding NLP",
-    revenue_risk_category: "Claim Undercoding",
-    estimated_financial_exposure: "$540.00",
-    status: "active"
-  },
-  {
-    id: "sig_103",
-    source: "EHR Connector Engine",
-    type: "Insurance Pre-Auth Alert",
-    message: "Pre-Authorization Required for Lumbago MRI Scan - Amitabh Bacchan",
-    timestamp: new Date(Date.now() - 45 * 60000).toISOString(),
-    risk_level: "Moderate",
-    problem: "BlueCross policy requires prior approval before Lumbar MRI scan.",
-    reason: "Rule SES-006 matched prior auth policy restriction.",
-    business_impact: "Claim denial risk if MRI performed without approval.",
-    recommended_action: "Submit electronic prior-authorization form via clearinghouse connector.",
-    expected_outcome: "Pre-auth approval granted within 2 hours.",
-    primary_context: "Payer Verification",
-    revenue_risk_category: "Prior Authorization Denial",
-    estimated_financial_exposure: "$1,200.00",
-    status: "active"
-  }
-];
+const defaultInitialSignals: SignalEvent[] = [];
 
 const initialState: SignalState = {
   events: defaultInitialSignals,
   isConnected: false,
   stats: {
-    activeSignals: 12,
-    patientFlow: 14,
-    criticalEvents: 3,
-    actionsTaken: 8,
+    activeSignals: 0,
+    patientFlow: 0,
+    criticalEvents: 0,
+    actionsTaken: 0,
   }
 };
 
@@ -168,11 +116,7 @@ const signalSlice = createSlice({
   extraReducers: (builder) => {
     builder.addCase(fetchHistoricalSignals.fulfilled, (state, action) => {
       if (action.payload && action.payload.length > 0) {
-        // Merge fetched signals, preferring them over default
-        const fetchedIds = new Set(action.payload.map(s => s.id));
-        const keptDefaults = state.events.filter(e => !fetchedIds.has(e.id) && e.id.startsWith("sig_"));
-        
-        state.events = [...action.payload, ...keptDefaults];
+        state.events = [...action.payload];
         
         // Recalculate stats
         state.stats.activeSignals = state.events.length;

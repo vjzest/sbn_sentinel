@@ -38,3 +38,9 @@ jobs:
         SECRET_KEY: "test-secret-key-for-ci"
       run: |
         pytest tests/unit/ -v -m unit
+
+    - name: SESR-001 Governance Testing
+      env:
+        SECRET_KEY: "test-secret-key-for-ci"
+      run: |
+        pytest tests/ -v -k "governance"

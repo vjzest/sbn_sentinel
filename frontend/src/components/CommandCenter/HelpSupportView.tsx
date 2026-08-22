@@ -41,14 +41,14 @@ export const HelpSupportView: React.FC = () => {
       {/* Quick Links Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {[
-          { title: 'Documentation', desc: 'Detailed guides on every feature.', icon: Book, color: 'text-blue-400', bg: 'bg-blue-500/20', hover: 'hover:border-[#BFDBFE]', action: 'Opening Sentinel Documentation Portal...' },
-          { title: 'API Reference', desc: 'Endpoints for custom integrations.', icon: FileText, color: 'text-emerald-400', bg: 'bg-emerald-500/20', hover: 'hover:border-[#A7F3D0]', action: 'Loading API Reference & Webhook Schemas...' },
-          { title: 'Community Forum', desc: 'Connect with other clinic admins.', icon: MessageCircle, color: 'text-orange-400', bg: 'bg-orange-500/20', hover: 'hover:border-[#FDE68A]', action: 'Redirecting to SBN Community Forum...' },
-          { title: 'Contact Support', desc: '24/7 enterprise technical support.', icon: Phone, color: 'text-purple-400', bg: 'bg-purple-500/20', hover: 'hover:border-[#DDD6FE]', action: 'Initiating Secure Support Chat...' },
+          { title: 'Documentation', desc: 'Detailed guides on every feature.', icon: Book, color: 'text-blue-400', bg: 'bg-blue-500/20', hover: 'hover:border-[#BFDBFE]', link: '/docs' },
+          { title: 'API Reference', desc: 'Endpoints for custom integrations.', icon: FileText, color: 'text-emerald-400', bg: 'bg-emerald-500/20', hover: 'hover:border-[#A7F3D0]', link: '/api-docs' },
+          { title: 'Community Forum', desc: 'Connect with other clinic admins.', icon: MessageCircle, color: 'text-orange-400', bg: 'bg-orange-500/20', hover: 'hover:border-[#FDE68A]', link: '/community' },
+          { title: 'Contact Support', desc: '24/7 enterprise technical support.', icon: Phone, color: 'text-purple-400', bg: 'bg-purple-500/20', hover: 'hover:border-[#DDD6FE]', link: '/support' },
         ].map((card, i) => (
           <div 
             key={i} 
-            onClick={() => window.dispatchEvent(new CustomEvent('show-sentinel-toast', { detail: { msg: card.action, type: 'info' } }))}
+            onClick={() => window.open(card.link, '_blank')}
             className={`bg-gradient-to-br from-[#2E1055] to-[#120524] border border-white/10 rounded-[24px] p-6 premium-shadow cursor-pointer transition-all ${card.hover} group`}
           >
              <div className={`w-12 h-12 ${card.bg} rounded-[14px] flex items-center justify-center mb-5 group-hover:scale-110 transition-transform`}>

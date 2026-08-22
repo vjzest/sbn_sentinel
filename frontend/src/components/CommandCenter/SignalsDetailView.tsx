@@ -116,19 +116,28 @@ export const SignalsDetailView: React.FC = () => {
       const user = userStr ? JSON.parse(userStr) : null;
       const userEmail = user?.email || "admin@sbnsentinel.com";
       
-      await fetchWithAuth(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/audit/`, {
+      const response = await fetchWithAuth(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/decisions/`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          user_email: userEmail,
-          action: `Approved Sentinel Action: ${selectedSignal.recommended_action || 'Acknowledged Event'}`,
-          resource: `Signal: ${selectedSignal.id}`,
-          ip_address: "127.0.0.1"
+          recommendation_id: selectedSignal.id,
+          decision_type: 'APPROVED',
+          reason: 'Clinician approved via UI'
         })
       });
       
-      await fetchAuditLogs();
+      if (!response.ok) {
+        throw new Error('Backend rejection');
+      }
 
+      await fetchAuditLogs();
+      
+      setIsDispatching(false);
+      setIsDispatched(true);
+      setOutcomeState('PENDING');
+      setResolutionState('UNRESOLVED');
+      dispatch(incrementActionsTaken());
+      
       // Add to Clinical Reminders in localStorage
       if (selectedSignal.recommended_action) {
         const saved = localStorage.getItem('clinicalReminders');
@@ -151,27 +160,14 @@ export const SignalsDetailView: React.FC = () => {
           };
           currentReminders.unshift(newReminder);
           localStorage.setItem('clinicalReminders', JSON.stringify(currentReminders));
-          // Dispatch custom event to notify page.tsx
           window.dispatchEvent(new Event('clinicalRemindersUpdated'));
         }
       }
     } catch (e) {
-      console.error("Failed to save audit log from triggerAction:", e);
-    }
-
-    setTimeout(() => {
+      console.error("Failed to approve decision:", e);
       setIsDispatching(false);
-      setIsDispatched(true);
-      setOutcomeState('PENDING');
-      setResolutionState('UNRESOLVED');
-      dispatch(incrementActionsTaken());
-
-      // Simulate SESR-007 Webhook Confirmation arriving asynchronously
-      setTimeout(() => {
-        setOutcomeState('CONFIRMED');
-        setResolutionState('RESOLVED');
-      }, 3000);
-    }, 1500);
+      // Could show error state here
+    }
   };
 
   // Generate simulated Practice Fusion / twilio raw payload details for audit
@@ -808,18 +804,28 @@ export const SignalsDetailView: React.FC = () => {
               {selectedSignal.recommended_action && (
                 <button
                   onClick={triggerAction}
-                  disabled={isDispatching || isDispatched}
+                  disabled={isDispatching || isDispatched || selectedSignal.status === 'expired' || selectedSignal.status === 'superseded'}
                   className={`flex items-center gap-2 font-bold text-xs px-5 py-2.5 rounded-[16px] premium-shadow transition-all ${
                     isDispatched 
                       ? 'bg-emerald-600 text-white cursor-default' 
-                      : isDispatching 
-                        ? 'bg-[#120524] text-white opacity-50 cursor-wait' 
-                        : 'bg-emerald-600 hover:bg-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.4)] text-white cursor-pointer hover:scale-105 active:scale-95'
+                      : (selectedSignal.status === 'expired' || selectedSignal.status === 'superseded')
+                        ? 'bg-[#120524] text-white/50 cursor-not-allowed border border-white/10'
+                        : isDispatching 
+                          ? 'bg-[#120524] text-white opacity-50 cursor-wait' 
+                          : 'bg-emerald-600 hover:bg-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.4)] text-white cursor-pointer hover:scale-105 active:scale-95'
                   }`}
                 >
                   {isDispatched ? (
                     <>
                       <CheckCircle2 className="w-4 h-4" /> Action Dispatched
+                    </>
+                  ) : selectedSignal.status === 'expired' ? (
+                    <>
+                      <AlertCircle className="w-4 h-4" /> Recommendation Expired
+                    </>
+                  ) : selectedSignal.status === 'superseded' ? (
+                    <>
+                      <AlertCircle className="w-4 h-4" /> Recommendation Superseded
                     </>
                   ) : isDispatching ? (
                     <>

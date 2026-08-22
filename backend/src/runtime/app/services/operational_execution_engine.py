@@ -10,6 +10,7 @@ from app.services.governance_registry import (
     OperationalActionRecord, ExecutionAttemptRecord, DecisionStatus,
     ContinuityViolationError
 )
+from app.core.config import settings
 
 logger = logging.getLogger(__name__)
 
@@ -40,6 +41,10 @@ class OperationalExecutionEngine(BaseService):
             
         if decision.status != DecisionStatus.RECORDED:
             return {"status": "ERROR", "message": f"Decision is not in a valid state for action creation. Status: {decision.status.value}"}
+            
+        from app.services.governance_registry import DecisionType
+        if decision.decision_type in [DecisionType.REJECTED, DecisionType.RETURNED_FOR_REVIEW]:
+            return {"status": "ERROR", "message": f"Cannot create action for decision type: {decision.decision_type.value}"}
             
         try:
             action_type = ActionType(action_type_str.upper())
@@ -128,7 +133,12 @@ class OperationalExecutionEngine(BaseService):
         logger.info(f"[{self.service_name}] Executing Attempt {attempt_number} for Action {action_id}")
         
         # MOCK CONNECTOR EXECUTION (AEX-020 to AEX-024)
-        mock_result = self._mock_connector_call(action)
+        if getattr(settings, "SYNTHETIC_TEST_ENABLED", False):
+            mock_result = self._mock_connector_call(action)
+        else:
+            # In V1 production, real connector logic goes here.
+            # If not implemented, it fails securely rather than spoofing success.
+            mock_result = {"result": ExecutionResult.FAILED, "error": "NOT_IMPLEMENTED", "message": "Real connector not implemented for V1 production."}
         
         # Record Attempt
         attempt = ExecutionAttemptRecord(
@@ -149,12 +159,12 @@ class OperationalExecutionEngine(BaseService):
         elif mock_result["result"] == ExecutionResult.FAILED:
             new_status = ActionStatus.FAILED
         else: # UNKNOWN
-            new_status = ActionStatus.FAILED  # Or a specialized PENDING_RECONCILIATION state
+            new_status = ActionStatus.FAILED  # To be reconciled later
             
         governance_registry.update_operational_action(action_id, new_status, mock_result["result"])
         
         return {
-            "status": "COMPLETED",
+            "status": new_status.value,
             "execution_result": mock_result["result"].value,
             "attempt_id": attempt_id,
             "message": mock_result.get("message", "Execution finished.")

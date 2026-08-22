@@ -119,9 +119,14 @@ class OperationalOutcomeEngine(BaseService):
         closed_at = None
         
         if confirmation_state == OutcomeConfirmationState.CONFIRMED:
-            resolution_state = OutcomeResolutionState.RESOLVED
-            closure_reason = "CONFIRMED_MATCH"
-            closed_at = datetime.utcnow()
+            if action.action_type == ActionType.CREATE_FOLLOWUP_TASK:
+                resolution_state = OutcomeResolutionState.FOLLOW_UP_REQUIRED
+                closure_reason = None
+                closed_at = None
+            else:
+                resolution_state = OutcomeResolutionState.RESOLVED
+                closure_reason = "CONFIRMED_MATCH"
+                closed_at = datetime.utcnow()
         elif confirmation_state == OutcomeConfirmationState.MISMATCH:
             resolution_state = OutcomeResolutionState.UNRESOLVED
             closure_reason = "CONFIRMED_MISMATCH"
