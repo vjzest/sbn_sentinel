@@ -1,4 +1,4 @@
-from datetime import timedelta
+from datetime import timedelta, datetime
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from app.db.database import get_db
@@ -16,7 +16,6 @@ class RegisterInitiateRequest(BaseModel):
     email: EmailStr
     password: str
     full_name: str
-    role: str = "clinic_admin"
 
 @router.post("/register/initiate")
 def initiate_registration(user_in: RegisterInitiateRequest, db: Session = Depends(get_db)):
@@ -49,7 +48,6 @@ class RegisterVerifyRequest(BaseModel):
     email: EmailStr
     password: str
     full_name: str
-    role: str = "clinic_admin"
     otp: str
 
 @router.post("/register")
@@ -66,14 +64,15 @@ def register_user(user_in: RegisterVerifyRequest, db: Session = Depends(get_db))
         OTPModel.is_used == False
     ).order_by(OTPModel.created_at.desc()).first()
     
-    if not otp_record:
+    if not otp_record or datetime.utcnow() - otp_record.created_at > timedelta(minutes=15):
         raise HTTPException(status_code=400, detail="Invalid or expired OTP")
         
+    from app.models.user import UserRole
     user = User(
         email=user_in.email,
         hashed_password=get_password_hash(user_in.password),
         full_name=user_in.full_name,
-        role=user_in.role
+        role=UserRole.UNASSIGNED.value
     )
     db.add(user)
     otp_record.is_used = True
@@ -150,7 +149,7 @@ def reset_password(payload: ResetPasswordRequest, db: Session = Depends(get_db))
         OTPModel.is_used == False
     ).order_by(OTPModel.created_at.desc()).first()
     
-    if not otp_record:
+    if not otp_record or datetime.utcnow() - otp_record.created_at > timedelta(minutes=15):
         raise HTTPException(status_code=400, detail="Invalid or expired OTP")
         
     user = db.query(User).filter(User.email == payload.email).first()
@@ -172,7 +171,7 @@ def accept_invite(payload: ResetPasswordRequest, db: Session = Depends(get_db)):
         OTPModel.is_used == False
     ).order_by(OTPModel.created_at.desc()).first()
     
-    if not otp_record:
+    if not otp_record or datetime.utcnow() - otp_record.created_at > timedelta(minutes=15):
         raise HTTPException(status_code=400, detail="Invalid or expired OTP")
         
     user = db.query(User).filter(User.email == payload.email).first()

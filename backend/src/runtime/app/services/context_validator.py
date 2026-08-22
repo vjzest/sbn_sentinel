@@ -41,13 +41,36 @@ class ContextValidator:
         return context_package
 
     def _detect_missing(self, evidence: list) -> list:
-        # Stub logic
-        return []
+        # P0-01: Actually detect missing core entities based on available facts.
+        found_entities = {ev["canonical_entity"] if isinstance(ev, dict) else getattr(ev, "canonical_entity", None) for ev in evidence}
+        missing = []
+        if "Appointment" not in found_entities and "OperationalEvent" not in found_entities:
+            missing.append("No primary contextual entity (Appointment/Event) found in evidence.")
+        return missing
 
     def _detect_conflicts(self, evidence: list) -> list:
-        # Stub logic
-        return []
+        # P0-01: Detect if two evidence records assert conflicting facts for the same key.
+        facts = {}
+        conflicts = []
+        for ev in evidence:
+            key = ev["fact_key"] if isinstance(ev, dict) else getattr(ev, "fact_key", None)
+            val = ev["fact_value"] if isinstance(ev, dict) else getattr(ev, "fact_value", None)
+            if key and val:
+                if key in facts and facts[key] != val:
+                    conflicts.append(f"Conflict on {key}: {facts[key]} vs {val}")
+                facts[key] = val
+        return conflicts
 
     def _evaluate_freshness(self, evidence: list) -> dict:
-        # Stub logic
-        return {"is_stale": False}
+        from datetime import datetime, timedelta
+        # P0-01: Detect stale evidence (older than 24 hours).
+        is_stale = False
+        stale_records = []
+        now = datetime.utcnow()
+        for ev in evidence:
+            ts = ev.get("retrieval_timestamp") if isinstance(ev, dict) else getattr(ev, "retrieval_timestamp", None)
+            if ts and isinstance(ts, datetime):
+                if (now - ts) > timedelta(hours=24):
+                    is_stale = True
+                    stale_records.append(str(ev.get("evidence_id") if isinstance(ev, dict) else getattr(ev, "evidence_id", "Unknown")))
+        return {"is_stale": is_stale, "stale_records": stale_records}

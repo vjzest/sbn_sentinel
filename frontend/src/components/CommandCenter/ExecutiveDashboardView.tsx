@@ -45,6 +45,21 @@ export const ExecutiveDashboardView: React.FC<Props> = ({ setActiveTab }) => {
     return true;
   });
 
+  if (!isConnected) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] animate-in fade-in duration-500">
+        <Server className="w-16 h-16 text-rose-500 mb-4 animate-pulse" />
+        <h2 className="text-2xl font-black text-white mb-2">Backend Connection Required</h2>
+        <p className="text-white/70 max-w-md text-center mb-6">
+          The Executive Dashboard is gated pending backend readiness. Please ensure the backend is running and the WebSocket connection is established.
+        </p>
+        <div className="bg-rose-500/10 border border-rose-500/30 text-rose-400 px-4 py-2 rounded-[12px] text-sm font-bold flex items-center gap-2">
+          <AlertCircle className="w-4 h-4" /> System Offline
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-[1600px] mx-auto space-y-6 animate-in fade-in duration-500">
       

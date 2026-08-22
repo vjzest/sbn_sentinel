@@ -2,7 +2,8 @@ from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel
 from typing import Optional, Dict, Any
 from app.services.operational_execution_engine import operational_execution_engine
-from app.api.deps import get_current_user
+from app.api.deps import get_current_user, RoleChecker
+from app.models.user import UserRole
 
 router = APIRouter()
 
@@ -18,7 +19,7 @@ class ExecuteActionRequest(BaseModel):
 @router.post("/")
 async def create_operational_action(
     request: CreateActionRequest,
-    current_user: Any = Depends(get_current_user)
+    current_user: Any = Depends(RoleChecker([UserRole.SYSTEM_ADMINISTRATOR.value, UserRole.CLINIC_MANAGER.value, UserRole.FRONT_DESK.value]))
 ):
     """
     SESR-006: Create a Governed Operational Action based on a Human Decision.
@@ -38,7 +39,7 @@ async def create_operational_action(
 @router.post("/execute")
 async def execute_operational_action(
     request: ExecuteActionRequest,
-    current_user: Any = Depends(get_current_user)
+    current_user: Any = Depends(RoleChecker([UserRole.SYSTEM_ADMINISTRATOR.value, UserRole.CLINIC_MANAGER.value]))
 ):
     """
     SESR-006: Validate execution eligibility and attempt action.

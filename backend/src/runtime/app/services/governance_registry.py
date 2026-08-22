@@ -3,6 +3,8 @@ from datetime import datetime, timedelta
 from enum import Enum
 from typing import Optional, List, Dict, Any
 import logging
+import pickle
+import os
 
 logger = logging.getLogger(__name__)
 
@@ -307,32 +309,71 @@ class GovernanceRegistry:
     Acts as the Single Source of Truth for engine processing.
     """
     def __init__(self):
-        self._policies: List[PolicyVersion] = []
-        self._rules: List[RuleVersion] = []
-        self._evaluations: List[RuleEvaluationRecord] = []
-        self._recommendation_mappings: List[RecommendationMapping] = []
-        self._recommendations: List[RecommendationRecord] = []
-        self._human_decisions: List[HumanDecisionRecord] = []
-        self._authority_configs: Dict[str, AuthorityConfiguration] = {}
-        self._operational_actions: List[OperationalActionRecord] = []
-        self._execution_attempts: List[ExecutionAttemptRecord] = []
-        self._operational_outcomes: List[OperationalOutcomeRecord] = []
+        self._storage_file = os.path.join(os.path.dirname(__file__), '..', 'data', 'governance_registry.pkl')
+        loaded = self._load()
+        if loaded:
+            self.__dict__.update(loaded)
+        else:
+            self._policies: List[PolicyVersion] = []
+            self._rules: List[RuleVersion] = []
+            self._evaluations: List[RuleEvaluationRecord] = []
+            self._recommendation_mappings: List[RecommendationMapping] = []
+            self._recommendations: List[RecommendationRecord] = []
+            self._human_decisions: List[HumanDecisionRecord] = []
+            self._authority_configs: Dict[str, AuthorityConfiguration] = {}
+            self._operational_actions: List[OperationalActionRecord] = []
+            self._execution_attempts: List[ExecutionAttemptRecord] = []
+            self._operational_outcomes: List[OperationalOutcomeRecord] = []
+
+    def _load(self) -> Optional[dict]:
+        if os.path.exists(self._storage_file):
+            try:
+                with open(self._storage_file, 'rb') as f:
+                    return pickle.load(f)
+            except Exception as e:
+                logger.error(f"[GovernanceRegistry] Failed to load registry: {e}")
+        return None
+
+    def _save(self):
+        os.makedirs(os.path.dirname(self._storage_file), exist_ok=True)
+        try:
+            state = {
+                '_policies': self._policies,
+                '_rules': self._rules,
+                '_evaluations': self._evaluations,
+                '_recommendation_mappings': self._recommendation_mappings,
+                '_recommendations': self._recommendations,
+                '_human_decisions': self._human_decisions,
+                '_authority_configs': self._authority_configs,
+                '_operational_actions': self._operational_actions,
+                '_execution_attempts': self._execution_attempts,
+                '_operational_outcomes': self._operational_outcomes,
+            }
+            with open(self._storage_file, 'wb') as f:
+                pickle.dump(state, f)
+        except Exception as e:
+            logger.error(f"[GovernanceRegistry] Failed to save registry: {e}")
 
     def register_policy(self, policy: PolicyVersion):
         self._policies.append(policy)
+        self._save()
 
     def register_rule(self, rule: RuleVersion):
         self._rules.append(rule)
+        self._save()
 
     def record_evaluation(self, record: RuleEvaluationRecord):
         self._evaluations.append(record)
+        self._save()
         logger.debug(f"[GovernanceRegistry] Recorded evaluation {record.evaluation_id} -> {record.result}")
 
     def register_recommendation_mapping(self, mapping: RecommendationMapping):
         self._recommendation_mappings.append(mapping)
+        self._save()
 
     def record_recommendation(self, record: RecommendationRecord):
         self._recommendations.append(record)
+        self._save()
         logger.debug(f"[GovernanceRegistry] Recorded recommendation {record.recommendation_id}")
         
     def get_recommendation(self, recommendation_id: str) -> Optional[RecommendationRecord]:
@@ -343,12 +384,14 @@ class GovernanceRegistry:
 
     def register_authority_config(self, config: AuthorityConfiguration):
         self._authority_configs[config.role] = config
+        self._save()
         
     def get_authority_config(self, role: str) -> Optional[AuthorityConfiguration]:
         return self._authority_configs.get(role)
 
     def record_human_decision(self, decision: HumanDecisionRecord):
         self._human_decisions.append(decision)
+        self._save()
         logger.debug(f"[GovernanceRegistry] Recorded human decision {decision.decision_id} by {decision.actor_id}")
         
     def get_human_decision(self, decision_id: str) -> Optional[HumanDecisionRecord]:
@@ -359,6 +402,7 @@ class GovernanceRegistry:
 
     def record_operational_action(self, action: OperationalActionRecord):
         self._operational_actions.append(action)
+        self._save()
         logger.debug(f"[GovernanceRegistry] Recorded operational action {action.action_id}")
         
     def get_operational_action(self, action_id: str) -> Optional[OperationalActionRecord]:
@@ -374,11 +418,13 @@ class GovernanceRegistry:
                 import dataclasses
                 updated = dataclasses.replace(a, status=new_status, current_result=new_result)
                 self._operational_actions[i] = updated
+                self._save()
                 return updated
         return None
 
     def record_execution_attempt(self, attempt: ExecutionAttemptRecord):
         self._execution_attempts.append(attempt)
+        self._save()
         logger.debug(f"[GovernanceRegistry] Recorded execution attempt {attempt.attempt_id} for action {attempt.action_id}")
 
     def get_execution_attempts(self, action_id: str) -> List[ExecutionAttemptRecord]:
@@ -386,6 +432,7 @@ class GovernanceRegistry:
 
     def record_operational_outcome(self, outcome: OperationalOutcomeRecord):
         self._operational_outcomes.append(outcome)
+        self._save()
         logger.debug(f"[GovernanceRegistry] Recorded operational outcome {outcome.outcome_id}")
         
     def get_operational_outcome(self, outcome_id: str) -> Optional[OperationalOutcomeRecord]:
@@ -488,6 +535,7 @@ class GovernanceRegistry:
                 import dataclasses
                 updated = dataclasses.replace(o, **kwargs)
                 self._operational_outcomes[i] = updated
+                self._save()
                 return updated
         return None
 

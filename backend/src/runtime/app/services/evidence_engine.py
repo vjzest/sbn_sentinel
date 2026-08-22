@@ -7,6 +7,8 @@ External Evidence -> ERP -> ERRM -> EVP -> Classification -> EOS-003 -> Decision
 """
 import logging
 import hashlib
+import pickle
+import os
 from typing import Dict, Any, List, Optional
 from datetime import datetime
 from dataclasses import dataclass, field
@@ -46,10 +48,29 @@ class EvidenceRepository:
     Manages storage and versioning.
     """
     def __init__(self):
-        self._storage: Dict[str, OperationalEvidence] = {}
+        self._storage_file = os.path.join(os.path.dirname(__file__), '..', 'data', 'evidence_repo.pkl')
+        self._storage: Dict[str, OperationalEvidence] = self._load()
+
+    def _load(self) -> Dict[str, OperationalEvidence]:
+        if os.path.exists(self._storage_file):
+            try:
+                with open(self._storage_file, 'rb') as f:
+                    return pickle.load(f)
+            except Exception as e:
+                logger.error(f"[ERRM] Failed to load evidence repository: {e}")
+        return {}
+
+    def _save(self):
+        os.makedirs(os.path.dirname(self._storage_file), exist_ok=True)
+        try:
+            with open(self._storage_file, 'wb') as f:
+                pickle.dump(self._storage, f)
+        except Exception as e:
+            logger.error(f"[ERRM] Failed to save evidence repository: {e}")
 
     def store(self, evidence: OperationalEvidence):
         self._storage[evidence.evidence_id] = evidence
+        self._save()
         logger.debug(f"[ERRM] Stored evidence {evidence.evidence_id}")
 
     def retrieve(self, evidence_id: str) -> Optional[OperationalEvidence]:
