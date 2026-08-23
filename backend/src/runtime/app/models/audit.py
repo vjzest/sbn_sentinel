@@ -1,5 +1,6 @@
 import uuid
-from sqlalchemy import Column, String, DateTime, Integer
+from sqlalchemy import Column, String, DateTime, Integer, event
+from sqlalchemy.exc import InvalidRequestError
 from datetime import datetime
 from app.db.database import Base
 
@@ -23,3 +24,11 @@ class AuditLogModel(Base):
     retry_attempts = Column(Integer, nullable=True)
     recovery_outcome = Column(String, nullable=True)
     resolution_status = Column(String, nullable=True)
+
+@event.listens_for(AuditLogModel, 'before_update')
+def receive_before_update(mapper, connection, target):
+    raise InvalidRequestError("AuditLogModel records are append-only and cannot be updated.")
+
+@event.listens_for(AuditLogModel, 'before_delete')
+def receive_before_delete(mapper, connection, target):
+    raise InvalidRequestError("AuditLogModel records are append-only and cannot be deleted.")
