@@ -64,7 +64,7 @@ def register_user(user_in: RegisterVerifyRequest, db: Session = Depends(get_db))
         OTPModel.is_used == False
     ).order_by(OTPModel.created_at.desc()).first()
     
-    if not otp_record or datetime.utcnow() - otp_record.created_at > timedelta(minutes=15):
+    if not otp_record or datetime.utcnow() - otp_record.created_at > timedelta(minutes=settings.OTP_EXPIRE_MINUTES):
         raise HTTPException(status_code=400, detail="Invalid or expired OTP")
         
     from app.models.user import UserRole
@@ -149,7 +149,7 @@ def reset_password(payload: ResetPasswordRequest, db: Session = Depends(get_db))
         OTPModel.is_used == False
     ).order_by(OTPModel.created_at.desc()).first()
     
-    if not otp_record or datetime.utcnow() - otp_record.created_at > timedelta(minutes=15):
+    if not otp_record or datetime.utcnow() - otp_record.created_at > timedelta(minutes=settings.OTP_EXPIRE_MINUTES):
         raise HTTPException(status_code=400, detail="Invalid or expired OTP")
         
     user = db.query(User).filter(User.email == payload.email).first()
@@ -171,7 +171,7 @@ def accept_invite(payload: ResetPasswordRequest, db: Session = Depends(get_db)):
         OTPModel.is_used == False
     ).order_by(OTPModel.created_at.desc()).first()
     
-    if not otp_record or datetime.utcnow() - otp_record.created_at > timedelta(minutes=15):
+    if not otp_record or datetime.utcnow() - otp_record.created_at > timedelta(minutes=settings.OTP_EXPIRE_MINUTES):
         raise HTTPException(status_code=400, detail="Invalid or expired OTP")
         
     user = db.query(User).filter(User.email == payload.email).first()

@@ -154,7 +154,7 @@ export const SignalsDetailView: React.FC = () => {
           const newReminder = {
             id: `signal-${selectedSignal.id}`,
             text: selectedSignal.recommended_action,
-            source: selectedSignal.source || 'Sentinel AI',
+            source: selectedSignal.source || 'Deterministic Policy Engine',
             timestamp: new Date().toISOString(),
             completed: false
           };

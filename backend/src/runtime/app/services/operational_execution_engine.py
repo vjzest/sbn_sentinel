@@ -32,7 +32,7 @@ class OperationalExecutionEngine(BaseService):
         # Required by BaseService
         return None
         
-    def create_action(self, decision_id: str, action_type_str: str, target_reference: str, parameters: Dict[str, Any]) -> Dict[str, Any]:
+    def create_action(self, decision_id: str, action_type_str: str, target_reference: str, parameters: Dict[str, Any], initiator_scope: Dict[str, Any] = None) -> Dict[str, Any]:
         """Creates an operational action based on an approved decision."""
         # Validate decision exists and is RECORDED
         decision = governance_registry.get_human_decision(decision_id)
@@ -50,6 +50,14 @@ class OperationalExecutionEngine(BaseService):
             action_type = ActionType(action_type_str.upper())
         except ValueError:
             return {"status": "ERROR", "message": f"Invalid action type: {action_type_str}"}
+            
+        # P0-05 / P0-06 / SESR-005: Trusted Scope Enforcement
+        if initiator_scope:
+            org_scope = initiator_scope.get("org_id")
+            if org_scope and org_scope != "SYSTEM_GLOBAL":
+                # Mock cross-scope validation. In reality, check if the decision context belongs to the org.
+                if parameters.get("org_id") and parameters.get("org_id") != org_scope:
+                    return {"status": "ERROR", "message": "AUTHORIZATION_SCOPE_MISMATCH: Action target is outside user's governed scope."}
 
         # SESR-008: Inherit journey_id from the authorizing decision
         journey_id = decision.journey_id
@@ -159,7 +167,9 @@ class OperationalExecutionEngine(BaseService):
         elif mock_result["result"] == ExecutionResult.FAILED:
             new_status = ActionStatus.FAILED
         else: # UNKNOWN
-            new_status = ActionStatus.FAILED  # To be reconciled later
+            # SESR-009: UNKNOWN means the connection timed out, but the system might have processed it.
+            # We MUST leave it in EXECUTING state for reconciliation, not FAILED, to prevent unsafe retries.
+            new_status = ActionStatus.EXECUTING
             
         governance_registry.update_operational_action(action_id, new_status, mock_result["result"])
         

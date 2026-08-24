@@ -7,7 +7,6 @@ External Evidence -> ERP -> ERRM -> EVP -> Classification -> EOS-003 -> Decision
 """
 import logging
 import hashlib
-import pickle
 import os
 from typing import Dict, Any, List, Optional
 from datetime import datetime
@@ -42,40 +41,74 @@ class OperationalEvidence:
 # ─────────────────────────────────────────────────────────────────────────────
 # EOS-002: EVIDENCE REPOSITORY (ERRM)
 # ─────────────────────────────────────────────────────────────────────────────
+from app.db.database import SessionLocal
+from app.models.evidence import EvidenceModel
+import json
+
 class EvidenceRepository:
     """
     EOS-002: Single source of truth for Evidence Objects.
-    Manages storage and versioning.
+    Manages storage and versioning using SQLAlchemy.
     """
-    def __init__(self):
-        self._storage_file = os.path.join(os.path.dirname(__file__), '..', 'data', 'evidence_repo.pkl')
-        self._storage: Dict[str, OperationalEvidence] = self._load()
-
-    def _load(self) -> Dict[str, OperationalEvidence]:
-        if os.path.exists(self._storage_file):
-            try:
-                with open(self._storage_file, 'rb') as f:
-                    return pickle.load(f)
-            except Exception as e:
-                logger.error(f"[ERRM] Failed to load evidence repository: {e}")
-        return {}
-
-    def _save(self):
-        os.makedirs(os.path.dirname(self._storage_file), exist_ok=True)
-        try:
-            with open(self._storage_file, 'wb') as f:
-                pickle.dump(self._storage, f)
-        except Exception as e:
-            logger.error(f"[ERRM] Failed to save evidence repository: {e}")
-
     def store(self, evidence: OperationalEvidence):
-        self._storage[evidence.evidence_id] = evidence
-        self._save()
-        logger.debug(f"[ERRM] Stored evidence {evidence.evidence_id}")
+        db = SessionLocal()
+        try:
+            # Check if exists
+            existing = db.query(EvidenceModel).filter(EvidenceModel.evidence_id == evidence.evidence_id).first()
+            if existing:
+                existing.canonical_entity = evidence.canonical_entity
+                existing.fact_key = evidence.fact_key
+                existing.fact_value_str = str(evidence.fact_value) if evidence.fact_value is not None else None
+                existing.source_connector = evidence.source_connector
+                existing.retrieval_timestamp = evidence.retrieval_timestamp
+                existing.evidence_type = evidence.evidence_type
+                existing.metadata_json = json.dumps(evidence.metadata) if evidence.metadata else None
+                existing.version = evidence.version
+                existing.previous_version_id = evidence.previous_version_id
+            else:
+                new_model = EvidenceModel(
+                    evidence_id=evidence.evidence_id,
+                    canonical_entity=evidence.canonical_entity,
+                    fact_key=evidence.fact_key,
+                    fact_value_str=str(evidence.fact_value) if evidence.fact_value is not None else None,
+                    source_connector=evidence.source_connector,
+                    retrieval_timestamp=evidence.retrieval_timestamp,
+                    evidence_type=evidence.evidence_type,
+                    metadata_json=json.dumps(evidence.metadata) if evidence.metadata else None,
+                    version=evidence.version,
+                    previous_version_id=evidence.previous_version_id
+                )
+                db.add(new_model)
+            db.commit()
+            logger.debug(f"[ERRM] Stored evidence {evidence.evidence_id} in DB")
+        except Exception as e:
+            db.rollback()
+            logger.error(f"[ERRM] Failed to store evidence {evidence.evidence_id}: {e}")
+            from app.core.exceptions import PersistenceError
+            raise PersistenceError(f"Database error storing evidence: {e}")
+        finally:
+            db.close()
 
     def retrieve(self, evidence_id: str) -> Optional[OperationalEvidence]:
-        return self._storage.get(evidence_id)
-
+        db = SessionLocal()
+        try:
+            model = db.query(EvidenceModel).filter(EvidenceModel.evidence_id == evidence_id).first()
+            if model:
+                return OperationalEvidence(
+                    evidence_id=model.evidence_id,
+                    canonical_entity=model.canonical_entity,
+                    fact_key=model.fact_key,
+                    fact_value=model.fact_value_str,
+                    source_connector=model.source_connector,
+                    retrieval_timestamp=model.retrieval_timestamp,
+                    evidence_type=model.evidence_type,
+                    metadata=json.loads(model.metadata_json) if model.metadata_json else {},
+                    version=model.version,
+                    previous_version_id=model.previous_version_id
+                )
+            return None
+        finally:
+            db.close()
 
 evidence_repository = EvidenceRepository()
 
@@ -95,6 +128,9 @@ class EvidenceStatusPackage:
     validation_results: Dict[str, bool]
     classification_results: Dict[str, str]
     processing_status: str
+    missing_evidence: List[str] = field(default_factory=list)
+    evidence_conflicts: List[str] = field(default_factory=list)
+    freshness_status: Dict[str, Any] = field(default_factory=dict)
     created_at: datetime = field(default_factory=datetime.utcnow)
 
 
@@ -145,14 +181,16 @@ class EvidenceEngine(BaseService):
             final_references.append(ev.evidence_id)
             classification_results[ev.evidence_id] = ev.evidence_type
 
-        # Generate EOS-003
         eos_003 = EvidenceStatusPackage(
             package_id=str(uuid.uuid4()),
             event_id=canonical_event_data.get("event_id", "UNKNOWN"),
             evidence_references=final_references,
             validation_results=validation_results,
             classification_results=classification_results,
-            processing_status="Success"
+            processing_status="Success",
+            missing_evidence=self._detect_missing(classified_evidence_list),
+            evidence_conflicts=self._detect_conflicts(classified_evidence_list),
+            freshness_status=self._evaluate_freshness(classified_evidence_list)
         )
         
         self.logger.info(f"[EvidenceEngine] Generated EOS-003 Package: {eos_003.package_id}")
@@ -243,5 +281,34 @@ class EvidenceEngine(BaseService):
             classified.append(new_ev)
             
         return classified
+
+    def _detect_missing(self, evidence_list: List[OperationalEvidence]) -> List[str]:
+        found_entities = {ev.canonical_entity for ev in evidence_list}
+        missing = []
+        if "Appointment" not in found_entities and "OperationalEvent" not in found_entities:
+            missing.append("No primary contextual entity (Appointment/Event) found in evidence.")
+        return missing
+
+    def _detect_conflicts(self, evidence_list: List[OperationalEvidence]) -> List[str]:
+        facts = {}
+        conflicts = []
+        for ev in evidence_list:
+            if ev.fact_key and ev.fact_value:
+                if ev.fact_key in facts and facts[ev.fact_key] != ev.fact_value:
+                    conflicts.append(f"Conflict on {ev.fact_key}: {facts[ev.fact_key]} vs {ev.fact_value}")
+                facts[ev.fact_key] = ev.fact_value
+        return conflicts
+
+    def _evaluate_freshness(self, evidence_list: List[OperationalEvidence]) -> Dict[str, Any]:
+        from datetime import timedelta
+        is_stale = False
+        stale_records = []
+        now = datetime.utcnow()
+        for ev in evidence_list:
+            if ev.retrieval_timestamp:
+                if (now - ev.retrieval_timestamp) > timedelta(hours=24):
+                    is_stale = True
+                    stale_records.append(str(ev.evidence_id))
+        return {"is_stale": is_stale, "stale_records": stale_records}
 
 evidence_engine = EvidenceEngine()

@@ -10,19 +10,7 @@ router = APIRouter()
 def get_clinics(db: Session = Depends(get_db)):
     """Get all clinics."""
     clinics = db.query(ClinicModel).all()
-    # Return some mock data if empty for demo purposes
-    if not clinics:
-        mock_clinic = ClinicModel(
-            name="Sentinel Health Urgent Care (Main)",
-            address="123 Health Ave, New York, NY",
-            phone="(555) 019-2834",
-            status="Active"
-        )
-        db.add(mock_clinic)
-        db.commit()
-        db.refresh(mock_clinic)
-        clinics = [mock_clinic]
-        
+    # No mock data injection
     return [
         {
             "id": str(c.id),

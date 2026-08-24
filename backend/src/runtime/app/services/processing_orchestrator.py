@@ -298,7 +298,7 @@ class ProcessingOrchestrator:
                 calling_module="EventPipeline",
                 target_service="DecisionContextEngine",
                 payload={
-                    "evidence_package": getattr(event, "evidence_package", {}),
+                    "eos_003_package": getattr(event, "evidence_package", {}),
                     "event_type": event.event_type
                 }
             )
@@ -309,11 +309,11 @@ class ProcessingOrchestrator:
                 error_msg = response.error_details.message if response.error_details else "Unknown error"
                 return self._fail_event(event, db, layer="L4-Context", error=error_msg)
                 
-            from app.models.intelligence import DecisionContextModel
+            import json
             event.decision_context = DecisionContextModel(
                 primary_context=response.result_payload.get("primary_context", "Unknown"),
                 secondary_context=response.result_payload.get("secondary_context"),
-                confidence=response.result_payload.get("confidence", "Low"),
+                evidence_state=json.dumps(getattr(event, "evidence_package", {})),
                 reason=response.result_payload.get("reason")
             )
             event.layer4_duration_ms = (time.time() - t_start) * 1000
@@ -402,8 +402,9 @@ class ProcessingOrchestrator:
             
             event.rule_findings = [RuleFindingModel(
                 rule_id=first_finding.get("rule_id", "Unknown"),
-                severity=first_finding.get("result", "Information"), # pass result down to severity
-                description=first_finding.get("result", "")
+                severity=first_finding.get("result", "Information"), 
+                description=first_finding.get("result", ""),
+                evaluation_id=first_finding.get("evaluation_id", "UNKNOWN_EVALUATION")
             )]
             event.rule_version = first_finding.get("rule_version", "Unknown")
             event.layer6_duration_ms = (time.time() - t_start) * 1000
@@ -430,13 +431,15 @@ class ProcessingOrchestrator:
                 calling_module="EventPipeline",
                 target_service="IntelligenceEngine",
                 payload={
-                    "finding": [{"rule_id": rf.rule_id, "severity": rf.severity} for rf in event.rule_findings] if event.rule_findings else {},
+                    "finding": [{"rule_id": rf.rule_id, "severity": rf.severity, "evaluation_id": rf.evaluation_id} for rf in event.rule_findings] if event.rule_findings else {},
                     "context": {
+                        "id": event.decision_context.id,
                         "primary_context": event.decision_context.primary_context,
                         "secondary_context": event.decision_context.secondary_context
                     } if event.decision_context else {},
                     "evidence": getattr(event, "evidence_package", {}),
-                    "policy": getattr(event, "policy_result", {})
+                    "policy": getattr(event, "policy_result", {}),
+                    "journey_id": event.correlation_id
                 }
             )
             
@@ -557,7 +560,7 @@ class ProcessingOrchestrator:
                 priority_score=intel_result.get("priority_score", 0),
                 primary_context=context_model.primary_context if context_model else "",
                 secondary_context=context_model.secondary_context if context_model else "",
-                context_confidence=context_model.confidence if context_model else "",
+                context_confidence="",
                 context_reason=context_model.reason if context_model else "",
                 revenue_risk_category=revenue_model.opportunity_category if revenue_model else "None",
                 estimated_financial_exposure=revenue_model.estimated_exposure if revenue_model else "$0.00",

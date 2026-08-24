@@ -29,28 +29,21 @@ class DecisionContextEngine(BaseService):
         from app.services.evidence_engine import evidence_repository
 
         eos_003 = payload.get("eos_003_package")
+        if not eos_003:
+            raise ValueError("[SESR-001] EOS-003 EvidenceStatusPackage is mandatory for DecisionContextEngine.")
+            
         event_type = payload.get("event_type", "Unknown")
 
         # Resolve evidence objects from the repository using EOS-003 references
         evidence_items = []
-        if eos_003:
-            refs = getattr(eos_003, "evidence_references", [])
-            for ref_id in refs:
-                ev = evidence_repository.retrieve(ref_id)
-                if ev:
-                    evidence_items.append(ev)
-
-        # Backward compatibility: also check legacy evidence_package key
-        evidence_package = payload.get("evidence_package", {})
-        if not evidence_items:
-            evidence_items = evidence_package.get("evidence_items", [])
-            
-        # Extract from evidence_references if it's a dict representing EvidenceStatusPackage
-        if not evidence_items and evidence_package.get("evidence_references"):
-            for ref_id in evidence_package.get("evidence_references", []):
-                ev = evidence_repository.retrieve(ref_id)
-                if ev:
-                    evidence_items.append(ev)
+        refs = eos_003.get("evidence_references", []) if isinstance(eos_003, dict) else getattr(eos_003, "evidence_references", [])
+        
+        for ref_id in refs:
+            ev = evidence_repository.retrieve(ref_id)
+            if ev:
+                evidence_items.append(ev)
+        
+        evidence_package = eos_003  # Pass EOS-003 as the package payload
         
         def get_fact_value(e):
             return getattr(e, 'fact_value', None) if not isinstance(e, dict) else e.get('fact_value')

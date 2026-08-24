@@ -21,6 +21,7 @@ class RuleFindingModel(Base):
     rule_id = Column(String, nullable=False)
     severity = Column(String, nullable=False)
     description = Column(String, nullable=False)
+    evaluation_id = Column(String, nullable=True)
     evaluation_timestamp = Column(DateTime, default=datetime.utcnow)
 
     event = relationship("OperationalEventModel", back_populates="rule_findings")
@@ -37,7 +38,7 @@ class DecisionContextModel(Base):
     event_id = Column(String, ForeignKey("pipeline_events.id"), nullable=False, unique=True)
     primary_context = Column(String, nullable=False)
     secondary_context = Column(String, nullable=True)
-    confidence = Column(String, default="Moderate")
+    evidence_state = Column(String, nullable=True) # JSON serialized evidence
     reason = Column(String, nullable=True)
     generated_timestamp = Column(DateTime, default=datetime.utcnow)
 

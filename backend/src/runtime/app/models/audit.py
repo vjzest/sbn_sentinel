@@ -18,12 +18,7 @@ class AuditLogModel(Base):
     module = Column(String, nullable=True)
     correlation_id = Column(String, index=True, nullable=True)
 
-    # SES-007: Failure Telemetry
-    error_category = Column(String, nullable=True)
-    severity = Column(String, nullable=True)
-    retry_attempts = Column(Integer, nullable=True)
-    recovery_outcome = Column(String, nullable=True)
-    resolution_status = Column(String, nullable=True)
+
 
 @event.listens_for(AuditLogModel, 'before_update')
 def receive_before_update(mapper, connection, target):

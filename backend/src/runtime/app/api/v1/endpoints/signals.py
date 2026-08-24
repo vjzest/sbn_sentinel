@@ -7,11 +7,12 @@ from app.db.database import get_db
 from app.models.signal import SignalModel
 
 router = APIRouter()
-from app.api.deps import RoleChecker
+from app.api.deps import get_current_user, RoleChecker
+from app.models.user import UserRole
 
 @router.get("")
 @router.get("/")
-def get_historical_signals(db: Session = Depends(get_db), current_user = Depends(RoleChecker(["clinic_admin", "executive", "super_admin"]))):
+def get_historical_signals(db: Session = Depends(get_db), current_user = Depends(RoleChecker([UserRole.CLINIC_MANAGER.value, UserRole.ORGANIZATION_ADMINISTRATOR.value, UserRole.SYSTEM_ADMINISTRATOR.value]))):
     signals = db.query(SignalModel).order_by(SignalModel.timestamp.desc()).limit(100).all()
     result = []
     for s in signals:
