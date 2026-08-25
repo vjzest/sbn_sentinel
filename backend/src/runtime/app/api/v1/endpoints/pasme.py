@@ -7,7 +7,8 @@ import os
 
 from app.db.database import get_db
 from app.api.deps import get_current_user, RoleChecker
-from app.models.user import User
+from app.api.deps import get_current_user, RoleChecker
+from app.models.user import User, UserRole
 from app.models.rule import RuleModel
 from app.services.data_audit_engine import data_audit_engine
 
@@ -53,7 +54,7 @@ async def websocket_chat(websocket: WebSocket):
 
 
 @router.get("/health")
-def get_platform_health(current_user: User = Depends(RoleChecker(["super_admin"]))):
+def get_platform_health(current_user: User = Depends(RoleChecker([UserRole.SYSTEM_ADMINISTRATOR.value]))):
     """
     Returns PASME Platform Health monitoring metrics.
     """
@@ -78,7 +79,7 @@ def get_platform_health(current_user: User = Depends(RoleChecker(["super_admin"]
     }
 
 @router.get("/rules")
-def get_all_rules(db: Session = Depends(get_db), current_user: User = Depends(RoleChecker(["super_admin"]))):
+def get_all_rules(db: Session = Depends(get_db), current_user: User = Depends(RoleChecker([UserRole.SYSTEM_ADMINISTRATOR.value]))):
     """
     Retrieve all business rules for PASME administration.
     """
@@ -102,7 +103,7 @@ def get_all_rules(db: Session = Depends(get_db), current_user: User = Depends(Ro
     ]
 
 @router.patch("/rules/{rule_id}/toggle")
-def toggle_rule(rule_id: str, db: Session = Depends(get_db), current_user: User = Depends(RoleChecker(["super_admin"]))):
+def toggle_rule(rule_id: str, db: Session = Depends(get_db), current_user: User = Depends(RoleChecker([UserRole.SYSTEM_ADMINISTRATOR.value]))):
     """
     Toggle a rule's active state. Audited by DMAE.
     """
@@ -125,7 +126,7 @@ def toggle_rule(rule_id: str, db: Session = Depends(get_db), current_user: User 
     return {"rule_id": rule.rule_id, "is_active": rule.is_active}
 
 @router.post("/maintenance/toggle")
-def toggle_maintenance_mode(db: Session = Depends(get_db), current_user: User = Depends(RoleChecker(["super_admin"]))):
+def toggle_maintenance_mode(db: Session = Depends(get_db), current_user: User = Depends(RoleChecker([UserRole.SYSTEM_ADMINISTRATOR.value]))):
     """
     Toggle global maintenance mode.
     """

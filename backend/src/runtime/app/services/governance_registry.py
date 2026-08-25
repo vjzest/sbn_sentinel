@@ -3,7 +3,6 @@ from datetime import datetime, timedelta
 from enum import Enum
 from typing import Optional, List, Dict, Any
 import logging
-import pickle
 import os
 
 logger = logging.getLogger(__name__)
@@ -309,7 +308,6 @@ class GovernanceRegistry:
     Acts as the Single Source of Truth for engine processing.
     """
     def __init__(self):
-        self._storage_file = os.path.join(os.path.dirname(__file__), '..', 'data', 'governance_registry.pkl')
         loaded = self._load()
         if loaded:
             self.__dict__.update(loaded)
@@ -326,33 +324,56 @@ class GovernanceRegistry:
             self._operational_outcomes: List[OperationalOutcomeRecord] = []
 
     def _load(self) -> Optional[dict]:
-        if os.path.exists(self._storage_file):
-            try:
-                with open(self._storage_file, 'rb') as f:
-                    return pickle.load(f)
-            except Exception as e:
-                logger.error(f"[GovernanceRegistry] Failed to load registry: {e}")
+        from app.db.database import SessionLocal
+        from app.models.governance_storage import GovernanceStorageModel
+        from app.core.json_utils import loads
+        
+        db = SessionLocal()
+        try:
+            record = db.query(GovernanceStorageModel).filter(GovernanceStorageModel.id == "singleton").first()
+            if record and record.state_json:
+                return loads(record.state_json)
+        except Exception as e:
+            logger.error(f"[GovernanceRegistry] Failed to load registry from DB: {e}")
+        finally:
+            db.close()
         return None
 
     def _save(self):
-        os.makedirs(os.path.dirname(self._storage_file), exist_ok=True)
+        from app.db.database import SessionLocal
+        from app.models.governance_storage import GovernanceStorageModel
+        from app.core.json_utils import dumps
+        
+        state = {
+            '_policies': self._policies,
+            '_rules': self._rules,
+            '_evaluations': self._evaluations,
+            '_recommendation_mappings': self._recommendation_mappings,
+            '_recommendations': self._recommendations,
+            '_human_decisions': self._human_decisions,
+            '_authority_configs': self._authority_configs,
+            '_operational_actions': self._operational_actions,
+            '_execution_attempts': self._execution_attempts,
+            '_operational_outcomes': self._operational_outcomes,
+        }
+        
+        db = SessionLocal()
         try:
-            state = {
-                '_policies': self._policies,
-                '_rules': self._rules,
-                '_evaluations': self._evaluations,
-                '_recommendation_mappings': self._recommendation_mappings,
-                '_recommendations': self._recommendations,
-                '_human_decisions': self._human_decisions,
-                '_authority_configs': self._authority_configs,
-                '_operational_actions': self._operational_actions,
-                '_execution_attempts': self._execution_attempts,
-                '_operational_outcomes': self._operational_outcomes,
-            }
-            with open(self._storage_file, 'wb') as f:
-                pickle.dump(state, f)
+            state_str = dumps(state)
+            record = db.query(GovernanceStorageModel).filter(GovernanceStorageModel.id == "singleton").first()
+            if record:
+                record.state_json = state_str
+            else:
+                record = GovernanceStorageModel(id="singleton", state_json=state_str)
+                db.add(record)
+            db.commit()
         except Exception as e:
-            logger.error(f"[GovernanceRegistry] Failed to save registry: {e}")
+            db.rollback()
+            logger.error(f"[GovernanceRegistry] Failed to save registry to DB: {e}")
+            from app.core.exceptions import PersistenceError
+            raise PersistenceError("Database connection failed during Governance Registry commit.")
+        finally:
+            db.close()
 
     def register_policy(self, policy: PolicyVersion):
         self._policies.append(policy)
@@ -546,8 +567,8 @@ class GovernanceRegistry:
             if m.applicable_rule_id == rule_id and m.eligible_result == result and m.is_applicable(eval_time):
                 applicable.append(m)
         if applicable:
-            # Return most recent version
-            return max(applicable, key=lambda x: x.created_at)
+            # Deterministic precedence: sort by length then string (handles V1 vs V10)
+            return sorted(applicable, key=lambda x: (len(x.version), x.version))[-1]
         return None
 
     def get_applicable_policies(self, eval_time: datetime) -> List[PolicyVersion]:
@@ -557,8 +578,8 @@ class GovernanceRegistry:
         for p_id in set(p.policy_id for p in self._policies):
             versions = [p for p in self._policies if p.policy_id == p_id and p.is_applicable(eval_time)]
             if versions:
-                # Resolve overlapping by taking most recently created applicable version (simplified precedence)
-                latest = max(versions, key=lambda x: x.created_at)
+                # Deterministic precedence: sort by length then string
+                latest = sorted(versions, key=lambda x: (len(x.version), x.version))[-1]
                 applicable.append(latest)
         return applicable
 
@@ -569,7 +590,8 @@ class GovernanceRegistry:
         for r_id in set(r.rule_id for r in mapped_rules):
             versions = [r for r in mapped_rules if r.rule_id == r_id and r.is_applicable(eval_time)]
             if versions:
-                latest = max(versions, key=lambda x: x.created_at)
+                # Deterministic precedence: sort by length then string
+                latest = sorted(versions, key=lambda x: (len(x.version), x.version))[-1]
                 applicable.append(latest)
         return applicable
 
@@ -619,6 +641,19 @@ governance_registry.register_policy(PolicyVersion(
     approved_by="USR-001"
 ))
 
+# 3. Production Source Authority Policy (Item 18)
+governance_registry.register_policy(PolicyVersion(
+    policy_id="POL-003",
+    version="V1",
+    content="Production execution is restricted to Practice Fusion sources.",
+    lifecycle_state=LifecycleState.ACTIVE,
+    effective_from=datetime.utcnow() - timedelta(days=30),
+    approval_state="APPROVED",
+    approved_by="USR-001"
+))
+    approved_by="USR-001"
+))
+
 # 3. Clinic No-Show Rule
 governance_registry.register_rule(RuleVersion(
     rule_id="RULE-SCH-001",
@@ -656,13 +691,30 @@ governance_registry.register_rule(RuleVersion(
     approved_by="USR-001"
 ))
 
-# 5. Recommendation Mappings (SESR-004)
+# 5. System Blocked Rule (PF-Only)
+governance_registry.register_rule(RuleVersion(
+    rule_id="RULE-SYS-BLOCKED",
+    version="V1",
+    logic_description="Blocks action if source is not Practice Fusion in Production.",
+    lifecycle_state=LifecycleState.ACTIVE,
+    governing_policy_id="POL-003",
+    governing_policy_version="V1",
+    inputs=[
+        RuleInputDefinition("source_connector", "str", True, "DecisionContext")
+    ],
+    allowed_outputs=["NOT_EVALUABLE", "BLOCKED"],
+    effective_from=datetime.utcnow() - timedelta(days=30),
+    approval_state="APPROVED",
+    approved_by="USR-001"
+))
+
+# 6. Recommendation Mappings (SESR-004)
 governance_registry.register_recommendation_mapping(RecommendationMapping(
     mapping_id="REC-MAP-001",
     version="V1",
     applicable_rule_id="RULE-SCH-001",
     eligible_result="CONDITION_MET",
-    recommendation_template="Auto-send SMS reschedule link and dispatch $25 fee claim.",
+    recommendation_template="Consider sending an SMS reschedule link and dispatching a $25 fee claim.",
     authority_requirement=AuthorityRequirement.APPROVAL_REQUIRED,
     priority="Moderate",
     business_impact_template="-$150.00 estimated revenue loss.",
@@ -677,7 +729,7 @@ governance_registry.register_recommendation_mapping(RecommendationMapping(
     version="V1",
     applicable_rule_id="RULE-SCH-002",
     eligible_result="CONDITION_MET",
-    recommendation_template="Re-route to next available Room. Notify Clinic Administrator immediately.",
+    recommendation_template="Suggest re-routing to next available Room and notifying the Clinic Administrator.",
     authority_requirement=AuthorityRequirement.REVIEW_REQUIRED,
     priority="High",
     business_impact_template="High risk of patient satisfaction drop and negative reviews.",

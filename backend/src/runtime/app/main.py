@@ -6,10 +6,11 @@ from app.core.logging import setup_logging
 from app.api.v1.api import api_router
 from app.db.database import engine
 from app.models.signal import Base
-from app.models.user import User
+from app.models.user import User, UserRole
 from app.models.connector import ConnectorModel
 from app.models.insurance import PatientInsuranceModel
 from app.models.audit import AuditLogModel
+from app.models.telemetry import TelemetryLogModel
 from app.models.settings import SettingsModel
 from app.models.encounter import EncounterModel
 from app.models.integration import IntegrationModel
@@ -21,6 +22,8 @@ from app.models.intelligence import (
     RuleFindingModel, DecisionContextModel, 
     OperationalIntelligenceModel, RevenueIntelligenceModel
 )
+from app.models.evidence import EvidenceModel
+from app.models.governance_storage import GovernanceStorageModel
 
 # Create tables in SQLite/PostgreSQL (if they don't exist)
 Base.metadata.create_all(bind=engine)
@@ -76,7 +79,7 @@ def create_app() -> FastAPI:
                     email="superadmin@sbnsentinel.com",
                     hashed_password=get_password_hash("SBNAdmin@2024"),
                     full_name="SBN Super Admin",
-                    role="super_admin",
+                    role=UserRole.SYSTEM_ADMINISTRATOR.value,
                     is_active=True
                 )
                 db.add(admin)

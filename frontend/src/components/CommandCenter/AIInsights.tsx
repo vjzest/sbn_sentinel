@@ -19,13 +19,11 @@ export const AIInsights: React.FC = () => {
     fetchWithAuth(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/settings`)
       .then(res => res.json())
       .then(data => {
-        if (data.ai_model === 'claude') {
-          setActiveModelName('Claude 3.5 Sonnet');
-        } else {
-          setActiveModelName('GPT-4o');
-        }
+          setActiveModelName('Deterministic Rules Engine');
       })
-      .catch(() => {});
+      .catch(() => {
+          setActiveModelName('Deterministic Rules Engine');
+      });
   }, []);
 
   const handleApprove = async () => {
@@ -66,10 +64,10 @@ export const AIInsights: React.FC = () => {
       <div className="flex items-center justify-between mb-6">
         <h3 className="text-base font-bold text-white flex items-center gap-2">
           <BrainCircuit className="w-5 h-5 text-[#2E1055]" />
-          Sentinel AI Engine
+          Deterministic Policy Engine
         </h3>
         <span className="text-[10px] font-bold bg-[#120524]/20 text-[#C4B5FD] px-2.5 py-1 rounded-full border border-[#EDE9FE]">
-          {activeModelName} Active
+          {activeModelName}
         </span>
       </div>
 
@@ -77,7 +75,7 @@ export const AIInsights: React.FC = () => {
         {!latestInsightSignal ? (
            <div className="flex flex-col items-center justify-center flex-1 text-[#9CA3AF]">
               <Loader2 className="w-8 h-8 animate-spin mb-3 text-[#E8EDF5]" />
-              <p className="text-sm font-medium">Analyzing operations for insights...</p>
+              <p className="text-sm font-medium">Evaluating deterministic rules...</p>
            </div>
         ) : (
           <>

@@ -19,19 +19,53 @@ export const BootScreen: React.FC<BootScreenProps> = ({ onComplete }) => {
   ];
 
   useEffect(() => {
-    if (currentStep < steps.length) {
-      const timer = setTimeout(() => {
-        setLogs(prev => [...prev, steps[currentStep].text]);
-        setCurrentStep(prev => prev + 1);
-      }, 550); // Speed up slightly for nice UX, total ~2.7s
-      return () => clearTimeout(timer);
-    } else {
-      const finishTimer = setTimeout(() => {
-        onComplete();
-      }, 600);
-      return () => clearTimeout(finishTimer);
-    }
-  }, [currentStep]);
+    let isMounted = true;
+
+    const performBoot = async () => {
+      try {
+        // Step 0: Base UI wait
+        await new Promise(r => setTimeout(r, 500));
+        if (!isMounted) return;
+        setLogs(prev => [...prev, steps[0].text]);
+        setCurrentStep(1);
+
+        // Step 1: Actually fetch health
+        const res = await fetch('http://localhost:8000/api/v1/health/verify');
+        if (!res.ok) throw new Error('Backend unreachabe');
+        const healthData = await res.json();
+        
+        if (!isMounted) return;
+        
+        if (healthData.status === "Degraded" || healthData.status === "Healthy") {
+           setLogs(prev => [...prev, `System Status: ${healthData.status}`]);
+           setCurrentStep(2);
+           await new Promise(r => setTimeout(r, 400));
+           
+           setLogs(prev => [...prev, `DB: ${healthData.database}, Cache: ${healthData.rules_engine_cache}`]);
+           setCurrentStep(3);
+           await new Promise(r => setTimeout(r, 400));
+
+           setLogs(prev => [...prev, steps[4].text]);
+           setCurrentStep(4);
+           
+           setTimeout(() => {
+             if (isMounted) onComplete();
+           }, 600);
+        } else {
+           throw new Error('Unhealthy status returned');
+        }
+
+      } catch (error) {
+        if (!isMounted) return;
+        setLogs(prev => [...prev, 'CRITICAL FAILURE: ' + (error as Error).message]);
+        // Do not complete boot on failure
+      }
+    };
+
+    performBoot();
+
+    return () => { isMounted = false; };
+  }, [onComplete]);
 
   return (
     <div className="fixed inset-0 bg-[#0B1121] text-white font-mono flex flex-col items-center justify-center z-50 p-6">

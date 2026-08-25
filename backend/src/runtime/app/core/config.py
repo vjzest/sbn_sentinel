@@ -9,6 +9,7 @@ class Settings(BaseSettings):
     SECRET_KEY: str = "supersecret_sentinel_key_2026_dev"
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 1440
+    OTP_EXPIRE_MINUTES: int = 15
     POSTGRES_SERVER: str = "localhost"
     POSTGRES_USER: str = "postgres"
     POSTGRES_PASSWORD: str = "postgres"
@@ -39,8 +40,11 @@ class Settings(BaseSettings):
 
     @model_validator(mode='after')
     def validate_sesr012_config(self) -> 'Settings':
-        if self.ENVIRONMENT == "PRODUCTION" and self.SYNTHETIC_TEST_ENABLED:
-            raise ValueError("SESR-012 CDI-006 Violation: SYNTHETIC_TEST_ENABLED must be disabled in PRODUCTION")
+        if self.ENVIRONMENT == "PRODUCTION":
+            if self.SYNTHETIC_TEST_ENABLED:
+                raise ValueError("SESR-012 CDI-006 Violation: SYNTHETIC_TEST_ENABLED must be disabled in PRODUCTION")
+            if self.SECRET_KEY == "supersecret_sentinel_key_2026_dev" or len(self.SECRET_KEY) < 32:
+                raise ValueError("SESR-012 CDI-007 Violation: SECRET_KEY must be a secure, non-default string of at least 32 characters in PRODUCTION")
         if not self.CLINIC_TIMEZONE:
             raise ValueError("SESR-012 CDI-014 Violation: CLINIC_TIMEZONE is required")
         return self

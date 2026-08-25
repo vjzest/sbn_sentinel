@@ -28,7 +28,8 @@ async def create_operational_action(
         decision_id=request.decision_id,
         action_type_str=request.action_type,
         target_reference=request.target_reference,
-        parameters=request.parameters
+        parameters=request.parameters,
+        initiator_scope={"user_id": current_user.id, "org_id": getattr(current_user, "org_id", None)} if hasattr(current_user, "id") else None
     )
     
     if result["status"] == "ERROR":

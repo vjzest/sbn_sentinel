@@ -3,6 +3,7 @@ from datetime import datetime
 from app.db.database import SessionLocal
 from app.models.signal import SignalModel
 from app.models.audit import AuditLogModel
+from app.models.telemetry import TelemetryLogModel
 from app.schemas.signal import SignalEvent
 from app.schemas.audit import AuditLogCreate
 
@@ -113,9 +114,8 @@ class DataAuditEngine:
         """
         db = SessionLocal()
         try:
-            db_audit = AuditLogModel(
+            db_audit = TelemetryLogModel(
                 user_system=user_system,
-                action=f"FAILURE_LOG:{error_category}",
                 module=module,
                 correlation_id=correlation_id,
                 error_category=error_category,
