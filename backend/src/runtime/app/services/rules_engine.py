@@ -1,12 +1,12 @@
+from app.services.governance_registry import governance_registry, RuleEvaluationRecord, RuleVersion
+from app.services.base_service import BaseService
 import logging
 from datetime import datetime
 import uuid
-from typing import Dict, Any, List
+from typing import Dict, Any
 
 logger = logging.getLogger(__name__)
 
-from app.services.base_service import BaseService
-from app.services.governance_registry import governance_registry, RuleEvaluationRecord, RuleVersion
 
 class RulesEngine(BaseService):
     """
@@ -14,6 +14,7 @@ class RulesEngine(BaseService):
     Evaluates governed deterministic rules based on Applicable Version Resolution.
     Enforces strict Input Definitions and outputs Rule Evaluation Records.
     """
+
     def __init__(self):
         self.registry = governance_registry
 
@@ -34,7 +35,7 @@ class RulesEngine(BaseService):
         policy_result = payload.get("policy_result", {})
         # SESR-008: Extract journey_id from payload — must be the originating event's correlation_id
         journey_id = payload.get("journey_id")
-        
+
         # 1. PRR-005: Validate Policy Governance State
         if not policy_result or not getattr(policy_result, "is_permitted", False):
             if isinstance(policy_result, dict) and not policy_result.get("is_permitted", False):
@@ -43,7 +44,7 @@ class RulesEngine(BaseService):
                     "reason": "Policy engine blocked execution or returned invalid context."
                 }
             elif not isinstance(policy_result, dict) and not getattr(policy_result, "is_permitted", False):
-                 return {
+                return {
                     "rule_result": "NOT_EVALUABLE",
                     "reason": "Policy engine blocked execution."
                 }
@@ -73,7 +74,7 @@ class RulesEngine(BaseService):
                         missing_inputs.append(req_input.input_name)
                     else:
                         input_values[req_input.input_name] = val
-                
+
                 if missing_inputs:
                     result_state = "NOT_EVALUABLE"
                 else:
@@ -95,7 +96,7 @@ class RulesEngine(BaseService):
                     journey_id=journey_id
                 )
                 self.registry.record_evaluation(eval_record)
-                
+
                 findings.append({
                     "rule_id": rule.rule_id,
                     "rule_version": rule.version,
@@ -107,19 +108,22 @@ class RulesEngine(BaseService):
 
     def _execute_rule_logic(self, rule: RuleVersion, inputs: Dict[str, Any]) -> str:
         """Deterministically evaluates rule conditions."""
-        
+
         if rule.rule_id == "RULE-SCH-001":
             # No-Show Rule
-            if inputs.get("primary_context") == "Operational" and inputs.get("secondary_context") == "Provider Schedule Gap":
+            if inputs.get("primary_context") == "Operational" and inputs.get(
+                    "secondary_context") == "Provider Schedule Gap":
                 return "CONDITION_MET"
             return "CONDITION_NOT_MET"
 
         elif rule.rule_id == "RULE-SCH-002":
             # Wait Time Rule
-            if inputs.get("primary_context") == "Operational" and inputs.get("secondary_context") == "Queue Congestion":
+            if inputs.get("primary_context") == "Operational" and inputs.get(
+                    "secondary_context") == "Queue Congestion":
                 return "CONDITION_MET"
             return "CONDITION_NOT_MET"
 
         return "NOT_EVALUABLE"
+
 
 rules_engine = RulesEngine()

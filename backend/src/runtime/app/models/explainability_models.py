@@ -1,7 +1,6 @@
 import uuid
 from datetime import datetime
-from sqlalchemy import Column, String, DateTime, ForeignKey, Boolean, Text
-from sqlalchemy.orm import relationship
+from sqlalchemy import Column, String, DateTime, Boolean, Text
 from app.db.database import Base
 
 
@@ -13,7 +12,7 @@ class ExplanationPackageModel(Base):
 
     id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
     recommendation_id = Column(String, nullable=False, index=True)
-    payload = Column(Text, nullable=False) # Stored as JSON string
+    payload = Column(Text, nullable=False)  # Stored as JSON string
     created_at = Column(DateTime, default=datetime.utcnow)
 
 
@@ -37,9 +36,9 @@ class EvidenceTraceModel(Base):
     __tablename__ = "exp_evidence_trace"
 
     id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
-    trace_id = Column(String, nullable=False, index=True) # Links to DecisionTraceModel
+    trace_id = Column(String, nullable=False, index=True)  # Links to DecisionTraceModel
     evidence_id = Column(String, nullable=False)
-    influence_type = Column(String, nullable=False) # e.g. "Primary Driver", "Supporting Fact"
+    influence_type = Column(String, nullable=False)  # e.g. "Primary Driver", "Supporting Fact"
 
 
 class PolicyTraceModel(Base):
@@ -89,4 +88,4 @@ class RecommendationExplanationModel(Base):
     id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
     recommendation_id = Column(String, nullable=False, index=True)
     human_readable_reasoning = Column(Text, nullable=False)
-    alternatives_considered = Column(Text, nullable=True) # JSON list
+    alternatives_considered = Column(Text, nullable=True)  # JSON list

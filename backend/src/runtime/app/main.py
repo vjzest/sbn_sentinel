@@ -7,23 +7,6 @@ from app.api.v1.api import api_router
 from app.db.database import engine
 from app.models.signal import Base
 from app.models.user import User, UserRole
-from app.models.connector import ConnectorModel
-from app.models.insurance import PatientInsuranceModel
-from app.models.audit import AuditLogModel
-from app.models.telemetry import TelemetryLogModel
-from app.models.settings import SettingsModel
-from app.models.encounter import EncounterModel
-from app.models.integration import IntegrationModel
-from app.models.otp import OTPModel
-from app.models.rule import RuleModel, RuleExecutionLog
-from app.models.event import OperationalEventModel
-from app.models.organization import OrganizationModel, OrganizationClinicModel
-from app.models.intelligence import (
-    RuleFindingModel, DecisionContextModel, 
-    OperationalIntelligenceModel, RevenueIntelligenceModel
-)
-from app.models.evidence import EvidenceModel
-from app.models.governance_storage import GovernanceStorageModel
 
 # Create tables in SQLite/PostgreSQL (if they don't exist)
 Base.metadata.create_all(bind=engine)
@@ -93,5 +76,6 @@ def create_app() -> FastAPI:
             db.close()
 
     return app
+
 
 app = create_app()

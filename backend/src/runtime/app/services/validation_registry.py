@@ -9,7 +9,7 @@ It does NOT mutate any operational state — it only observes and records.
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import Optional, List, Dict, Any
+from typing import Optional, List
 import logging
 
 logger = logging.getLogger(__name__)
@@ -32,8 +32,10 @@ class FindingCategory(Enum):
     """
     MISSING_IMPLEMENTATION = "MISSING_IMPLEMENTATION"    # Required step was never executed
     INCORRECT_IMPLEMENTATION = "INCORRECT_IMPLEMENTATION"  # Step executed but produced wrong result
-    CROSS_MODULE_FAILURE = "CROSS_MODULE_FAILURE"        # A downstream failure caused by an upstream defect
-    SILENT_DEVIATION = "SILENT_DEVIATION"                # Step ran but silently diverged from specification
+    # A downstream failure caused by an upstream defect
+    CROSS_MODULE_FAILURE = "CROSS_MODULE_FAILURE"
+    # Step ran but silently diverged from specification
+    SILENT_DEVIATION = "SILENT_DEVIATION"
     DATA_INTEGRITY_VIOLATION = "DATA_INTEGRITY_VIOLATION"  # Required data field missing or corrupt
     CONTINUITY_VIOLATION = "CONTINUITY_VIOLATION"        # SESR-008 journey linkage broken
 
@@ -113,12 +115,21 @@ class ConformanceReport:
         lines = [
             sep,
             "  SESR-011 CONFORMANCE REPORT",
-            f"  Report ID  : {self.report_id}",
-            f"  Scenario   : {self.scenario_name}",
-            f"  Event ID   : {self.event_id or 'N/A'}",
-            f"  Overall    : {self.overall_status.value}",
-            f"  Checks     : {self.passed_checks} passed / {self.failed_checks} failed / {self.skipped_checks} skipped (total: {self.total_checks})",
-            f"  Generated  : {self.generated_at.isoformat()}",
+            f"  Report ID  : {
+                self.report_id}",
+            f"  Scenario   : {
+                self.scenario_name}",
+            f"  Event ID   : {
+                self.event_id or 'N/A'}",
+            f"  Overall    : {
+                self.overall_status.value}",
+            f"  Checks     : {
+                self.passed_checks} passed / {
+                self.failed_checks} failed / {
+                self.skipped_checks} skipped (total: {
+                self.total_checks})",
+            f"  Generated  : {
+                self.generated_at.isoformat()}",
             sep,
         ]
         for result in self.check_results:
@@ -128,7 +139,8 @@ class ConformanceReport:
                 icon = "SKIP"
             else:
                 icon = "FAIL"
-            lines.append(f"  [{icon}] [{result.scope.value}] {result.requirement_ref} -> {result.status.value}")
+            lines.append(
+                f"  [{icon}] [{result.scope.value}] {result.requirement_ref} -> {result.status.value}")
             for f in result.findings:
                 lines.append(f"        |-> [{f.category.value}] {f.description}")
                 if f.expected_value:

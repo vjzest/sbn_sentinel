@@ -4,7 +4,7 @@ Event ORM Model — The central state record for every event in the pipeline.
 """
 import uuid
 from datetime import datetime
-from sqlalchemy import Column, String, DateTime, Integer, JSON, Float, Text, ForeignKey
+from sqlalchemy import Column, String, DateTime, Integer, JSON, Float, Text
 from sqlalchemy.orm import relationship
 from app.models.signal import Base
 
@@ -37,10 +37,25 @@ class OperationalEventModel(Base):
     last_error = Column(Text, nullable=True)
 
     # --- Pipeline Layer Results (SES-004 Relational Links) ---
-    rule_findings = relationship("RuleFindingModel", back_populates="event", cascade="all, delete-orphan")
-    decision_context = relationship("DecisionContextModel", back_populates="event", uselist=False, cascade="all, delete-orphan")
-    operational_intelligence = relationship("OperationalIntelligenceModel", back_populates="event", uselist=False, cascade="all, delete-orphan")
-    revenue_intelligence = relationship("RevenueIntelligenceModel", back_populates="event", uselist=False, cascade="all, delete-orphan")
+    rule_findings = relationship(
+        "RuleFindingModel",
+        back_populates="event",
+        cascade="all, delete-orphan")
+    decision_context = relationship(
+        "DecisionContextModel",
+        back_populates="event",
+        uselist=False,
+        cascade="all, delete-orphan")
+    operational_intelligence = relationship(
+        "OperationalIntelligenceModel",
+        back_populates="event",
+        uselist=False,
+        cascade="all, delete-orphan")
+    revenue_intelligence = relationship(
+        "RevenueIntelligenceModel",
+        back_populates="event",
+        uselist=False,
+        cascade="all, delete-orphan")
 
     layer7_storage_ref = Column(String, nullable=True)      # Reference to stored signal ID
     layer8_published = Column(String, nullable=True)        # "dashboard", "api", etc.
@@ -85,32 +100,32 @@ class OperationalEventModel(Base):
             "completed_at": self.completed_at.isoformat() if self.completed_at else None,
             "failed_at": self.failed_at.isoformat() if self.failed_at else None,
             "total_duration_ms": self.total_duration_ms(),
-            
+
             # Reconstruct legacy output structure for API compatibility
             "layer3_rules_output": {
                 "rule_id": rf.rule_id, "severity": rf.severity, "description": rf.description
             } if self.rule_findings and (rf := self.rule_findings[0]) else None,
-            
+
             "layer4_context_output": {
                 "primary_context": self.decision_context.primary_context,
                 "secondary_context": self.decision_context.secondary_context,
                 "confidence": self.decision_context.confidence,
                 "reason": self.decision_context.reason
             } if self.decision_context else None,
-            
+
             "layer5_intelligence_output": {
                 "risk_level": self.operational_intelligence.priority,
                 "business_impact": self.operational_intelligence.operational_impact,
                 "action": self.operational_intelligence.recommendation,
                 "status": self.operational_intelligence.status
             } if self.operational_intelligence else None,
-            
+
             "layer6_revenue_output": {
                 "estimated_financial_exposure": self.revenue_intelligence.estimated_exposure,
                 "revenue_risk_category": self.revenue_intelligence.opportunity_category,
                 "revenue_confidence": self.revenue_intelligence.financial_priority
             } if self.revenue_intelligence else None,
-            
+
             "layer7_storage_ref": self.layer7_storage_ref,
             "layer8_published": self.layer8_published,
         }

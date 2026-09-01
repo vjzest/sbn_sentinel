@@ -1,3 +1,5 @@
+from app.models.audit import AuditLogModel
+from app.models.user import User, UserRole
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from typing import List, Dict, Any
@@ -9,14 +11,15 @@ from app.models.encounter import EncounterModel
 
 router = APIRouter()
 
-from app.models.user import User, UserRole
 
 def require_super_admin(email: str, db: Session):
     """Simple super admin check - in production use JWT middleware."""
-    user = db.query(User).filter(User.email == email, User.role == UserRole.SYSTEM_ADMINISTRATOR.value).first()
+    user = db.query(User).filter(User.email == email, User.role ==
+                                 UserRole.SYSTEM_ADMINISTRATOR.value).first()
     if not user:
         raise HTTPException(status_code=403, detail="Super admin access required.")
     return user
+
 
 @router.get("/stats")
 def get_platform_stats(db: Session = Depends(get_db)):
@@ -26,10 +29,13 @@ def get_platform_stats(db: Session = Depends(get_db)):
     all_users = db.query(User).all()
     all_encounters = db.query(EncounterModel).all()
 
-    total_clinics = len(set(u.full_name.split(" - ")[0] if " - " in (u.full_name or "") else "Default Clinic" for u in all_users if u.role != UserRole.SYSTEM_ADMINISTRATOR.value))
-    total_doctors = len([u for u in all_users if u.role in (UserRole.PHYSICIAN.value, UserRole.CLINIC_MANAGER.value, UserRole.SYSTEM_ADMINISTRATOR.value)])
+    total_clinics = len(set(u.full_name.split(" - ")[0] if " - " in (
+        u.full_name or "") else "Default Clinic" for u in all_users if u.role != UserRole.SYSTEM_ADMINISTRATOR.value))
+    total_doctors = len([u for u in all_users if u.role in (
+        UserRole.PHYSICIAN.value, UserRole.CLINIC_MANAGER.value, UserRole.SYSTEM_ADMINISTRATOR.value)])
     total_patients = len(all_encounters)
-    active_users = len([u for u in all_users if u.is_active and u.role != UserRole.SYSTEM_ADMINISTRATOR.value])
+    active_users = len([u for u in all_users if u.is_active and u.role !=
+                       UserRole.SYSTEM_ADMINISTRATOR.value])
 
     paid_count = len([e for e in all_encounters if e.billing_status == "Paid"])
     pending_count = len([e for e in all_encounters if e.billing_status == "Pending"])
@@ -52,6 +58,7 @@ def get_platform_stats(db: Session = Depends(get_db)):
         "generated_at": datetime.utcnow().isoformat() + "Z"
     }
 
+
 @router.get("/users")
 def get_all_users(db: Session = Depends(get_db)) -> List[Dict[str, Any]]:
     """
@@ -71,6 +78,7 @@ def get_all_users(db: Session = Depends(get_db)) -> List[Dict[str, Any]]:
         for u in users
     ]
 
+
 @router.patch("/users/{user_id}/toggle")
 def toggle_user_status(user_id: int, db: Session = Depends(get_db)):
     """Toggle active/inactive status of a user."""
@@ -82,6 +90,7 @@ def toggle_user_status(user_id: int, db: Session = Depends(get_db)):
     user.is_active = not user.is_active
     db.commit()
     return {"id": user.id, "email": user.email, "is_active": user.is_active}
+
 
 @router.post("/users/invite")
 def invite_clinic_user(payload: Dict[str, Any], db: Session = Depends(get_db)):
@@ -120,6 +129,7 @@ def invite_clinic_user(payload: Dict[str, Any], db: Session = Depends(get_db)):
         "role": role
     }
 
+
 @router.get("/encounters/summary")
 def get_all_encounters_summary(db: Session = Depends(get_db)) -> List[Dict[str, Any]]:
     """
@@ -140,12 +150,13 @@ def get_all_encounters_summary(db: Session = Depends(get_db)) -> List[Dict[str, 
         for e in encounters
     ]
 
+
 @router.get("/pending-approvals")
 def get_pending_approvals():
     """Return pending clinic registrations."""
     return []
 
-from app.models.audit import AuditLogModel
+
 @router.get("/audit-logs")
 def get_audit_logs(db: Session = Depends(get_db)):
     """Return super admin audit logs from database."""

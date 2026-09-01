@@ -8,6 +8,7 @@ from sqlalchemy import Column, String, DateTime, Boolean, ForeignKey
 from sqlalchemy.orm import relationship
 from app.db.database import Base
 
+
 class OrganizationModel(Base):
     """
     Represents the customer organization.
@@ -21,7 +22,11 @@ class OrganizationModel(Base):
     created_date = Column(DateTime, default=datetime.utcnow)
 
     # Relationships
-    clinics = relationship("OrganizationClinicModel", back_populates="organization", cascade="all, delete")
+    clinics = relationship(
+        "OrganizationClinicModel",
+        back_populates="organization",
+        cascade="all, delete")
+
 
 class OrganizationClinicModel(Base):
     """

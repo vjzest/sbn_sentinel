@@ -1,7 +1,7 @@
 import httpx
 from typing import Dict, Any, List
-import logging
 from .base_connector import BaseConnector
+
 
 class PracticeFusionConnector(BaseConnector):
     """
@@ -24,7 +24,7 @@ class PracticeFusionConnector(BaseConnector):
         endpoint = config.get("endpoint")
         if endpoint:
             self.base_url = endpoint
-            
+
         if not self.api_key:
             self.logger.error("Missing api_key in config")
             return False
@@ -34,7 +34,7 @@ class PracticeFusionConnector(BaseConnector):
             "Accept": "application/json",
             "Content-Type": "application/json"
         }
-        
+
         # Test authentication with a lightweight call (or rely on retrieve_data)
         # For simplicity in V1, we assume true if key exists. True auth is verified during retrieve.
         return True
@@ -75,7 +75,7 @@ class PracticeFusionConnector(BaseConnector):
         """
         resource = raw_record.get("resource", {})
         patient_id = resource.get("id", "UNKNOWN")
-        
+
         names = resource.get("name", [])
         patient_name = "Unknown"
         if names:
@@ -92,5 +92,5 @@ class PracticeFusionConnector(BaseConnector):
             "detail": detail,
             "patient_id": patient_id,
             "patient_name": patient_name,
-            "raw_source_data": raw_record # Preserve raw data for reference
+            "raw_source_data": raw_record  # Preserve raw data for reference
         }

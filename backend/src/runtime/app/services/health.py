@@ -5,10 +5,12 @@ from src.runtime.app.core.config import settings
 
 logger = logging.getLogger(__name__)
 
+
 class HealthState(str, Enum):
     HEALTHY = "HEALTHY"
     DEGRADED = "DEGRADED"
     NOT_READY = "NOT_READY"
+
 
 class HealthService:
     @staticmethod
@@ -28,9 +30,9 @@ class HealthService:
         components: Dict[str, Any] = {
             "application_build": settings.BUILD_ID,
             "environment": settings.ENVIRONMENT,
-            "database": HealthState.HEALTHY, # Mock database health
-            "pf_connector": HealthState.HEALTHY, # Mock connector health
-            "schema_compatibility": HealthState.HEALTHY, # Mock schema health
+            "database": HealthState.HEALTHY,  # Mock database health
+            "pf_connector": HealthState.HEALTHY,  # Mock connector health
+            "schema_compatibility": HealthState.HEALTHY,  # Mock schema health
         }
 
         # Example Readiness checks based on configuration

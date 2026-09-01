@@ -1,7 +1,6 @@
 import uuid
 from datetime import datetime
-from sqlalchemy import Column, String, DateTime, ForeignKey, Boolean, Text
-from sqlalchemy.orm import relationship
+from sqlalchemy import Column, String, DateTime, Boolean
 from app.db.database import Base
 
 
@@ -28,7 +27,7 @@ class ContextRelationshipsModel(Base):
     context_id = Column(String, nullable=False, index=True)
     source_evidence_id = Column(String, nullable=False)
     target_evidence_id = Column(String, nullable=False)
-    relationship_type = Column(String, nullable=False) # e.g. "Causes", "Depends On"
+    relationship_type = Column(String, nullable=False)  # e.g. "Causes", "Depends On"
 
 
 class ContextConflictsModel(Base):
@@ -79,5 +78,5 @@ class ContextProvenanceModel(Base):
     id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
     context_id = Column(String, nullable=False, index=True)
     evidence_id = Column(String, nullable=False)
-    source_system = Column(String, nullable=False) # e.g. "Practice Fusion", "Manual Input"
+    source_system = Column(String, nullable=False)  # e.g. "Practice Fusion", "Manual Input"
     ingestion_timestamp = Column(DateTime, default=datetime.utcnow)

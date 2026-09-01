@@ -18,7 +18,7 @@ Pipeline Position:
 """
 import logging
 from typing import Dict, Any, List
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 import uuid
 from app.services.base_service import BaseService
 
@@ -27,6 +27,8 @@ logger = logging.getLogger(__name__)
 # ─────────────────────────────────────────────────────────────────────────────
 # POLICY RESULT — Output of policy evaluation
 # ─────────────────────────────────────────────────────────────────────────────
+
+
 @dataclass
 class PolicyResult:
     """
@@ -107,14 +109,15 @@ class PolicyEngine(BaseService):
 
         for policy in applicable_policies:
             evaluated.append(f"{policy.policy_id} / {policy.version}")
-            
+
             if policy.policy_id == "POL-001":
-                if not evidence_package or (not evidence_package.get("evidence_items") and not evidence_package.get("evidence_references")):
+                if not evidence_package or (not evidence_package.get(
+                        "evidence_items") and not evidence_package.get("evidence_references")):
                     failed.append(f"{policy.policy_id} / {policy.version}")
                     notes.append("BLOCKED: No operational evidence available.")
                 else:
                     notes.append(f"PASS: {policy.policy_id}")
-            
+
             elif policy.policy_id == "POL-002":
                 allowed_event_types = ["EHR", "Phone", "Email", "Manual"]
                 if event_type not in allowed_event_types:
@@ -139,5 +142,6 @@ class PolicyEngine(BaseService):
             f"Checked={len(evaluated)} policies. Failed={len(failed)} policies."
         )
         return result
+
 
 policy_engine = PolicyEngine()

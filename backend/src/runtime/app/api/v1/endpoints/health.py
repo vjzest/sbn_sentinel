@@ -4,18 +4,19 @@ from sqlalchemy import text
 from typing import Dict, Any
 
 from app.db.database import SessionLocal
-from app.api.deps import get_current_user
-from app.models.user import User
 
 router = APIRouter()
 
 # Dependency
+
+
 def get_db():
     db = SessionLocal()
     try:
         yield db
     finally:
         db.close()
+
 
 @router.get("/verify", summary="SES-012 Post-Deployment Health Check")
 def verify_health(
@@ -44,7 +45,10 @@ def verify_health(
     try:
         from app.services.connector_manager import connector_manager
         # In python a dict has length, verify the manager initialized the registry
-        if hasattr(connector_manager, '_connector_registry') and len(connector_manager._connector_registry) > 0:
+        if hasattr(
+                connector_manager,
+                '_connector_registry') and len(
+                connector_manager._connector_registry) > 0:
             health_status["connectors"] = "Initialized"
         else:
             health_status["connectors"] = "Warning: No connectors registered"
@@ -57,7 +61,8 @@ def verify_health(
         from app.services.rules_engine import rules_engine
         # Ensure rules engine is instantiated and cache variables exist
         if hasattr(rules_engine, '_cache_ttl_seconds'):
-            health_status["rules_engine_cache"] = f"Enabled (TTL: {rules_engine._cache_ttl_seconds}s)"
+            health_status["rules_engine_cache"] = f"Enabled (TTL: {
+                rules_engine._cache_ttl_seconds}s)"
         else:
             health_status["rules_engine_cache"] = "Warning: Cache disabled or uninitialized"
     except Exception as e:
@@ -66,6 +71,7 @@ def verify_health(
 
     return health_status
 
+
 @router.get("/ready", summary="Readiness Gate")
 def readiness_gate(db: Session = Depends(get_db)):
     """
@@ -73,17 +79,17 @@ def readiness_gate(db: Session = Depends(get_db)):
     Checks DB connectivity.
     """
     status_dict = {"ready": False, "database": "Disconnected", "auth": "Unverified"}
-    
+
     try:
         db.execute(text("SELECT 1"))
         status_dict["database"] = "Connected"
-        status_dict["auth"] = "Verified" # In V1 we assume if DB is up auth is reachable
+        status_dict["auth"] = "Verified"  # In V1 we assume if DB is up auth is reachable
         status_dict["ready"] = True
     except Exception as e:
         status_dict["database"] = f"Failed: {str(e)}"
-        
+
     if not status_dict["ready"]:
         from fastapi import HTTPException
         raise HTTPException(status_code=503, detail=status_dict)
-        
+
     return status_dict

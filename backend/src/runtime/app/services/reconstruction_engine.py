@@ -1,6 +1,5 @@
 import logging
-from typing import Dict, Any, Optional
-from datetime import datetime
+from typing import Dict, Any
 
 from app.db.database import SessionLocal
 from app.models.governance_storage import RecommendationModel
@@ -8,18 +7,27 @@ from app.services.governance_registry import governance_registry
 
 logger = logging.getLogger(__name__)
 
+
 class ReproductionResult:
-    def __init__(self, status: str, original_recommendation: Dict[str, Any], reproduced_recommendation: Dict[str, Any], diff: str):
-        self.status = status # MATCH, MISMATCH, NOT_REPRODUCIBLE
+    def __init__(self,
+                 status: str,
+                 original_recommendation: Dict[str,
+                                               Any],
+                 reproduced_recommendation: Dict[str,
+                                                 Any],
+                 diff: str):
+        self.status = status  # MATCH, MISMATCH, NOT_REPRODUCIBLE
         self.original_recommendation = original_recommendation
         self.reproduced_recommendation = reproduced_recommendation
         self.diff = diff
+
 
 class ReconstructionEngine:
     """
     SESR-010: Decision Reproducibility & Deterministic Reconstruction Engine.
     Re-runs historical governed logic against historical inputs to prove determinism.
     """
+
     def __init__(self):
         self.registry = governance_registry
 
@@ -31,46 +39,57 @@ class ReconstructionEngine:
         db = SessionLocal()
         try:
             # 1. Fetch Historical Context Binding from new governed storage
-            record = db.query(RecommendationModel).filter(RecommendationModel.journey_id == event_id).first()
+            record = db.query(RecommendationModel).filter(
+                RecommendationModel.journey_id == event_id).first()
             if not record:
-                return ReproductionResult("NOT_REPRODUCIBLE", {}, {}, "No RecommendationModel found for journey.")
+                return ReproductionResult(
+                    "NOT_REPRODUCIBLE", {}, {}, "No RecommendationModel found for journey.")
 
             if not record.mapping_version:
-                return ReproductionResult("NOT_REPRODUCIBLE", {}, {}, "RecommendationModel lacks historical bindings.")
-            
-            # 2. Fetch Historical Logic Versions
-            historical_mapping = self.registry.get_recommendation_mapping_by_version(record.mapping_id, record.mapping_version)
-            if not historical_mapping:
-                 return ReproductionResult("NOT_REPRODUCIBLE", {}, {}, f"Historical mapping {record.mapping_id} version {record.mapping_version} no longer exists in registry.")
+                return ReproductionResult(
+                    "NOT_REPRODUCIBLE", {}, {}, "RecommendationModel lacks historical bindings.")
 
-            historical_rule = self.registry.get_rule_by_version(historical_mapping.applicable_rule_id, "V1")
+            # 2. Fetch Historical Logic Versions
+            historical_mapping = self.registry.get_recommendation_mapping_by_version(
+                record.mapping_id, record.mapping_version)
+            if not historical_mapping:
+                return ReproductionResult(
+                    "NOT_REPRODUCIBLE", {}, {}, f"Historical mapping {
+                        record.mapping_id} version {
+                        record.mapping_version} no longer exists in registry.")
+
+            historical_rule = self.registry.get_rule_by_version(
+                historical_mapping.applicable_rule_id, "V1")
             if not historical_rule:
-                 return ReproductionResult("NOT_REPRODUCIBLE", {}, {}, "Historical rule no longer exists in registry.")
+                return ReproductionResult(
+                    "NOT_REPRODUCIBLE", {}, {}, "Historical rule no longer exists in registry.")
 
             # 3. Deterministic Reconstruction
-            
+
             # 3a. Reproduce Rule Logic (isolated context)
             original_rec = {
                 "priority": record.priority,
                 "action": record.content,
                 "mapping_version": record.mapping_version
             }
-            
+
             # Simplistic fallback for inputs
             inputs = {
                 "primary_context": "Operational",
                 "secondary_context": "Provider Schedule Gap",
                 "event_type": "EHR"
             }
-            
+
             rule_result = "NOT_EVALUABLE"
             if historical_rule.rule_id == "RULE-SCH-001":
-                if inputs.get("primary_context") == "Operational" and inputs.get("secondary_context") == "Provider Schedule Gap":
+                if inputs.get("primary_context") == "Operational" and inputs.get(
+                        "secondary_context") == "Provider Schedule Gap":
                     rule_result = "CONDITION_MET"
                 else:
                     rule_result = "CONDITION_NOT_MET"
             elif historical_rule.rule_id == "RULE-SCH-002":
-                if inputs.get("primary_context") == "Operational" and inputs.get("secondary_context") == "Queue Congestion":
+                if inputs.get("primary_context") == "Operational" and inputs.get(
+                        "secondary_context") == "Queue Congestion":
                     rule_result = "CONDITION_MET"
                 else:
                     rule_result = "CONDITION_NOT_MET"
@@ -87,13 +106,13 @@ class ReconstructionEngine:
                 }
             elif rule_result == "NOT_EVALUABLE":
                 reproduced_rec = {
-                     "action": "Review policy rules.",
-                     "priority": "Information"
+                    "action": "Review policy rules.",
+                    "priority": "Information"
                 }
 
             # 4. Compare Outputs
             # original_rec is already loaded above
-            
+
             # Simple diff: compare key values
             diffs = []
             for k in ["priority", "action", "expected_outcome", "business_impact"]:
@@ -110,8 +129,9 @@ class ReconstructionEngine:
                 diff_str = ", ".join(diffs)
 
             return ReproductionResult(status, original_rec, reproduced_rec, diff_str)
-            
+
         finally:
             db.close()
+
 
 reconstruction_engine = ReconstructionEngine()

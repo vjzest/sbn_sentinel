@@ -6,10 +6,10 @@ from app.models.settings import SettingsModel
 from app.models.user import User
 from app.models.integration import IntegrationModel
 from app.schemas.settings import SettingsUpdate, SettingsResponse
-from app.core.security import get_password_hash
 from app.core.email import send_email
 
 router = APIRouter()
+
 
 @router.get("", response_model=SettingsResponse)
 def get_settings(db: Session = Depends(get_db)):
@@ -44,6 +44,7 @@ def get_settings(db: Session = Depends(get_db)):
         db.refresh(settings)
     return settings
 
+
 @router.post("", response_model=SettingsResponse)
 def update_settings(payload: SettingsUpdate, db: Session = Depends(get_db)):
     """
@@ -60,10 +61,11 @@ def update_settings(payload: SettingsUpdate, db: Session = Depends(get_db)):
     update_data = payload.dict(exclude_unset=True)
     for key, value in update_data.items():
         setattr(settings, key, value)
-    
+
     db.commit()
     db.refresh(settings)
     return settings
+
 
 @router.get("/team")
 def get_team_members(db: Session = Depends(get_db)) -> List[Dict[str, Any]]:
@@ -80,20 +82,21 @@ def get_team_members(db: Session = Depends(get_db)) -> List[Dict[str, Any]]:
         for u in users
     ]
 
+
 @router.post("/team/invite")
 def invite_team_member(payload: Dict[str, Any], db: Session = Depends(get_db)):
     """Invite a new staff member to the clinic."""
     email = payload.get("email")
     name = payload.get("name", "New Staff")
     role = payload.get("role", "staff")
-    
+
     if not email:
         raise HTTPException(status_code=400, detail="Email is required")
-        
+
     existing = db.query(User).filter(User.email == email).first()
     if existing:
         raise HTTPException(status_code=400, detail="Email already registered")
-        
+
     new_user = User(
         email=email,
         full_name=name,
@@ -102,16 +105,16 @@ def invite_team_member(payload: Dict[str, Any], db: Session = Depends(get_db)):
         is_active=False
     )
     db.add(new_user)
-    
+
     import random
     from app.models.otp import OTPModel
     otp = str(random.randint(100000, 999999))
     db_otp = OTPModel(email=email, otp_code=otp, purpose="invite")
     db.add(db_otp)
-    
+
     db.commit()
     db.refresh(new_user)
-    
+
     # Send invitation email
     login_url = "http://localhost:3000"
     html_content = f"""
@@ -127,8 +130,12 @@ def invite_team_member(payload: Dict[str, Any], db: Session = Depends(get_db)):
         </body>
     </html>
     """
-    send_email(to_email=email, subject="You are invited to SBN Sentinel", body=html_content, is_html=True)
-    
+    send_email(
+        to_email=email,
+        subject="You are invited to SBN Sentinel",
+        body=html_content,
+        is_html=True)
+
     return {
         "id": str(new_user.id),
         "name": new_user.full_name,
@@ -136,6 +143,7 @@ def invite_team_member(payload: Dict[str, Any], db: Session = Depends(get_db)):
         "role": new_user.role,
         "status": "Pending"
     }
+
 
 @router.delete("/team/{user_id}")
 def revoke_team_member(user_id: int, db: Session = Depends(get_db)):
@@ -145,10 +153,11 @@ def revoke_team_member(user_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="User not found")
     if user.role == "super_admin":
         raise HTTPException(status_code=403, detail="Cannot revoke super admin")
-        
+
     user.is_active = False
     db.commit()
     return {"message": "Access revoked successfully"}
+
 
 @router.get("/integrations")
 def get_integrations(db: Session = Depends(get_db)) -> List[Dict[str, Any]]:
@@ -156,16 +165,40 @@ def get_integrations(db: Session = Depends(get_db)) -> List[Dict[str, Any]]:
     integrations = db.query(IntegrationModel).all()
     if not integrations:
         default_integrations = [
-            IntegrationModel(id='practice-fusion', name='Practice Fusion EHR', type='Clinical Integration', connected=True, lastSync='1 hr ago'),
-            IntegrationModel(id='gmail', name='Google Workspace Gmail', type='Secure Communication', connected=True, lastSync='30 mins ago'),
-            IntegrationModel(id='twilio', name='Twilio Outbound Gateway', type='Voice & SMS API', connected=True, lastSync='10 mins ago'),
-            IntegrationModel(id='clearinghouse', name='Approved Clearinghouse API', type='Billing Integration', connected=True, lastSync='2 hrs ago'),
-            IntegrationModel(id='openai', name='OpenAI Intelligence Engine', type='AI Service (Approved V1)', connected=True, lastSync='5 mins ago')
-        ]
+            IntegrationModel(
+                id='practice-fusion',
+                name='Practice Fusion EHR',
+                type='Clinical Integration',
+                connected=True,
+                lastSync='1 hr ago'),
+            IntegrationModel(
+                id='gmail',
+                name='Google Workspace Gmail',
+                type='Secure Communication',
+                connected=True,
+                lastSync='30 mins ago'),
+            IntegrationModel(
+                id='twilio',
+                name='Twilio Outbound Gateway',
+                type='Voice & SMS API',
+                connected=True,
+                lastSync='10 mins ago'),
+            IntegrationModel(
+                id='clearinghouse',
+                name='Approved Clearinghouse API',
+                type='Billing Integration',
+                connected=True,
+                lastSync='2 hrs ago'),
+            IntegrationModel(
+                id='openai',
+                name='OpenAI Intelligence Engine',
+                type='AI Service (Approved V1)',
+                connected=True,
+                lastSync='5 mins ago')]
         db.add_all(default_integrations)
         db.commit()
         integrations = default_integrations
-        
+
     return [
         {
             "id": i.id,
@@ -177,23 +210,25 @@ def get_integrations(db: Session = Depends(get_db)) -> List[Dict[str, Any]]:
         for i in integrations
     ]
 
+
 @router.post("/integrations/{integration_id}/toggle")
 def toggle_integration(integration_id: str, db: Session = Depends(get_db)):
     """Toggle the connected status of an integration."""
     integration = db.query(IntegrationModel).filter(IntegrationModel.id == integration_id).first()
     if not integration:
         raise HTTPException(status_code=404, detail="Integration not found")
-        
+
     integration.connected = not integration.connected
     integration.lastSync = 'Just now' if integration.connected else 'Never'
     db.commit()
     db.refresh(integration)
-    
+
     return {
         "id": integration.id,
         "connected": integration.connected,
         "lastSync": integration.lastSync
     }
+
 
 @router.post("/send-sms-reminder")
 def trigger_sms_reminder(payload: Dict[str, Any]):
@@ -205,9 +240,10 @@ def trigger_sms_reminder(payload: Dict[str, Any]):
     patient = payload.get("patient_name", "Vijay Maurya")
     doctor = payload.get("doctor_name", "Dr. Smith")
     time_str = payload.get("time_str", "10:00 AM")
-    
+
     result = send_patient_sms_reminder(to_phone, patient, doctor, time_str)
     return result
+
 
 @router.post("/send-email-report")
 def trigger_email_report(payload: Dict[str, Any] = None):

@@ -5,12 +5,14 @@ from datetime import datetime
 from typing import Any, Dict
 
 # SES-010: Structured Logging Configuration
+
+
 class StructuredJSONFormatter(logging.Formatter):
     """
     Format logs as structured JSON to fulfill SES-010 Section 10 observability requirements.
     Ensures Timestamp, Severity, Component, and Correlation ID are present.
     """
-    
+
     def format(self, record: logging.LogRecord) -> str:
         log_entry: Dict[str, Any] = {
             "timestamp": datetime.utcnow().isoformat() + "Z",
@@ -37,7 +39,29 @@ class StructuredJSONFormatter(logging.Formatter):
 
         # Scrub sensitive data from kwargs if they were accidentally attached
         for key in dir(record):
-            if key.startswith("_") or key in log_entry or key in ["args", "asctime", "created", "exc_info", "exc_text", "filename", "funcName", "levelname", "levelno", "lineno", "message", "module", "msecs", "msg", "name", "pathname", "process", "processName", "relativeCreated", "stack_info", "thread", "threadName"]:
+            if key.startswith("_") or key in log_entry or key in [
+                "args",
+                "asctime",
+                "created",
+                "exc_info",
+                "exc_text",
+                "filename",
+                "funcName",
+                "levelname",
+                "levelno",
+                "lineno",
+                "message",
+                "module",
+                "msecs",
+                "msg",
+                "name",
+                "pathname",
+                "process",
+                "processName",
+                "relativeCreated",
+                "stack_info",
+                "thread",
+                    "threadName"]:
                 continue
             val = getattr(record, key)
             if isinstance(val, (str, int, float, bool, dict, list)):
@@ -54,7 +78,7 @@ def setup_logging(log_level: str = "INFO"):
     Initializes the root logger with the SES-010 compliant structured formatter.
     """
     root_logger = logging.getLogger()
-    
+
     # Clear existing handlers to avoid duplicates
     if root_logger.hasHandlers():
         root_logger.handlers.clear()
@@ -68,5 +92,5 @@ def setup_logging(log_level: str = "INFO"):
 
     # Specific loud loggers to silence or restrict
     logging.getLogger("uvicorn.access").setLevel(logging.WARNING)
-    
+
     root_logger.info("Structured logging initialized (SES-010).")

@@ -5,13 +5,13 @@ Mandatory Implementation Standards for the Evidence Engine.
 Runtime Sequence:
 External Evidence -> ERP -> ERRM -> EVP -> Classification -> EOS-003 -> Decision Context Engine
 """
+import json
+from app.models.evidence import EvidenceModel
+from app.db.database import SessionLocal
 import logging
-import hashlib
-import os
 from typing import Dict, Any, List, Optional
 from datetime import datetime
 from dataclasses import dataclass, field
-from enum import Enum
 from app.services.base_service import BaseService
 import uuid
 
@@ -20,6 +20,8 @@ logger = logging.getLogger(__name__)
 # ─────────────────────────────────────────────────────────────────────────────
 # EOS-001: EVIDENCE OBJECT
 # ─────────────────────────────────────────────────────────────────────────────
+
+
 @dataclass(frozen=True)
 class OperationalEvidence:
     """
@@ -32,7 +34,7 @@ class OperationalEvidence:
     fact_value: Any
     source_connector: str
     retrieval_timestamp: datetime
-    evidence_type: Optional[str] = None # Assigned during Classification
+    evidence_type: Optional[str] = None  # Assigned during Classification
     metadata: Dict[str, Any] = field(default_factory=dict)
     version: int = 1
     previous_version_id: Optional[str] = None
@@ -41,28 +43,30 @@ class OperationalEvidence:
 # ─────────────────────────────────────────────────────────────────────────────
 # EOS-002: EVIDENCE REPOSITORY (ERRM)
 # ─────────────────────────────────────────────────────────────────────────────
-from app.db.database import SessionLocal
-from app.models.evidence import EvidenceModel
-import json
+
 
 class EvidenceRepository:
     """
     EOS-002: Single source of truth for Evidence Objects.
     Manages storage and versioning using SQLAlchemy.
     """
+
     def store(self, evidence: OperationalEvidence):
         db = SessionLocal()
         try:
             # Check if exists
-            existing = db.query(EvidenceModel).filter(EvidenceModel.evidence_id == evidence.evidence_id).first()
+            existing = db.query(EvidenceModel).filter(
+                EvidenceModel.evidence_id == evidence.evidence_id).first()
             if existing:
                 existing.canonical_entity = evidence.canonical_entity
                 existing.fact_key = evidence.fact_key
-                existing.fact_value_str = str(evidence.fact_value) if evidence.fact_value is not None else None
+                existing.fact_value_str = str(
+                    evidence.fact_value) if evidence.fact_value is not None else None
                 existing.source_connector = evidence.source_connector
                 existing.retrieval_timestamp = evidence.retrieval_timestamp
                 existing.evidence_type = evidence.evidence_type
-                existing.metadata_json = json.dumps(evidence.metadata) if evidence.metadata else None
+                existing.metadata_json = json.dumps(
+                    evidence.metadata) if evidence.metadata else None
                 existing.version = evidence.version
                 existing.previous_version_id = evidence.previous_version_id
             else:
@@ -70,14 +74,15 @@ class EvidenceRepository:
                     evidence_id=evidence.evidence_id,
                     canonical_entity=evidence.canonical_entity,
                     fact_key=evidence.fact_key,
-                    fact_value_str=str(evidence.fact_value) if evidence.fact_value is not None else None,
+                    fact_value_str=str(
+                        evidence.fact_value) if evidence.fact_value is not None else None,
                     source_connector=evidence.source_connector,
                     retrieval_timestamp=evidence.retrieval_timestamp,
                     evidence_type=evidence.evidence_type,
-                    metadata_json=json.dumps(evidence.metadata) if evidence.metadata else None,
+                    metadata_json=json.dumps(
+                        evidence.metadata) if evidence.metadata else None,
                     version=evidence.version,
-                    previous_version_id=evidence.previous_version_id
-                )
+                    previous_version_id=evidence.previous_version_id)
                 db.add(new_model)
             db.commit()
             logger.debug(f"[ERRM] Stored evidence {evidence.evidence_id} in DB")
@@ -110,6 +115,7 @@ class EvidenceRepository:
         finally:
             db.close()
 
+
 evidence_repository = EvidenceRepository()
 
 
@@ -124,7 +130,7 @@ class EvidenceStatusPackage:
     """
     package_id: str
     event_id: str
-    evidence_references: List[str] # List of evidence_ids
+    evidence_references: List[str]  # List of evidence_ids
     validation_results: Dict[str, bool]
     classification_results: Dict[str, str]
     processing_status: str
@@ -144,6 +150,7 @@ class EvidenceEngine(BaseService):
     SESR-001 Compliant Evidence Engine.
     Executes the strict runtime: ERP -> ERRM -> EVP -> Classification -> EOS-003.
     """
+
     def __init__(self):
         self.logger = logging.getLogger(self.__class__.__name__)
         self.repository = evidence_repository
@@ -151,7 +158,7 @@ class EvidenceEngine(BaseService):
     @property
     def service_name(self) -> str:
         return "EvidenceEngine"
-        
+
     @property
     def version(self) -> str:
         return "v1.0"
@@ -161,10 +168,10 @@ class EvidenceEngine(BaseService):
         Entry point from processing_orchestrator.
         """
         canonical_event_data = payload.get("canonical_event", {})
-        
+
         # ERP: Evidence Registration Pipeline
         raw_evidence_list = self._erp_registration(canonical_event_data)
-        
+
         # ERRM: Evidence Repository Runtime Management
         for ev in raw_evidence_list:
             self.repository.store(ev)
@@ -185,14 +192,14 @@ class EvidenceEngine(BaseService):
 
         missing = self._detect_missing(classified_evidence_list)
         stale_info = self._evaluate_freshness(classified_evidence_list)
-        
+
         evidence_statuses = {}
         for ev in classified_evidence_list:
             if ev.evidence_id in stale_info.get("stale_records", []):
                 evidence_statuses[ev.evidence_id] = "STALE"
             else:
                 evidence_statuses[ev.evidence_id] = "USED"
-                
+
         retrieval_failures = canonical_event_data.get("retrieval_failures", [])
 
         eos_003 = EvidenceStatusPackage(
@@ -208,9 +215,9 @@ class EvidenceEngine(BaseService):
             evidence_statuses=evidence_statuses,
             retrieval_failures=retrieval_failures
         )
-        
+
         self.logger.info(f"[EvidenceEngine] Generated EOS-003 Package: {eos_003.package_id}")
-        
+
         # We return this dictionary mapping for the downstream orchestrator
         # The orchestrator will pass this to DCE
         return {"eos_003_package": eos_003}
@@ -220,15 +227,17 @@ class EvidenceEngine(BaseService):
     def _erp_registration(self, canonical_data: dict) -> List[OperationalEvidence]:
         """Creates initial EOS-001 objects."""
         from app.core.config import settings
-        
+
         source = canonical_data.get("source_system", "Unknown")
-        
+
         # Audit 3 Item 18: PF-Only Admission in Production
         if not getattr(settings, "SYNTHETIC_TEST_ENABLED", False):
             if "practice_fusion" not in source.lower() and "practicefusion" not in source.lower() and source != "PF":
-                self.logger.error(f"[EvidenceEngine] Production admission blocked: Source {source} is not Practice Fusion.")
-                raise ValueError("PRODUCTION_ADMISSION_REJECTED: Only Practice Fusion sources are permitted in V1 production.")
-                
+                self.logger.error(
+                    f"[EvidenceEngine] Production admission blocked: Source {source} is not Practice Fusion.")
+                raise ValueError(
+                    "PRODUCTION_ADMISSION_REJECTED: Only Practice Fusion sources are permitted in V1 production.")
+
         evidence_items = []
         now = datetime.utcnow()
         metadata = canonical_data.get("canonical_metadata", {})
@@ -237,26 +246,68 @@ class EvidenceEngine(BaseService):
 
         if event_type == "EHR":
             if "no-show" in detail:
-                evidence_items.append(self._create_eos_001("Appointment", "status", "NO_SHOW", source, now))
+                evidence_items.append(
+                    self._create_eos_001(
+                        "Appointment",
+                        "status",
+                        "NO_SHOW",
+                        source,
+                        now))
             elif "wait time" in detail:
-                evidence_items.append(self._create_eos_001("Appointment", "status", "WAIT_TIME_EXCEEDED", source, now))
+                evidence_items.append(
+                    self._create_eos_001(
+                        "Appointment",
+                        "status",
+                        "WAIT_TIME_EXCEEDED",
+                        source,
+                        now))
             elif "booked" in detail or "appointment" in detail:
-                evidence_items.append(self._create_eos_001("Appointment", "status", "BOOKED", source, now))
-        
+                evidence_items.append(
+                    self._create_eos_001(
+                        "Appointment",
+                        "status",
+                        "BOOKED",
+                        source,
+                        now))
+
         elif event_type == "Phone":
             if "missed call" in detail:
-                evidence_items.append(self._create_eos_001("PhoneInteraction", "status", "MISSED_CALL", source, now))
-        
+                evidence_items.append(
+                    self._create_eos_001(
+                        "PhoneInteraction",
+                        "status",
+                        "MISSED_CALL",
+                        source,
+                        now))
+
         elif event_type == "Email":
             if "lab" in detail:
-                evidence_items.append(self._create_eos_001("LabReport", "status", "PENDING_REVIEW", source, now))
+                evidence_items.append(
+                    self._create_eos_001(
+                        "LabReport",
+                        "status",
+                        "PENDING_REVIEW",
+                        source,
+                        now))
 
         # Provenance
-        evidence_items.append(self._create_eos_001("OperationalEvent", "source", source, source, now))
-        
+        evidence_items.append(
+            self._create_eos_001(
+                "OperationalEvent",
+                "source",
+                source,
+                source,
+                now))
+
         return evidence_items
 
-    def _create_eos_001(self, entity: str, key: str, value: Any, source: str, ts: datetime) -> OperationalEvidence:
+    def _create_eos_001(
+            self,
+            entity: str,
+            key: str,
+            value: Any,
+            source: str,
+            ts: datetime) -> OperationalEvidence:
         return OperationalEvidence(
             evidence_id=str(uuid.uuid4()),
             canonical_entity=entity,
@@ -276,7 +327,9 @@ class EvidenceEngine(BaseService):
                 self.logger.warning(f"[EVP] Validation failed for {ev.evidence_id}")
         return results
 
-    def _classify_evidence(self, evidence_list: List[OperationalEvidence]) -> List[OperationalEvidence]:
+    def _classify_evidence(
+            self,
+            evidence_list: List[OperationalEvidence]) -> List[OperationalEvidence]:
         """Assigns EvidenceType from ETR and creates new versions."""
         classified = []
         for ev in evidence_list:
@@ -289,7 +342,7 @@ class EvidenceEngine(BaseService):
                 ev_type = "DocumentStatus"
             elif ev.canonical_entity == "OperationalEvent":
                 ev_type = "EventProvenance"
-                
+
             # Create new version (Immutability pattern)
             new_ev = OperationalEvidence(
                 evidence_id=str(uuid.uuid4()),
@@ -304,7 +357,7 @@ class EvidenceEngine(BaseService):
                 previous_version_id=ev.evidence_id
             )
             classified.append(new_ev)
-            
+
         return classified
 
     def _detect_missing(self, evidence_list: List[OperationalEvidence]) -> List[str]:
@@ -320,7 +373,8 @@ class EvidenceEngine(BaseService):
         for ev in evidence_list:
             if ev.fact_key and ev.fact_value:
                 if ev.fact_key in facts and facts[ev.fact_key] != ev.fact_value:
-                    conflicts.append(f"Conflict on {ev.fact_key}: {facts[ev.fact_key]} vs {ev.fact_value}")
+                    conflicts.append(
+                        f"Conflict on {ev.fact_key}: {facts[ev.fact_key]} vs {ev.fact_value}")
                 facts[ev.fact_key] = ev.fact_value
         return conflicts
 
@@ -335,5 +389,6 @@ class EvidenceEngine(BaseService):
                     is_stale = True
                     stale_records.append(str(ev.evidence_id))
         return {"is_stale": is_stale, "stale_records": stale_records}
+
 
 evidence_engine = EvidenceEngine()

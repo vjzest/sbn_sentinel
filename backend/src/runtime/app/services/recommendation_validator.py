@@ -1,7 +1,7 @@
 class RecommendationValidator:
     """
     AIS-004: Recommendation Validator
-    Ensures that the recommendation generated does not violate governance boundaries, 
+    Ensures that the recommendation generated does not violate governance boundaries,
     override authority, or act without sufficient evidence.
     """
 

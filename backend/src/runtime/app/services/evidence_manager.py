@@ -14,13 +14,16 @@ class EvidenceManager:
         Returns a dictionary containing sufficiency boolean and reasons.
         """
         if not self._check_completeness(data):
-            return {"sufficient": False, "state": "Missing", "reason": "Required data fields are missing."}
+            return {"sufficient": False, "state": "Missing",
+                    "reason": "Required data fields are missing."}
 
         if not self._check_freshness(data):
-            return {"sufficient": False, "state": "Stale", "reason": "Data exceeds maximum allowed age."}
+            return {"sufficient": False, "state": "Stale",
+                    "reason": "Data exceeds maximum allowed age."}
 
         if self._detect_conflicts(data):
-            return {"sufficient": False, "state": "Conflicting", "reason": "Conflicting data points detected in evidence."}
+            return {"sufficient": False, "state": "Conflicting",
+                    "reason": "Conflicting data points detected in evidence."}
 
         return {"sufficient": True, "state": "Available", "reason": None}
 

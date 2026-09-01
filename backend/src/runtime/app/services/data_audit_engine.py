@@ -9,6 +9,7 @@ from app.schemas.audit import AuditLogCreate
 
 logger = logging.getLogger(__name__)
 
+
 class DataAuditEngine:
     """
     Data Management & Audit Engine (DMAE).
@@ -18,7 +19,7 @@ class DataAuditEngine:
 
     def save_intelligence_record(self, event: SignalEvent) -> bool:
         """
-        Validates and securely stores an operational intelligence record (Signal) 
+        Validates and securely stores an operational intelligence record (Signal)
         and generates an automatic system audit log.
         """
         db = SessionLocal()
@@ -28,7 +29,12 @@ class DataAuditEngine:
                 source=event.source,
                 type=event.type,
                 message=event.message,
-                timestamp=datetime.fromisoformat(event.timestamp.replace('Z', '+00:00')) if isinstance(event.timestamp, str) else event.timestamp,
+                timestamp=datetime.fromisoformat(
+                    event.timestamp.replace(
+                        'Z',
+                        '+00:00')) if isinstance(
+                    event.timestamp,
+                    str) else event.timestamp,
                 metadata_data=event.metadata,
                 risk_level=event.risk_level,
                 problem=event.problem,
@@ -44,17 +50,22 @@ class DataAuditEngine:
                 estimated_financial_exposure=event.estimated_financial_exposure,
                 revenue_confidence=event.revenue_confidence,
                 operational_dependency=event.operational_dependency,
-                explainability_log=getattr(event, 'explainability_log', None),
-                priority_score=getattr(event, 'priority_score', None)
-            )
+                explainability_log=getattr(
+                    event,
+                    'explainability_log',
+                    None),
+                priority_score=getattr(
+                    event,
+                    'priority_score',
+                    None))
             db.add(db_signal)
             db.commit()
-            
+
             # Generate Immutable System Audit Log
             self._log_internal(
-                db, 
-                user_system="system@sentinel.local", 
-                action=f"Generated Intelligence Record: {event.type}", 
+                db,
+                user_system="system@sentinel.local",
+                action=f"Generated Intelligence Record: {event.type}",
                 module="DataManagementEngine",
                 correlation_id=event.id
             )
@@ -73,7 +84,7 @@ class DataAuditEngine:
         db = SessionLocal()
         try:
             self._log_internal(
-                db, 
+                db,
                 user_system=audit_data.user_email,
                 action=audit_data.action,
                 module=audit_data.resource,
@@ -87,7 +98,13 @@ class DataAuditEngine:
         finally:
             db.close()
 
-    def _log_internal(self, db, user_system: str, action: str, module: str, correlation_id: str = None):
+    def _log_internal(
+            self,
+            db,
+            user_system: str,
+            action: str,
+            module: str,
+            correlation_id: str = None):
         """Internal helper to insert into AuditLogModel."""
         db_audit = AuditLogModel(
             user_system=user_system,

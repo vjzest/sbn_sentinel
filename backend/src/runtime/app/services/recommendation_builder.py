@@ -1,6 +1,7 @@
 import uuid
 from datetime import datetime, timedelta
 
+
 class RecommendationBuilder:
     """
     AIS-004: Recommendation Builder
@@ -11,13 +12,18 @@ class RecommendationBuilder:
     def __init__(self, db_session):
         self.db = db_session
 
-    async def build(self, evaluation_package: dict, raw_recommendation: dict, priority: str, auth_status: dict) -> dict:
+    async def build(
+            self,
+            evaluation_package: dict,
+            raw_recommendation: dict,
+            priority: str,
+            auth_status: dict) -> dict:
         """
         Constructs the Recommendation Package output for AIS-004.
         """
         eval_id = evaluation_package.get("identity", {}).get("evaluation_id", "UNKNOWN")
         context_id = evaluation_package.get("identity", {}).get("context_id", "UNKNOWN")
-        
+
         return {
             "identity": {
                 "recommendation_id": str(uuid.uuid4()),

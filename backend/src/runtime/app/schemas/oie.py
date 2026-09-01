@@ -1,7 +1,8 @@
 from pydantic import BaseModel, Field
-from typing import Optional, Dict, Any
+from typing import Dict, Any
 from enum import Enum
 from datetime import datetime
+
 
 class RiskLevel(str, Enum):
     INFORMATION = "Information"
@@ -10,6 +11,7 @@ class RiskLevel(str, Enum):
     HIGH = "High"
     CRITICAL = "Critical"
 
+
 class SignalCategory(str, Enum):
     PATIENT_FLOW = "Patient Flow"
     REVENUE = "Revenue"
@@ -17,11 +19,13 @@ class SignalCategory(str, Enum):
     OPERATIONAL_CAPACITY = "Operational Capacity"
     CONNECTOR_HEALTH = "Connector Health"
 
+
 class OperationalSignal(BaseModel):
     category: SignalCategory
     source: str  # e.g., "Practice Fusion", "Internal Sentinel"
     timestamp: datetime = Field(default_factory=datetime.utcnow)
     data: Dict[str, Any]  # Raw data from the source (e.g. appointment info, missing insurance flag)
+
 
 class Recommendation(BaseModel):
     id: str

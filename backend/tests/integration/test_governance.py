@@ -1,8 +1,10 @@
+
 import pytest
 from fastapi.testclient import TestClient
 from app.main import app
 
 client = TestClient(app)
+
 
 @pytest.mark.governance
 def test_a024_session_invalidation():
@@ -11,7 +13,9 @@ def test_a024_session_invalidation():
     """
     headers = {"Authorization": "Bearer stale.token.here"}
     response = client.get("/api/v1/clinics", headers=headers)
-    assert response.status_code in [401, 403], f"Expected 401/403 for stale token, got {response.status_code}"
+    assert response.status_code in [
+        401, 403], f"Expected 401/403 for stale token, got {response.status_code}"
+
 
 @pytest.mark.governance
 def test_a023_organization_clinic_scope_enforcement():
@@ -22,14 +26,12 @@ def test_a023_organization_clinic_scope_enforcement():
     response = client.get("/api/v1/clinics?org_id=ORG-B", headers=headers)
     assert response.status_code in [401, 403], "Should reject cross-scope access"
 
-from unittest.mock import patch
-from app.services.processing_orchestrator import ProcessingOrchestrator
 
 @pytest.mark.governance
 def test_a020_failure_matrix():
     from app.services.operational_execution_engine import operational_execution_engine
-    from app.services.governance_registry import OperationalActionRecord, ActionType, ActionStatus
-    
+    from app.services.governance_registry import OperationalActionRecord, ActionType
+
     action = OperationalActionRecord(
         action_id="TEST-FAIL-1",
         action_type=ActionType.SEND_NOTIFICATION,
@@ -40,31 +42,58 @@ def test_a020_failure_matrix():
     result = operational_execution_engine._mock_connector_call(action)
     assert result["result"].value == "UNKNOWN"
 
+
 @pytest.mark.governance
 def test_a021_historical_reconstruction():
-    from app.services.governance_registry import governance_registry, PolicyVersion, RuleVersion, LifecycleState
+    from app.services.governance_registry import (
+        governance_registry, PolicyVersion, RuleVersion, LifecycleState
+    )
     from datetime import datetime
-    
+
+    import uuid
+    uid = uuid.uuid4().hex[:6]
+    policy_id = f"POL-TEST-{uid}"
+    rule_id = f"R-TEST-{uid}"
+
     # Inject historical state
-    policy = PolicyVersion(policy_id="POL-TEST-001", version="V1", content="", lifecycle_state=LifecycleState.ACTIVE)
-    rule = RuleVersion(rule_id="R-TEST-001", version="V1", logic_description="", lifecycle_state=LifecycleState.ACTIVE, inputs=[], allowed_outputs=[], governing_policy_id="POL-TEST-001", governing_policy_version="V1")
+    policy = PolicyVersion(
+        policy_id=policy_id,
+        version="V1",
+        content="",
+        lifecycle_state=LifecycleState.ACTIVE)
+    rule = RuleVersion(
+        rule_id=rule_id,
+        version="V1",
+        logic_description="",
+        lifecycle_state=LifecycleState.ACTIVE,
+        inputs=[],
+        allowed_outputs=[],
+        governing_policy_id=policy_id,
+        governing_policy_version="V1")
     governance_registry.register_policy(policy)
     governance_registry.register_rule(rule)
-    
-    rules = governance_registry.get_applicable_rules_for_policy("POL-TEST-001", "V1", datetime.utcnow())
-    assert len(rules) > 0, "Should reconstruct at least one rule for POL-TEST-001"
+
+    rules = governance_registry.get_applicable_rules_for_policy(
+        policy_id, "V1", datetime.utcnow())
+    assert len(rules) > 0, "Should reconstruct at least one rule"
+
 
 @pytest.mark.governance
 def test_a022_synthetic_test_isolation():
     from app.core.config import Settings
     from pydantic import ValidationError
-    
+
     # Try to initialize config with SYNTHETIC_TEST_ENABLED in PRODUCTION
     try:
-        Settings(ENVIRONMENT="PRODUCTION", SYNTHETIC_TEST_ENABLED=True, CLINIC_TIMEZONE="UTC", SECRET_KEY="thisisverysecureandlongenough1234567")
+        Settings(
+            ENVIRONMENT="PRODUCTION",
+            SYNTHETIC_TEST_ENABLED=True,
+            CLINIC_TIMEZONE="UTC",
+            SECRET_KEY="thisisverysecureandlongenough1234567")
         assert False, "Should have raised a validation error for synthetic test in production"
     except ValidationError as e:
         assert "CDI-006" in str(e) or "SYNTHETIC_TEST_ENABLED" in str(e)
+
 
 @pytest.mark.governance
 def test_e2e_authentic_journey():
@@ -75,33 +104,33 @@ def test_e2e_authentic_journey():
     from app.models.user import User, UserRole
     from app.core.security import get_password_hash
     import uuid
-    
+
     db = SessionLocal()
     test_email = f"e2e_{uuid.uuid4().hex[:6]}@sbnsentinel.com"
     user = User(
-        email=test_email, 
-        hashed_password=get_password_hash("Test@123"), 
-        full_name="E2E Test", 
-        role=UserRole.SYSTEM_ADMINISTRATOR.value, 
+        email=test_email,
+        hashed_password=get_password_hash("Test@123"),
+        full_name="E2E Test",
+        role=UserRole.SYSTEM_ADMINISTRATOR.value,
         is_active=True
     )
     db.add(user)
     db.commit()
-    
+
     # 1. Login
     res = client.post("/api/v1/auth/login", json={"email": test_email, "password": "Test@123"})
     assert res.status_code == 200, f"Login failed: {res.text}"
     token = res.json()["access_token"]
     headers = {"Authorization": f"Bearer {token}"}
-    
+
     # 2. Check Readiness Gate
     ready_res = client.get("/api/v1/health/ready")
     assert ready_res.status_code == 200, f"Readiness gate failed: {ready_res.text}"
-    
+
     # 3. Access Protected Route
     clinics_res = client.get("/api/v1/clinics", headers=headers)
     assert clinics_res.status_code == 200, "Protected route access failed"
-    
+
     db.delete(user)
     db.commit()
     db.close()

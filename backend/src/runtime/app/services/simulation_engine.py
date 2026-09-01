@@ -1,17 +1,17 @@
 import asyncio
 import random
-import uuid
 from datetime import datetime, timezone
 from app.schemas.signal import SignalEvent
 
 # SES-002: All simulation data flows through the event pipeline
 from app.services.processing_orchestrator import processing_orchestrator
 
+
 class SimulationEngine:
     def __init__(self):
         self.running = False
         self.clients = []
-        
+
         self.patients = ["John Doe", "Jane Smith", "Michael Johnson", "Emily Davis", "Robert Brown"]
         self.events = [
             {"source": "Practice Fusion", "type": "EHR", "msg_template": "Patient {patient} appointment marked as No-Show."},
@@ -23,12 +23,12 @@ class SimulationEngine:
 
     async def generate_realistic_data(self):
         while self.running:
-            await asyncio.sleep(random.uniform(3, 8)) # Generate an event every 3 to 8 seconds
-            
+            await asyncio.sleep(random.uniform(3, 8))  # Generate an event every 3 to 8 seconds
+
             patient = random.choice(self.patients)
             event_template = random.choice(self.events)
             message_str = event_template["msg_template"].format(patient=patient)
-            
+
             # ─────────────────────────────────────────────────────────────
             # SES-002 COMPLIANT: All data flows through the 8-layer pipeline
             # No direct engine calls — pipeline orchestrator handles all layers
@@ -45,18 +45,21 @@ class SimulationEngine:
                     priority=random.choice(["Normal", "Normal", "High", "Low", "Critical"]),
                     initiated_by="system@sentinel.local",
                 )
-                
+
                 # Execute pipeline synchronously for simulation feed
                 processing_orchestrator.process_event_background(event_model.id)
-                
+
                 from app.db.database import SessionLocal
                 from app.models.intelligence import OperationalIntelligenceModel, RevenueIntelligenceModel, DecisionContextModel
-                
+
                 db = SessionLocal()
                 try:
-                    intel = db.query(OperationalIntelligenceModel).filter(OperationalIntelligenceModel.event_id == event_model.id).first()
-                    revenue = db.query(RevenueIntelligenceModel).filter(RevenueIntelligenceModel.event_id == event_model.id).first()
-                    context = db.query(DecisionContextModel).filter(DecisionContextModel.event_id == event_model.id).first()
+                    intel = db.query(OperationalIntelligenceModel).filter(
+                        OperationalIntelligenceModel.event_id == event_model.id).first()
+                    revenue = db.query(RevenueIntelligenceModel).filter(
+                        RevenueIntelligenceModel.event_id == event_model.id).first()
+                    context = db.query(DecisionContextModel).filter(
+                        DecisionContextModel.event_id == event_model.id).first()
 
                     event = SignalEvent(
                         id=event_model.id[:8],
@@ -101,16 +104,17 @@ class SimulationEngine:
                     p = random.choice(waiting)
                     p.status = "In Room"
                     p.wait_time = f"{random.randint(5, 45)} mins"
-                
+
                 # 2. Move "In Room" -> "Completed"
                 in_room = db.query(EncounterModel).filter(EncounterModel.status == "In Room").all()
                 if in_room and random.random() > 0.5:
                     p = random.choice(in_room)
                     p.status = "Completed"
                     p.billing_status = "Pending"
-                
+
                 # 3. Move "Completed" -> "Billed" -> "Paid"
-                completed = db.query(EncounterModel).filter(EncounterModel.status == "Completed").all()
+                completed = db.query(EncounterModel).filter(
+                    EncounterModel.status == "Completed").all()
                 for c in completed:
                     if c.billing_status == "Pending" and random.random() > 0.7:
                         c.billing_status = "Billed"
@@ -159,9 +163,10 @@ class SimulationEngine:
 
     def add_client(self, queue: asyncio.Queue):
         self.clients.append(queue)
-        
+
     def remove_client(self, queue: asyncio.Queue):
         if queue in self.clients:
             self.clients.remove(queue)
+
 
 simulation_engine = SimulationEngine()

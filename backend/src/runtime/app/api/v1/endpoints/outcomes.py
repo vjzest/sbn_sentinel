@@ -1,10 +1,10 @@
-from fastapi import APIRouter, HTTPException, Depends
-from pydantic import BaseModel
-from typing import Optional, Any, Dict
+from fastapi import APIRouter, Depends
+from typing import Any
 from app.services.governance_registry import governance_registry
 from app.api.deps import get_current_user
 
 router = APIRouter()
+
 
 @router.get("/action/{action_id}")
 async def get_outcome_by_action(
@@ -17,7 +17,7 @@ async def get_outcome_by_action(
     outcome = governance_registry.get_operational_outcome_by_action(action_id)
     if not outcome:
         return {"status": "NOT_FOUND"}
-        
+
     return {
         "outcome_id": outcome.outcome_id,
         "action_id": outcome.action_id,

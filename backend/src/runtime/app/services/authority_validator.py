@@ -18,7 +18,7 @@ class AuthorityValidator:
             return "Escalation Required"
         elif recommendation_category == "Administrative":
             return "Review Required"
-        
+
         return "Approval Required"
 
     async def validate_user_authority(self, user_id: str, required_level: str) -> bool:

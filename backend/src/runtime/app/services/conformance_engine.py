@@ -11,7 +11,6 @@ without silent deviation.
 import uuid
 import time
 import logging
-from datetime import datetime
 from typing import Optional, List, Dict, Any
 
 from app.db.database import SessionLocal
@@ -22,7 +21,6 @@ from app.models.intelligence import (
 )
 from app.models.decision_record import DecisionRecordModel
 from app.services.processing_orchestrator import processing_orchestrator
-from app.services.governance_registry import governance_registry
 from app.services.validation_registry import (
     validation_registry, ValidationRegistry,
     ConformanceStatus, FindingCategory, CheckScope,
@@ -77,7 +75,8 @@ class ConformanceEngine:
         reg = registry or validation_registry
         report_id = f"SESR011-RPT-{uuid.uuid4().hex[:8].upper()}"
 
-        self.logger.info(f"[SESR-011] Starting conformance scenario: '{scenario_name}' | report_id={report_id}")
+        self.logger.info(
+            f"[SESR-011] Starting conformance scenario: '{scenario_name}' | report_id={report_id}")
 
         # Step 1: Ingest the synthetic event via the normal pipeline
         event = processing_orchestrator.create_event(

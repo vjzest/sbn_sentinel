@@ -2,11 +2,12 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+
 class EvidenceEvaluationEngine:
     """
     AIS-003: Evidence Evaluation & Reasoning Engine (EERE)
     Coordinates the deterministic reasoning sequence for evidence evaluation:
-    Context Package -> Validation -> Completeness -> Freshness -> Conflict -> 
+    Context Package -> Validation -> Completeness -> Freshness -> Conflict ->
     Dependency -> Sufficiency -> Governance -> Evaluation Package
     """
 
@@ -31,11 +32,14 @@ class EvidenceEvaluationEngine:
         try:
             # 1. Evidence Validation (Basic structural check)
             if not self._validate_structure(context_package):
-                return self._halt_evaluation(context_id, "ValidationFailed", "Invalid context package structure")
+                return self._halt_evaluation(
+                    context_id,
+                    "ValidationFailed",
+                    "Invalid context package structure")
 
             # 2. Completeness Evaluation
             is_complete = await self._evaluate_completeness(context_package)
-            
+
             # 3. Freshness Evaluation
             is_fresh = await self._evaluate_freshness(context_package)
 
@@ -53,7 +57,8 @@ class EvidenceEvaluationEngine:
             # 7. Governance Validation
             governance_status = await self._validate_governance(sufficiency_status)
             if not governance_status["passed"]:
-                return self._halt_evaluation(context_id, "GovernanceBlocked", governance_status["reason"])
+                return self._halt_evaluation(
+                    context_id, "GovernanceBlocked", governance_status["reason"])
 
             # 8. Build Evaluation Package
             evaluation_package = await self._build_evaluation_package(
@@ -74,15 +79,20 @@ class EvidenceEvaluationEngine:
         return len(pkg.get("evidence", {}).get("missing", [])) == 0
 
     async def _evaluate_freshness(self, pkg: dict) -> bool:
-        return True # Stub
+        return True  # Stub
 
     async def _evaluate_conflicts(self, pkg: dict) -> bool:
         return len(pkg.get("evidence", {}).get("conflicts", [])) > 0
 
     async def _evaluate_dependencies(self, pkg: dict) -> bool:
-        return True # Stub
+        return True  # Stub
 
-    async def _evaluate_sufficiency(self, complete: bool, fresh: bool, conflict: bool, deps: bool) -> str:
+    async def _evaluate_sufficiency(
+            self,
+            complete: bool,
+            fresh: bool,
+            conflict: bool,
+            deps: bool) -> str:
         if not fresh or conflict or not deps:
             return "Insufficient"
         if not complete:

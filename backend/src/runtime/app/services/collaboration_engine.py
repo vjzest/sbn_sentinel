@@ -2,6 +2,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+
 class CollaborationEngine:
     """
     AIS-006: Human Collaboration & Approval Engine
@@ -30,7 +31,7 @@ class CollaborationEngine:
 
             # 2. Update status based on requirement
             initial_status = "Awaiting Review" if authority_req != "Informational Only" else "Informational"
-            
+
             # 3. Record timeline event
             await self._record_timeline(rec_id, "Collaboration Initiated", initial_status)
 
@@ -45,7 +46,12 @@ class CollaborationEngine:
             logger.error(f"[{rec_id}] CollaborationEngine: Unhandled error - {str(e)}")
             return {"status": "Error", "details": str(e)}
 
-    async def process_human_decision(self, rec_id: str, actor_id: str, decision: str, override_reason: str = None) -> dict:
+    async def process_human_decision(
+            self,
+            rec_id: str,
+            actor_id: str,
+            decision: str,
+            override_reason: str = None) -> dict:
         """
         Processes a human's explicit decision (Approve, Reject, Override).
         """
@@ -67,13 +73,12 @@ class CollaborationEngine:
 
         return {"status": "Success", "final_decision": decision}
 
-
     async def _determine_authority_requirement(self, rec_pkg: dict) -> str:
         # Stub logic
         return rec_pkg.get("governance", {}).get("authority_level", "Approval Required")
 
     async def _validate_actor_authority(self, actor_id: str, decision: str) -> bool:
-        return True # Stub
+        return True  # Stub
 
     async def _process_override(self, rec_id: str, actor_id: str, reason: str):
         pass

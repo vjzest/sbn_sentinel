@@ -3,6 +3,7 @@ from sqlalchemy import Column, String, DateTime, Integer
 from datetime import datetime
 from app.db.database import Base
 
+
 class TelemetryLogModel(Base):
     """
     Operational Telemetry Logs (separated from governed Audit Logs).
@@ -15,7 +16,7 @@ class TelemetryLogModel(Base):
     user_system = Column(String, index=True, nullable=True)
     module = Column(String, nullable=True)
     correlation_id = Column(String, index=True, nullable=True)
-    
+
     error_category = Column(String, nullable=True)
     severity = Column(String, nullable=True)
     retry_attempts = Column(Integer, nullable=True)

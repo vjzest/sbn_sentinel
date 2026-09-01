@@ -16,6 +16,7 @@ class ServiceErrorCode(str, Enum):
     SERVICE_UNAVAILABLE = "SERVICE_UNAVAILABLE"
     INTERNAL_PROCESSING_ERROR = "INTERNAL_PROCESSING_ERROR"
 
+
 class ErrorCategory(str, Enum):
     VALIDATION = "Validation Error"
     BUSINESS_RULE = "Business Rule Error"
@@ -28,11 +29,13 @@ class ErrorCategory(str, Enum):
     CONFIGURATION = "Configuration Error"
     SYSTEM = "System Error"
 
+
 class ErrorSeverity(str, Enum):
     INFORMATIONAL = "Informational"
     WARNING = "Warning"
     ERROR = "Error"
     CRITICAL = "Critical"
+
 
 class ServiceStatus(str, Enum):
     SUCCESS = "SUCCESS"

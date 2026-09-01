@@ -6,6 +6,7 @@ from app.main import app
 
 client = TestClient(app)
 
+
 @pytest.mark.unit
 def test_read_main():
     """
@@ -18,6 +19,7 @@ def test_read_main():
         "message": "Welcome to SBN Sentinel Core Engine",
         "documentation": "/docs"
     }
+
 
 @pytest.mark.unit
 def test_health_endpoint():
