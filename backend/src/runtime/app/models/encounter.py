@@ -1,6 +1,6 @@
-from sqlalchemy import Column, String, Float, DateTime
-from datetime import datetime
+from sqlalchemy import Column, String, Float
 from app.db.database import Base
+
 
 class EncounterModel(Base):
     __tablename__ = "encounters"

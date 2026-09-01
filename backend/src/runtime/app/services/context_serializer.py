@@ -1,7 +1,7 @@
-import json
 import logging
 
 logger = logging.getLogger(__name__)
+
 
 class ContextSerializer:
     """
@@ -17,8 +17,9 @@ class ContextSerializer:
         """
         Ensures the package strictly adheres to the schema required by AIS-002.
         """
-        logger.info(f"[{context_package['identity']['context_id']}] ContextSerializer: Serializing package")
-        
+        logger.info(
+            f"[{context_package['identity']['context_id']}] ContextSerializer: Serializing package")
+
         # Deep copy or format transformations can happen here.
         # Since our builder already creates a dictionary, we just validate structure.
         return {

@@ -2,11 +2,12 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+
 class RecommendationGenerationEngine:
     """
     AIS-004: Recommendation Generation Engine (RGE)
     Coordinates the deterministic reasoning sequence for recommendation generation:
-    Evaluation Package -> Policy Matching -> Rule Selection -> Priority Assignment -> 
+    Evaluation Package -> Policy Matching -> Rule Selection -> Priority Assignment ->
     Authority Validation -> Construction -> Validation -> Final Package
     """
 
@@ -30,7 +31,8 @@ class RecommendationGenerationEngine:
             # 1. Policy & Rule Selection
             matched_rule = await self._match_rules(evaluation_package)
             if not matched_rule:
-                return self._halt_generation(eval_id, "NoRuleMatched", "No policies or rules matched the evaluated evidence")
+                return self._halt_generation(
+                    eval_id, "NoRuleMatched", "No policies or rules matched the evaluated evidence")
 
             # 2. Recommendation Selection
             raw_recommendation = await self._select_recommendation(matched_rule)
@@ -50,7 +52,10 @@ class RecommendationGenerationEngine:
 
             # 6. Recommendation Validation
             if not self._validate_final_recommendation(built_recommendation):
-                return self._halt_generation(eval_id, "ValidationFailed", "Constructed recommendation failed final sanity checks")
+                return self._halt_generation(
+                    eval_id,
+                    "ValidationFailed",
+                    "Constructed recommendation failed final sanity checks")
 
             logger.info(f"[{eval_id}] RGE: Generation completed successfully")
             return built_recommendation
@@ -75,13 +80,23 @@ class RecommendationGenerationEngine:
         # Stub logic
         return {"valid": True, "reason": None, "level": "Human Approval"}
 
-    async def _build_recommendation(self, eval_pkg: dict, rec: dict, priority: str, auth: dict) -> dict:
+    async def _build_recommendation(
+            self,
+            eval_pkg: dict,
+            rec: dict,
+            priority: str,
+            auth: dict) -> dict:
         # Stub logic handled by builder
         return {
-            "identity": {"recommendation_id": "rec-123", "evaluation_id": eval_pkg["identity"]["evaluation_id"]},
-            "recommendation": {"title": rec["title"], "priority": priority, "category": rec["category"]},
-            "lifecycle": {"status": "Generated"}
-        }
+            "identity": {
+                "recommendation_id": "rec-123",
+                "evaluation_id": eval_pkg["identity"]["evaluation_id"]},
+            "recommendation": {
+                "title": rec["title"],
+                "priority": priority,
+                "category": rec["category"]},
+            "lifecycle": {
+                "status": "Generated"}}
 
     def _validate_final_recommendation(self, rec_pkg: dict) -> bool:
         return "identity" in rec_pkg and "recommendation" in rec_pkg

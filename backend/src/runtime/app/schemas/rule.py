@@ -1,6 +1,6 @@
 from pydantic import BaseModel
-from typing import Optional
 from datetime import datetime
+
 
 class RuleBase(BaseModel):
     rule_id: str
@@ -14,8 +14,10 @@ class RuleBase(BaseModel):
     is_active: bool = True
     version: str = "1.0"
 
+
 class RuleCreate(RuleBase):
     pass
+
 
 class Rule(RuleBase):
     id: int
@@ -25,6 +27,7 @@ class Rule(RuleBase):
     class Config:
         from_attributes = True
 
+
 class RuleExecutionLogBase(BaseModel):
     rule_id: str
     input_source: str
@@ -33,8 +36,10 @@ class RuleExecutionLogBase(BaseModel):
     processing_duration_ms: int
     user_acknowledged: bool = False
 
+
 class RuleExecutionLogCreate(RuleExecutionLogBase):
     pass
+
 
 class RuleExecutionLog(RuleExecutionLogBase):
     id: int

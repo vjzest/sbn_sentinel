@@ -1,7 +1,7 @@
 class AuthorityEngine:
     """
     AIS-001: Authority Engine
-    Enforces organizational decision boundaries. Sentinel recommendations remain 
+    Enforces organizational decision boundaries. Sentinel recommendations remain
     subject to organizational authority.
     """
 
@@ -19,11 +19,12 @@ class AuthorityEngine:
         - Administrative Control
         """
         required_level = self._determine_required_level(context)
-        
+
         # Stub logic: Prevent Sentinel from taking autonomous operational actions
         if required_level in ["Human Approval", "Human Override", "Administrative Control"]:
             # Action must pause here and await explicit human interaction.
-            # Returning True for evaluation implies the pipeline can proceed to generate a recommendation (but not act).
+            # Returning True for evaluation implies the pipeline can proceed to
+            # generate a recommendation (but not act).
             pass
 
         return True

@@ -1,7 +1,7 @@
 class RulePolicyTraceService:
     """
     AIS-005: Rule & Policy Trace Service
-    Combines Policy, Rule, Threshold, and Authority tracing to prove the 
+    Combines Policy, Rule, Threshold, and Authority tracing to prove the
     governance boundaries of the recommendation.
     """
 
@@ -13,7 +13,7 @@ class RulePolicyTraceService:
         Extracts and verifies the governance rules applied.
         """
         gov_meta = recommendation_package.get("governance", {})
-        
+
         return {
             "policy_id": gov_meta.get("policy_used", "Unknown"),
             "rule_id": gov_meta.get("rule_used", "Unknown"),

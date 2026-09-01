@@ -2,10 +2,10 @@ import json
 import dataclasses
 from datetime import datetime
 from enum import Enum
-import sys
 
 # Import all governance dataclasses to decode them
 import app.services.governance_registry as gov
+
 
 class GovernanceJSONEncoder(json.JSONEncoder):
     def default(self, o):
@@ -18,6 +18,7 @@ class GovernanceJSONEncoder(json.JSONEncoder):
         if isinstance(o, Enum):
             return {"__enum__": f"{o.__class__.__name__}.{o.name}"}
         return super().default(o)
+
 
 def governance_json_decoder(dct):
     if "__datetime__" in dct:
@@ -32,8 +33,10 @@ def governance_json_decoder(dct):
         return cls(**dct)
     return dct
 
+
 def dumps(obj):
     return json.dumps(obj, cls=GovernanceJSONEncoder)
+
 
 def loads(s):
     return json.loads(s, object_hook=governance_json_decoder)

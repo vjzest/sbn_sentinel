@@ -1,7 +1,7 @@
 class DecisionTraceService:
     """
     AIS-005: Decision Trace Service
-    Establishes the fundamental link between the output recommendation and 
+    Establishes the fundamental link between the output recommendation and
     the upstream evaluations and operational contexts.
     """
 
@@ -13,7 +13,7 @@ class DecisionTraceService:
         Builds the trace connecting Recommendation -> Evaluation -> Context.
         """
         identity = recommendation_package.get("identity", {})
-        
+
         return {
             "recommendation_id": identity.get("recommendation_id"),
             "evaluation_id": identity.get("evaluation_id"),

@@ -16,7 +16,7 @@ class PolicyModel(Base):
     description = Column(String, nullable=True)
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime, default=datetime.utcnow)
-    
+
     versions = relationship("PolicyVersionModel", back_populates="policy")
 
 
@@ -73,7 +73,7 @@ class GovernanceStatusModel(Base):
 
     id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
     event_id = Column(String, nullable=False, index=True)
-    status = Column(String, nullable=False) # e.g. Pass, Fail, Needs Human
+    status = Column(String, nullable=False)  # e.g. Pass, Fail, Needs Human
     reason = Column(String, nullable=True)
     evaluated_at = Column(DateTime, default=datetime.utcnow)
 
@@ -100,7 +100,7 @@ class DecisionTraceModel(Base):
 
     id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
     event_id = Column(String, nullable=False, index=True)
-    stage = Column(String, nullable=False) # e.g. Validate, Governance, Rule Eval
+    stage = Column(String, nullable=False)  # e.g. Validate, Governance, Rule Eval
     result = Column(String, nullable=False)
     details = Column(Text, nullable=True)
     timestamp = Column(DateTime, default=datetime.utcnow)
@@ -113,5 +113,5 @@ class AuthorityLevelModel(Base):
     __tablename__ = "authority_levels"
 
     id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
-    level_name = Column(String, nullable=False, unique=True) # e.g. Observation, Human Approval
+    level_name = Column(String, nullable=False, unique=True)  # e.g. Observation, Human Approval
     requires_override = Column(Boolean, default=False)

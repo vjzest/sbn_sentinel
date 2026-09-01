@@ -2,14 +2,20 @@ from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum
 from typing import Optional, List, Dict, Any
+from uuid import UUID
+from app.db.database import SessionLocal
+from app.models.governance_storage import (
+    RecommendationModel, HumanDecisionModel,
+    OperationalActionModel, ExecutionAttemptModel, OperationalOutcomeModel
+)
 import logging
-import os
 
 logger = logging.getLogger(__name__)
 
 # ======================================================
 # SESR-003: Core Governance Objects
 # ======================================================
+
 
 class LifecycleState(Enum):
     DRAFT = "DRAFT"
@@ -18,6 +24,7 @@ class LifecycleState(Enum):
     ACTIVE = "ACTIVE"
     SUPERSEDED = "SUPERSEDED"
     RETIRED = "RETIRED"
+
 
 @dataclass(frozen=True)
 class PolicyVersion:
@@ -44,6 +51,7 @@ class PolicyVersion:
             return False
         return True
 
+
 @dataclass(frozen=True)
 class RuleInputDefinition:
     """PRO-006: Rule Input Definition"""
@@ -51,6 +59,7 @@ class RuleInputDefinition:
     input_type: str
     required: bool
     expected_source: str
+
 
 @dataclass(frozen=True)
 class RuleVersion:
@@ -80,6 +89,7 @@ class RuleVersion:
             return False
         return True
 
+
 @dataclass(frozen=True)
 class RuleEvaluationRecord:
     """PRO-014: Rule Evaluation Record"""
@@ -106,10 +116,12 @@ class RecommendationStatus(Enum):
     INVALIDATED = "INVALIDATED"
     SUPERSEDED = "SUPERSEDED"
 
+
 class AuthorityRequirement(Enum):
     INFORMATIONAL = "INFORMATIONAL"
     REVIEW_REQUIRED = "REVIEW_REQUIRED"
     APPROVAL_REQUIRED = "APPROVAL_REQUIRED"
+
 
 @dataclass(frozen=True)
 class RecommendationMapping:
@@ -134,6 +146,7 @@ class RecommendationMapping:
         if self.effective_from and eval_time < self.effective_from:
             return False
         return True
+
 
 @dataclass(frozen=True)
 class RecommendationRecord:
@@ -165,10 +178,12 @@ class DecisionType(Enum):
     OVERRIDDEN = "OVERRIDDEN"
     RETURNED_FOR_REVIEW = "RETURNED_FOR_REVIEW"
 
+
 class DecisionStatus(Enum):
     RECORDED = "RECORDED"
     SUPERSEDED = "SUPERSEDED"
     INVALIDATED = "INVALIDATED"
+
 
 @dataclass(frozen=True)
 class AuthorityConfiguration:
@@ -176,7 +191,11 @@ class AuthorityConfiguration:
     role: str
     allowed_decisions: List[DecisionType]
     can_override: bool = False
-    requires_reason_for: List[DecisionType] = field(default_factory=lambda: [DecisionType.REJECTED, DecisionType.OVERRIDDEN])
+    requires_reason_for: List[DecisionType] = field(
+        default_factory=lambda: [
+            DecisionType.REJECTED,
+            DecisionType.OVERRIDDEN])
+
 
 @dataclass(frozen=True)
 class HumanDecisionRecord:
@@ -204,6 +223,7 @@ class ActionType(Enum):
     UPDATE_OPERATIONAL_STATUS = "UPDATE_OPERATIONAL_STATUS"
     CREATE_FOLLOWUP_TASK = "CREATE_FOLLOWUP_TASK"
 
+
 class ActionStatus(Enum):
     CREATED = "CREATED"
     READY = "READY"
@@ -214,12 +234,14 @@ class ActionStatus(Enum):
     EXPIRED = "EXPIRED"
     BLOCKED = "BLOCKED"
 
+
 class ExecutionResult(Enum):
     SUCCESS = "SUCCESS"
     FAILED = "FAILED"
     PARTIAL = "PARTIAL"
     UNKNOWN = "UNKNOWN"
     NOT_ATTEMPTED = "NOT_ATTEMPTED"
+
 
 @dataclass(frozen=True)
 class OperationalActionRecord:
@@ -235,6 +257,7 @@ class OperationalActionRecord:
     created_at: datetime = field(default_factory=datetime.utcnow)
     # SESR-008: Journey identity
     journey_id: Optional[str] = None
+
 
 @dataclass(frozen=True)
 class ExecutionAttemptRecord:
@@ -255,17 +278,20 @@ class ExecutionAttemptRecord:
 # SESR-007: Operational Outcome Governance Objects
 # ======================================================
 
+
 class OutcomeConfirmationState(Enum):
     CONFIRMED = "CONFIRMED"
     MISMATCH = "MISMATCH"
     PENDING = "PENDING"
     UNKNOWN = "UNKNOWN"
 
+
 class OutcomeResolutionState(Enum):
     OPEN = "OPEN"
     RESOLVED = "RESOLVED"
     UNRESOLVED = "UNRESOLVED"
     FOLLOW_UP_REQUIRED = "FOLLOW_UP_REQUIRED"
+
 
 @dataclass(frozen=True)
 class OperationalOutcomeRecord:
@@ -289,13 +315,13 @@ class OperationalOutcomeRecord:
 # SESR-008: Continuity Violation Error
 # ======================================================
 
+
 class ContinuityViolationError(Exception):
     """
     SESR-008 CFR-001 / CVC-031: Raised when a governed record cannot be associated
     with its required upstream parent, or when journey_id values do not match.
     This error must never be silenced — it signals a broken operational chain.
     """
-    pass
 
 
 # ======================================================
@@ -307,6 +333,7 @@ class GovernanceRegistry:
     In-memory registry to demonstrate SESR-003, SESR-004, and SESR-005 compliance.
     Acts as the Single Source of Truth for engine processing.
     """
+
     def __init__(self):
         loaded = self._load()
         if loaded:
@@ -327,10 +354,11 @@ class GovernanceRegistry:
         from app.db.database import SessionLocal
         from app.models.governance_storage import GovernanceStorageModel
         from app.core.json_utils import loads
-        
+
         db = SessionLocal()
         try:
-            record = db.query(GovernanceStorageModel).filter(GovernanceStorageModel.id == "singleton").first()
+            record = db.query(GovernanceStorageModel).filter(
+                GovernanceStorageModel.id == "singleton").first()
             if record and record.state_json:
                 return loads(record.state_json)
         except Exception as e:
@@ -343,7 +371,7 @@ class GovernanceRegistry:
         from app.db.database import SessionLocal
         from app.models.governance_storage import GovernanceStorageModel
         from app.core.json_utils import dumps
-        
+
         state = {
             '_policies': self._policies,
             '_rules': self._rules,
@@ -356,11 +384,12 @@ class GovernanceRegistry:
             '_execution_attempts': self._execution_attempts,
             '_operational_outcomes': self._operational_outcomes,
         }
-        
+
         db = SessionLocal()
         try:
             state_str = dumps(state)
-            record = db.query(GovernanceStorageModel).filter(GovernanceStorageModel.id == "singleton").first()
+            record = db.query(GovernanceStorageModel).filter(
+                GovernanceStorageModel.id == "singleton").first()
             if record:
                 record.state_json = state_str
             else:
@@ -386,7 +415,8 @@ class GovernanceRegistry:
     def record_evaluation(self, record: RuleEvaluationRecord):
         self._evaluations.append(record)
         self._save()
-        logger.debug(f"[GovernanceRegistry] Recorded evaluation {record.evaluation_id} -> {record.result}")
+        logger.debug(
+            f"[GovernanceRegistry] Recorded evaluation {record.evaluation_id} -> {record.result}")
 
     def register_recommendation_mapping(self, mapping: RecommendationMapping):
         self._recommendation_mappings.append(mapping)
@@ -414,11 +444,10 @@ class GovernanceRegistry:
             db.close()
         except Exception as e:
             logger.error(f"DB Error saving recommendation: {e}")
-            if 'db' in locals(): db.close()
+            if 'db' in locals():
+                db.close()
         logger.debug(f"[GovernanceRegistry] Recorded recommendation {record.recommendation_id}")
 
-
-        
     def get_recommendation(self, recommendation_id: str) -> Optional[RecommendationRecord]:
         for r in self._recommendations:
             if r.recommendation_id == recommendation_id:
@@ -428,7 +457,7 @@ class GovernanceRegistry:
     def register_authority_config(self, config: AuthorityConfiguration):
         self._authority_configs[config.role] = config
         self._save()
-        
+
     def get_authority_config(self, role: str) -> Optional[AuthorityConfiguration]:
         return self._authority_configs.get(role)
 
@@ -451,11 +480,13 @@ class GovernanceRegistry:
             db.close()
         except Exception as e:
             logger.error(f"DB Error saving decision: {e}")
-            if 'db' in locals(): db.close()
-        logger.debug(f"[GovernanceRegistry] Recorded human decision {decision.decision_id} by {decision.actor_id}")
+            if 'db' in locals():
+                db.close()
+        logger.debug(
+            f"[GovernanceRegistry] Recorded human decision {
+                decision.decision_id} by {
+                decision.actor_id}")
 
-
-        
     def get_human_decision(self, decision_id: str) -> Optional[HumanDecisionRecord]:
         for d in self._human_decisions:
             if d.decision_id == decision_id:
@@ -481,18 +512,21 @@ class GovernanceRegistry:
             db.close()
         except Exception as e:
             logger.error(f"DB Error saving action: {e}")
-            if 'db' in locals(): db.close()
+            if 'db' in locals():
+                db.close()
         logger.debug(f"[GovernanceRegistry] Recorded operational action {action.action_id}")
 
-
-        
     def get_operational_action(self, action_id: str) -> Optional[OperationalActionRecord]:
         for a in self._operational_actions:
             if a.action_id == action_id:
                 return a
         return None
-        
-    def update_operational_action(self, action_id: str, new_status: ActionStatus, new_result: ExecutionResult):
+
+    def update_operational_action(
+            self,
+            action_id: str,
+            new_status: ActionStatus,
+            new_result: ExecutionResult):
         for i, a in enumerate(self._operational_actions):
             if a.action_id == action_id:
                 # Replace with new frozen dataclass instance
@@ -520,10 +554,12 @@ class GovernanceRegistry:
             db.close()
         except Exception as e:
             logger.error(f"DB Error saving attempt: {e}")
-            if 'db' in locals(): db.close()
-        logger.debug(f"[GovernanceRegistry] Recorded execution attempt {attempt.attempt_id} for action {attempt.action_id}")
-
-
+            if 'db' in locals():
+                db.close()
+        logger.debug(
+            f"[GovernanceRegistry] Recorded execution attempt {
+                attempt.attempt_id} for action {
+                attempt.action_id}")
 
     def get_execution_attempts(self, action_id: str) -> List[ExecutionAttemptRecord]:
         return [a for a in self._execution_attempts if a.action_id == action_id]
@@ -546,23 +582,23 @@ class GovernanceRegistry:
             db.close()
         except Exception as e:
             logger.error(f"DB Error saving outcome: {e}")
-            if 'db' in locals(): db.close()
+            if 'db' in locals():
+                db.close()
         logger.debug(f"[GovernanceRegistry] Recorded operational outcome {outcome.outcome_id}")
 
-
-        
     def get_operational_outcome(self, outcome_id: str) -> Optional[OperationalOutcomeRecord]:
         for o in self._operational_outcomes:
             if o.outcome_id == outcome_id:
                 return o
         return None
 
-    def get_operational_outcome_by_action(self, action_id: str) -> Optional[OperationalOutcomeRecord]:
+    def get_operational_outcome_by_action(
+            self, action_id: str) -> Optional[OperationalOutcomeRecord]:
         for o in self._operational_outcomes:
             if o.action_id == action_id:
                 return o
         return None
-        
+
     # ======================================================
     # SESR-008: Continuity Validation
     # ======================================================
@@ -590,23 +626,28 @@ class GovernanceRegistry:
         parent_journey_id = None
 
         if parent_type == "evaluation":
-            parent_record = next((r for r in self._evaluations if r.evaluation_id == parent_id), None)
+            parent_record = next(
+                (r for r in self._evaluations if r.evaluation_id == parent_id), None)
             if parent_record:
                 parent_journey_id = parent_record.journey_id
         elif parent_type == "recommendation":
-            parent_record = next((r for r in self._recommendations if r.recommendation_id == parent_id), None)
+            parent_record = next(
+                (r for r in self._recommendations if r.recommendation_id == parent_id), None)
             if parent_record:
                 parent_journey_id = parent_record.journey_id
         elif parent_type == "decision":
-            parent_record = next((d for d in self._human_decisions if d.decision_id == parent_id), None)
+            parent_record = next(
+                (d for d in self._human_decisions if d.decision_id == parent_id), None)
             if parent_record:
                 parent_journey_id = parent_record.journey_id
         elif parent_type == "action":
-            parent_record = next((a for a in self._operational_actions if a.action_id == parent_id), None)
+            parent_record = next(
+                (a for a in self._operational_actions if a.action_id == parent_id), None)
             if parent_record:
                 parent_journey_id = parent_record.journey_id
         elif parent_type == "outcome":
-            parent_record = next((o for o in self._operational_outcomes if o.outcome_id == parent_id), None)
+            parent_record = next(
+                (o for o in self._operational_outcomes if o.outcome_id == parent_id), None)
             if parent_record:
                 parent_journey_id = parent_record.journey_id
         else:
@@ -645,7 +686,7 @@ class GovernanceRegistry:
         from app.core.exceptions import PersistenceError
         if kwargs.pop("simulate_persistence_error", False):
             raise PersistenceError("Database connection failed during Operational Outcome commit.")
-            
+
         for i, o in enumerate(self._operational_outcomes):
             if o.outcome_id == outcome_id:
                 import dataclasses
@@ -655,16 +696,22 @@ class GovernanceRegistry:
                 return updated
         return None
 
-    def get_applicable_recommendation_mapping(self, rule_id: str, result: str, eval_time: datetime) -> Optional[RecommendationMapping]:
+    def get_applicable_recommendation_mapping(
+            self,
+            rule_id: str,
+            result: str,
+            eval_time: datetime) -> Optional[RecommendationMapping]:
         """RGV-005: Deterministic Mapping Resolution"""
         applicable = []
         for m in self._recommendation_mappings:
-            if m.applicable_rule_id == rule_id and m.eligible_result == result and m.is_applicable(eval_time):
+            if m.applicable_rule_id == rule_id and m.eligible_result == result and m.is_applicable(
+                    eval_time):
                 applicable.append(m)
         if not applicable:
             return None
         if len(applicable) > 1:
-            raise ValueError(f"GOVERNANCE_AMBIGUITY: Multiple active recommendation mappings found for rule {rule_id}")
+            raise ValueError(
+                f"GOVERNANCE_AMBIGUITY: Multiple active recommendation mappings found for rule {rule_id}")
         return applicable[0]
 
     def get_applicable_policies(self, eval_time: datetime) -> List[PolicyVersion]:
@@ -672,17 +719,23 @@ class GovernanceRegistry:
         applicable = []
         # Find latest active policy per policy_id that is effective
         for p_id in set(p.policy_id for p in self._policies):
-            versions = [p for p in self._policies if p.policy_id == p_id and p.is_applicable(eval_time)]
+            versions = [p for p in self._policies if p.policy_id ==
+                        p_id and p.is_applicable(eval_time)]
             if len(versions) > 1:
                 raise ValueError(f"GOVERNANCE_AMBIGUITY: Multiple active policies found for {p_id}")
             if versions:
                 applicable.append(versions[0])
         return applicable
 
-    def get_applicable_rules_for_policy(self, policy_id: str, policy_version: str, eval_time: datetime) -> List[RuleVersion]:
+    def get_applicable_rules_for_policy(
+            self,
+            policy_id: str,
+            policy_version: str,
+            eval_time: datetime) -> List[RuleVersion]:
         """PRR-004: Resolve Applicable Rule Version"""
         applicable = []
-        mapped_rules = [r for r in self._rules if r.governing_policy_id == policy_id and r.governing_policy_version == policy_version]
+        mapped_rules = [r for r in self._rules if r.governing_policy_id ==
+                        policy_id and r.governing_policy_version == policy_version]
         for r_id in set(r.rule_id for r in mapped_rules):
             versions = [r for r in mapped_rules if r.rule_id == r_id and r.is_applicable(eval_time)]
             if len(versions) > 1:
@@ -703,11 +756,15 @@ class GovernanceRegistry:
                 return r
         return None
 
-    def get_recommendation_mapping_by_version(self, mapping_id: str, version: str) -> Optional[RecommendationMapping]:
+    def get_recommendation_mapping_by_version(
+            self,
+            mapping_id: str,
+            version: str) -> Optional[RecommendationMapping]:
         for m in self._recommendation_mappings:
             if m.mapping_id == mapping_id and m.version == version:
                 return m
         return None
+
 
 governance_registry = GovernanceRegistry()
 
@@ -715,169 +772,179 @@ governance_registry = GovernanceRegistry()
 # SEED INITIAL GOVERNED DATA
 # ======================================================
 
+
 def initialize_registry_seeds():
     # 1. Evidence Availability Policy
-    if governance_registry.get_policy_by_version("POL-001", "V1"): return
+    if governance_registry.get_policy_by_version("POL-001", "V1"):
+        return
     governance_registry.register_policy(PolicyVersion(
-    policy_id="POL-001",
-    version="V1",
-    content="Recommendations require operational evidence.",
-    lifecycle_state=LifecycleState.ACTIVE,
-    effective_from=datetime.utcnow() - timedelta(days=30),
-    approval_state="APPROVED",
-    approved_by="USR-001"
+        policy_id="POL-001",
+        version="V1",
+        content="Recommendations require operational evidence.",
+        lifecycle_state=LifecycleState.ACTIVE,
+        effective_from=datetime.utcnow() - timedelta(days=30),
+        approval_state="APPROVED",
+        approved_by="USR-001"
     ))
 
     # 2. Event Type Authority Policy
     governance_registry.register_policy(PolicyVersion(
-    policy_id="POL-002",
-    version="V1",
-    content="Only EHR, Phone, Email, Manual events are authorized.",
-    lifecycle_state=LifecycleState.ACTIVE,
-    effective_from=datetime.utcnow() - timedelta(days=30),
-    approval_state="APPROVED",
-    approved_by="USR-001"
+        policy_id="POL-002",
+        version="V1",
+        content="Only EHR, Phone, Email, Manual events are authorized.",
+        lifecycle_state=LifecycleState.ACTIVE,
+        effective_from=datetime.utcnow() - timedelta(days=30),
+        approval_state="APPROVED",
+        approved_by="USR-001"
     ))
 
     # 3. Production Source Authority Policy (Item 18)
     governance_registry.register_policy(PolicyVersion(
-    policy_id="POL-003",
-    version="V1",
-    content="Production execution is restricted to Practice Fusion sources.",
-    lifecycle_state=LifecycleState.ACTIVE,
-    effective_from=datetime.utcnow() - timedelta(days=30),
-    approval_state="APPROVED",
-    approved_by="USR-001"
+        policy_id="POL-003",
+        version="V1",
+        content="Production execution is restricted to Practice Fusion sources.",
+        lifecycle_state=LifecycleState.ACTIVE,
+        effective_from=datetime.utcnow() - timedelta(days=30),
+        approval_state="APPROVED",
+        approved_by="USR-001"
     ))
-
 
     # 3. Clinic No-Show Rule
     governance_registry.register_rule(RuleVersion(
-    rule_id="RULE-SCH-001",
-    version="V1",
-    logic_description="Flag patient no-show gaps in schedule.",
-    lifecycle_state=LifecycleState.ACTIVE,
-    governing_policy_id="POL-001",
-    governing_policy_version="V1",
-    inputs=[
-        RuleInputDefinition("primary_context", "str", True, "DecisionContext"),
-        RuleInputDefinition("secondary_context", "str", True, "DecisionContext"),
-        RuleInputDefinition("event_type", "str", True, "DecisionContext")
-    ],
-    allowed_outputs=["CONDITION_MET", "CONDITION_NOT_MET", "NOT_EVALUABLE"],
-    effective_from=datetime.utcnow() - timedelta(days=30),
-    approval_state="APPROVED",
-    approved_by="USR-001"
+        rule_id="RULE-SCH-001",
+        version="V1",
+        logic_description="Flag patient no-show gaps in schedule.",
+        lifecycle_state=LifecycleState.ACTIVE,
+        governing_policy_id="POL-001",
+        governing_policy_version="V1",
+        inputs=[
+            RuleInputDefinition("primary_context", "str", True, "DecisionContext"),
+            RuleInputDefinition("secondary_context", "str", True, "DecisionContext"),
+            RuleInputDefinition("event_type", "str", True, "DecisionContext")
+        ],
+        allowed_outputs=["CONDITION_MET", "CONDITION_NOT_MET", "NOT_EVALUABLE"],
+        effective_from=datetime.utcnow() - timedelta(days=30),
+        approval_state="APPROVED",
+        approved_by="USR-001"
     ))
 
     # 4. Clinic Wait Time Rule
     governance_registry.register_rule(RuleVersion(
-    rule_id="RULE-SCH-002",
-    version="V1",
-    logic_description="Flag wait times exceeding threshold.",
-    lifecycle_state=LifecycleState.ACTIVE,
-    governing_policy_id="POL-001",
-    governing_policy_version="V1",
-    inputs=[
-        RuleInputDefinition("primary_context", "str", True, "DecisionContext"),
-        RuleInputDefinition("secondary_context", "str", True, "DecisionContext")
-    ],
-    allowed_outputs=["CONDITION_MET", "CONDITION_NOT_MET", "NOT_EVALUABLE"],
-    effective_from=datetime.utcnow() - timedelta(days=30),
-    approval_state="APPROVED",
-    approved_by="USR-001"
+        rule_id="RULE-SCH-002",
+        version="V1",
+        logic_description="Flag wait times exceeding threshold.",
+        lifecycle_state=LifecycleState.ACTIVE,
+        governing_policy_id="POL-001",
+        governing_policy_version="V1",
+        inputs=[
+            RuleInputDefinition("primary_context", "str", True, "DecisionContext"),
+            RuleInputDefinition("secondary_context", "str", True, "DecisionContext")
+        ],
+        allowed_outputs=["CONDITION_MET", "CONDITION_NOT_MET", "NOT_EVALUABLE"],
+        effective_from=datetime.utcnow() - timedelta(days=30),
+        approval_state="APPROVED",
+        approved_by="USR-001"
     ))
 
     # 5. System Blocked Rule (PF-Only)
     governance_registry.register_rule(RuleVersion(
-    rule_id="RULE-SYS-BLOCKED",
-    version="V1",
-    logic_description="Blocks action if source is not Practice Fusion in Production.",
-    lifecycle_state=LifecycleState.ACTIVE,
-    governing_policy_id="POL-003",
-    governing_policy_version="V1",
-    inputs=[
-        RuleInputDefinition("source_connector", "str", True, "DecisionContext")
-    ],
-    allowed_outputs=["NOT_EVALUABLE", "BLOCKED"],
-    effective_from=datetime.utcnow() - timedelta(days=30),
-    approval_state="APPROVED",
-    approved_by="USR-001"
+        rule_id="RULE-SYS-BLOCKED",
+        version="V1",
+        logic_description="Blocks action if source is not Practice Fusion in Production.",
+        lifecycle_state=LifecycleState.ACTIVE,
+        governing_policy_id="POL-003",
+        governing_policy_version="V1",
+        inputs=[
+            RuleInputDefinition("source_connector", "str", True, "DecisionContext")
+        ],
+        allowed_outputs=["NOT_EVALUABLE", "BLOCKED"],
+        effective_from=datetime.utcnow() - timedelta(days=30),
+        approval_state="APPROVED",
+        approved_by="USR-001"
     ))
 
     # 6. Recommendation Mappings (SESR-004)
+    governance_registry.register_recommendation_mapping(
+        RecommendationMapping(
+            mapping_id="REC-MAP-001",
+            version="V1",
+            applicable_rule_id="RULE-SCH-001",
+            eligible_result="CONDITION_MET",
+            recommendation_template="Consider sending an SMS reschedule link and dispatching a $25 fee claim.",
+            authority_requirement=AuthorityRequirement.APPROVAL_REQUIRED,
+            priority="Moderate",
+            business_impact_template="-$150.00 estimated revenue loss.",
+            expected_outcome_template="Recovery of $25 fee and rescheduled visit.",
+            problem_template="Patient No-Show",
+            lifecycle_state=LifecycleState.ACTIVE,
+            effective_from=datetime.utcnow() -
+            timedelta(
+                days=30)))
+
+    governance_registry.register_recommendation_mapping(
+        RecommendationMapping(
+            mapping_id="REC-MAP-002",
+            version="V1",
+            applicable_rule_id="RULE-SCH-002",
+            eligible_result="CONDITION_MET",
+            recommendation_template="Suggest re-routing to next available Room and notifying the Clinic Administrator.",
+            authority_requirement=AuthorityRequirement.REVIEW_REQUIRED,
+            priority="High",
+            business_impact_template="High risk of patient satisfaction drop and negative reviews.",
+            expected_outcome_template="Wait time mitigated, patient informed.",
+            problem_template="Extended Patient Wait Time",
+            lifecycle_state=LifecycleState.ACTIVE,
+            effective_from=datetime.utcnow() -
+            timedelta(
+                days=30)))
+
     governance_registry.register_recommendation_mapping(RecommendationMapping(
-    mapping_id="REC-MAP-001",
-    version="V1",
-    applicable_rule_id="RULE-SCH-001",
-    eligible_result="CONDITION_MET",
-    recommendation_template="Consider sending an SMS reschedule link and dispatching a $25 fee claim.",
-    authority_requirement=AuthorityRequirement.APPROVAL_REQUIRED,
-    priority="Moderate",
-    business_impact_template="-$150.00 estimated revenue loss.",
-    expected_outcome_template="Recovery of $25 fee and rescheduled visit.",
-    problem_template="Patient No-Show",
-    lifecycle_state=LifecycleState.ACTIVE,
-    effective_from=datetime.utcnow() - timedelta(days=30)
+        mapping_id="REC-MAP-003",
+        version="V1",
+        applicable_rule_id="RULE-SYS-BLOCKED",
+        eligible_result="NOT_EVALUABLE",
+        recommendation_template="Review policy rules.",
+        authority_requirement=AuthorityRequirement.INFORMATIONAL,
+        priority="Information",
+        business_impact_template="Ensured compliance and security.",
+        expected_outcome_template="Maintained system integrity.",
+        problem_template="Action Blocked by Governance",
+        lifecycle_state=LifecycleState.ACTIVE,
+        effective_from=datetime.utcnow() - timedelta(days=30)
     ))
 
     governance_registry.register_recommendation_mapping(RecommendationMapping(
-    mapping_id="REC-MAP-002",
-    version="V1",
-    applicable_rule_id="RULE-SCH-002",
-    eligible_result="CONDITION_MET",
-    recommendation_template="Suggest re-routing to next available Room and notifying the Clinic Administrator.",
-    authority_requirement=AuthorityRequirement.REVIEW_REQUIRED,
-    priority="High",
-    business_impact_template="High risk of patient satisfaction drop and negative reviews.",
-    expected_outcome_template="Wait time mitigated, patient informed.",
-    problem_template="Extended Patient Wait Time",
-    lifecycle_state=LifecycleState.ACTIVE,
-    effective_from=datetime.utcnow() - timedelta(days=30)
+        mapping_id="REC-MAP-004",
+        version="V1",
+        applicable_rule_id="RULE-SCH-001",
+        eligible_result="NOT_EVALUABLE",
+        recommendation_template="Request Human Review for incomplete schedule data.",
+        authority_requirement=AuthorityRequirement.REVIEW_REQUIRED,
+        priority="Information",
+        business_impact_template="None",
+        expected_outcome_template="Data integrity maintained.",
+        problem_template="Unverifiable Schedule Context",
+        lifecycle_state=LifecycleState.ACTIVE,
+        effective_from=datetime.utcnow() - timedelta(days=30)
     ))
-
-    governance_registry.register_recommendation_mapping(RecommendationMapping(
-    mapping_id="REC-MAP-003",
-    version="V1",
-    applicable_rule_id="RULE-SYS-BLOCKED",
-    eligible_result="NOT_EVALUABLE",
-    recommendation_template="Review policy rules.",
-    authority_requirement=AuthorityRequirement.INFORMATIONAL,
-    priority="Information",
-    business_impact_template="Ensured compliance and security.",
-    expected_outcome_template="Maintained system integrity.",
-    problem_template="Action Blocked by Governance",
-    lifecycle_state=LifecycleState.ACTIVE,
-    effective_from=datetime.utcnow() - timedelta(days=30)
-    ))
-
-    governance_registry.register_recommendation_mapping(RecommendationMapping(
-    mapping_id="REC-MAP-004",
-    version="V1",
-    applicable_rule_id="RULE-SCH-001",
-    eligible_result="NOT_EVALUABLE",
-    recommendation_template="Request Human Review for incomplete schedule data.",
-    authority_requirement=AuthorityRequirement.REVIEW_REQUIRED,
-    priority="Information",
-    business_impact_template="None",
-    expected_outcome_template="Data integrity maintained.",
-    problem_template="Unverifiable Schedule Context",
-    lifecycle_state=LifecycleState.ACTIVE,
-    effective_from=datetime.utcnow() - timedelta(days=30)
-    ))
-
 
     # 6. Authority Configurations (SESR-005)
-    governance_registry.register_authority_config(AuthorityConfiguration(
-    role="Clinic Manager",
-    allowed_decisions=[DecisionType.APPROVED, DecisionType.REJECTED, DecisionType.OVERRIDDEN, DecisionType.RETURNED_FOR_REVIEW],
-    can_override=True,
-    requires_reason_for=[DecisionType.REJECTED, DecisionType.OVERRIDDEN]
-    ))
+    governance_registry.register_authority_config(
+        AuthorityConfiguration(
+            role="Clinic Manager",
+            allowed_decisions=[
+                DecisionType.APPROVED,
+                DecisionType.REJECTED,
+                DecisionType.OVERRIDDEN,
+                DecisionType.RETURNED_FOR_REVIEW],
+            can_override=True,
+            requires_reason_for=[
+                DecisionType.REJECTED,
+                DecisionType.OVERRIDDEN]))
 
     governance_registry.register_authority_config(AuthorityConfiguration(
-    role="Front Desk",
-    allowed_decisions=[DecisionType.APPROVED, DecisionType.REJECTED],
-    can_override=False,
-    requires_reason_for=[DecisionType.REJECTED]
+        role="Front Desk",
+        allowed_decisions=[DecisionType.APPROVED, DecisionType.REJECTED],
+        can_override=False,
+        requires_reason_for=[DecisionType.REJECTED]
     ))

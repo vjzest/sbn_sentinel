@@ -50,27 +50,32 @@ def test_a021_historical_reconstruction():
     )
     from datetime import datetime
 
+    import uuid
+    uid = uuid.uuid4().hex[:6]
+    policy_id = f"POL-TEST-{uid}"
+    rule_id = f"R-TEST-{uid}"
+
     # Inject historical state
     policy = PolicyVersion(
-        policy_id="POL-TEST-001",
+        policy_id=policy_id,
         version="V1",
         content="",
         lifecycle_state=LifecycleState.ACTIVE)
     rule = RuleVersion(
-        rule_id="R-TEST-001",
+        rule_id=rule_id,
         version="V1",
         logic_description="",
         lifecycle_state=LifecycleState.ACTIVE,
         inputs=[],
         allowed_outputs=[],
-        governing_policy_id="POL-TEST-001",
+        governing_policy_id=policy_id,
         governing_policy_version="V1")
     governance_registry.register_policy(policy)
     governance_registry.register_rule(rule)
 
     rules = governance_registry.get_applicable_rules_for_policy(
-        "POL-TEST-001", "V1", datetime.utcnow())
-    assert len(rules) > 0, "Should reconstruct at least one rule for POL-TEST-001"
+        policy_id, "V1", datetime.utcnow())
+    assert len(rules) > 0, "Should reconstruct at least one rule"
 
 
 @pytest.mark.governance

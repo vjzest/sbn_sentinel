@@ -8,7 +8,12 @@ class OverrideEngine:
     def __init__(self, db_session):
         self.db = db_session
 
-    async def process_override(self, recommendation_id: str, actor_id: str, reason_code: str, justification: str) -> dict:
+    async def process_override(
+            self,
+            recommendation_id: str,
+            actor_id: str,
+            reason_code: str,
+            justification: str) -> dict:
         """
         Records an override event securely without rewriting past history.
         """

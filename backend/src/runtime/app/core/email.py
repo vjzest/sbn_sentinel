@@ -5,9 +5,11 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+
 def send_email(to_email: str, subject: str, body: str, is_html: bool = False):
     if not settings.SMTP_SERVER or not settings.SMTP_USER or not settings.SMTP_PASSWORD:
-        logger.warning(f"SMTP configuration is missing. Mocking email send to {to_email}: {subject}")
+        logger.warning(
+            f"SMTP configuration is missing. Mocking email send to {to_email}: {subject}")
         return False
 
     try:
@@ -32,13 +34,14 @@ def send_email(to_email: str, subject: str, body: str, is_html: bool = False):
         logger.error(f"Failed to send email to {to_email}: {str(e)}")
         return False
 
+
 def send_daily_report_email(to_email: str = "vjzest9569@gmail.com"):
     subject = "📊 Sentinel Health Daily Clinical & Revenue Intelligence Report"
     html_body = """
     <div style="font-family: Arial, sans-serif; background-color: #0F071B; color: #ffffff; padding: 30px; border-radius: 16px;">
         <h2 style="color: #6366F1;">📊 SBN Sentinel Daily Executive Summary</h2>
         <p style="color: #A5B4FC;">Here is your automated end-of-day clinical telemetry & revenue report.</p>
-        
+
         <table style="width: 100%; border-collapse: collapse; margin-top: 20px; background-color: #180A2E; border-radius: 12px; overflow: hidden;">
             <tr style="border-b: 1px solid rgba(255,255,255,0.1); text-align: left;">
                 <th style="padding: 12px; color: #9CA3AF;">Metric</th>

@@ -1,5 +1,6 @@
-from pydantic import BaseModel, HttpUrl
+from pydantic import BaseModel
 from typing import Optional, Dict, Any
+
 
 class ConnectorHealthResponse(BaseModel):
     id: str
@@ -8,6 +9,7 @@ class ConnectorHealthResponse(BaseModel):
     latency_ms: int
     last_sync: str
     details: Optional[Dict[str, Any]] = None
+
 
 class ConnectorSyncRequest(BaseModel):
     connector_id: str

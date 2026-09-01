@@ -1,6 +1,7 @@
 from sqlalchemy import Column, Integer, String, Boolean
 from app.db.database import Base
 
+
 class SettingsModel(Base):
     __tablename__ = "settings"
 
@@ -12,7 +13,7 @@ class SettingsModel(Base):
     close_time = Column(String, default="20:00")
     language = Column(String, default="en")
     theme_mode = Column(String, default="system")
-    
+
     # SESR-012C / CCA-023 Governed Organizational Configuration
     # AI Settings (Must be governed by Policy/Rule Engine for deterministic behavior)
     # These fields act as mapped proxies to the authoritative Rule Governance framework.

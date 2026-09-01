@@ -1,7 +1,7 @@
 class PriorityEngine:
     """
     AIS-004: Priority Engine
-    Assigns an operational priority (e.g., Critical, High, Medium, Low, Informational) 
+    Assigns an operational priority (e.g., Critical, High, Medium, Low, Informational)
     based on the operational urgency of the recommendation.
     """
 

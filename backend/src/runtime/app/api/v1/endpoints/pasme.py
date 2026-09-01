@@ -1,13 +1,13 @@
 from fastapi import APIRouter, Depends, HTTPException, WebSocket, WebSocketDisconnect
 from sqlalchemy.orm import Session
-from typing import List, Dict, Any
+from typing import List
 import time
 import psutil
 import os
 
 from app.db.database import get_db
-from app.api.deps import get_current_user, RoleChecker
-from app.api.deps import get_current_user, RoleChecker
+from app.api.deps import RoleChecker
+from app.api.deps import RoleChecker
 from app.models.user import User, UserRole
 from app.models.rule import RuleModel
 from app.services.data_audit_engine import data_audit_engine
@@ -18,6 +18,8 @@ router = APIRouter()
 MAINTENANCE_MODE = False
 
 # WebSocket Connection Manager for PASME Real-Time Chat
+
+
 class ConnectionManager:
     def __init__(self):
         self.active_connections: List[WebSocket] = []
@@ -37,7 +39,9 @@ class ConnectionManager:
             except Exception:
                 pass
 
+
 manager = ConnectionManager()
+
 
 @router.websocket("/chat/ws")
 async def websocket_chat(websocket: WebSocket):
@@ -54,13 +58,14 @@ async def websocket_chat(websocket: WebSocket):
 
 
 @router.get("/health")
-def get_platform_health(current_user: User = Depends(RoleChecker([UserRole.SYSTEM_ADMINISTRATOR.value]))):
+def get_platform_health(current_user: User = Depends(
+        RoleChecker([UserRole.SYSTEM_ADMINISTRATOR.value]))):
     """
     Returns PASME Platform Health monitoring metrics.
     """
     process = psutil.Process(os.getpid())
     memory_info = process.memory_info()
-    
+
     return {
         "status": "healthy" if not MAINTENANCE_MODE else "maintenance",
         "maintenance_mode": MAINTENANCE_MODE,
@@ -78,8 +83,10 @@ def get_platform_health(current_user: User = Depends(RoleChecker([UserRole.SYSTE
         }
     }
 
+
 @router.get("/rules")
-def get_all_rules(db: Session = Depends(get_db), current_user: User = Depends(RoleChecker([UserRole.SYSTEM_ADMINISTRATOR.value]))):
+def get_all_rules(db: Session = Depends(get_db), current_user: User = Depends(
+        RoleChecker([UserRole.SYSTEM_ADMINISTRATOR.value]))):
     """
     Retrieve all business rules for PASME administration.
     """
@@ -88,7 +95,7 @@ def get_all_rules(db: Session = Depends(get_db), current_user: User = Depends(Ro
         # Seed rules if they don't exist yet
         seed_rules(db)
         rules = db.query(RuleModel).all()
-        
+
     return [
         {
             "id": r.id,
@@ -102,18 +109,20 @@ def get_all_rules(db: Session = Depends(get_db), current_user: User = Depends(Ro
         for r in rules
     ]
 
+
 @router.patch("/rules/{rule_id}/toggle")
-def toggle_rule(rule_id: str, db: Session = Depends(get_db), current_user: User = Depends(RoleChecker([UserRole.SYSTEM_ADMINISTRATOR.value]))):
+def toggle_rule(rule_id: str, db: Session = Depends(get_db), current_user: User = Depends(
+        RoleChecker([UserRole.SYSTEM_ADMINISTRATOR.value]))):
     """
     Toggle a rule's active state. Audited by DMAE.
     """
     rule = db.query(RuleModel).filter(RuleModel.rule_id == rule_id).first()
     if not rule:
         raise HTTPException(status_code=404, detail="Rule not found")
-        
+
     previous_state = rule.is_active
     rule.is_active = not rule.is_active
-    
+
     # MS-012/MS-010 Audit Requirement: Administrative actions are permanently traceable
     data_audit_engine._log_internal(
         db,
@@ -121,18 +130,20 @@ def toggle_rule(rule_id: str, db: Session = Depends(get_db), current_user: User 
         action=f"{'Enabled' if rule.is_active else 'Disabled'} Rule",
         module=f"Rule: {rule.rule_id}"
     )
-    
+
     db.commit()
     return {"rule_id": rule.rule_id, "is_active": rule.is_active}
 
+
 @router.post("/maintenance/toggle")
-def toggle_maintenance_mode(db: Session = Depends(get_db), current_user: User = Depends(RoleChecker([UserRole.SYSTEM_ADMINISTRATOR.value]))):
+def toggle_maintenance_mode(db: Session = Depends(get_db), current_user: User = Depends(
+        RoleChecker([UserRole.SYSTEM_ADMINISTRATOR.value]))):
     """
     Toggle global maintenance mode.
     """
     global MAINTENANCE_MODE
     MAINTENANCE_MODE = not MAINTENANCE_MODE
-    
+
     # Audit log
     data_audit_engine._log_internal(
         db,
@@ -140,18 +151,47 @@ def toggle_maintenance_mode(db: Session = Depends(get_db), current_user: User = 
         action=f"{'Enabled' if MAINTENANCE_MODE else 'Disabled'} Maintenance Mode",
         module="Platform System"
     )
-    
+
     return {"maintenance_mode": MAINTENANCE_MODE}
 
 
 def seed_rules(db: Session):
     """Seed initial rules matching the V1 requirements if empty."""
     initial_rules = [
-        RuleModel(rule_id="SCH-001", name="Patient No-Show Detected", category="Scheduling", severity="High", description="Patient did not arrive for scheduled appointment.", is_active=True),
-        RuleModel(rule_id="SCH-002", name="Wait Time Threshold Exceeded", category="Scheduling", severity="Critical", description="Patient wait time exceeded threshold (45 mins).", is_active=True),
-        RuleModel(rule_id="SCH-003", name="New Appointment Scheduled", category="Scheduling", severity="Information", description="New appointment booked in EHR.", is_active=True),
-        RuleModel(rule_id="OPS-001", name="Front Desk Unreachable (Missed Call)", category="Operational Capacity", severity="Moderate", description="Patient couldn't reach the front desk.", is_active=True),
-        RuleModel(rule_id="CLIN-001", name="Clinical Documentation Pending Review", category="Clinical Workflow", severity="Moderate", description="Lab results pending review.", is_active=True)
-    ]
+        RuleModel(
+            rule_id="SCH-001",
+            name="Patient No-Show Detected",
+            category="Scheduling",
+            severity="High",
+            description="Patient did not arrive for scheduled appointment.",
+            is_active=True),
+        RuleModel(
+            rule_id="SCH-002",
+            name="Wait Time Threshold Exceeded",
+            category="Scheduling",
+            severity="Critical",
+            description="Patient wait time exceeded threshold (45 mins).",
+            is_active=True),
+        RuleModel(
+            rule_id="SCH-003",
+            name="New Appointment Scheduled",
+            category="Scheduling",
+            severity="Information",
+            description="New appointment booked in EHR.",
+            is_active=True),
+        RuleModel(
+            rule_id="OPS-001",
+            name="Front Desk Unreachable (Missed Call)",
+            category="Operational Capacity",
+            severity="Moderate",
+            description="Patient couldn't reach the front desk.",
+            is_active=True),
+        RuleModel(
+            rule_id="CLIN-001",
+            name="Clinical Documentation Pending Review",
+            category="Clinical Workflow",
+            severity="Moderate",
+            description="Lab results pending review.",
+            is_active=True)]
     db.bulk_save_objects(initial_rules)
     db.commit()

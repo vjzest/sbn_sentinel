@@ -2,6 +2,7 @@ from sqlalchemy import Column, Integer, String, Boolean, DateTime, Text
 from datetime import datetime
 from app.db.database import Base
 
+
 class RuleModel(Base):
     __tablename__ = "rules"
 
@@ -19,6 +20,7 @@ class RuleModel(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
     modified_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
+
 class RuleExecutionLog(Base):
     __tablename__ = "rule_execution_logs"
 
@@ -26,7 +28,7 @@ class RuleExecutionLog(Base):
     timestamp = Column(DateTime, default=datetime.utcnow)
     rule_id = Column(String(50), index=True)
     input_source = Column(String(100))
-    evaluation_result = Column(String(50)) # e.g. "Violation Detected"
+    evaluation_result = Column(String(50))  # e.g. "Violation Detected"
     severity = Column(String(50))
     processing_duration_ms = Column(Integer)
     user_acknowledged = Column(Boolean, default=False)

@@ -1,6 +1,7 @@
 import uuid
 from datetime import datetime
 
+
 class EvaluationBuilder:
     """
     AIS-003: Evaluation Builder
@@ -10,7 +11,11 @@ class EvaluationBuilder:
     def __init__(self, db_session):
         self.db = db_session
 
-    async def build(self, context_package: dict, sufficiency_status: str, governance_status: dict) -> dict:
+    async def build(
+            self,
+            context_package: dict,
+            sufficiency_status: str,
+            governance_status: dict) -> dict:
         """
         Assembles the output evaluation package required for downstream modules (AIS-004).
         """

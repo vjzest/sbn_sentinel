@@ -2,11 +2,12 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+
 class ExplainabilityEngine:
     """
     AIS-005: Explainability Engine
-    Coordinates the deterministic tracing of a recommendation back through its 
-    governance, policy, and evidence, converting technical trace data into a 
+    Coordinates the deterministic tracing of a recommendation back through its
+    governance, policy, and evidence, converting technical trace data into a
     structured Explanation Package.
     """
 
@@ -78,7 +79,8 @@ class ExplainabilityEngine:
         }
 
     def _halt_explainability(self, rec_id: str, reason_code: str, details: str) -> dict:
-        logger.warning(f"[{rec_id}] ExplainabilityEngine: Generation halted - {reason_code}: {details}")
+        logger.warning(
+            f"[{rec_id}] ExplainabilityEngine: Generation halted - {reason_code}: {details}")
         return {
             "status": "Blocked",
             "block_reason": reason_code,

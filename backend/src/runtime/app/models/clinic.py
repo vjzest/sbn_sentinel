@@ -1,6 +1,7 @@
 import uuid
-from sqlalchemy import Column, String, Boolean
+from sqlalchemy import Column, String
 from app.db.database import Base
+
 
 class ClinicModel(Base):
     __tablename__ = "clinics"

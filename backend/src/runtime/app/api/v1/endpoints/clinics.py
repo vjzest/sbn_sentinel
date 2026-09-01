@@ -6,6 +6,7 @@ from app.models.clinic import ClinicModel
 
 router = APIRouter()
 
+
 @router.get("/", response_model=List[Dict[str, Any]])
 def get_clinics(db: Session = Depends(get_db)):
     """Get all clinics."""
@@ -22,16 +23,17 @@ def get_clinics(db: Session = Depends(get_db)):
         for c in clinics
     ]
 
+
 @router.post("/")
 def create_clinic(payload: Dict[str, Any], db: Session = Depends(get_db)):
     """Create a new clinic."""
     name = payload.get("name")
     address = payload.get("address", "")
     phone = payload.get("phone", "")
-    
+
     if not name:
         raise HTTPException(status_code=400, detail="Clinic name is required")
-        
+
     new_clinic = ClinicModel(
         name=name,
         address=address,
@@ -41,7 +43,7 @@ def create_clinic(payload: Dict[str, Any], db: Session = Depends(get_db)):
     db.add(new_clinic)
     db.commit()
     db.refresh(new_clinic)
-    
+
     return {
         "id": str(new_clinic.id),
         "name": new_clinic.name,

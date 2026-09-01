@@ -4,7 +4,7 @@ Domain 3 - Intelligence
 """
 import uuid
 from datetime import datetime
-from sqlalchemy import Column, String, DateTime, ForeignKey, Float
+from sqlalchemy import Column, String, DateTime, ForeignKey
 from sqlalchemy.orm import relationship
 from app.db.database import Base
 
@@ -38,7 +38,7 @@ class DecisionContextModel(Base):
     event_id = Column(String, ForeignKey("pipeline_events.id"), nullable=False, unique=True)
     primary_context = Column(String, nullable=False)
     secondary_context = Column(String, nullable=True)
-    evidence_state = Column(String, nullable=True) # JSON serialized evidence
+    evidence_state = Column(String, nullable=True)  # JSON serialized evidence
     reason = Column(String, nullable=True)
     generated_timestamp = Column(DateTime, default=datetime.utcnow)
 
@@ -54,10 +54,10 @@ class OperationalIntelligenceModel(Base):
 
     id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
     event_id = Column(String, ForeignKey("pipeline_events.id"), nullable=False, unique=True)
-    priority = Column(String, nullable=False) # e.g. High, Medium, Low
+    priority = Column(String, nullable=False)  # e.g. High, Medium, Low
     operational_impact = Column(String, nullable=True)
     recommendation = Column(String, nullable=True)
-    status = Column(String, default="Generated") # Generated, Acknowledged, Dismissed
+    status = Column(String, default="Generated")  # Generated, Acknowledged, Dismissed
 
     event = relationship("OperationalEventModel", back_populates="operational_intelligence")
 
@@ -71,8 +71,8 @@ class RevenueIntelligenceModel(Base):
 
     id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
     event_id = Column(String, ForeignKey("pipeline_events.id"), nullable=False, unique=True)
-    estimated_exposure = Column(String, nullable=True) # E.g., "$150.00"
-    opportunity_category = Column(String, nullable=True) # e.g., "Revenue Loss"
+    estimated_exposure = Column(String, nullable=True)  # E.g., "$150.00"
+    opportunity_category = Column(String, nullable=True)  # e.g., "Revenue Loss"
     financial_priority = Column(String, nullable=True)
 
     event = relationship("OperationalEventModel", back_populates="revenue_intelligence")

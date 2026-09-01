@@ -4,6 +4,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+
 class ContextBuilder:
     """
     AIS-002: Context Builder
@@ -19,7 +20,7 @@ class ContextBuilder:
         Builds the foundational Decision Context Package without generating recommendations.
         """
         logger.info(f"[{event_id}] ContextBuilder: Assembling Decision Context Package")
-        
+
         context_package = {
             "identity": {
                 "context_id": str(uuid.uuid4()),
@@ -30,8 +31,8 @@ class ContextBuilder:
             "evidence": {
                 "used": normalized_evidence,
                 "missing": [],  # Populated by ContextValidator
-                "freshness": {}, # Populated by ContextValidator
-                "provenance": {}, # Mapped here or in normalizer
+                "freshness": {},  # Populated by ContextValidator
+                "provenance": {},  # Mapped here or in normalizer
                 "conflicts": []  # Populated by ContextValidator
             },
             "operational_context": {

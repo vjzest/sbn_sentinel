@@ -1,14 +1,14 @@
-from datetime import datetime
 import logging
 
 logger = logging.getLogger(__name__)
+
 
 class IntelligenceOrchestrator:
     """
     AIS-001: Intelligence Orchestrator
     Implements the deterministic processing pipeline:
-    Collect Data -> Validate -> Normalize -> Evaluate Evidence -> Apply Governance -> 
-    Build Context -> Evaluate Policies -> Evaluate Rules -> Evaluate Thresholds -> 
+    Collect Data -> Validate -> Normalize -> Evaluate Evidence -> Apply Governance ->
+    Build Context -> Evaluate Policies -> Evaluate Rules -> Evaluate Thresholds ->
     Evaluate Authority -> Generate Recommendation -> Trace -> Dashboard
     """
 
@@ -30,10 +30,13 @@ class IntelligenceOrchestrator:
         """
         try:
             logger.info(f"[{event_id}] Starting Intelligence Pipeline")
-            
+
             # 1. Collect Data & Validate Connectors (AIS-008)
             if not self._validate_data(payload):
-                self._fail_transparently(event_id, "ValidationFailed", "Initial payload validation failed")
+                self._fail_transparently(
+                    event_id,
+                    "ValidationFailed",
+                    "Initial payload validation failed")
                 return
 
             # 2. Normalize Evidence (AIS-008)
@@ -41,14 +44,16 @@ class IntelligenceOrchestrator:
 
             # 3. Privacy & Governance Validation (AIS-009)
             if not await self._apply_governance(event_id, normalized_data):
-                self._fail_transparently(event_id, "GovernanceFailed", "Failed governance boundaries")
+                self._fail_transparently(event_id, "GovernanceFailed",
+                                         "Failed governance boundaries")
                 return
 
             # 4. SESR-001: Run Evidence Engine (ERP -> ERRM -> EVP -> Classification -> EOS-003)
             evidence_result = self.evidence_engine._process({"canonical_event": normalized_data})
             eos_003 = evidence_result.get("eos_003_package")
             if not eos_003 or eos_003.processing_status != "Success":
-                self._fail_transparently(event_id, "EvidenceEngineFailed", "EOS-003 package was not produced")
+                self._fail_transparently(event_id, "EvidenceEngineFailed",
+                                         "EOS-003 package was not produced")
                 return
 
             # 5. Build Decision Context (AIS-002) — consumes EOS-003
@@ -57,16 +62,25 @@ class IntelligenceOrchestrator:
             # 6. Evaluate Evidence Sufficiency (AIS-003)
             evidence_status = await self._evaluate_evidence(event_id, context)
             if not evidence_status['sufficient']:
-                self._fail_transparently(event_id, "EvidenceInsufficient", evidence_status['reason'])
+                self._fail_transparently(
+                    event_id,
+                    "EvidenceInsufficient",
+                    evidence_status['reason'])
                 return
 
             # 6. Evaluate Policies, Rules, Thresholds & Authority (Pre-Recommendation)
             if not await self._evaluate_policies_and_rules(event_id, context):
-                self._fail_transparently(event_id, "PolicyRuleFailure", "Context failed policy or rule evaluation")
+                self._fail_transparently(
+                    event_id,
+                    "PolicyRuleFailure",
+                    "Context failed policy or rule evaluation")
                 return
 
             if not await self._evaluate_authority(event_id, context):
-                self._fail_transparently(event_id, "AuthorityFailure", "Action exceeds allowed authority boundaries")
+                self._fail_transparently(
+                    event_id,
+                    "AuthorityFailure",
+                    "Action exceeds allowed authority boundaries")
                 return
 
             # 7. Generate Recommendation (AIS-004)
@@ -84,7 +98,6 @@ class IntelligenceOrchestrator:
         except Exception as e:
             logger.error(f"[{event_id}] Unhandled error in intelligence pipeline: {str(e)}")
             self._fail_transparently(event_id, "SystemError", str(e))
-
 
     # --- Pipeline Stage Stubs ---
     # These would call their respective single-responsibility engines

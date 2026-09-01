@@ -6,10 +6,12 @@ from app.api.deps import get_current_user
 
 router = APIRouter()
 
+
 class DecisionRequest(BaseModel):
     recommendation_id: str
     decision_type: str
     reason: Optional[str] = None
+
 
 @router.post("/")
 async def record_human_decision(
@@ -27,10 +29,14 @@ async def record_human_decision(
         "decision_type": request.decision_type,
         "reason": request.reason
     }
-    
+
     result = human_decision_engine._process(payload)
-    
+
     if result["status"] == "ERROR":
-        raise HTTPException(status_code=403 if "AUTHORIZ" in result.get("message", "") else 400, detail=result["message"])
-        
+        raise HTTPException(
+            status_code=403 if "AUTHORIZ" in result.get(
+                "message",
+                "") else 400,
+            detail=result["message"])
+
     return result

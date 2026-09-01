@@ -4,11 +4,11 @@ from typing import Dict, Any
 from datetime import datetime
 from app.services.base_service import BaseService
 from app.services.governance_registry import (
-    governance_registry, RecommendationStatus, AuthorityRequirement,
-    RecommendationRecord
+    governance_registry, RecommendationStatus, RecommendationRecord
 )
 
 logger = logging.getLogger(__name__)
+
 
 class IntelligenceEngine(BaseService):
     """
@@ -16,7 +16,7 @@ class IntelligenceEngine(BaseService):
     Receives objective findings and context.
     Calculates priority, estimates impact, and generates executive recommendations per MS-004.
     """
-    
+
     @property
     def service_name(self) -> str:
         return "IntelligenceEngine"
@@ -36,7 +36,7 @@ class IntelligenceEngine(BaseService):
         if isinstance(finding, list):
             finding = finding[0] if finding else {}
         context = payload.get("context", {})
-        
+
         rule_id = finding.get("rule_id", "UNKNOWN")
         # In SESR-004, finding severity or other fields can serve as 'result'
         # In absence of a true rule result field, we'll map 'Information', 'Warning', 'Error', etc.
@@ -45,13 +45,15 @@ class IntelligenceEngine(BaseService):
         # We will assume if it produced a finding, the rule result was "CONDITION_MET".
         # Let's check for 'NOT_EVALUABLE' in the severity just in case.
         result = "NOT_EVALUABLE" if finding.get("severity") == "NOT_EVALUABLE" else "CONDITION_MET"
-        
+
         eval_time = datetime.utcnow()
-        mapping = governance_registry.get_applicable_recommendation_mapping(rule_id, result, eval_time)
-        
+        mapping = governance_registry.get_applicable_recommendation_mapping(
+            rule_id, result, eval_time)
+
         if not mapping:
             # Safe Non-Generation (RGV-031)
-            logger.info(f"[IntelligenceEngine] No applicable mapping for rule {rule_id} and result {result}. Generating safe NO_RECOMMENDATION.")
+            logger.info(
+                f"[IntelligenceEngine] No applicable mapping for rule {rule_id} and result {result}. Generating safe NO_RECOMMENDATION.")
             return {
                 "risk_level": "Information",
                 "priority": "Information",
@@ -64,12 +66,17 @@ class IntelligenceEngine(BaseService):
                 "recommendation": "NO_RECOMMENDATION",
                 "expected_outcome": "No operational action recommended.",
                 "explainability_log": f"Because: No mapping in registry for {rule_id}.",
-                "primary_context": context.get("primary_context", "General"),
-                "secondary_context": context.get("secondary_context", ""),
-                "context_reason": context.get("reason", ""),
-                "decision_record": {}
-            }
-        
+                "primary_context": context.get(
+                    "primary_context",
+                    "General"),
+                "secondary_context": context.get(
+                    "secondary_context",
+                    ""),
+                "context_reason": context.get(
+                    "reason",
+                    ""),
+                "decision_record": {}}
+
         # Governed Variable Substitution (RGV-011)
         # We can implement basic formatting if needed, assuming the context contains the keys.
         try:
@@ -85,16 +92,17 @@ class IntelligenceEngine(BaseService):
             formatted_problem = mapping.problem_template
 
         rec_id = f"REC-{uuid.uuid4().hex[:8].upper()}"
-        
+
         # Enforce Provenance Identifiers (Audit 3 Item 4)
         decision_context_id = context.get("id") or context.get("context_id")
         rule_evaluation_id = finding.get("evaluation_id")
         journey_id = payload.get("journey_id")
-        
+
         if not decision_context_id or not rule_evaluation_id or not journey_id:
             logger.error("[IntelligenceEngine] Missing required provenance identifiers.")
-            raise ValueError("Recommendation creation failed: context_id, evaluation_id, and journey_id are mandatory.")
-            
+            raise ValueError(
+                "Recommendation creation failed: context_id, evaluation_id, and journey_id are mandatory.")
+
         # RCO-001: Create and persist Recommendation Record
         record = RecommendationRecord(
             recommendation_id=rec_id,
@@ -112,8 +120,11 @@ class IntelligenceEngine(BaseService):
             journey_id=journey_id
         )
         governance_registry.record_recommendation(record)
-        
-        explainability_log = f"Governed by {mapping.mapping_id} (Version {mapping.version}) for {rule_id} ({result}). Authority: {mapping.authority_requirement.value}"
+
+        explainability_log = f"Governed by {
+            mapping.mapping_id} (Version {
+            mapping.version}) for {rule_id} ({result}). Authority: {
+            mapping.authority_requirement.value}"
 
         decision_record = {
             "evidence": payload.get("evidence", "Evidence not provided to L7"),
@@ -129,7 +140,7 @@ class IntelligenceEngine(BaseService):
         result_payload = {
             "risk_level": mapping.priority,
             "priority": mapping.priority,
-            "priority_score": 50, # Optional: calculate based on priority
+            "priority_score": 50,  # Optional: calculate based on priority
             "problem": formatted_problem,
             "reason": f"Governed Mapping {mapping.mapping_id}",
             "operational_impact": formatted_impact,
@@ -144,7 +155,8 @@ class IntelligenceEngine(BaseService):
             "mapping_version": mapping.version,
             "decision_record": decision_record
         }
-        
+
         return result_payload
+
 
 intelligence_engine = IntelligenceEngine()

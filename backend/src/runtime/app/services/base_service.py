@@ -5,7 +5,7 @@ BaseService architecture.
 import time
 import logging
 from abc import ABC, abstractmethod
-from typing import Dict, Any, Optional
+from typing import Dict, Any
 
 from app.schemas.service_communication import (
     ServiceRequest,
@@ -29,13 +29,11 @@ class BaseService(ABC):
     @abstractmethod
     def service_name(self) -> str:
         """Name of the service (e.g., 'RulesEngine')"""
-        pass
 
     @property
     @abstractmethod
     def version(self) -> str:
         """Version of the service (e.g., 'v1.0')"""
-        pass
 
     def invoke(self, request: ServiceRequest) -> ServiceResponse:
         """
@@ -43,15 +41,22 @@ class BaseService(ABC):
         Validates request, manages timing, executes logic, and handles standard errors.
         """
         t_start = time.time()
-        
+
         # SES-003: Observability (Log interaction start)
-        logger.debug(f"[SES-003] -> {self.service_name} invoked by {request.calling_module} | correlation_id={request.correlation_id}")
-        
+        logger.debug(
+            f"[SES-003] -> {
+                self.service_name} invoked by {
+                request.calling_module} | correlation_id={
+                request.correlation_id}")
+
         warnings = []
         try:
             # SES-003: Validate Target Service
             if request.target_service != self.service_name:
-                raise ValueError(f"Request routed to wrong service. Expected {self.service_name}, got {request.target_service}")
+                raise ValueError(
+                    f"Request routed to wrong service. Expected {
+                        self.service_name}, got {
+                        request.target_service}")
 
             # Execute actual business logic
             result = self._process(request.payload)
@@ -81,10 +86,11 @@ class BaseService(ABC):
                     message=str(ve)
                 )
             )
-            
+
         except Exception as e:
             duration_ms = (time.time() - t_start) * 1000
-            logger.error(f"[SES-003] <- {self.service_name} INTERNAL_ERROR: {str(e)}", exc_info=True)
+            logger.error(
+                f"[SES-003] <- {self.service_name} INTERNAL_ERROR: {str(e)}", exc_info=True)
             return ServiceResponse(
                 status=ServiceStatus.FAILED,
                 response_code=500,
@@ -103,4 +109,3 @@ class BaseService(ABC):
         Must be implemented by subclasses.
         Returns the dictionary to be set as `result_payload`.
         """
-        pass

@@ -1,6 +1,7 @@
 import uuid
 from datetime import datetime
 
+
 class ExplanationBuilder:
     """
     AIS-005: Explanation Builder
@@ -11,13 +12,13 @@ class ExplanationBuilder:
     def __init__(self, db_session):
         self.db = db_session
 
-    async def build(self, recommendation_package: dict, decision_trace: dict, 
-                    evidence_trace: dict, rule_policy_trace: dict, 
+    async def build(self, recommendation_package: dict, decision_trace: dict,
+                    evidence_trace: dict, rule_policy_trace: dict,
                     alternative_analysis: list) -> dict:
         """
         Constructs the Explanation Package output for AIS-005.
         """
-        
+
         # Build Human-Readable Reasoning string based on rule_policy_trace and evidence
         # In a real system, this would use templates based on the rule.
         human_reasoning = (

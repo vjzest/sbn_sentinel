@@ -1,6 +1,7 @@
 from pydantic import BaseModel
 from typing import Optional
 
+
 class EncounterCreate(BaseModel):
     id: str
     patient_name: str
@@ -21,6 +22,7 @@ class EncounterCreate(BaseModel):
     cpt_code: Optional[str] = "99213"
     billing_amount: Optional[float] = 95.0
 
+
 class EncounterUpdate(BaseModel):
     status: Optional[str] = None
     billing_status: Optional[str] = None
@@ -32,6 +34,7 @@ class EncounterUpdate(BaseModel):
     payer_network: Optional[str] = None
     cpt_code: Optional[str] = None
     billing_amount: Optional[float] = None
+
 
 class EncounterResponse(BaseModel):
     id: str

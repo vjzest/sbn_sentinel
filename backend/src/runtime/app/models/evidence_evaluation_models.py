@@ -1,7 +1,6 @@
 import uuid
 from datetime import datetime
-from sqlalchemy import Column, String, DateTime, ForeignKey, Boolean, Text
-from sqlalchemy.orm import relationship
+from sqlalchemy import Column, String, DateTime, Boolean, Text
 from app.db.database import Base
 
 
@@ -13,7 +12,7 @@ class EvidenceEvaluationModel(Base):
 
     id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
     context_id = Column(String, nullable=False, index=True)
-    overall_status = Column(String, nullable=False) # e.g. Sufficient, Insufficient
+    overall_status = Column(String, nullable=False)  # e.g. Sufficient, Insufficient
     evaluated_at = Column(DateTime, default=datetime.utcnow)
 
 
@@ -26,7 +25,7 @@ class EvaluationPackageModel(Base):
     id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
     evaluation_id = Column(String, nullable=False, index=True)
     context_id = Column(String, nullable=False)
-    payload = Column(Text, nullable=False) # Stored as JSON string
+    payload = Column(Text, nullable=False)  # Stored as JSON string
     created_at = Column(DateTime, default=datetime.utcnow)
 
 

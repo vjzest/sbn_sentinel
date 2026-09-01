@@ -1,7 +1,7 @@
 class GovernanceValidator:
     """
     AIS-003: Governance Validator
-    Validates if the evaluated evidence package meets the mandatory governance criteria 
+    Validates if the evaluated evidence package meets the mandatory governance criteria
     required to proceed to recommendation generation.
     """
 
@@ -28,11 +28,11 @@ class GovernanceValidator:
             }
 
         # Rule: AIS-011 Every evaluation must have a linked Policy and Rule Version ID
-        if not governance_metadata.get("policy_version_id") or not governance_metadata.get("rule_version_id"):
+        if not governance_metadata.get(
+                "policy_version_id") or not governance_metadata.get("rule_version_id"):
             return {
                 "passed": False,
-                "reason": "Governance blocked: Missing mandatory AIS-011 Version IDs for Policy or Rule."
-            }
+                "reason": "Governance blocked: Missing mandatory AIS-011 Version IDs for Policy or Rule."}
 
         return {
             "passed": True,

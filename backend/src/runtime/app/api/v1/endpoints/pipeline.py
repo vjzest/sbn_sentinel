@@ -3,12 +3,10 @@ SES-002: Internal Data Flow & Event Processing Specification
 Pipeline API — Exposes event submission, tracing, and monitoring endpoints.
 """
 from fastapi import APIRouter, HTTPException, Depends, Query, BackgroundTasks
-from sqlalchemy.orm import Session
-from typing import Optional, List
+from typing import Optional
 from pydantic import BaseModel, Field
 from datetime import datetime
 
-from app.db.database import get_db
 from app.services.processing_orchestrator import processing_orchestrator
 from app.api.deps import get_current_user
 from app.models.user import User
@@ -22,7 +20,9 @@ router = APIRouter()
 
 class EventSubmitRequest(BaseModel):
     """Request body to submit a new event into the SES-002 pipeline."""
-    event_type: str = Field(..., example="EHR", description="Category: EHR, Phone, Email, System, Billing")
+    event_type: str = Field(...,
+                            example="EHR",
+                            description="Category: EHR, Phone, Email, System, Billing")
     source: str = Field(..., example="Practice Fusion", description="Origin system name")
     raw_payload: dict = Field(..., description="Raw data from the source connector")
     priority: str = Field(default="Normal", description="Critical | High | Normal | Low")
@@ -63,7 +63,7 @@ def submit_event(
 ):
     """
     SES-002 Layer 1 entry point with SES-009 Background Queuing.
-    
+
     Accepts a raw event, queues it, and immediately returns the ID.
     The background task runs it through all 8 processing layers.
     """
@@ -76,10 +76,10 @@ def submit_event(
             correlation_id=request.correlation_id,
             initiated_by=current_user.email,
         )
-        
+
         # SES-009: Separate Interactive and Operational Workloads
         background_tasks.add_task(processing_orchestrator.process_event_background, event.id)
-        
+
         return {
             "status": "queued",
             "message": "Event has been queued for background processing.",
@@ -92,10 +92,17 @@ def submit_event(
 
 @router.get("/events", summary="List recent pipeline events")
 def list_events(
-    limit: int = Query(default=50, le=200, description="Maximum events to return"),
-    state: Optional[str] = Query(default=None, description="Filter by state: Completed, Failed, Retrying, etc."),
-    event_type: Optional[str] = Query(default=None, description="Filter by type: EHR, Phone, Email"),
-    current_user: User = Depends(get_current_user),
+        limit: int = Query(
+            default=50,
+            le=200,
+            description="Maximum events to return"),
+    state: Optional[str] = Query(
+            default=None,
+            description="Filter by state: Completed, Failed, Retrying, etc."),
+        event_type: Optional[str] = Query(
+            default=None,
+            description="Filter by type: EHR, Phone, Email"),
+        current_user: User = Depends(get_current_user),
 ):
     """
     Returns a paginated list of recent pipeline events.
@@ -115,7 +122,7 @@ def get_event_trace(
 ):
     """
     Returns the complete processing trace for a single event.
-    
+
     Includes:
     - Per-layer timing (milliseconds)
     - State transitions

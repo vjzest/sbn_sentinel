@@ -2,6 +2,7 @@ from sqlalchemy import Column, String, DateTime, Integer, Text
 from app.db.database import Base
 from datetime import datetime
 
+
 class EvidenceModel(Base):
     __tablename__ = "evidence_repository"
     evidence_id = Column(String, primary_key=True)

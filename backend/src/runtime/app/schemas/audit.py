@@ -1,6 +1,7 @@
 from pydantic import BaseModel
-from typing import Optional, Dict, Any
+from typing import Optional
 from datetime import datetime
+
 
 class AuditLogCreate(BaseModel):
     user_system: str
@@ -12,6 +13,7 @@ class AuditLogCreate(BaseModel):
     retry_attempts: Optional[int] = None
     recovery_outcome: Optional[str] = None
     resolution_status: Optional[str] = None
+
 
 class AuditLogResponse(AuditLogCreate):
     id: str

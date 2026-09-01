@@ -27,8 +27,8 @@ from app.db.database import SessionLocal
 from app.schemas.service_communication import ServiceRequest, ServiceStatus
 from app.models.event import OperationalEventModel
 from app.models.intelligence import (
-    RuleFindingModel, DecisionContextModel, 
-    OperationalIntelligenceModel, RevenueIntelligenceModel
+    DecisionContextModel, OperationalIntelligenceModel,
+    RevenueIntelligenceModel
 )
 from app.models.decision_record import DecisionRecordModel
 
@@ -41,8 +41,8 @@ from app.services.revenue_intelligence_engine import revenue_intelligence_engine
 from app.services.data_audit_engine import data_audit_engine
 from app.schemas.signal import SignalEvent
 from app.core.exceptions import (
-    SentinelError, InputValidationError, ConnectorError, 
-    DependencyError, TimeoutError, InvalidResponseError, PersistenceError
+    InputValidationError, ConnectorError, DependencyError,
+    TimeoutError, InvalidResponseError, PersistenceError
 )
 from app.services.state_transition_engine import sste
 
@@ -119,18 +119,21 @@ class ProcessingOrchestrator:
         """
         db = SessionLocal()
         try:
-            event = db.query(OperationalEventModel).filter(OperationalEventModel.id == event_id).first()
+            event = db.query(OperationalEventModel).filter(
+                OperationalEventModel.id == event_id).first()
             if not event:
-                self.logger.error(f"[SES-009] Cannot process background event {event_id}, not found in DB.")
+                self.logger.error(
+                    f"[SES-009] Cannot process background event {event_id}, not found in DB.")
                 return
 
             sste.execute_transition(event, "OperationalEvent", "Processing")
             db.commit()
-            
+
             # Run the pipeline
             self._run_pipeline(event, db)
         except Exception as e:
-            self.logger.error(f"[SES-009][PIPELINE] Fatal background error for event {event_id}: {e}")
+            self.logger.error(
+                f"[SES-009][PIPELINE] Fatal background error for event {event_id}: {e}")
         finally:
             db.close()
 
@@ -249,7 +252,7 @@ class ProcessingOrchestrator:
         t_start = time.time()
         try:
             payload_data = event.raw_payload or {}
-            
+
             from app.adapters.ehr_adapter import default_ehr_adapter
             canonical_event = default_ehr_adapter.to_canonical(
                 raw_payload=payload_data,
@@ -257,7 +260,7 @@ class ProcessingOrchestrator:
                 event_type=event.event_type,
                 source=event.source
             )
-            
+
             request = ServiceRequest(
                 correlation_id=event.correlation_id,
                 calling_module="EventPipeline",
@@ -266,18 +269,20 @@ class ProcessingOrchestrator:
                     "canonical_event": canonical_event.dict()
                 }
             )
-            
+
             response = evidence_engine.invoke(request)
-            
+
             if response.status != ServiceStatus.SUCCESS:
                 error_msg = response.error_details.message if response.error_details else "Unknown error"
                 return self._fail_event(event, db, layer="L3-Evidence", error=error_msg)
-                
-            evidence_package = response.result_payload.get("eos_003_package") or response.result_payload.get("evidence_package")
+
+            evidence_package = response.result_payload.get(
+                "eos_003_package") or response.result_payload.get("evidence_package")
             import dataclasses
-            event.evidence_package = dataclasses.asdict(evidence_package) if hasattr(evidence_package, '__dataclass_fields__') else evidence_package
+            event.evidence_package = dataclasses.asdict(evidence_package) if hasattr(
+                evidence_package, '__dataclass_fields__') else evidence_package
             event.layer3_duration_ms = (time.time() - t_start) * 1000
-            
+
             db.commit()
             self.logger.debug(f"[L3] Evidence Engine completed for event {event.id}")
             return event
@@ -302,13 +307,13 @@ class ProcessingOrchestrator:
                     "event_type": event.event_type
                 }
             )
-            
+
             response = decision_context_engine.invoke(request)
-            
+
             if response.status != ServiceStatus.SUCCESS:
                 error_msg = response.error_details.message if response.error_details else "Unknown error"
                 return self._fail_event(event, db, layer="L4-Context", error=error_msg)
-                
+
             import json
             event.decision_context = DecisionContextModel(
                 primary_context=response.result_payload.get("primary_context", "Unknown"),
@@ -317,9 +322,12 @@ class ProcessingOrchestrator:
                 reason=response.result_payload.get("reason")
             )
             event.layer4_duration_ms = (time.time() - t_start) * 1000
-            
+
             db.commit()
-            self.logger.debug(f"[L4] DCE resolved context for event {event.id}: {event.decision_context.primary_context}")
+            self.logger.debug(
+                f"[L4] DCE resolved context for event {
+                    event.id}: {
+                    event.decision_context.primary_context}")
             return event
         except Exception as e:
             return self._fail_event(event, db, layer="L4-Context", error=e)
@@ -334,31 +342,37 @@ class ProcessingOrchestrator:
         t_start = time.time()
         try:
             decision_context = {
-                "evidence_package": getattr(event, "evidence_package", {}),
+                "evidence_package": getattr(
+                    event,
+                    "evidence_package",
+                    {}),
                 "event_type": event.event_type,
-                "primary_context": event.decision_context.primary_context if event.decision_context else "Unknown"
-            }
-            
+                "primary_context": event.decision_context.primary_context if event.decision_context else "Unknown"}
+
             request = ServiceRequest(
                 correlation_id=event.correlation_id,
                 calling_module="EventPipeline",
                 target_service="PolicyEngine",
                 payload={"decision_context": decision_context}
             )
-            
+
             response = policy_engine.invoke(request)
-            
+
             if response.status != ServiceStatus.SUCCESS:
                 error_msg = response.error_details.message if response.error_details else "Unknown error"
                 return self._fail_event(event, db, layer="L5-Policy", error=error_msg)
-                
+
             policy_result = response.result_payload.get("policy_result")
-            event.policy_result = policy_result.__dict__ if hasattr(policy_result, '__dict__') else policy_result
+            event.policy_result = policy_result.__dict__ if hasattr(
+                policy_result, '__dict__') else policy_result
             event.policy_version = response.result_payload.get("policy_version", "Unknown")
             event.layer5_duration_ms = (time.time() - t_start) * 1000
-            
+
             db.commit()
-            self.logger.debug(f"[L5] Policy Engine completed for event {event.id}. Permitted: {event.policy_result.get('is_permitted')}")
+            self.logger.debug(
+                f"[L5] Policy Engine completed for event {
+                    event.id}. Permitted: {
+                    event.policy_result.get('is_permitted')}")
             return event
         except Exception as e:
             return self._fail_event(event, db, layer="L5-Policy", error=e)
@@ -387,39 +401,45 @@ class ProcessingOrchestrator:
                     "journey_id": event.correlation_id
                 }
             )
-            
+
             response = rules_engine.invoke(request)
-            
+
             if response.status != ServiceStatus.SUCCESS:
                 error_msg = response.error_details.message if response.error_details else "Unknown error"
                 return self._fail_event(event, db, layer="L6-Rules", error=error_msg)
-                
+
             from app.models.intelligence import RuleFindingModel
             findings_list = response.result_payload.get("findings", [])
             # Only keep findings that actually met the condition or were blocked
-            active_findings = [f for f in findings_list if f.get("result") in ("CONDITION_MET", "NOT_EVALUABLE")]
-            first_finding = active_findings[0] if active_findings else (findings_list[0] if findings_list else {})
-            
+            active_findings = [
+                f for f in findings_list if f.get("result") in (
+                    "CONDITION_MET", "NOT_EVALUABLE")]
+            first_finding = active_findings[0] if active_findings else (
+                findings_list[0] if findings_list else {})
+
             event.rule_findings = [RuleFindingModel(
                 rule_id=first_finding.get("rule_id", "Unknown"),
-                severity=first_finding.get("result", "Information"), 
+                severity=first_finding.get("result", "Information"),
                 description=first_finding.get("result", ""),
                 evaluation_id=first_finding.get("evaluation_id", "UNKNOWN_EVALUATION")
             )]
             event.rule_version = first_finding.get("rule_version", "Unknown")
             event.layer6_duration_ms = (time.time() - t_start) * 1000
-            
+
             db.commit()
-            self.logger.debug(f"[L6] Rules Engine evaluated event {event.id} -> finding: {event.rule_findings[0].rule_id if event.rule_findings else 'Unknown'}")
+            self.logger.debug(
+                f"[L6] Rules Engine evaluated event {
+                    event.id} -> finding: {
+                    event.rule_findings[0].rule_id if event.rule_findings else 'Unknown'}")
             return event
 
         except Exception as e:
             return self._fail_event(event, db, layer="L6-Rules", error=e)
 
-
     # ─────────────────────────────────────────────
     # LAYER 7 — Operational Intelligence Engine
     # ─────────────────────────────────────────────
+
     def _layer7_intelligence(self, event: OperationalEventModel, db) -> OperationalEventModel:
         """
         Takes objective rule findings and generates executive recommendations.
@@ -431,33 +451,40 @@ class ProcessingOrchestrator:
                 calling_module="EventPipeline",
                 target_service="IntelligenceEngine",
                 payload={
-                    "finding": [{"rule_id": rf.rule_id, "severity": rf.severity, "evaluation_id": rf.evaluation_id} for rf in event.rule_findings] if event.rule_findings else {},
+                    "finding": [
+                        {
+                            "rule_id": rf.rule_id,
+                            "severity": rf.severity,
+                            "evaluation_id": rf.evaluation_id} for rf in event.rule_findings] if event.rule_findings else {},
                     "context": {
                         "id": event.decision_context.id,
                         "primary_context": event.decision_context.primary_context,
-                        "secondary_context": event.decision_context.secondary_context
-                    } if event.decision_context else {},
-                    "evidence": getattr(event, "evidence_package", {}),
-                    "policy": getattr(event, "policy_result", {}),
-                    "journey_id": event.correlation_id
-                }
-            )
-            
+                        "secondary_context": event.decision_context.secondary_context} if event.decision_context else {},
+                    "evidence": getattr(
+                        event,
+                        "evidence_package",
+                        {}),
+                    "policy": getattr(
+                        event,
+                        "policy_result",
+                        {}),
+                    "journey_id": event.correlation_id})
+
             response = intelligence_engine.invoke(request)
-            
+
             if response.status != ServiceStatus.SUCCESS:
                 error_msg = response.error_details.message if response.error_details else "Unknown error"
                 return self._fail_event(event, db, layer="L7-Intelligence", error=error_msg)
-                
+
             from app.models.intelligence import OperationalIntelligenceModel
             event.operational_intelligence = OperationalIntelligenceModel(
                 priority=response.result_payload.get("priority", "Information"),
                 operational_impact=response.result_payload.get("operational_impact", ""),
                 recommendation=response.result_payload.get("recommendation", "")
             )
-            event.intelligence_result = response.result_payload # Keep dynamic attr just in case
+            event.intelligence_result = response.result_payload  # Keep dynamic attr just in case
             event.layer7_duration_ms = (time.time() - t_start) * 1000
-            
+
             db.commit()
             self.logger.debug(f"[L7] OIE generated recommendations for event {event.id}")
             return event
@@ -486,13 +513,15 @@ class ProcessingOrchestrator:
                     } if event.decision_context else {}
                 }
             )
-            
+
             response = revenue_intelligence_engine.invoke(request)
-            
+
             if response.status != ServiceStatus.SUCCESS:
                 error_msg = response.error_details.message if response.error_details else "Unknown error"
-                # SES-007 Graceful Degradation: Do not fail the entire event if Revenue Intelligence fails.
-                self.logger.warning(f"[L8] Revenue Intelligence Engine failed. Applying Graceful Degradation. Error: {error_msg}")
+                # SES-007 Graceful Degradation: Do not fail the entire event if Revenue
+                # Intelligence fails.
+                self.logger.warning(
+                    f"[L8] Revenue Intelligence Engine failed. Applying Graceful Degradation. Error: {error_msg}")
                 # We still log the failure audit
                 try:
                     data_audit_engine.log_failure_event(
@@ -508,22 +537,24 @@ class ProcessingOrchestrator:
                 except Exception as e_audit:
                     pass
                 return event
-                
+
             from app.models.intelligence import RevenueIntelligenceModel
             event.revenue_intelligence = RevenueIntelligenceModel(
                 estimated_exposure=response.result_payload.get("estimated_exposure", ""),
                 opportunity_category=response.result_payload.get("opportunity_category", ""),
                 financial_priority=response.result_payload.get("financial_priority", "")
             )
-            event.revenue_result = response.result_payload # Keep dynamic attr just in case
+            event.revenue_result = response.result_payload  # Keep dynamic attr just in case
             event.layer8_duration_ms = (time.time() - t_start) * 1000
-            
+
             db.commit()
             self.logger.debug(f"[L8] RIE processed event {event.id}")
             return event
 
         except Exception as e:
-            self.logger.warning(f"[L8] Revenue Intelligence Engine exception. Applying Graceful Degradation. Error: {str(e)}")
+            self.logger.warning(
+                f"[L8] Revenue Intelligence Engine exception. Applying Graceful Degradation. Error: {
+                    str(e)}")
             return event
 
     # ─────────────────────────────────────────────
@@ -537,12 +568,15 @@ class ProcessingOrchestrator:
         t_start = time.time()
         try:
             payload = event.raw_payload or {}
-            intel_model = db.query(OperationalIntelligenceModel).filter(OperationalIntelligenceModel.event_id == event.id).first()
-            revenue_model = db.query(RevenueIntelligenceModel).filter(RevenueIntelligenceModel.event_id == event.id).first()
-            context_model = db.query(DecisionContextModel).filter(DecisionContextModel.event_id == event.id).first()
+            intel_model = db.query(OperationalIntelligenceModel).filter(
+                OperationalIntelligenceModel.event_id == event.id).first()
+            revenue_model = db.query(RevenueIntelligenceModel).filter(
+                RevenueIntelligenceModel.event_id == event.id).first()
+            context_model = db.query(DecisionContextModel).filter(
+                DecisionContextModel.event_id == event.id).first()
 
             intel_result = getattr(event, "intelligence_result", {})
-            
+
             signal_event = SignalEvent(
                 id=event.id,
                 source=event.source,
@@ -551,8 +585,8 @@ class ProcessingOrchestrator:
                 timestamp=datetime.utcnow().isoformat(),
                 metadata={"pipeline_event_id": event.id, "priority": event.priority},
                 risk_level=intel_result.get("risk_level") or (intel_model.priority if intel_model else "Information"),
-                problem=intel_result.get("problem", ""), 
-                reason=intel_result.get("reason", ""), 
+                problem=intel_result.get("problem", ""),
+                reason=intel_result.get("reason", ""),
                 business_impact=intel_result.get("business_impact") or (intel_model.operational_impact if intel_model else ""),
                 recommended_action=intel_result.get("action") or (intel_model.recommendation if intel_model else ""),
                 expected_outcome=intel_result.get("expected_outcome", ""),
@@ -570,16 +604,20 @@ class ProcessingOrchestrator:
 
             success = data_audit_engine.save_intelligence_record(signal_event)
             event.layer7_storage_ref = event.id if success else "FAILED"
-            
+
             # Save Decision Record Audit Trail
             intel_result = getattr(event, "intelligence_result", {})
             if intel_result:
                 decision_record = DecisionRecordModel(
                     event_id=event.id,
-                    evidence=__import__("json").loads(__import__("json").dumps(event.evidence_package, default=str)) if event.evidence_package else {},
+                    evidence=__import__("json").loads(
+                        __import__("json").dumps(
+                            event.evidence_package,
+                            default=str)) if event.evidence_package else {},
                     rule_id=event.rule_findings[0].rule_id if event.rule_findings else "SYS-BLOCKED",
                     policy_status=getattr(event, "policy_result", {}).get("is_permitted", False),
-                    recommendation=__import__("json").loads(__import__("json").dumps(intel_result, default=str)),
+                    recommendation=__import__("json").loads(
+                        __import__("json").dumps(intel_result, default=str)),
                     # SESR-010 Bindings
                     policy_version=getattr(event, "policy_version", "Unknown"),
                     rule_version=getattr(event, "rule_version", "Unknown"),
@@ -587,7 +625,7 @@ class ProcessingOrchestrator:
                     evaluation_timestamp=datetime.utcnow()
                 )
                 db.add(decision_record)
-                
+
             event.layer7_duration_ms = (time.time() - t_start) * 1000
             db.commit()
 
@@ -626,10 +664,10 @@ class ProcessingOrchestrator:
     # STATE MANAGEMENT — Failure Handler (SES-007)
     # ─────────────────────────────────────────────
     def _fail_event(
-        self, 
-        event: OperationalEventModel, 
-        db, 
-        layer: str, 
+        self,
+        event: OperationalEventModel,
+        db,
+        layer: str,
         error: Exception,
         category: str = None,
         severity: str = None
@@ -677,7 +715,8 @@ class ProcessingOrchestrator:
             new_state = "Degraded" if severity == "Warning" else "Failed"
             sste.execute_transition(event, "OperationalEvent", new_state)
             event.failed_at = datetime.utcnow()
-            resolution = "Administrative Intervention Required" if severity == "Critical" else ("Degraded - Feature Unavailable" if severity == "Warning" else "Failed - No Recovery")
+            resolution = "Administrative Intervention Required" if severity == "Critical" else (
+                "Degraded - Feature Unavailable" if severity == "Warning" else "Failed - No Recovery")
             self.logger.error(
                 f"[SES-009][{layer}] Event {event.id} {event.state.upper()} | "
                 f"Cat={category} Sev={severity} Retries={event.retry_count}: {error_str}"
@@ -685,7 +724,7 @@ class ProcessingOrchestrator:
         else:
             sste.execute_transition(event, "OperationalEvent", "Retrying")
             resolution = "Retrying - Backoff initiated"
-            backoff_seconds = min(2 ** event.retry_count, 10) # max 10s synchronous backoff
+            backoff_seconds = min(2 ** event.retry_count, 10)  # max 10s synchronous backoff
             self.logger.warning(
                 f"[SES-007][{layer}] Event {event.id} retry {event.retry_count}/{event.max_retries}. "
                 f"Applying {backoff_seconds}s backoff. Error: {error_str}"
@@ -724,7 +763,8 @@ class ProcessingOrchestrator:
         """
         db = SessionLocal()
         try:
-            event = db.query(OperationalEventModel).filter(OperationalEventModel.id == event_id).first()
+            event = db.query(OperationalEventModel).filter(
+                OperationalEventModel.id == event_id).first()
             if not event:
                 return None
             return {
@@ -754,7 +794,8 @@ class ProcessingOrchestrator:
         """
         db = SessionLocal()
         try:
-            query = db.query(OperationalEventModel).order_by(OperationalEventModel.received_at.desc())
+            query = db.query(OperationalEventModel).order_by(
+                OperationalEventModel.received_at.desc())
             if state:
                 query = query.filter(OperationalEventModel.state == state)
             if event_type:

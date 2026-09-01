@@ -1,7 +1,7 @@
 import logging
-from app.models.decision_context_models import ContextEvidenceModel
 
 logger = logging.getLogger(__name__)
+
 
 class ContextRegistry:
     """
@@ -19,11 +19,10 @@ class ContextRegistry:
         """
         context_id = context_package["identity"]["context_id"]
         logger.info(f"[{context_id}] ContextRegistry: Registering context")
-        
+
         # In a real implementation, we would decompose the package into:
         # ContextEvidenceModel, ContextRelationshipsModel, etc.
         # For now, we stub the successful registration.
-        pass
 
     async def archive(self, context_id: str) -> None:
         """
@@ -31,4 +30,3 @@ class ContextRegistry:
         Archived contexts remain available for auditing and reproducibility.
         """
         logger.info(f"[{context_id}] ContextRegistry: Archiving context")
-        pass

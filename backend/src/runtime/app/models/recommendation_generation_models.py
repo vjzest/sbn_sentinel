@@ -1,8 +1,9 @@
 import uuid
 from datetime import datetime
-from sqlalchemy import Column, String, DateTime, ForeignKey, Boolean, Text
-from sqlalchemy.orm import relationship
+from sqlalchemy import Column, String, DateTime, Boolean, Text
 from app.db.database import Base
+
+
 class RgeRecommendationModel(Base):
     """
     AIS-004: Primary recommendation object representing operational guidance.
@@ -14,7 +15,7 @@ class RgeRecommendationModel(Base):
     evaluation_id = Column(String, nullable=False, index=True)
     title = Column(String, nullable=False)
     description = Column(String, nullable=False)
-    category = Column(String, nullable=False) # e.g. Operational, Administrative, Governance
+    category = Column(String, nullable=False)  # e.g. Operational, Administrative, Governance
     operational_objective = Column(String, nullable=False)
 
 
@@ -26,7 +27,7 @@ class RgeRecommendationPackageModel(Base):
 
     id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
     recommendation_id = Column(String, nullable=False, index=True)
-    payload = Column(Text, nullable=False) # Stored as JSON string
+    payload = Column(Text, nullable=False)  # Stored as JSON string
     created_at = Column(DateTime, default=datetime.utcnow)
 
 
@@ -51,7 +52,7 @@ class RgeRecommendationPriorityModel(Base):
 
     id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
     recommendation_id = Column(String, nullable=False, index=True)
-    priority_level = Column(String, nullable=False) # e.g. Critical, High, Medium, Low
+    priority_level = Column(String, nullable=False)  # e.g. Critical, High, Medium, Low
     justification = Column(String, nullable=True)
 
 

@@ -1,14 +1,15 @@
-from fastapi import APIRouter, HTTPException, Depends, status
+from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from datetime import datetime, timezone
 import random
-from typing import Dict, Any, Optional
+from typing import Optional
 
 from app.db.database import get_db
 from app.models.insurance import PatientInsuranceModel
 from app.schemas.insurance import PatientInsuranceCreate, PatientInsuranceResponse, OCRScanResponse
 
 router = APIRouter()
+
 
 @router.post("/ocr-scan", response_model=OCRScanResponse)
 def simulate_ocr_scan(file_type: str = "image/png"):
@@ -26,7 +27,7 @@ def simulate_ocr_scan(file_type: str = "image/png"):
     selected = random.choice(providers)
     member_id = f"MEM{random.randint(100000, 999999)}"
     group_no = f"GRP{random.randint(10000, 99999)}"
-    
+
     ocr_text = f"""
     INSURANCE CARD FRONT
     -------------------------
@@ -38,7 +39,7 @@ def simulate_ocr_scan(file_type: str = "image/png"):
     RX BIN: 610014
     -------------------------
     """
-    
+
     return OCRScanResponse(
         provider_name=selected['name'],
         member_id=member_id,
@@ -47,6 +48,7 @@ def simulate_ocr_scan(file_type: str = "image/png"):
         confidence_score=0.97,
         ocr_raw_text=ocr_text
     )
+
 
 @router.post("/verify-eligibility", response_model=PatientInsuranceResponse)
 def verify_patient_eligibility(insurance_in: PatientInsuranceCreate, db: Session = Depends(get_db)):
@@ -58,21 +60,29 @@ def verify_patient_eligibility(insurance_in: PatientInsuranceCreate, db: Session
     existing = db.query(PatientInsuranceModel).filter(
         PatientInsuranceModel.patient_name == insurance_in.patient_name
     ).first()
-    
-    # Determine eligibility status (Deterministically check for test keywords like EXPIRED, INVALID, INACTIVE)
+
+    # Determine eligibility status (Deterministically check for test keywords
+    # like EXPIRED, INVALID, INACTIVE)
     mem_upper = (insurance_in.member_id or "").upper()
     prov_upper = (insurance_in.provider_name or "").upper()
-    if any(k in mem_upper or k in prov_upper for k in ["EXPIRE", "EXPIRED", "INVALID", "CANCEL", "CANCELLED", "INACTIVE"]):
+    if any(
+        k in mem_upper or k in prov_upper for k in [
+            "EXPIRE",
+            "EXPIRED",
+            "INVALID",
+            "CANCEL",
+            "CANCELLED",
+            "INACTIVE"]):
         eligibility = "Inactive"
     else:
         eligibility = "Active"
-    
+
     copay_p = 20.0 if eligibility == "Active" else 0.0
     copay_s = 45.0 if eligibility == "Active" else 0.0
     deductible = float(random.choice([250, 500, 1000])) if eligibility == "Active" else 0.0
-    
+
     raw_ocr = f"Verified via clearinghouse gateway on {datetime.now(timezone.utc).isoformat()}"
-    
+
     if existing:
         existing.provider_name = insurance_in.provider_name
         existing.member_id = insurance_in.member_id
@@ -105,6 +115,7 @@ def verify_patient_eligibility(insurance_in: PatientInsuranceCreate, db: Session
         db.commit()
         db.refresh(new_record)
         return new_record
+
 
 @router.get("/patient/{patient_name}", response_model=Optional[PatientInsuranceResponse])
 def get_patient_insurance_details(patient_name: str, db: Session = Depends(get_db)):

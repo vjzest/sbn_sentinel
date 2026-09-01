@@ -1,3 +1,5 @@
+from app.models.user import UserRole
+from app.api.deps import RoleChecker
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Depends
 from sqlalchemy.orm import Session
 import asyncio
@@ -7,12 +9,14 @@ from app.db.database import get_db
 from app.models.signal import SignalModel
 
 router = APIRouter()
-from app.api.deps import get_current_user, RoleChecker
-from app.models.user import UserRole
+
 
 @router.get("")
 @router.get("/")
-def get_historical_signals(db: Session = Depends(get_db), current_user = Depends(RoleChecker([UserRole.CLINIC_MANAGER.value, UserRole.ORGANIZATION_ADMINISTRATOR.value, UserRole.SYSTEM_ADMINISTRATOR.value]))):
+def get_historical_signals(db: Session = Depends(get_db),
+                           current_user=Depends(RoleChecker([UserRole.CLINIC_MANAGER.value,
+                                                             UserRole.ORGANIZATION_ADMINISTRATOR.value,
+                                                             UserRole.SYSTEM_ADMINISTRATOR.value]))):
     signals = db.query(SignalModel).order_by(SignalModel.timestamp.desc()).limit(100).all()
     result = []
     for s in signals:
@@ -42,13 +46,16 @@ def get_historical_signals(db: Session = Depends(get_db), current_user = Depends
         })
     return result
 
+
 @router.on_event("startup")
 async def startup_event():
     simulation_engine.start()
 
+
 @router.on_event("shutdown")
 async def shutdown_event():
     simulation_engine.stop()
+
 
 @router.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):

@@ -15,7 +15,8 @@ class RuleMatcher:
         """
         # In a real implementation, we would query the Rules/Policies tables here.
         # Stub logic for V1:
-        if evaluation_package.get("governance_summary", {}).get("sufficiency_status") != "Sufficient":
+        if evaluation_package.get("governance_summary", {}).get(
+                "sufficiency_status") != "Sufficient":
             return None
 
         # Example rule matched

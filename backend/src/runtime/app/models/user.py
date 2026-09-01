@@ -4,6 +4,7 @@ from app.db.database import Base
 
 from enum import Enum
 
+
 class UserRole(str, Enum):
     SYSTEM_ADMINISTRATOR = "System Administrator"
     ORGANIZATION_ADMINISTRATOR = "Organization Administrator"
@@ -11,6 +12,7 @@ class UserRole(str, Enum):
     FRONT_DESK = "Front Desk"
     READ_ONLY_AUDITOR = "Read-Only Auditor"
     UNASSIGNED = "Unassigned"
+
 
 class User(Base):
     __tablename__ = "users"

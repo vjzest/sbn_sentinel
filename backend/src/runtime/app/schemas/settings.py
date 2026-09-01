@@ -1,6 +1,7 @@
 from pydantic import BaseModel
 from typing import Optional
 
+
 class SettingsUpdate(BaseModel):
     practice_name: Optional[str] = None
     practice_phone: Optional[str] = None
@@ -9,7 +10,7 @@ class SettingsUpdate(BaseModel):
     close_time: Optional[str] = None
     language: Optional[str] = None
     theme_mode: Optional[str] = None
-    
+
     # AI Settings
     scheduling_aggressiveness: Optional[int] = None
     auto_outreach: Optional[bool] = None
@@ -27,6 +28,7 @@ class SettingsUpdate(BaseModel):
     active_plan: Optional[str] = None
     payment_card: Optional[str] = None
 
+
 class SettingsResponse(BaseModel):
     id: int
     practice_name: str
@@ -36,7 +38,7 @@ class SettingsResponse(BaseModel):
     close_time: str
     language: str
     theme_mode: str
-    
+
     scheduling_aggressiveness: int
     auto_outreach: bool
     confidence_threshold: str
