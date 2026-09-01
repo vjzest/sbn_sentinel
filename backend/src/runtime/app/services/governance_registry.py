@@ -619,8 +619,10 @@ governance_registry = GovernanceRegistry()
 # SEED INITIAL GOVERNED DATA
 # ======================================================
 
-# 1. Evidence Availability Policy
-governance_registry.register_policy(PolicyVersion(
+def initialize_registry_seeds():
+    # 1. Evidence Availability Policy
+    if governance_registry.get_policy_by_version("POL-001", "V1"): return
+    governance_registry.register_policy(PolicyVersion(
     policy_id="POL-001",
     version="V1",
     content="Recommendations require operational evidence.",
@@ -628,10 +630,10 @@ governance_registry.register_policy(PolicyVersion(
     effective_from=datetime.utcnow() - timedelta(days=30),
     approval_state="APPROVED",
     approved_by="USR-001"
-))
+    ))
 
-# 2. Event Type Authority Policy
-governance_registry.register_policy(PolicyVersion(
+    # 2. Event Type Authority Policy
+    governance_registry.register_policy(PolicyVersion(
     policy_id="POL-002",
     version="V1",
     content="Only EHR, Phone, Email, Manual events are authorized.",
@@ -639,10 +641,10 @@ governance_registry.register_policy(PolicyVersion(
     effective_from=datetime.utcnow() - timedelta(days=30),
     approval_state="APPROVED",
     approved_by="USR-001"
-))
+    ))
 
-# 3. Production Source Authority Policy (Item 18)
-governance_registry.register_policy(PolicyVersion(
+    # 3. Production Source Authority Policy (Item 18)
+    governance_registry.register_policy(PolicyVersion(
     policy_id="POL-003",
     version="V1",
     content="Production execution is restricted to Practice Fusion sources.",
@@ -650,12 +652,11 @@ governance_registry.register_policy(PolicyVersion(
     effective_from=datetime.utcnow() - timedelta(days=30),
     approval_state="APPROVED",
     approved_by="USR-001"
-))
-    approved_by="USR-001"
-))
+    ))
 
-# 3. Clinic No-Show Rule
-governance_registry.register_rule(RuleVersion(
+
+    # 3. Clinic No-Show Rule
+    governance_registry.register_rule(RuleVersion(
     rule_id="RULE-SCH-001",
     version="V1",
     logic_description="Flag patient no-show gaps in schedule.",
@@ -671,10 +672,10 @@ governance_registry.register_rule(RuleVersion(
     effective_from=datetime.utcnow() - timedelta(days=30),
     approval_state="APPROVED",
     approved_by="USR-001"
-))
+    ))
 
-# 4. Clinic Wait Time Rule
-governance_registry.register_rule(RuleVersion(
+    # 4. Clinic Wait Time Rule
+    governance_registry.register_rule(RuleVersion(
     rule_id="RULE-SCH-002",
     version="V1",
     logic_description="Flag wait times exceeding threshold.",
@@ -689,10 +690,10 @@ governance_registry.register_rule(RuleVersion(
     effective_from=datetime.utcnow() - timedelta(days=30),
     approval_state="APPROVED",
     approved_by="USR-001"
-))
+    ))
 
-# 5. System Blocked Rule (PF-Only)
-governance_registry.register_rule(RuleVersion(
+    # 5. System Blocked Rule (PF-Only)
+    governance_registry.register_rule(RuleVersion(
     rule_id="RULE-SYS-BLOCKED",
     version="V1",
     logic_description="Blocks action if source is not Practice Fusion in Production.",
@@ -706,10 +707,10 @@ governance_registry.register_rule(RuleVersion(
     effective_from=datetime.utcnow() - timedelta(days=30),
     approval_state="APPROVED",
     approved_by="USR-001"
-))
+    ))
 
-# 6. Recommendation Mappings (SESR-004)
-governance_registry.register_recommendation_mapping(RecommendationMapping(
+    # 6. Recommendation Mappings (SESR-004)
+    governance_registry.register_recommendation_mapping(RecommendationMapping(
     mapping_id="REC-MAP-001",
     version="V1",
     applicable_rule_id="RULE-SCH-001",
@@ -722,9 +723,9 @@ governance_registry.register_recommendation_mapping(RecommendationMapping(
     problem_template="Patient No-Show",
     lifecycle_state=LifecycleState.ACTIVE,
     effective_from=datetime.utcnow() - timedelta(days=30)
-))
+    ))
 
-governance_registry.register_recommendation_mapping(RecommendationMapping(
+    governance_registry.register_recommendation_mapping(RecommendationMapping(
     mapping_id="REC-MAP-002",
     version="V1",
     applicable_rule_id="RULE-SCH-002",
@@ -737,9 +738,9 @@ governance_registry.register_recommendation_mapping(RecommendationMapping(
     problem_template="Extended Patient Wait Time",
     lifecycle_state=LifecycleState.ACTIVE,
     effective_from=datetime.utcnow() - timedelta(days=30)
-))
+    ))
 
-governance_registry.register_recommendation_mapping(RecommendationMapping(
+    governance_registry.register_recommendation_mapping(RecommendationMapping(
     mapping_id="REC-MAP-003",
     version="V1",
     applicable_rule_id="RULE-SYS-BLOCKED",
@@ -752,9 +753,9 @@ governance_registry.register_recommendation_mapping(RecommendationMapping(
     problem_template="Action Blocked by Governance",
     lifecycle_state=LifecycleState.ACTIVE,
     effective_from=datetime.utcnow() - timedelta(days=30)
-))
+    ))
 
-governance_registry.register_recommendation_mapping(RecommendationMapping(
+    governance_registry.register_recommendation_mapping(RecommendationMapping(
     mapping_id="REC-MAP-004",
     version="V1",
     applicable_rule_id="RULE-SCH-001",
@@ -767,22 +768,20 @@ governance_registry.register_recommendation_mapping(RecommendationMapping(
     problem_template="Unverifiable Schedule Context",
     lifecycle_state=LifecycleState.ACTIVE,
     effective_from=datetime.utcnow() - timedelta(days=30)
-))
+    ))
 
 
-# 6. Authority Configurations (SESR-005)
-governance_registry.register_authority_config(AuthorityConfiguration(
+    # 6. Authority Configurations (SESR-005)
+    governance_registry.register_authority_config(AuthorityConfiguration(
     role="Clinic Manager",
     allowed_decisions=[DecisionType.APPROVED, DecisionType.REJECTED, DecisionType.OVERRIDDEN, DecisionType.RETURNED_FOR_REVIEW],
     can_override=True,
     requires_reason_for=[DecisionType.REJECTED, DecisionType.OVERRIDDEN]
-))
+    ))
 
-governance_registry.register_authority_config(AuthorityConfiguration(
+    governance_registry.register_authority_config(AuthorityConfiguration(
     role="Front Desk",
     allowed_decisions=[DecisionType.APPROVED, DecisionType.REJECTED],
     can_override=False,
     requires_reason_for=[DecisionType.REJECTED]
-))
-
-
+    ))

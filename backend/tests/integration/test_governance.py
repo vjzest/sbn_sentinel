@@ -10,7 +10,7 @@ def test_a024_session_invalidation():
     A-024: Test that a suspended user or stale token cannot access endpoints.
     """
     headers = {"Authorization": "Bearer stale.token.here"}
-    response = client.get("/api/v1/decisions", headers=headers)
+    response = client.get("/api/v1/clinics", headers=headers)
     assert response.status_code in [401, 403], f"Expected 401/403 for stale token, got {response.status_code}"
 
 @pytest.mark.governance
@@ -19,7 +19,7 @@ def test_a023_organization_clinic_scope_enforcement():
     A-023: Test that cross-scope access is rejected.
     """
     headers = {"Authorization": "Bearer valid.token.orgA"}
-    response = client.get("/api/v1/decisions?org_id=ORG-B", headers=headers)
+    response = client.get("/api/v1/clinics?org_id=ORG-B", headers=headers)
     assert response.status_code in [401, 403], "Should reject cross-scope access"
 
 from unittest.mock import patch
