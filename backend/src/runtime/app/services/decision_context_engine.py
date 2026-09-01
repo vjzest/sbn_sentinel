@@ -63,6 +63,34 @@ class DecisionContextEngine(BaseService):
             "event_type": event_type
         }
         
+        # Check for Audit 3 Item 1 failures: STALE or TECHNICAL_RETRIEVAL_FAILURE
+        retrieval_failures = getattr(eos_003, "retrieval_failures", []) if not isinstance(eos_003, dict) else eos_003.get("retrieval_failures", [])
+        evidence_statuses = getattr(eos_003, "evidence_statuses", {}) if not isinstance(eos_003, dict) else eos_003.get("evidence_statuses", {})
+        
+        has_stale = any(status == "STALE" for status in evidence_statuses.values())
+        
+        if retrieval_failures:
+            context = {
+                "primary_context": "NOT_EVALUABLE",
+                "secondary_context": "TECHNICAL_RETRIEVAL_FAILURE",
+                "reason": f"Technical retrieval failure encountered: {retrieval_failures}",
+                "evidence_package": evidence_package,
+                "event_type": event_type
+            }
+            # Skip normal classification
+            has_no_show = has_wait_time = has_booked = has_missed_call = has_pending_review = False
+            
+        elif has_stale:
+            context = {
+                "primary_context": "INSUFFICIENT",
+                "secondary_context": "STALE_EVIDENCE",
+                "reason": "One or more required operational facts are stale.",
+                "evidence_package": evidence_package,
+                "event_type": event_type
+            }
+            # Skip normal classification
+            has_no_show = has_wait_time = has_booked = has_missed_call = has_pending_review = False
+        
         if has_no_show:
             context = {
                 "primary_context": "Operational",

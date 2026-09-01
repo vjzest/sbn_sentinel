@@ -9,9 +9,11 @@ from app.models.encounter import EncounterModel
 
 router = APIRouter()
 
+from app.models.user import User, UserRole
+
 def require_super_admin(email: str, db: Session):
     """Simple super admin check - in production use JWT middleware."""
-    user = db.query(User).filter(User.email == email, User.role == "super_admin").first()
+    user = db.query(User).filter(User.email == email, User.role == UserRole.SYSTEM_ADMINISTRATOR.value).first()
     if not user:
         raise HTTPException(status_code=403, detail="Super admin access required.")
     return user
@@ -24,10 +26,10 @@ def get_platform_stats(db: Session = Depends(get_db)):
     all_users = db.query(User).all()
     all_encounters = db.query(EncounterModel).all()
 
-    total_clinics = len(set(u.full_name.split(" - ")[0] if " - " in (u.full_name or "") else "Default Clinic" for u in all_users if u.role != "super_admin"))
-    total_doctors = len([u for u in all_users if u.role in ("doctor", "clinic_admin", "admin")])
+    total_clinics = len(set(u.full_name.split(" - ")[0] if " - " in (u.full_name or "") else "Default Clinic" for u in all_users if u.role != UserRole.SYSTEM_ADMINISTRATOR.value))
+    total_doctors = len([u for u in all_users if u.role in (UserRole.PHYSICIAN.value, UserRole.CLINIC_MANAGER.value, UserRole.SYSTEM_ADMINISTRATOR.value)])
     total_patients = len(all_encounters)
-    active_users = len([u for u in all_users if u.is_active and u.role != "super_admin"])
+    active_users = len([u for u in all_users if u.is_active and u.role != UserRole.SYSTEM_ADMINISTRATOR.value])
 
     paid_count = len([e for e in all_encounters if e.billing_status == "Paid"])
     pending_count = len([e for e in all_encounters if e.billing_status == "Pending"])
@@ -75,7 +77,7 @@ def toggle_user_status(user_id: int, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
-    if user.role == "super_admin":
+    if user.role == UserRole.SYSTEM_ADMINISTRATOR.value:
         raise HTTPException(status_code=403, detail="Cannot deactivate super admin")
     user.is_active = not user.is_active
     db.commit()
@@ -90,7 +92,7 @@ def invite_clinic_user(payload: Dict[str, Any], db: Session = Depends(get_db)):
     from app.core.security import get_password_hash
     email = payload.get("email")
     full_name = payload.get("full_name", "New Doctor")
-    role = payload.get("role", "doctor")
+    role = payload.get("role", UserRole.PHYSICIAN.value)
     temp_password = payload.get("temp_password", "Sentinel@123")
     clinic_name = payload.get("clinic_name", "Default Clinic")
 

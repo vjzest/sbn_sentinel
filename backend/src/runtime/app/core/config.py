@@ -37,6 +37,7 @@ class Settings(BaseSettings):
     CLINIC_TIMEZONE: str = "UTC"
     SYNTHETIC_TEST_ENABLED: bool = False
     BUILD_ID: str = "unknown"
+    BOOTSTRAP_ADMIN_PASSWORD: str = "SBNAdmin@2024" # Default for dev
 
     @model_validator(mode='after')
     def validate_sesr012_config(self) -> 'Settings':
@@ -45,6 +46,9 @@ class Settings(BaseSettings):
                 raise ValueError("SESR-012 CDI-006 Violation: SYNTHETIC_TEST_ENABLED must be disabled in PRODUCTION")
             if self.SECRET_KEY == "supersecret_sentinel_key_2026_dev" or len(self.SECRET_KEY) < 32:
                 raise ValueError("SESR-012 CDI-007 Violation: SECRET_KEY must be a secure, non-default string of at least 32 characters in PRODUCTION")
+            # Audit 3 Item 6: Secret Bootstrap
+            if self.BOOTSTRAP_ADMIN_PASSWORD == "SBNAdmin@2024" or not self.BOOTSTRAP_ADMIN_PASSWORD:
+                raise ValueError("PRODUCTION_BOOTSTRAP_ERROR: BOOTSTRAP_ADMIN_PASSWORD must be explicitly provided in production and cannot be the default.")
         if not self.CLINIC_TIMEZONE:
             raise ValueError("SESR-012 CDI-014 Violation: CLINIC_TIMEZONE is required")
         return self

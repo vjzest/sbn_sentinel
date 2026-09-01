@@ -131,6 +131,8 @@ class EvidenceStatusPackage:
     missing_evidence: List[str] = field(default_factory=list)
     evidence_conflicts: List[str] = field(default_factory=list)
     freshness_status: Dict[str, Any] = field(default_factory=dict)
+    evidence_statuses: Dict[str, str] = field(default_factory=dict)
+    retrieval_failures: List[Dict[str, str]] = field(default_factory=list)
     created_at: datetime = field(default_factory=datetime.utcnow)
 
 
@@ -181,6 +183,18 @@ class EvidenceEngine(BaseService):
             final_references.append(ev.evidence_id)
             classification_results[ev.evidence_id] = ev.evidence_type
 
+        missing = self._detect_missing(classified_evidence_list)
+        stale_info = self._evaluate_freshness(classified_evidence_list)
+        
+        evidence_statuses = {}
+        for ev in classified_evidence_list:
+            if ev.evidence_id in stale_info.get("stale_records", []):
+                evidence_statuses[ev.evidence_id] = "STALE"
+            else:
+                evidence_statuses[ev.evidence_id] = "USED"
+                
+        retrieval_failures = canonical_event_data.get("retrieval_failures", [])
+
         eos_003 = EvidenceStatusPackage(
             package_id=str(uuid.uuid4()),
             event_id=canonical_event_data.get("event_id", "UNKNOWN"),
@@ -188,9 +202,11 @@ class EvidenceEngine(BaseService):
             validation_results=validation_results,
             classification_results=classification_results,
             processing_status="Success",
-            missing_evidence=self._detect_missing(classified_evidence_list),
+            missing_evidence=missing,
             evidence_conflicts=self._detect_conflicts(classified_evidence_list),
-            freshness_status=self._evaluate_freshness(classified_evidence_list)
+            freshness_status=stale_info,
+            evidence_statuses=evidence_statuses,
+            retrieval_failures=retrieval_failures
         )
         
         self.logger.info(f"[EvidenceEngine] Generated EOS-003 Package: {eos_003.package_id}")
@@ -203,9 +219,18 @@ class EvidenceEngine(BaseService):
 
     def _erp_registration(self, canonical_data: dict) -> List[OperationalEvidence]:
         """Creates initial EOS-001 objects."""
+        from app.core.config import settings
+        
+        source = canonical_data.get("source_system", "Unknown")
+        
+        # Audit 3 Item 18: PF-Only Admission in Production
+        if not getattr(settings, "SYNTHETIC_TEST_ENABLED", False):
+            if "practice_fusion" not in source.lower() and "practicefusion" not in source.lower() and source != "PF":
+                self.logger.error(f"[EvidenceEngine] Production admission blocked: Source {source} is not Practice Fusion.")
+                raise ValueError("PRODUCTION_ADMISSION_REJECTED: Only Practice Fusion sources are permitted in V1 production.")
+                
         evidence_items = []
         now = datetime.utcnow()
-        source = canonical_data.get("source_system", "Unknown")
         metadata = canonical_data.get("canonical_metadata", {})
         detail = metadata.get("detail", "").lower()
         event_type = canonical_data.get("event_type", "Unknown")

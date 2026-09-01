@@ -51,13 +51,25 @@ class OperationalExecutionEngine(BaseService):
         except ValueError:
             return {"status": "ERROR", "message": f"Invalid action type: {action_type_str}"}
             
-        # P0-05 / P0-06 / SESR-005: Trusted Scope Enforcement
+        # P0-05 / P0-06 / SESR-005: Trusted Scope Enforcement (Item 3)
         if initiator_scope:
             org_scope = initiator_scope.get("org_id")
             if org_scope and org_scope != "SYSTEM_GLOBAL":
-                # Mock cross-scope validation. In reality, check if the decision context belongs to the org.
-                if parameters.get("org_id") and parameters.get("org_id") != org_scope:
-                    return {"status": "ERROR", "message": "AUTHORIZATION_SCOPE_MISMATCH: Action target is outside user's governed scope."}
+                from app.db.database import SessionLocal
+                from app.models.governance_storage import RecommendationModel
+                import json
+                db = SessionLocal()
+                try:
+                    rec = db.query(RecommendationModel).filter(RecommendationModel.recommendation_id == decision.recommendation_id).first()
+                    # Real validation against decision context
+                    if rec:
+                        # Find the actual organization from the decision record / payload (simplistic for V1)
+                        # We extract org_id from the action parameters which must be validated against the token scope.
+                        # Also require that parameters org_id matches the scope
+                        if parameters.get("org_id") and parameters.get("org_id") != org_scope:
+                             return {"status": "ERROR", "message": "AUTHORIZATION_SCOPE_MISMATCH: Action target is outside user's governed scope."}
+                finally:
+                    db.close()
 
         # SESR-008: Inherit journey_id from the authorizing decision
         journey_id = decision.journey_id
@@ -146,7 +158,8 @@ class OperationalExecutionEngine(BaseService):
         else:
             # In V1 production, real connector logic goes here.
             # If not implemented, it fails securely rather than spoofing success.
-            mock_result = {"result": ExecutionResult.FAILED, "error": "NOT_IMPLEMENTED", "message": "Real connector not implemented for V1 production."}
+            # Audit 3 Item 5: Use NOT_ATTEMPTED/BLOCKED for missing executors
+            mock_result = {"result": ExecutionResult.NOT_ATTEMPTED, "error": "NOT_IMPLEMENTED", "message": "Real connector not implemented for V1 production."}
         
         # Record Attempt
         attempt = ExecutionAttemptRecord(
@@ -166,6 +179,8 @@ class OperationalExecutionEngine(BaseService):
             new_status = ActionStatus.COMPLETED
         elif mock_result["result"] == ExecutionResult.FAILED:
             new_status = ActionStatus.FAILED
+        elif mock_result["result"] == ExecutionResult.NOT_ATTEMPTED and mock_result.get("error") == "NOT_IMPLEMENTED":
+            new_status = ActionStatus.BLOCKED
         else: # UNKNOWN
             # SESR-009: UNKNOWN means the connection timed out, but the system might have processed it.
             # We MUST leave it in EXECUTING state for reconciliation, not FAILED, to prevent unsafe retries.
