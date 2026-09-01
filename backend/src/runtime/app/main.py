@@ -77,14 +77,14 @@ def create_app() -> FastAPI:
             if not existing:
                 admin = User(
                     email="superadmin@sbnsentinel.com",
-                    hashed_password=get_password_hash("SBNAdmin@2024"),
+                    hashed_password=get_password_hash(settings.BOOTSTRAP_ADMIN_PASSWORD),
                     full_name="SBN Super Admin",
                     role=UserRole.SYSTEM_ADMINISTRATOR.value,
                     is_active=True
                 )
                 db.add(admin)
                 db.commit()
-                print("[SUCCESS] Super Admin seeded: superadmin@sbnsentinel.com / SBNAdmin@2024")
+                print("[SUCCESS] Super Admin seeded: superadmin@sbnsentinel.com / [HIDDEN]")
             else:
                 print("[SUCCESS] Super Admin already exists.")
         except Exception as e:

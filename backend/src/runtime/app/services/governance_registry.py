@@ -393,9 +393,31 @@ class GovernanceRegistry:
         self._save()
 
     def record_recommendation(self, record: RecommendationRecord):
+
         self._recommendations.append(record)
         self._save()
+        try:
+            db = SessionLocal()
+            db.add(RecommendationModel(
+                recommendation_id=record.recommendation_id,
+                decision_context_id=record.decision_context_id,
+                rule_evaluation_id=record.rule_evaluation_id,
+                journey_id=record.journey_id or "UNKNOWN",
+                mapping_id=record.mapping_id,
+                mapping_version=record.mapping_version,
+                content=record.recommendation_content,
+                status=record.status.value,
+                priority=record.priority,
+                generated_at=record.generated_at.isoformat()
+            ))
+            db.commit()
+            db.close()
+        except Exception as e:
+            logger.error(f"DB Error saving recommendation: {e}")
+            if 'db' in locals(): db.close()
         logger.debug(f"[GovernanceRegistry] Recorded recommendation {record.recommendation_id}")
+
+
         
     def get_recommendation(self, recommendation_id: str) -> Optional[RecommendationRecord]:
         for r in self._recommendations:
@@ -411,9 +433,28 @@ class GovernanceRegistry:
         return self._authority_configs.get(role)
 
     def record_human_decision(self, decision: HumanDecisionRecord):
+
         self._human_decisions.append(decision)
         self._save()
+        try:
+            db = SessionLocal()
+            db.add(HumanDecisionModel(
+                decision_id=decision.decision_id,
+                recommendation_id=decision.recommendation_id,
+                journey_id=decision.journey_id or "UNKNOWN",
+                actor_id=decision.actor_id,
+                decision_type=decision.decision_type.value,
+                status=decision.status.value,
+                decision_timestamp=decision.decision_timestamp.isoformat()
+            ))
+            db.commit()
+            db.close()
+        except Exception as e:
+            logger.error(f"DB Error saving decision: {e}")
+            if 'db' in locals(): db.close()
         logger.debug(f"[GovernanceRegistry] Recorded human decision {decision.decision_id} by {decision.actor_id}")
+
+
         
     def get_human_decision(self, decision_id: str) -> Optional[HumanDecisionRecord]:
         for d in self._human_decisions:
@@ -422,9 +463,28 @@ class GovernanceRegistry:
         return None
 
     def record_operational_action(self, action: OperationalActionRecord):
+
         self._operational_actions.append(action)
         self._save()
+        try:
+            db = SessionLocal()
+            db.add(OperationalActionModel(
+                action_id=action.action_id,
+                authorization_reference=action.authorization_reference,
+                journey_id=action.journey_id or "UNKNOWN",
+                action_type=action.action_type.value,
+                target_reference=action.target_reference,
+                status=action.status.value,
+                created_at=action.created_at.isoformat()
+            ))
+            db.commit()
+            db.close()
+        except Exception as e:
+            logger.error(f"DB Error saving action: {e}")
+            if 'db' in locals(): db.close()
         logger.debug(f"[GovernanceRegistry] Recorded operational action {action.action_id}")
+
+
         
     def get_operational_action(self, action_id: str) -> Optional[OperationalActionRecord]:
         for a in self._operational_actions:
@@ -444,17 +504,52 @@ class GovernanceRegistry:
         return None
 
     def record_execution_attempt(self, attempt: ExecutionAttemptRecord):
+
         self._execution_attempts.append(attempt)
         self._save()
+        try:
+            db = SessionLocal()
+            db.add(ExecutionAttemptModel(
+                attempt_id=attempt.attempt_id,
+                action_id=attempt.action_id,
+                journey_id=attempt.journey_id or "UNKNOWN",
+                result=attempt.result.value,
+                attempt_timestamp=attempt.attempt_timestamp.isoformat()
+            ))
+            db.commit()
+            db.close()
+        except Exception as e:
+            logger.error(f"DB Error saving attempt: {e}")
+            if 'db' in locals(): db.close()
         logger.debug(f"[GovernanceRegistry] Recorded execution attempt {attempt.attempt_id} for action {attempt.action_id}")
+
+
 
     def get_execution_attempts(self, action_id: str) -> List[ExecutionAttemptRecord]:
         return [a for a in self._execution_attempts if a.action_id == action_id]
 
     def record_operational_outcome(self, outcome: OperationalOutcomeRecord):
+
         self._operational_outcomes.append(outcome)
         self._save()
+        try:
+            db = SessionLocal()
+            db.add(OperationalOutcomeModel(
+                outcome_id=outcome.outcome_id,
+                attempt_id=outcome.attempt_id,
+                journey_id=outcome.journey_id or "UNKNOWN",
+                operational_status=outcome.operational_status.value,
+                closure_status=outcome.closure_status.value,
+                timestamp=outcome.timestamp.isoformat()
+            ))
+            db.commit()
+            db.close()
+        except Exception as e:
+            logger.error(f"DB Error saving outcome: {e}")
+            if 'db' in locals(): db.close()
         logger.debug(f"[GovernanceRegistry] Recorded operational outcome {outcome.outcome_id}")
+
+
         
     def get_operational_outcome(self, outcome_id: str) -> Optional[OperationalOutcomeRecord]:
         for o in self._operational_outcomes:
@@ -566,10 +661,11 @@ class GovernanceRegistry:
         for m in self._recommendation_mappings:
             if m.applicable_rule_id == rule_id and m.eligible_result == result and m.is_applicable(eval_time):
                 applicable.append(m)
-        if applicable:
-            # Deterministic precedence: sort by length then string (handles V1 vs V10)
-            return sorted(applicable, key=lambda x: (len(x.version), x.version))[-1]
-        return None
+        if not applicable:
+            return None
+        if len(applicable) > 1:
+            raise ValueError(f"GOVERNANCE_AMBIGUITY: Multiple active recommendation mappings found for rule {rule_id}")
+        return applicable[0]
 
     def get_applicable_policies(self, eval_time: datetime) -> List[PolicyVersion]:
         """PRR-003: Resolve Applicable Policy Version"""
@@ -577,10 +673,10 @@ class GovernanceRegistry:
         # Find latest active policy per policy_id that is effective
         for p_id in set(p.policy_id for p in self._policies):
             versions = [p for p in self._policies if p.policy_id == p_id and p.is_applicable(eval_time)]
+            if len(versions) > 1:
+                raise ValueError(f"GOVERNANCE_AMBIGUITY: Multiple active policies found for {p_id}")
             if versions:
-                # Deterministic precedence: sort by length then string
-                latest = sorted(versions, key=lambda x: (len(x.version), x.version))[-1]
-                applicable.append(latest)
+                applicable.append(versions[0])
         return applicable
 
     def get_applicable_rules_for_policy(self, policy_id: str, policy_version: str, eval_time: datetime) -> List[RuleVersion]:
@@ -589,10 +685,10 @@ class GovernanceRegistry:
         mapped_rules = [r for r in self._rules if r.governing_policy_id == policy_id and r.governing_policy_version == policy_version]
         for r_id in set(r.rule_id for r in mapped_rules):
             versions = [r for r in mapped_rules if r.rule_id == r_id and r.is_applicable(eval_time)]
+            if len(versions) > 1:
+                raise ValueError(f"GOVERNANCE_AMBIGUITY: Multiple active rules found for {r_id}")
             if versions:
-                # Deterministic precedence: sort by length then string
-                latest = sorted(versions, key=lambda x: (len(x.version), x.version))[-1]
-                applicable.append(latest)
+                applicable.append(versions[0])
         return applicable
 
     def get_policy_by_version(self, policy_id: str, version: str) -> Optional[PolicyVersion]:

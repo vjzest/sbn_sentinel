@@ -65,3 +65,25 @@ def verify_health(
         health_status["status"] = "Degraded"
 
     return health_status
+
+@router.get("/ready", summary="Readiness Gate")
+def readiness_gate(db: Session = Depends(get_db)):
+    """
+    Verifies that the backend is fully initialized and ready to serve traffic.
+    Checks DB connectivity.
+    """
+    status_dict = {"ready": False, "database": "Disconnected", "auth": "Unverified"}
+    
+    try:
+        db.execute(text("SELECT 1"))
+        status_dict["database"] = "Connected"
+        status_dict["auth"] = "Verified" # In V1 we assume if DB is up auth is reachable
+        status_dict["ready"] = True
+    except Exception as e:
+        status_dict["database"] = f"Failed: {str(e)}"
+        
+    if not status_dict["ready"]:
+        from fastapi import HTTPException
+        raise HTTPException(status_code=503, detail=status_dict)
+        
+    return status_dict

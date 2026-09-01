@@ -66,7 +66,6 @@ class IntelligenceEngine(BaseService):
                 "explainability_log": f"Because: No mapping in registry for {rule_id}.",
                 "primary_context": context.get("primary_context", "General"),
                 "secondary_context": context.get("secondary_context", ""),
-                "context_confidence": context.get("confidence", "High"),
                 "context_reason": context.get("reason", ""),
                 "decision_record": {}
             }
@@ -87,20 +86,30 @@ class IntelligenceEngine(BaseService):
 
         rec_id = f"REC-{uuid.uuid4().hex[:8].upper()}"
         
+        # Enforce Provenance Identifiers (Audit 3 Item 4)
+        decision_context_id = context.get("id") or context.get("context_id")
+        rule_evaluation_id = finding.get("evaluation_id")
+        journey_id = payload.get("journey_id")
+        
+        if not decision_context_id or not rule_evaluation_id or not journey_id:
+            logger.error("[IntelligenceEngine] Missing required provenance identifiers.")
+            raise ValueError("Recommendation creation failed: context_id, evaluation_id, and journey_id are mandatory.")
+            
         # RCO-001: Create and persist Recommendation Record
         record = RecommendationRecord(
             recommendation_id=rec_id,
             mapping_id=mapping.mapping_id,
             mapping_version=mapping.version,
-            decision_context_id=context.get("id", "UNKNOWN_CONTEXT"),
-            rule_evaluation_id=finding.get("evaluation_id", "UNKNOWN_EVALUATION"),
+            decision_context_id=decision_context_id,
+            rule_evaluation_id=rule_evaluation_id,
             recommendation_content=formatted_recommendation,
             status=RecommendationStatus.ACTIVE,
             authority_requirement=mapping.authority_requirement,
             priority=mapping.priority,
             business_impact=formatted_impact,
             expected_outcome=formatted_outcome,
-            problem=formatted_problem
+            problem=formatted_problem,
+            journey_id=journey_id
         )
         governance_registry.record_recommendation(record)
         
@@ -131,7 +140,6 @@ class IntelligenceEngine(BaseService):
             "explainability_log": explainability_log,
             "primary_context": context.get("primary_context", "General"),
             "secondary_context": context.get("secondary_context", ""),
-            "context_confidence": context.get("confidence", "High"),
             "context_reason": context.get("reason", ""),
             "mapping_version": mapping.version,
             "decision_record": decision_record

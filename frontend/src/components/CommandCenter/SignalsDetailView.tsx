@@ -19,8 +19,9 @@ export const SignalsDetailView: React.FC = () => {
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [auditLogs, setAuditLogs] = useState<any[]>([]);
   const [viewMode, setViewMode] = useState<'doctor' | 'developer' | 'inspector'>('doctor');
-  const [outcomeState, setOutcomeState] = useState<'PENDING' | 'CONFIRMED' | null>(null);
-  const [resolutionState, setResolutionState] = useState<'UNRESOLVED' | 'RESOLVED' | null>(null);
+  const [outcomeState, setOutcomeState] = useState<'PENDING' | 'CONFIRMED' | 'BLOCKED' | null>(null);
+  const [resolutionState, setResolutionState] = useState<'UNRESOLVED' | 'RESOLVED' | 'BLOCKED' | null>(null);
+  const [isProd, setIsProd] = useState(false);
 
   // Combine redux state and db historical signals
   const fetchDbSignals = async () => {
@@ -54,6 +55,16 @@ export const SignalsDetailView: React.FC = () => {
   useEffect(() => {
     fetchDbSignals();
     fetchAuditLogs();
+    
+    // Audit 3 Item 8: Demo State gating
+    fetchWithAuth(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/settings`)
+      .then(res => res.json())
+      .then(data => {
+         if (data.ENVIRONMENT === 'PRODUCTION' && !data.SYNTHETIC_TEST_ENABLED) {
+            setIsProd(true);
+         }
+      })
+      .catch(() => {});
   }, [reduxSignals]);
 
   // Merge lists to guarantee uniqueness by ID, preferring newest
@@ -117,26 +128,43 @@ export const SignalsDetailView: React.FC = () => {
       const userEmail = user?.email || "admin@sbnsentinel.com";
       
       const response = await fetchWithAuth(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/decisions/`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        recommendation_id: selectedSignal.id,
+        decision_type: 'APPROVED',
+        reason: 'Clinician approved via UI'
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error('Backend rejection');
+    }
+    
+    // Audit 3 Item 7: Execute and check true backend success
+    const execRes = await fetchWithAuth(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/actions/execute`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          recommendation_id: selectedSignal.id,
-          decision_type: 'APPROVED',
-          reason: 'Clinician approved via UI'
+          action_id: `ACT-MOCK-${selectedSignal.id}`
         })
-      });
-      
-      if (!response.ok) {
-        throw new Error('Backend rejection');
-      }
+    });
+    
+    const execData = await execRes.json();
+    
+    await fetchAuditLogs();
 
-      await fetchAuditLogs();
-      
-      setIsDispatching(false);
-      setIsDispatched(true);
-      setOutcomeState('PENDING');
-      setResolutionState('UNRESOLVED');
-      dispatch(incrementActionsTaken());
+    setIsDispatching(false);
+    setIsDispatched(true);
+    
+    if (!execRes.ok && (execRes.status === 409 || execData.detail?.includes('blocked') || execData.detail?.includes('BLOCKED'))) {
+        setOutcomeState('BLOCKED' as any);
+        setResolutionState('BLOCKED' as any);
+    } else {
+        setOutcomeState('PENDING');
+        setResolutionState('UNRESOLVED');
+    }
+    dispatch(incrementActionsTaken());
       
       // Add to Clinical Reminders in localStorage
       if (selectedSignal.recommended_action) {
@@ -672,13 +700,13 @@ export const SignalsDetailView: React.FC = () => {
                     <div className="grid grid-cols-2 gap-4">
                       <div>
                         <p className="text-[10px] text-white/50 uppercase tracking-widest font-bold">Confirmation State</p>
-                        <p className={`text-xs font-bold ${outcomeState === 'CONFIRMED' ? 'text-emerald-400' : 'text-amber-400'}`}>
+                        <p className={`text-xs font-bold ${outcomeState === 'CONFIRMED' ? 'text-emerald-400' : outcomeState === 'BLOCKED' ? 'text-red-400' : 'text-amber-400'}`}>
                           {outcomeState || 'PENDING'}
                         </p>
                       </div>
                       <div>
                         <p className="text-[10px] text-white/50 uppercase tracking-widest font-bold">Resolution State</p>
-                        <p className={`text-xs font-bold ${resolutionState === 'RESOLVED' ? 'text-emerald-400' : 'text-amber-400'}`}>
+                        <p className={`text-xs font-bold ${resolutionState === 'RESOLVED' ? 'text-emerald-400' : resolutionState === 'BLOCKED' ? 'text-red-400' : 'text-amber-400'}`}>
                           {resolutionState || 'UNRESOLVED'}
                         </p>
                       </div>
@@ -705,22 +733,27 @@ export const SignalsDetailView: React.FC = () => {
                       >
                         Clinical
                       </button>
-                      <button 
-                        onClick={() => setViewMode('inspector')}
-                        className={`text-[9px] font-black px-2 py-1 rounded-[6px] transition-all cursor-pointer ${
-                          viewMode === 'inspector' ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30 shadow-sm' : 'text-white/50 hover:text-white'
-                        }`}
-                      >
-                        Evidence Inspector
-                      </button>
-                      <button 
-                        onClick={() => setViewMode('developer')}
-                        className={`text-[9px] font-black px-2 py-1 rounded-[6px] transition-all cursor-pointer ${
-                          viewMode === 'developer' ? 'bg-white/20 text-white shadow-sm' : 'text-white/50 hover:text-white'
-                        }`}
-                      >
-                        JSON Payload
-                      </button>
+                      
+                      {!isProd && (
+                        <>
+                          <button 
+                            onClick={() => setViewMode('inspector')}
+                            className={`text-[9px] font-black px-2 py-1 rounded-[6px] transition-all cursor-pointer ${
+                              viewMode === 'inspector' ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30 shadow-sm' : 'text-white/50 hover:text-white'
+                            }`}
+                          >
+                            Evidence Inspector
+                          </button>
+                          <button 
+                            onClick={() => setViewMode('developer')}
+                            className={`text-[9px] font-black px-2 py-1 rounded-[6px] transition-all cursor-pointer ${
+                              viewMode === 'developer' ? 'bg-white/20 text-white shadow-sm' : 'text-white/50 hover:text-white'
+                            }`}
+                          >
+                            JSON Payload
+                          </button>
+                        </>
+                      )}
                     </div>
 
                     <button 

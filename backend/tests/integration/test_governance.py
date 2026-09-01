@@ -46,13 +46,13 @@ def test_a021_historical_reconstruction():
     from datetime import datetime
     
     # Inject historical state
-    policy = PolicyVersion(policy_id="POL-001", version="V1", content="", lifecycle_state=LifecycleState.ACTIVE)
-    rule = RuleVersion(rule_id="R-001", version="V1", logic_description="", lifecycle_state=LifecycleState.ACTIVE, inputs=[], allowed_outputs=[], governing_policy_id="POL-001", governing_policy_version="V1")
+    policy = PolicyVersion(policy_id="POL-TEST-001", version="V1", content="", lifecycle_state=LifecycleState.ACTIVE)
+    rule = RuleVersion(rule_id="R-TEST-001", version="V1", logic_description="", lifecycle_state=LifecycleState.ACTIVE, inputs=[], allowed_outputs=[], governing_policy_id="POL-TEST-001", governing_policy_version="V1")
     governance_registry.register_policy(policy)
     governance_registry.register_rule(rule)
     
-    rules = governance_registry.get_applicable_rules_for_policy("POL-001", "V1", datetime.utcnow())
-    assert len(rules) > 0, "Should reconstruct at least one rule for POL-001"
+    rules = governance_registry.get_applicable_rules_for_policy("POL-TEST-001", "V1", datetime.utcnow())
+    assert len(rules) > 0, "Should reconstruct at least one rule for POL-TEST-001"
 
 @pytest.mark.governance
 def test_a022_synthetic_test_isolation():
@@ -65,3 +65,43 @@ def test_a022_synthetic_test_isolation():
         assert False, "Should have raised a validation error for synthetic test in production"
     except ValidationError as e:
         assert "CDI-006" in str(e) or "SYNTHETIC_TEST_ENABLED" in str(e)
+
+@pytest.mark.governance
+def test_e2e_authentic_journey():
+    """
+    Audit 3 Item 20: Authentic, authenticated E2E journey test.
+    """
+    from app.db.database import SessionLocal
+    from app.models.user import User, UserRole
+    from app.core.security import get_password_hash
+    import uuid
+    
+    db = SessionLocal()
+    test_email = f"e2e_{uuid.uuid4().hex[:6]}@sbnsentinel.com"
+    user = User(
+        email=test_email, 
+        hashed_password=get_password_hash("Test@123"), 
+        full_name="E2E Test", 
+        role=UserRole.SYSTEM_ADMINISTRATOR.value, 
+        is_active=True
+    )
+    db.add(user)
+    db.commit()
+    
+    # 1. Login
+    res = client.post("/api/v1/auth/login", json={"email": test_email, "password": "Test@123"})
+    assert res.status_code == 200, f"Login failed: {res.text}"
+    token = res.json()["access_token"]
+    headers = {"Authorization": f"Bearer {token}"}
+    
+    # 2. Check Readiness Gate
+    ready_res = client.get("/api/v1/health/ready")
+    assert ready_res.status_code == 200, f"Readiness gate failed: {ready_res.text}"
+    
+    # 3. Access Protected Route
+    clinics_res = client.get("/api/v1/clinics", headers=headers)
+    assert clinics_res.status_code == 200, "Protected route access failed"
+    
+    db.delete(user)
+    db.commit()
+    db.close()

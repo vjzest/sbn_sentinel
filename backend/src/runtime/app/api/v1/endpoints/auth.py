@@ -167,7 +167,7 @@ def accept_invite(payload: ResetPasswordRequest, db: Session = Depends(get_db)):
     otp_record = db.query(OTPModel).filter(
         OTPModel.email == payload.email, 
         OTPModel.otp_code == payload.otp,
-        OTPModel.purpose.in_(["invite", "reset_password"]),
+        OTPModel.purpose == "invite",
         OTPModel.is_used == False
     ).order_by(OTPModel.created_at.desc()).first()
     

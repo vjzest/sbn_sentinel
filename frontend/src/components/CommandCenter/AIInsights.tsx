@@ -6,7 +6,7 @@ import { RootState } from '@/store';
 import { incrementActionsTaken } from '@/store/slices/signalSlice';
 
 export const AIInsights: React.FC = () => {
-  const [actionStatus, setActionStatus] = useState<'pending' | 'approved' | 'dismissed'>('pending');
+  const [actionStatus, setActionStatus] = useState<'pending' | 'approved' | 'dismissed' | 'blocked' | 'error'>('pending');
   const [activeModelName, setActiveModelName] = useState('GPT-4o');
   const signals = useSelector((state: RootState) => state.signals.events);
   const dispatch = useDispatch();
@@ -32,22 +32,29 @@ export const AIInsights: React.FC = () => {
     dispatch(incrementActionsTaken());
     
     try {
-      const userStr = localStorage.getItem('user');
-      const user = userStr ? JSON.parse(userStr) : null;
-      const userEmail = user?.email || "admin@sbnsentinel.com";
-      
-      await fetchWithAuth(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/audit/`, {
+      const res = await fetchWithAuth(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/actions/execute`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          user_email: userEmail,
-          action: `Approved Sentinel Action: ${latestInsightSignal.recommended_action || 'Acknowledged Event'}`,
-          resource: `Signal ID: ${latestInsightSignal.id} (${latestInsightSignal.type})`,
-          ip_address: "127.0.0.1"
+          action_id: `ACT-MOCK-${latestInsightSignal.id}`
         })
       });
+      
+      const data = await res.json();
+      
+      if (!res.ok) {
+        if (res.status === 409 || data.detail?.includes('blocked') || data.detail?.includes('BLOCKED')) {
+          setActionStatus('blocked');
+        } else {
+          setActionStatus('error');
+        }
+      } else {
+        setActionStatus('approved');
+      }
+      
     } catch (e) {
-      console.error("Failed to write AIInsight approval to audit log:", e);
+      console.error("Failed to execute action:", e);
+      setActionStatus('error');
     }
   };
 
@@ -134,7 +141,25 @@ export const AIInsights: React.FC = () => {
           <div className="bg-[#10B981]/20 border border-[#10B981]/30 rounded-[16px] p-5 flex items-center justify-between flex-1 animate-in fade-in">
              <div className="flex flex-wrap items-center gap-2 sm:gap-3 w-full md:w-auto">
               <CheckCircle2 className="w-5 h-5 text-[#10B981]" />
-              <span className="text-sm font-bold text-[#34D399]">Action Approved: SMS Sequence Initiated.</span>
+              <span className="text-sm font-bold text-[#34D399]">Action Approved & Dispatched.</span>
+            </div>
+          </div>
+        )}
+        
+        {/* Blocked State */}
+        {actionStatus === 'blocked' && (
+          <div className="bg-[#EF4444]/20 border border-[#EF4444]/30 rounded-[16px] p-5 flex items-center justify-between flex-1 animate-in fade-in">
+             <div className="flex flex-wrap items-center gap-2 sm:gap-3 w-full md:w-auto">
+              <span className="text-sm font-bold text-[#F87171]">Action BLOCKED: Missing integration or not implemented.</span>
+            </div>
+          </div>
+        )}
+        
+        {/* Error State */}
+        {actionStatus === 'error' && (
+          <div className="bg-amber-500/20 border border-amber-500/30 rounded-[16px] p-5 flex items-center justify-between flex-1 animate-in fade-in">
+             <div className="flex flex-wrap items-center gap-2 sm:gap-3 w-full md:w-auto">
+              <span className="text-sm font-bold text-amber-500">Action Failed.</span>
             </div>
           </div>
         )}

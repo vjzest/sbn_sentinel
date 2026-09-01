@@ -30,18 +30,18 @@ export const BootScreen: React.FC<BootScreenProps> = ({ onComplete }) => {
         setCurrentStep(1);
 
         // Step 1: Actually fetch health
-        const res = await fetch('http://localhost:8000/api/v1/health/verify');
+        const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000'}/api/v1/health/ready`);
         if (!res.ok) throw new Error('Backend unreachabe');
         const healthData = await res.json();
         
         if (!isMounted) return;
         
-        if (healthData.status === "Degraded" || healthData.status === "Healthy") {
-           setLogs(prev => [...prev, `System Status: ${healthData.status}`]);
+        if (healthData.ready) {
+           setLogs(prev => [...prev, `System Status: Ready`]);
            setCurrentStep(2);
            await new Promise(r => setTimeout(r, 400));
            
-           setLogs(prev => [...prev, `DB: ${healthData.database}, Cache: ${healthData.rules_engine_cache}`]);
+           setLogs(prev => [...prev, `DB: ${healthData.database}, Auth: ${healthData.auth}`]);
            setCurrentStep(3);
            await new Promise(r => setTimeout(r, 400));
 
