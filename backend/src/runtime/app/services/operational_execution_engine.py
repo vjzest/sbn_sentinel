@@ -64,19 +64,25 @@ class OperationalExecutionEngine(BaseService):
             if org_scope and org_scope != "SYSTEM_GLOBAL":
                 from app.db.database import SessionLocal
                 from app.models.governance_storage import RecommendationModel
+                import json
+                
                 db = SessionLocal()
                 try:
+                    # Issue #2 Fix: Resolve true ownership from persisted DB record, NOT client parameters.
                     rec = db.query(RecommendationModel).filter(
                         RecommendationModel.recommendation_id == decision.recommendation_id).first()
-                    # Real validation against decision context
-                    if rec:
-                        # Find the actual organization from the decision record / payload (simplistic for V1)
-                        # We extract org_id from the action parameters which must be validated against the token scope.
-                        # Also require that parameters org_id matches the scope
-                        if parameters.get("org_id") and parameters.get("org_id") != org_scope:
-                            return {
-                                "status": "ERROR",
-                                "message": "AUTHORIZATION_SCOPE_MISMATCH: Action target is outside user's governed scope."}
+                    
+                    if not rec:
+                        return {"status": "ERROR", "message": "AUTHORIZATION_FAILURE: Orphaned decision."}
+                    
+                    # Recommendation context carries the true evaluated context (including org_id)
+                    rec_content = json.loads(rec.content)
+                    true_org_id = rec_content.get("org_id") or rec_content.get("event", {}).get("org_id")
+                    
+                    if not true_org_id or true_org_id != org_scope:
+                        return {
+                            "status": "ERROR",
+                            "message": f"AUTHORIZATION_SCOPE_MISMATCH: Action target (true_org={true_org_id}) is outside user's governed scope ({org_scope})."}
                 finally:
                     db.close()
 

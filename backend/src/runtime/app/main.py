@@ -47,11 +47,14 @@ def create_app() -> FastAPI:
         }
 
     @app.on_event("startup")
-    def seed_super_admin():
+    def seed_data():
         """
-        Auto-seed a super_admin account on first startup.
-        Default credentials: superadmin@sbnsentinel.com / SBNAdmin@2024
+        Auto-seed a super_admin account on first startup and initialize governance seeds.
         """
+        from app.services.governance_registry import initialize_registry_seeds
+        initialize_registry_seeds()
+        # Auto-seed a super_admin account on first startup.
+        # Default credentials: superadmin@sbnsentinel.com / SBNAdmin@2024
         from app.db.database import SessionLocal
         from app.core.security import get_password_hash
         db = SessionLocal()

@@ -44,7 +44,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onSaveSettings, acti
   // AI Preferences States
   const [schedulingAggressiveness, setSchedulingAggressiveness] = useState(2); // 1 = Conservative, 2 = Balanced, 3 = Aggressive
   const [autoOutreach, setAutoOutreach] = useState(true);
-  const [confidenceThreshold, setConfidenceThreshold] = useState('85% (Recommended)');
+  const [ValidationThreshold, setValidationThreshold] = useState('85% (Recommended)');
   const [aiModel, setAiModel] = useState('gpt-4o');
 
   // Team & Access States
@@ -189,7 +189,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onSaveSettings, acti
           setThemeMode(data.theme_mode || 'system');
           setSchedulingAggressiveness(data.scheduling_aggressiveness ?? 2);
           setAutoOutreach(data.auto_outreach ?? true);
-          setConfidenceThreshold(data.confidence_threshold || '85% (Recommended)');
+          setValidationThreshold(data.validation_threshold || '85% (Recommended)');
           setAiModel(data.ai_model || 'gpt-4o');
           setNotifySms(data.notify_sms ?? true);
           setNotifyEmail(data.notify_email ?? false);
@@ -222,7 +222,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onSaveSettings, acti
           theme_mode: themeMode,
           scheduling_aggressiveness: schedulingAggressiveness,
           auto_outreach: autoOutreach,
-          confidence_threshold: confidenceThreshold,
+          validation_threshold: ValidationThreshold,
           ai_model: aiModel,
           notify_sms: notifySms,
           notify_email: notifyEmail,

@@ -236,7 +236,7 @@ export const IntelligenceView: React.FC = () => {
                       <div className="mt-4 pt-4 border-t border-amber-500/20 grid grid-cols-2 gap-4">
                         <div>
                           <div className="text-xs text-amber-500/50 uppercase tracking-widest font-bold mb-1">Verification Level</div>
-                          <div className={selectedEvent.revenue_confidence === 'High' ? 'text-emerald-400 font-bold text-sm' : 'text-amber-300 font-bold text-sm'}>{selectedEvent.revenue_confidence === 'High' ? 'Verified' : 'Pending Review'}</div>
+                          <div className={selectedEvent.revenue_impact_status === 'High' ? 'text-emerald-400 font-bold text-sm' : 'text-amber-300 font-bold text-sm'}>{selectedEvent.revenue_impact_status === 'High' ? 'Verified' : 'Pending Review'}</div>
                         </div>
                         <div>
                           <div className="text-xs text-amber-500/50 uppercase tracking-widest font-bold mb-1">Dependency</div>
@@ -264,7 +264,7 @@ export const IntelligenceView: React.FC = () => {
                     </div>
                   </div>
                   <div className="mt-4 pt-4 border-t border-white/10">
-                    <div className="text-xs text-white/50 uppercase tracking-widest font-bold mb-1">Verification Level: <span className={selectedEvent.context_confidence === 'High' ? 'text-emerald-400' : 'text-yellow-400'}>{selectedEvent.context_confidence === 'High' ? 'Verified' : 'Pending'}</span></div>
+                    <div className="text-xs text-white/50 uppercase tracking-widest font-bold mb-1">Verification Level: <span className={selectedEvent.context_validation_status === 'High' ? 'text-emerald-400' : 'text-yellow-400'}>{selectedEvent.context_validation_status === 'High' ? 'Verified' : 'Pending'}</span></div>
                     <div className="text-white/70 text-sm leading-relaxed">{selectedEvent.context_reason || 'Insufficient information.'}</div>
                   </div>
                 </div>

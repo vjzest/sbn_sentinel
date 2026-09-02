@@ -22,5 +22,6 @@ class User(Base):
     hashed_password = Column(String, nullable=False)
     full_name = Column(String, index=True)
     role = Column(String, default=UserRole.UNASSIGNED.value)  # P0-04: Default to zero privileges
+    org_id = Column(String, nullable=True) # Scope context
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())

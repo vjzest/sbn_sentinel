@@ -33,8 +33,8 @@ class HumanDecisionEngine(BaseService):
         recommendation_id = payload.get("recommendation_id")
         decision_type_str = payload.get("decision_type")
         reason = payload.get("reason")
-        # SESR-008: Journey identity must be passed by caller (originating event's correlation_id)
-        journey_id = payload.get("journey_id")
+        # Journey ID is extracted securely from the DB record later.
+        # SESR-008: Reject client-provided journey_ids.
 
         # 1. Basic Validation
         if not all([actor_id, actor_role, recommendation_id, decision_type_str]):
@@ -53,6 +53,9 @@ class HumanDecisionEngine(BaseService):
         if rec_record.status != RecommendationStatus.ACTIVE:
             return {"status": "ERROR",
                     "message": f"Recommendation is not decision-eligible. Status: {rec_record.status.value}"}
+
+        # Extract authentic journey identity (Fix for Issue #1 - broken chain)
+        journey_id = rec_record.journey_id
 
         # 3. Validate Authority (HDA-003, HDA-004, HDA-005, HDA-009)
         auth_config = governance_registry.get_authority_config(actor_role)

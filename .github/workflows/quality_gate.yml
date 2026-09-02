@@ -2,9 +2,9 @@ name: SES-011 Quality Gate
 
 on:
   push:
-    branches: [ "main", "develop" ]
+    branches: [ "main", "develop", "master" ]
   pull_request:
-    branches: [ "main", "develop" ]
+    branches: [ "main", "develop", "master" ]
 
 jobs:
   quality-assurance:

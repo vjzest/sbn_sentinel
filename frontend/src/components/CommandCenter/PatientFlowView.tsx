@@ -81,7 +81,7 @@ export const PatientFlowView: React.FC = () => {
   const [payerId, setPayerId] = useState('');
 
   const [ocrText, setOcrText] = useState('');
-  const [confidence, setConfidence] = useState<number | null>(null);
+  const [validation, setvalidation] = useState<number | null>(null);
   const [isScanning, setIsScanning] = useState(false);
   const [showScannerView, setShowScannerView] = useState(false);
   const [isFlashActive, setIsFlashActive] = useState(false);
@@ -301,7 +301,7 @@ export const PatientFlowView: React.FC = () => {
     setGroupNumber('');
     setPayerId('');
     setOcrText('');
-    setConfidence(null);
+    setvalidation(null);
     setVerificationResult(null);
     setValidationError(null);
     setIsHealthCardModalOpen(true);
@@ -327,7 +327,7 @@ export const PatientFlowView: React.FC = () => {
   // Simulate OCR scanning
   const handleOCRScan = async () => {
     setIsScanning(true);
-    setConfidence(null);
+    setvalidation(null);
     setShowScannerView(true);
     setIsFlashActive(false);
 
@@ -350,7 +350,7 @@ export const PatientFlowView: React.FC = () => {
         setGroupNumber(data.group_number || '');
         setPayerId(data.payer_id || '');
         setOcrText(data.ocr_raw_text);
-        setConfidence(data.confidence_score);
+        setvalidation(data.validation_score);
       }
     } catch (error) {
       console.error("OCR scanning error:", error);
@@ -1222,7 +1222,7 @@ export const PatientFlowView: React.FC = () => {
                     )}
                   </button>
 
-                  {confidence !== null && (
+                  {validation !== null && (
                     <div className="mt-3 bg-[#ECFDF5] text-[#10B981] border border-emerald-500/30 px-3 py-2 rounded-[10px] text-[10px] font-extrabold flex justify-between items-center">
                       <span>OCR EXTRACTION MATCH</span>
                       <span className="bg-white/5 px-2 py-0.5 rounded-full border border-emerald-500/30">Verified</span>

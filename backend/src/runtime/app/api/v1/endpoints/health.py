@@ -78,12 +78,20 @@ def readiness_gate(db: Session = Depends(get_db)):
     Verifies that the backend is fully initialized and ready to serve traffic.
     Checks DB connectivity.
     """
-    status_dict = {"ready": False, "database": "Disconnected", "auth": "Unverified"}
+    status_dict = {"ready": False, "database": "Disconnected", "auth": "Unverified", "governance": "Uninitialized"}
 
     try:
         db.execute(text("SELECT 1"))
         status_dict["database"] = "Connected"
         status_dict["auth"] = "Verified"  # In V1 we assume if DB is up auth is reachable
+        
+        # Check governance registry initialization
+        from app.services.governance_registry import governance_registry
+        if governance_registry._policies or governance_registry._rules:
+            status_dict["governance"] = "Initialized"
+        else:
+            status_dict["governance"] = "Warning: Empty"
+            
         status_dict["ready"] = True
     except Exception as e:
         status_dict["database"] = f"Failed: {str(e)}"
