@@ -28,22 +28,61 @@ export const AIInsights: React.FC = () => {
 
   const handleApprove = async () => {
     if (!latestInsightSignal) return;
-    setActionStatus('approved');
+    setActionStatus('pending');
     dispatch(incrementActionsTaken());
     
     try {
-      const res = await fetchWithAuth(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/actions/execute`, {
+      // Step 1: Record Human Decision
+      const decisionRes = await fetchWithAuth(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/decisions`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          action_id: `ACT-MOCK-${latestInsightSignal.id}`
+          recommendation_id: latestInsightSignal.id, // Using signal ID assuming it maps to recommendation
+          decision_type: "APPROVED"
         })
       });
       
-      const data = await res.json();
+      const decisionData = await decisionRes.json();
+      if (!decisionRes.ok) {
+         setActionStatus('error');
+         return;
+      }
       
-      if (!res.ok) {
-        if (res.status === 409 || data.detail?.includes('blocked') || data.detail?.includes('BLOCKED')) {
+      const decisionId = decisionData.decision_id;
+
+      // Step 2: Create Action
+      const actionRes = await fetchWithAuth(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/actions`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          decision_id: decisionId,
+          action_type: "SCHEDULE_SYNC", // Replace with appropriate action type later if dynamic
+          target_reference: `SIGNAL-${latestInsightSignal.id}`,
+          parameters: {}
+        })
+      });
+
+      const actionData = await actionRes.json();
+      if (!actionRes.ok) {
+         setActionStatus('error');
+         return;
+      }
+
+      const actionId = actionData.action_id;
+
+      // Step 3: Execute Action
+      const execRes = await fetchWithAuth(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/actions/execute`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action_id: actionId
+        })
+      });
+      
+      const execData = await execRes.json();
+      
+      if (!execRes.ok) {
+        if (execRes.status === 409 || execData.detail?.includes('blocked') || execData.detail?.includes('BLOCKED')) {
           setActionStatus('blocked');
         } else {
           setActionStatus('error');
@@ -53,7 +92,7 @@ export const AIInsights: React.FC = () => {
       }
       
     } catch (e) {
-      console.error("Failed to execute action:", e);
+      console.error("Failed to execute action sequence:", e);
       setActionStatus('error');
     }
   };

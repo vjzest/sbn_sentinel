@@ -9,6 +9,20 @@ class GovernanceStorageModel(Base):
     state_json = Column(Text, nullable=False)
 
 
+class RuleEvaluationModel(Base):
+    __tablename__ = "governed_rule_evaluations"
+    evaluation_id = Column(String, primary_key=True)
+    decision_context_id = Column(String, nullable=False)
+    policy_id = Column(String, nullable=False)
+    policy_version = Column(String, nullable=False)
+    rule_id = Column(String, nullable=False)
+    rule_version = Column(String, nullable=False)
+    result = Column(String, nullable=False)
+    evaluation_timestamp = Column(String, nullable=False)
+    input_values_json = Column(Text)
+    journey_id = Column(String, nullable=False, index=True)
+
+
 class RecommendationModel(Base):
     __tablename__ = "governed_recommendations"
     recommendation_id = Column(String, primary_key=True)
@@ -57,8 +71,8 @@ class ExecutionAttemptModel(Base):
 class OperationalOutcomeModel(Base):
     __tablename__ = "governed_outcomes"
     outcome_id = Column(String, primary_key=True)
-    attempt_id = Column(String, nullable=False)
+    action_id = Column(String, nullable=False)
     journey_id = Column(String, nullable=False, index=True)
-    operational_status = Column(String)
-    closure_status = Column(String)
-    timestamp = Column(String)
+    confirmation_state = Column(String)
+    resolution_state = Column(String)
+    created_at = Column(String)

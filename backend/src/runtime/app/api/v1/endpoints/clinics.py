@@ -1,15 +1,23 @@
-from typing import Any, Dict, List
-from fastapi import APIRouter, Depends, HTTPException
+from typing import Any, Dict, List, Optional
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from app.db.database import get_db
 from app.models.clinic import ClinicModel
+from app.api.deps import get_current_user
+from app.models.user import User
 
 router = APIRouter()
 
 
 @router.get("/", response_model=List[Dict[str, Any]])
-def get_clinics(db: Session = Depends(get_db)):
-    """Get all clinics."""
+def get_clinics(
+    org_id: Optional[str] = None,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Get all clinics. Enforces scope if org_id is provided."""
+    if org_id and current_user.org_id and org_id != current_user.org_id:
+        raise HTTPException(status_code=403, detail="Cross-scope access denied")
     clinics = db.query(ClinicModel).all()
     # No mock data injection
     return [

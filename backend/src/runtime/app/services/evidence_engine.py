@@ -231,7 +231,7 @@ class EvidenceEngine(BaseService):
         source = canonical_data.get("source_system", "Unknown")
 
         # Audit 3 Item 18: PF-Only Admission in Production
-        if not getattr(settings, "SYNTHETIC_TEST_ENABLED", False):
+        if getattr(settings, "ENVIRONMENT", "DEVELOPMENT") == "PRODUCTION":
             if "practice_fusion" not in source.lower() and "practicefusion" not in source.lower() and source != "PF":
                 self.logger.error(
                     f"[EvidenceEngine] Production admission blocked: Source {source} is not Practice Fusion.")

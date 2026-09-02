@@ -17,11 +17,9 @@ export interface SignalEvent {
   priority_score?: number;
   primary_context?: string;
   secondary_context?: string;
-  context_confidence?: string;
   context_reason?: string;
   revenue_risk_category?: string;
   estimated_financial_exposure?: string;
-  revenue_confidence?: string;
   operational_dependency?: string;
   ai_insight?: string;
   status?: 'active' | 'acknowledged' | 'expired' | 'superseded';

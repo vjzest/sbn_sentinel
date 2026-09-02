@@ -41,7 +41,7 @@ export const BootScreen: React.FC<BootScreenProps> = ({ onComplete }) => {
            setCurrentStep(2);
            await new Promise(r => setTimeout(r, 400));
            
-           setLogs(prev => [...prev, `DB: ${healthData.database}, Auth: ${healthData.auth}`]);
+           setLogs(prev => [...prev, `DB: ${healthData.database}, Auth: ${healthData.auth}, Gov: ${healthData.governance}`]);
            setCurrentStep(3);
            await new Promise(r => setTimeout(r, 400));
 

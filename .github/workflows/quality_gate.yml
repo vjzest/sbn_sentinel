@@ -2,9 +2,9 @@ name: SES-011 Quality Gate
 
 on:
   push:
-    branches: [ "main", "develop" ]
+    branches: [ "main", "develop", "master" ]
   pull_request:
-    branches: [ "main", "develop" ]
+    branches: [ "main", "develop", "master" ]
 
 jobs:
   quality-assurance:
@@ -31,16 +31,18 @@ jobs:
 
     - name: SES-011 Linting (Flake8)
       run: |
-        flake8 app/ tests/
+        flake8 src/runtime/app/ tests/
 
     - name: SES-011 Unit Testing (Pytest)
       env:
         SECRET_KEY: "test-secret-key-for-ci"
+        PYTHONPATH: "src/runtime"
       run: |
         pytest tests/unit/ -v -m unit
 
     - name: SESR-001 Governance Testing
       env:
         SECRET_KEY: "test-secret-key-for-ci"
+        PYTHONPATH: "src/runtime"
       run: |
         pytest tests/ -v -k "governance"

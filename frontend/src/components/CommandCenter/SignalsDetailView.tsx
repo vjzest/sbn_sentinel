@@ -55,16 +55,16 @@ export const SignalsDetailView: React.FC = () => {
   useEffect(() => {
     fetchDbSignals();
     fetchAuditLogs();
-    
+
     // Audit 3 Item 8: Demo State gating
     fetchWithAuth(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/settings`)
       .then(res => res.json())
       .then(data => {
-         if (data.ENVIRONMENT === 'PRODUCTION' && !data.SYNTHETIC_TEST_ENABLED) {
-            setIsProd(true);
-         }
+        if (data.ENVIRONMENT === 'PRODUCTION' && !data.SYNTHETIC_TEST_ENABLED) {
+          setIsProd(true);
+        }
       })
-      .catch(() => {});
+      .catch(() => { });
   }, [reduxSignals]);
 
   // Merge lists to guarantee uniqueness by ID, preferring newest
@@ -73,8 +73,8 @@ export const SignalsDetailView: React.FC = () => {
   dbSignals.forEach(s => allSignalsMap.set(s.id, s));
   // 2. Add Redux real-time signals (override db if duplicates)
   reduxSignals.forEach(s => allSignalsMap.set(s.id, s));
-  
-  const signalsList = Array.from(allSignalsMap.values()).sort((a, b) => 
+
+  const signalsList = Array.from(allSignalsMap.values()).sort((a, b) =>
     new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
   );
 
@@ -104,9 +104,9 @@ export const SignalsDetailView: React.FC = () => {
 
   // Filtered list
   const filteredSignals = signalsList.filter(s => {
-    const matchesSearch = s.message.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                          s.source.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                          (s.metadata?.patient_name || '').toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch = s.message.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      s.source.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (s.metadata?.patient_name || '').toLowerCase().includes(searchTerm.toLowerCase());
     const matchesType = activeFilter === 'All' ? true : s.type === activeFilter;
     return matchesSearch && matchesType;
   });
@@ -121,51 +121,70 @@ export const SignalsDetailView: React.FC = () => {
   const triggerAction = async () => {
     if (!selectedSignal) return;
     setIsDispatching(true);
-    
-    try {
-      const userStr = localStorage.getItem('user');
-      const user = userStr ? JSON.parse(userStr) : null;
-      const userEmail = user?.email || "admin@sbnsentinel.com";
-      
-      const response = await fetchWithAuth(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/decisions/`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        recommendation_id: selectedSignal.id,
-        decision_type: 'APPROVED',
-        reason: 'Clinician approved via UI'
-      })
-    });
 
-    if (!response.ok) {
-      throw new Error('Backend rejection');
-    }
-    
-    // Audit 3 Item 7: Execute and check true backend success
-    const execRes = await fetchWithAuth(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/actions/execute`, {
+    try {
+      // Step 1: Decision
+      const decisionResponse = await fetchWithAuth(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/decisions`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          action_id: `ACT-MOCK-${selectedSignal.id}`
+          recommendation_id: selectedSignal.id,
+          decision_type: 'APPROVED',
+          reason: 'Clinician approved via UI'
         })
-    });
-    
-    const execData = await execRes.json();
-    
-    await fetchAuditLogs();
+      });
 
-    setIsDispatching(false);
-    setIsDispatched(true);
-    
-    if (!execRes.ok && (execRes.status === 409 || execData.detail?.includes('blocked') || execData.detail?.includes('BLOCKED'))) {
+      if (!decisionResponse.ok) {
+        throw new Error('Decision rejection');
+      }
+      
+      const decisionData = await decisionResponse.json();
+      const decisionId = decisionData.decision_id;
+
+      // Step 2: Action Creation
+      const actionResponse = await fetchWithAuth(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/actions`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          decision_id: decisionId,
+          action_type: 'SCHEDULE_SYNC', // Or dynamic based on signal type
+          target_reference: `SIGNAL-${selectedSignal.id}`,
+          parameters: {}
+        })
+      });
+
+      if (!actionResponse.ok) {
+        throw new Error('Action creation rejection');
+      }
+      
+      const actionData = await actionResponse.json();
+      const actionId = actionData.action_id;
+
+      // Step 3: Execution
+      const execRes = await fetchWithAuth(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/actions/execute`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action_id: actionId
+        })
+      });
+
+      const execData = await execRes.json();
+
+      await fetchAuditLogs();
+
+      setIsDispatching(false);
+      setIsDispatched(true);
+
+      if (!execRes.ok && (execRes.status === 409 || execData.detail?.includes('blocked') || execData.detail?.includes('BLOCKED'))) {
         setOutcomeState('BLOCKED' as any);
         setResolutionState('BLOCKED' as any);
-    } else {
+      } else {
         setOutcomeState('PENDING');
         setResolutionState('UNRESOLVED');
-    }
-    dispatch(incrementActionsTaken());
-      
+      }
+      dispatch(incrementActionsTaken());
+
       // Add to Clinical Reminders in localStorage
       if (selectedSignal.recommended_action) {
         const saved = localStorage.getItem('clinicalReminders');
@@ -200,9 +219,12 @@ export const SignalsDetailView: React.FC = () => {
 
   // Generate simulated Practice Fusion / twilio raw payload details for audit
   const getSimulatedRawPayload = (signal: SignalEvent) => {
+    // Issue #5: Only simulate in demo environments.
+    if (isProd) return signal;
+
     const patientName = signal.metadata?.patient_name || "Unknown Patient";
     const cleanPatient = patientName.replace(/\s+/g, '').toLowerCase();
-    
+
     if (signal.type === 'EHR') {
       return {
         resourceType: "Appointment",
@@ -307,8 +329,8 @@ export const SignalsDetailView: React.FC = () => {
           <p className="text-sm text-white/70 font-medium">Real-time Secure Data EHR connections, Twilio hooks, and automated audit stream logs.</p>
         </div>
         <div className="flex flex-wrap items-center gap-2 sm:gap-3 w-full md:w-auto">
-          <button 
-            onClick={fetchDbSignals} 
+          <button
+            onClick={fetchDbSignals}
             disabled={isRefreshing}
             className="flex items-center gap-2 bg-white/10 border border-white/20 text-white font-bold text-xs px-4 py-2.5 rounded-[16px] hover:bg-white/20 transition-colors disabled:opacity-50 cursor-pointer"
           >
@@ -322,7 +344,7 @@ export const SignalsDetailView: React.FC = () => {
         <div className="bg-gradient-to-br from-[#2E1055] to-[#120524] border border-white/10 p-6 rounded-[24px] shadow-[0_20px_50px_rgba(46,16,85,0.3)] flex items-center justify-between text-white">
           <div>
             <p className="text-xs font-bold text-white/70 uppercase tracking-widest mb-1">Total Signals</p>
-            <p className="text-2xl font-black text-white">{1284 + totalCount}</p>
+            <p className="text-2xl font-black text-white">{isProd ? totalCount : 1284 + totalCount}</p>
           </div>
           <span className="p-3 bg-[#3B82F6]/20 text-[#60A5FA] rounded-[16px]">
             <Cpu className="w-6 h-6" />
@@ -366,25 +388,24 @@ export const SignalsDetailView: React.FC = () => {
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
             <div className="flex items-center gap-2 bg-white/5 border border-white/10 rounded-[14px] px-3.5 py-2 w-72">
               <Search className="w-4 h-4 text-white/70" />
-              <input 
-                type="text" 
-                placeholder="Search patient, source, or text..." 
+              <input
+                type="text"
+                placeholder="Search patient, source, or text..."
                 value={searchTerm}
                 onChange={e => setSearchTerm(e.target.value)}
                 className="bg-transparent border-none outline-none text-xs text-white w-full placeholder:text-[#9CA3AF]"
               />
             </div>
-            
+
             <div className="flex gap-2">
               {(['All', 'EHR', 'Phone', 'Email'] as const).map((filter) => (
                 <button
                   key={filter}
                   onClick={() => setActiveFilter(filter)}
-                  className={`px-3 py-1.5 rounded-[10px] text-xs font-bold transition-all border cursor-pointer ${
-                    activeFilter === filter 
-                      ? 'bg-white/20 text-white border-white/40 shadow-md' 
-                      : 'bg-white/5 text-white/70 border-white/10 hover:bg-white/10'
-                  }`}
+                  className={`px-3 py-1.5 rounded-[10px] text-xs font-bold transition-all border cursor-pointer ${activeFilter === filter
+                    ? 'bg-white/20 text-white border-white/40 shadow-md'
+                    : 'bg-white/5 text-white/70 border-white/10 hover:bg-white/10'
+                    }`}
                 >
                   {filter}
                 </button>
@@ -412,7 +433,7 @@ export const SignalsDetailView: React.FC = () => {
                   filteredSignals.map((signal) => {
                     const isRisk = signal.risk_level === 'Critical' || signal.risk_level === 'High';
                     return (
-                      <tr 
+                      <tr
                         key={signal.id}
                         onClick={() => {
                           setSelectedSignal(signal);
@@ -421,9 +442,8 @@ export const SignalsDetailView: React.FC = () => {
                           setOutcomeState(null);
                           setResolutionState(null);
                         }}
-                        className={`border-b border-white/10 hover:bg-white/5 transition-all last:border-0 cursor-pointer ${
-                          selectedSignal?.id === signal.id ? 'bg-white/10 border-l-4 border-l-[#A78BFA]' : ''
-                        }`}
+                        className={`border-b border-white/10 hover:bg-white/5 transition-all last:border-0 cursor-pointer ${selectedSignal?.id === signal.id ? 'bg-white/10 border-l-4 border-l-[#A78BFA]' : ''
+                          }`}
                       >
                         <td className="py-4 px-2 font-mono text-[11px] text-[#2563EB]">{signal.id}</td>
                         <td className="py-4 px-2">
@@ -570,7 +590,6 @@ export const SignalsDetailView: React.FC = () => {
           </div>
         </div>
       </div>
-
       {/* Detail Inspection Modal */}
       {selectedSignal && createPortal(
         <div className="fixed inset-0 z-[1000] bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in">
@@ -595,8 +614,8 @@ export const SignalsDetailView: React.FC = () => {
                   <p className="text-[10px] text-white/70 font-extrabold uppercase tracking-widest mt-0.5">Source: {selectedSignal.source} Integration Layer</p>
                 </div>
               </div>
-              <button 
-                onClick={() => setSelectedSignal(null)} 
+              <button
+                onClick={() => setSelectedSignal(null)}
                 className="w-8 h-8 rounded-full hover:bg-white/10 flex items-center justify-center transition-colors cursor-pointer text-white/60 hover:text-white"
               >
                 <X className="w-4 h-4" />
@@ -624,7 +643,7 @@ export const SignalsDetailView: React.FC = () => {
                     <p className="text-xs text-white/90 font-semibold"><span className="text-white/50">Problem:</span> {selectedSignal.problem || 'None'}</p>
                     <p className="text-xs text-white/90 font-semibold"><span className="text-white/50">Reason:</span> {selectedSignal.reason || 'None'}</p>
                   </div>
-                  
+
                   {selectedSignal.recommended_action && (
                     <div className="mt-2.5 p-2 bg-emerald-500/10 border border-emerald-500/30 rounded-2xl inline-block text-[11px] text-emerald-400 font-bold w-full">
                       Action: {selectedSignal.recommended_action}
@@ -650,12 +669,6 @@ export const SignalsDetailView: React.FC = () => {
                       <p className="text-xs font-bold text-white">{selectedSignal.secondary_context || 'Unknown'}</p>
                     </div>
                     <div>
-                      <p className="text-[10px] text-white/50 uppercase tracking-widest font-bold">Verification Level</p>
-                      <p className={`text-xs font-bold ${selectedSignal.context_confidence === 'High' ? 'text-emerald-400' : 'text-amber-400'}`}>
-                        {selectedSignal.context_confidence === 'High' ? 'Verified' : 'Pending'}
-                      </p>
-                    </div>
-                    <div>
                       <p className="text-[10px] text-white/50 uppercase tracking-widest font-bold">Reasoning</p>
                       <p className="text-[11px] font-semibold text-white/70 leading-snug">{selectedSignal.context_reason || 'N/A'}</p>
                     </div>
@@ -677,10 +690,6 @@ export const SignalsDetailView: React.FC = () => {
                     <div>
                       <p className="text-[10px] text-amber-500/50 uppercase tracking-widest font-bold">Financial Exposure</p>
                       <p className="text-lg font-black text-amber-400">{selectedSignal.estimated_financial_exposure || '$0.00'}</p>
-                    </div>
-                    <div>
-                      <p className="text-[10px] text-amber-500/50 uppercase tracking-widest font-bold">Action Readiness</p>
-                      <p className="text-xs font-bold text-amber-300">{selectedSignal.revenue_confidence === 'High' ? 'Ready' : 'Requires Review'}</p>
                     </div>
                     <div>
                       <p className="text-[10px] text-amber-500/50 uppercase tracking-widest font-bold">Operational Dependency</p>
@@ -721,34 +730,31 @@ export const SignalsDetailView: React.FC = () => {
                   <h5 className="text-[10px] font-extrabold text-white/50 uppercase tracking-widest">
                     {viewMode === 'doctor' ? 'SYSTEM STATUS (CLINICAL VIEW)' : viewMode === 'inspector' ? 'EVIDENCE & LOGIC INSPECTOR (SESR-001/003)' : 'RAW SYSTEM LOGS (DEVELOPER VIEW)'}
                   </h5>
-                  
+
                   <div className="flex flex-wrap items-center gap-2 sm:gap-3 w-full md:w-auto">
                     {/* View Mode Toggle */}
                     <div className="bg-white/5 p-0.5 rounded-[8px] flex items-center border border-white/10">
-                      <button 
+                      <button
                         onClick={() => setViewMode('doctor')}
-                        className={`text-[9px] font-black px-2 py-1 rounded-[6px] transition-all cursor-pointer ${
-                          viewMode === 'doctor' ? 'bg-white/20 text-white shadow-sm' : 'text-white/50 hover:text-white'
-                        }`}
+                        className={`text-[9px] font-black px-2 py-1 rounded-[6px] transition-all cursor-pointer ${viewMode === 'doctor' ? 'bg-white/20 text-white shadow-sm' : 'text-white/50 hover:text-white'
+                          }`}
                       >
                         Clinical
                       </button>
-                      
+
                       {!isProd && (
                         <>
-                          <button 
+                          <button
                             onClick={() => setViewMode('inspector')}
-                            className={`text-[9px] font-black px-2 py-1 rounded-[6px] transition-all cursor-pointer ${
-                              viewMode === 'inspector' ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30 shadow-sm' : 'text-white/50 hover:text-white'
-                            }`}
+                            className={`text-[9px] font-black px-2 py-1 rounded-[6px] transition-all cursor-pointer ${viewMode === 'inspector' ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30 shadow-sm' : 'text-white/50 hover:text-white'
+                              }`}
                           >
                             Evidence Inspector
                           </button>
-                          <button 
+                          <button
                             onClick={() => setViewMode('developer')}
-                            className={`text-[9px] font-black px-2 py-1 rounded-[6px] transition-all cursor-pointer ${
-                              viewMode === 'developer' ? 'bg-white/20 text-white shadow-sm' : 'text-white/50 hover:text-white'
-                            }`}
+                            className={`text-[9px] font-black px-2 py-1 rounded-[6px] transition-all cursor-pointer ${viewMode === 'developer' ? 'bg-white/20 text-white shadow-sm' : 'text-white/50 hover:text-white'
+                              }`}
                           >
                             JSON Payload
                           </button>
@@ -756,7 +762,7 @@ export const SignalsDetailView: React.FC = () => {
                       )}
                     </div>
 
-                    <button 
+                    <button
                       onClick={() => handleCopyId(selectedSignal.id)}
                       className="text-[10px] font-extrabold text-[#A78BFA] hover:underline flex items-center gap-1 cursor-pointer"
                     >
@@ -772,7 +778,6 @@ export const SignalsDetailView: React.FC = () => {
                     </button>
                   </div>
                 </div>
-
                 {viewMode === 'doctor' ? (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-white/5 border border-white/10 rounded-[20px] p-5">
                     <div className="space-y-1">
@@ -827,7 +832,7 @@ export const SignalsDetailView: React.FC = () => {
 
             {/* Modal Footer */}
             <div className="px-6 py-4 bg-white/5 border-t border-white/10 flex items-center justify-between shrink-0">
-              <button 
+              <button
                 onClick={() => setSelectedSignal(null)}
                 className="bg-white/5 border border-white/10 hover:bg-white/5 text-white/80 font-bold text-xs px-4 py-2.5 rounded-[16px] premium-shadow cursor-pointer transition-colors"
               >
@@ -838,15 +843,14 @@ export const SignalsDetailView: React.FC = () => {
                 <button
                   onClick={triggerAction}
                   disabled={isDispatching || isDispatched || selectedSignal.status === 'expired' || selectedSignal.status === 'superseded'}
-                  className={`flex items-center gap-2 font-bold text-xs px-5 py-2.5 rounded-[16px] premium-shadow transition-all ${
-                    isDispatched 
-                      ? 'bg-emerald-600 text-white cursor-default' 
-                      : (selectedSignal.status === 'expired' || selectedSignal.status === 'superseded')
-                        ? 'bg-[#120524] text-white/50 cursor-not-allowed border border-white/10'
-                        : isDispatching 
-                          ? 'bg-[#120524] text-white opacity-50 cursor-wait' 
-                          : 'bg-emerald-600 hover:bg-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.4)] text-white cursor-pointer hover:scale-105 active:scale-95'
-                  }`}
+                  className={`flex items-center gap-2 font-bold text-xs px-5 py-2.5 rounded-[16px] premium-shadow transition-all ${isDispatched
+                    ? 'bg-emerald-600 text-white cursor-default'
+                    : (selectedSignal.status === 'expired' || selectedSignal.status === 'superseded')
+                      ? 'bg-[#120524] text-white/50 cursor-not-allowed border border-white/10'
+                      : isDispatching
+                        ? 'bg-[#120524] text-white opacity-50 cursor-wait'
+                        : 'bg-emerald-600 hover:bg-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.4)] text-white cursor-pointer hover:scale-105 active:scale-95'
+                    }`}
                 >
                   {isDispatched ? (
                     <>

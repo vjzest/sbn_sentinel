@@ -6,7 +6,8 @@ from uuid import UUID
 from app.db.database import SessionLocal
 from app.models.governance_storage import (
     RecommendationModel, HumanDecisionModel,
-    OperationalActionModel, ExecutionAttemptModel, OperationalOutcomeModel
+    OperationalActionModel, ExecutionAttemptModel, OperationalOutcomeModel,
+    RuleEvaluationModel
 )
 import logging
 
@@ -384,23 +385,11 @@ class GovernanceRegistry:
             '_execution_attempts': self._execution_attempts,
             '_operational_outcomes': self._operational_outcomes,
         }
-
         db = SessionLocal()
         try:
-            state_str = dumps(state)
-            record = db.query(GovernanceStorageModel).filter(
-                GovernanceStorageModel.id == "singleton").first()
-            if record:
-                record.state_json = state_str
-            else:
-                record = GovernanceStorageModel(id="singleton", state_json=state_str)
-                db.add(record)
-            db.commit()
-        except Exception as e:
-            db.rollback()
-            logger.error(f"[GovernanceRegistry] Failed to save registry to DB: {e}")
-            from app.core.exceptions import PersistenceError
-            raise PersistenceError("Database connection failed during Governance Registry commit.")
+            # Issue #3: Legacy JSON dual-write is completely removed.
+            # State is now 100% relational only.
+            pass
         finally:
             db.close()
 
@@ -414,7 +403,30 @@ class GovernanceRegistry:
 
     def record_evaluation(self, record: RuleEvaluationRecord):
         self._evaluations.append(record)
-        self._save()
+        
+        db = SessionLocal()
+        try:
+            import json
+            db.add(RuleEvaluationModel(
+                evaluation_id=record.evaluation_id,
+                decision_context_id=record.decision_context_id,
+                policy_id=record.policy_id,
+                policy_version=record.policy_version,
+                rule_id=record.rule_id,
+                rule_version=record.rule_version,
+                result=record.result,
+                evaluation_timestamp=record.evaluation_timestamp.isoformat(),
+                input_values_json=json.dumps(record.input_values),
+                journey_id=record.journey_id
+            ))
+            db.commit()
+        except Exception as e:
+            db.rollback()
+            logger.error(f"DB Error saving rule evaluation: {e}")
+            raise
+        finally:
+            db.close()
+            
         logger.debug(
             f"[GovernanceRegistry] Recorded evaluation {record.evaluation_id} -> {record.result}")
 
@@ -423,16 +435,15 @@ class GovernanceRegistry:
         self._save()
 
     def record_recommendation(self, record: RecommendationRecord):
-
         self._recommendations.append(record)
-        self._save()
+        
+        db = SessionLocal()
         try:
-            db = SessionLocal()
             db.add(RecommendationModel(
                 recommendation_id=record.recommendation_id,
                 decision_context_id=record.decision_context_id,
                 rule_evaluation_id=record.rule_evaluation_id,
-                journey_id=record.journey_id or "UNKNOWN",
+                journey_id=record.journey_id, # Issue #3: Removed "UNKNOWN" fallback
                 mapping_id=record.mapping_id,
                 mapping_version=record.mapping_version,
                 content=record.recommendation_content,
@@ -441,11 +452,13 @@ class GovernanceRegistry:
                 generated_at=record.generated_at.isoformat()
             ))
             db.commit()
-            db.close()
         except Exception as e:
+            db.rollback()
             logger.error(f"DB Error saving recommendation: {e}")
-            if 'db' in locals():
-                db.close()
+            raise # Issue #3: Abort, do not swallow error
+        finally:
+            db.close()
+            
         logger.debug(f"[GovernanceRegistry] Recorded recommendation {record.recommendation_id}")
 
     def get_recommendation(self, recommendation_id: str) -> Optional[RecommendationRecord]:
@@ -462,26 +475,27 @@ class GovernanceRegistry:
         return self._authority_configs.get(role)
 
     def record_human_decision(self, decision: HumanDecisionRecord):
-
         self._human_decisions.append(decision)
-        self._save()
+        
+        db = SessionLocal()
         try:
-            db = SessionLocal()
             db.add(HumanDecisionModel(
                 decision_id=decision.decision_id,
                 recommendation_id=decision.recommendation_id,
-                journey_id=decision.journey_id or "UNKNOWN",
+                journey_id=decision.journey_id, # Issue #3: Removed "UNKNOWN" fallback
                 actor_id=decision.actor_id,
                 decision_type=decision.decision_type.value,
                 status=decision.status.value,
                 decision_timestamp=decision.decision_timestamp.isoformat()
             ))
             db.commit()
-            db.close()
         except Exception as e:
+            db.rollback()
             logger.error(f"DB Error saving decision: {e}")
-            if 'db' in locals():
-                db.close()
+            raise # Issue #3: Abort
+        finally:
+            db.close()
+            
         logger.debug(
             f"[GovernanceRegistry] Recorded human decision {
                 decision.decision_id} by {
@@ -494,26 +508,27 @@ class GovernanceRegistry:
         return None
 
     def record_operational_action(self, action: OperationalActionRecord):
-
         self._operational_actions.append(action)
-        self._save()
+        
+        db = SessionLocal()
         try:
-            db = SessionLocal()
             db.add(OperationalActionModel(
                 action_id=action.action_id,
                 authorization_reference=action.authorization_reference,
-                journey_id=action.journey_id or "UNKNOWN",
+                journey_id=action.journey_id, # Issue #3: Removed "UNKNOWN" fallback
                 action_type=action.action_type.value,
                 target_reference=action.target_reference,
                 status=action.status.value,
                 created_at=action.created_at.isoformat()
             ))
             db.commit()
-            db.close()
         except Exception as e:
+            db.rollback()
             logger.error(f"DB Error saving action: {e}")
-            if 'db' in locals():
-                db.close()
+            raise # Issue #3: Abort
+        finally:
+            db.close()
+            
         logger.debug(f"[GovernanceRegistry] Recorded operational action {action.action_id}")
 
     def get_operational_action(self, action_id: str) -> Optional[OperationalActionRecord]:
@@ -538,24 +553,25 @@ class GovernanceRegistry:
         return None
 
     def record_execution_attempt(self, attempt: ExecutionAttemptRecord):
-
         self._execution_attempts.append(attempt)
-        self._save()
+        
+        db = SessionLocal()
         try:
-            db = SessionLocal()
             db.add(ExecutionAttemptModel(
                 attempt_id=attempt.attempt_id,
                 action_id=attempt.action_id,
-                journey_id=attempt.journey_id or "UNKNOWN",
+                journey_id=attempt.journey_id, # Issue #3: Removed "UNKNOWN" fallback
                 result=attempt.result.value,
                 attempt_timestamp=attempt.attempt_timestamp.isoformat()
             ))
             db.commit()
-            db.close()
         except Exception as e:
+            db.rollback()
             logger.error(f"DB Error saving attempt: {e}")
-            if 'db' in locals():
-                db.close()
+            raise # Issue #3: Abort
+        finally:
+            db.close()
+            
         logger.debug(
             f"[GovernanceRegistry] Recorded execution attempt {
                 attempt.attempt_id} for action {
@@ -565,25 +581,26 @@ class GovernanceRegistry:
         return [a for a in self._execution_attempts if a.action_id == action_id]
 
     def record_operational_outcome(self, outcome: OperationalOutcomeRecord):
-
         self._operational_outcomes.append(outcome)
-        self._save()
+        
+        db = SessionLocal()
         try:
-            db = SessionLocal()
             db.add(OperationalOutcomeModel(
                 outcome_id=outcome.outcome_id,
-                attempt_id=outcome.attempt_id,
-                journey_id=outcome.journey_id or "UNKNOWN",
-                operational_status=outcome.operational_status.value,
-                closure_status=outcome.closure_status.value,
-                timestamp=outcome.timestamp.isoformat()
+                action_id=outcome.action_id,
+                journey_id=outcome.journey_id, # Issue #3: Removed "UNKNOWN" fallback
+                confirmation_state=outcome.confirmation_state.value,
+                resolution_state=outcome.resolution_state.value,
+                created_at=outcome.created_at.isoformat()
             ))
             db.commit()
-            db.close()
         except Exception as e:
+            db.rollback()
             logger.error(f"DB Error saving outcome: {e}")
-            if 'db' in locals():
-                db.close()
+            raise # Issue #3: Abort
+        finally:
+            db.close()
+            
         logger.debug(f"[GovernanceRegistry] Recorded operational outcome {outcome.outcome_id}")
 
     def get_operational_outcome(self, outcome_id: str) -> Optional[OperationalOutcomeRecord]:
@@ -784,7 +801,7 @@ def initialize_registry_seeds():
         lifecycle_state=LifecycleState.ACTIVE,
         effective_from=datetime.utcnow() - timedelta(days=30),
         approval_state="APPROVED",
-        approved_by="USR-001"
+        approved_by="System Administrator"
     ))
 
     # 2. Event Type Authority Policy
@@ -795,7 +812,7 @@ def initialize_registry_seeds():
         lifecycle_state=LifecycleState.ACTIVE,
         effective_from=datetime.utcnow() - timedelta(days=30),
         approval_state="APPROVED",
-        approved_by="USR-001"
+        approved_by="System Administrator"
     ))
 
     # 3. Production Source Authority Policy (Item 18)
@@ -806,7 +823,7 @@ def initialize_registry_seeds():
         lifecycle_state=LifecycleState.ACTIVE,
         effective_from=datetime.utcnow() - timedelta(days=30),
         approval_state="APPROVED",
-        approved_by="USR-001"
+        approved_by="System Administrator"
     ))
 
     # 3. Clinic No-Show Rule
@@ -825,7 +842,7 @@ def initialize_registry_seeds():
         allowed_outputs=["CONDITION_MET", "CONDITION_NOT_MET", "NOT_EVALUABLE"],
         effective_from=datetime.utcnow() - timedelta(days=30),
         approval_state="APPROVED",
-        approved_by="USR-001"
+        approved_by="System Administrator"
     ))
 
     # 4. Clinic Wait Time Rule
@@ -843,7 +860,7 @@ def initialize_registry_seeds():
         allowed_outputs=["CONDITION_MET", "CONDITION_NOT_MET", "NOT_EVALUABLE"],
         effective_from=datetime.utcnow() - timedelta(days=30),
         approval_state="APPROVED",
-        approved_by="USR-001"
+        approved_by="System Administrator"
     ))
 
     # 5. System Blocked Rule (PF-Only)
@@ -860,7 +877,7 @@ def initialize_registry_seeds():
         allowed_outputs=["NOT_EVALUABLE", "BLOCKED"],
         effective_from=datetime.utcnow() - timedelta(days=30),
         approval_state="APPROVED",
-        approved_by="USR-001"
+        approved_by="System Administrator"
     ))
 
     # 6. Recommendation Mappings (SESR-004)

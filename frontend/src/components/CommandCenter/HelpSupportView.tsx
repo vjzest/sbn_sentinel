@@ -7,9 +7,9 @@ export const HelpSupportView: React.FC = () => {
 
   const allFaqs = [
     { q: 'How do I add a new Kareo billing integration?', a: 'Go to Administration > Connectors in the sidebar. Click "Add New Integration", select Kareo, and enter your API keys.' },
-    { q: 'Why is the AI recommendation not auto-filling the waitlist?', a: 'The AI requires a confidence score above 85% to auto-fill. Ensure patient preferences and schedule constraints match exactly.' },
-    { q: 'Can I export the patient flow data to a CSV?', a: 'Yes. Navigate to Operations > Patient Flow, and click the Export button in the top right corner.' },
-    { q: 'What is the required confidence score for automated actions?', a: 'By default, automated dispatch (Autopilot) requires a minimum confidence score of 90%. This can be changed in Preferences.' },
+    { q: 'Why is the AI recommendation not auto-filling the waitlist?', a: 'The action requires a SUFFICIENT validation score to auto-fill. Ensure patient preferences and schedule constraints match exactly.' },
+    { q: 'Can I export the patient flow data to a CSV?', a: 'Yes, navigate to the Patient Flow view and click the Export button in the top right corner. The data will be downloaded as a CSV file.' },
+    { q: 'What is the required validation status for automated actions?', a: 'By default, automated dispatch (Autopilot) requires a SUFFICIENT validation score. This can be changed in Preferences.' },
     { q: 'How do I reset a staff member password?', a: 'Go to Administration > User Management, click on the user profile, and select "Send Password Reset Link".' },
     { q: 'Where can I find the API documentation for custom webhooks?', a: 'Click the "API Reference" card on this page to view full documentation and webhook payload schemas.' }
   ];
