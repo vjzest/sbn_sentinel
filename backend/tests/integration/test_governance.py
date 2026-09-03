@@ -11,10 +11,46 @@ def test_a024_session_invalidation():
     """
     A-024: Test that a suspended user or stale token cannot access endpoints.
     """
-    headers = {"Authorization": "Bearer stale.token.here"}
-    response = client.get("/api/v1/clinics", headers=headers)
-    assert response.status_code in [
-        401, 403], f"Expected 401/403 for stale token, got {response.status_code}"
+    from app.db.database import SessionLocal
+    from app.models.user import User, UserRole
+    from app.core.security import get_password_hash
+    import uuid
+
+    db = SessionLocal()
+    test_email = f"e2e_{uuid.uuid4().hex[:6]}@sbnsentinel.com"
+    user = User(
+        email=test_email,
+        hashed_password=get_password_hash("Test@123"),
+        full_name="Suspension Test",
+        role=UserRole.SYSTEM_ADMINISTRATOR.value,
+        is_active=True
+    )
+    db.add(user)
+    db.commit()
+
+    try:
+        # 1. Login
+        res = client.post("/api/v1/auth/login", json={"email": test_email, "password": "Test@123"})
+        assert res.status_code == 200, "Login failed"
+        token = res.json()["access_token"]
+        headers = {"Authorization": f"Bearer {token}"}
+
+        # 2. Access Protected Route (Should Succeed)
+        clinics_res = client.get("/api/v1/clinics", headers=headers)
+        assert clinics_res.status_code == 200, "Protected route access failed"
+
+        # 3. Suspend User
+        user.is_active = False
+        db.commit()
+
+        # 4. Access Protected Route Again (Should Fail)
+        clinics_res_fail = client.get("/api/v1/clinics", headers=headers)
+        assert clinics_res_fail.status_code in [400, 401, 403], f"Expected 400/401/403 for suspended user, got {clinics_res_fail.status_code}"
+
+    finally:
+        db.delete(user)
+        db.commit()
+        db.close()
 
 
 @pytest.mark.governance

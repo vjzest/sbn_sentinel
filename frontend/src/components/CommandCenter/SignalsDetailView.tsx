@@ -21,7 +21,7 @@ export const SignalsDetailView: React.FC = () => {
   const [viewMode, setViewMode] = useState<'doctor' | 'developer' | 'inspector'>('doctor');
   const [outcomeState, setOutcomeState] = useState<'PENDING' | 'CONFIRMED' | 'BLOCKED' | null>(null);
   const [resolutionState, setResolutionState] = useState<'UNRESOLVED' | 'RESOLVED' | 'BLOCKED' | null>(null);
-  const [isProd, setIsProd] = useState(false);
+  const [isProd, setIsProd] = useState(true);
 
   // Combine redux state and db historical signals
   const fetchDbSignals = async () => {
@@ -56,15 +56,19 @@ export const SignalsDetailView: React.FC = () => {
     fetchDbSignals();
     fetchAuditLogs();
 
-    // Audit 3 Item 8: Demo State gating
+    // Audit 3 Item 8 / Audit 4 Item 6: Demo State gating
     fetchWithAuth(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/settings`)
       .then(res => res.json())
       .then(data => {
-        if (data.ENVIRONMENT === 'PRODUCTION' && !data.SYNTHETIC_TEST_ENABLED) {
-          setIsProd(true);
+        // Explicitly require opt-in to demo mode
+        if (data.ENVIRONMENT !== 'PRODUCTION' && data.SYNTHETIC_TEST_ENABLED) {
+          setIsProd(false);
         }
       })
-      .catch(() => { });
+      .catch(() => { 
+        // Fail open to safe (production) mode
+        setIsProd(true);
+      });
   }, [reduxSignals]);
 
   // Merge lists to guarantee uniqueness by ID, preferring newest
@@ -128,7 +132,7 @@ export const SignalsDetailView: React.FC = () => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          recommendation_id: selectedSignal.id,
+          recommendation_id: selectedSignal.metadata?.recommendation_id || selectedSignal.id,
           decision_type: 'APPROVED',
           reason: 'Clinician approved via UI'
         })
@@ -147,7 +151,7 @@ export const SignalsDetailView: React.FC = () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           decision_id: decisionId,
-          action_type: 'SCHEDULE_SYNC', // Or dynamic based on signal type
+          action_type: 'SEND_NOTIFICATION',
           target_reference: `SIGNAL-${selectedSignal.id}`,
           parameters: {}
         })
@@ -182,8 +186,10 @@ export const SignalsDetailView: React.FC = () => {
       } else {
         setOutcomeState('PENDING');
         setResolutionState('UNRESOLVED');
+        if (execRes.ok) {
+           dispatch(incrementActionsTaken());
+        }
       }
-      dispatch(incrementActionsTaken());
 
       // Add to Clinical Reminders in localStorage
       if (selectedSignal.recommended_action) {

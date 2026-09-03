@@ -352,20 +352,6 @@ class GovernanceRegistry:
             self._operational_outcomes: List[OperationalOutcomeRecord] = []
 
     def _load(self) -> Optional[dict]:
-        from app.db.database import SessionLocal
-        from app.models.governance_storage import GovernanceStorageModel
-        from app.core.json_utils import loads
-
-        db = SessionLocal()
-        try:
-            record = db.query(GovernanceStorageModel).filter(
-                GovernanceStorageModel.id == "singleton").first()
-            if record and record.state_json:
-                return loads(record.state_json)
-        except Exception as e:
-            logger.error(f"[GovernanceRegistry] Failed to load registry from DB: {e}")
-        finally:
-            db.close()
         return None
 
     def _save(self):
@@ -502,10 +488,28 @@ class GovernanceRegistry:
                 decision.actor_id}")
 
     def get_human_decision(self, decision_id: str) -> Optional[HumanDecisionRecord]:
-        for d in self._human_decisions:
-            if d.decision_id == decision_id:
-                return d
-        return None
+        from app.db.database import SessionLocal
+        from app.models.governance_storage import HumanDecisionModel
+        db = SessionLocal()
+        try:
+            db_record = db.query(HumanDecisionModel).filter(HumanDecisionModel.decision_id == decision_id).first()
+            if db_record:
+                return HumanDecisionRecord(
+                    decision_id=db_record.decision_id,
+                    recommendation_id=db_record.recommendation_id,
+                    actor_id=db_record.actor_id,
+                    decision_type=DecisionType(db_record.decision_type),
+                    authority_basis="Unknown", # Will be migrated fully later
+                    status=DecisionStatus(db_record.status),
+                    journey_id=db_record.journey_id
+                )
+            # Fallback to in-memory for testing if needed
+            for d in self._human_decisions:
+                if d.decision_id == decision_id:
+                    return d
+            return None
+        finally:
+            db.close()
 
     def record_operational_action(self, action: OperationalActionRecord):
         self._operational_actions.append(action)
@@ -532,25 +536,58 @@ class GovernanceRegistry:
         logger.debug(f"[GovernanceRegistry] Recorded operational action {action.action_id}")
 
     def get_operational_action(self, action_id: str) -> Optional[OperationalActionRecord]:
-        for a in self._operational_actions:
-            if a.action_id == action_id:
-                return a
-        return None
+        from app.db.database import SessionLocal
+        from app.models.governance_storage import OperationalActionModel
+        db = SessionLocal()
+        try:
+            db_record = db.query(OperationalActionModel).filter(OperationalActionModel.action_id == action_id).first()
+            if db_record:
+                return OperationalActionRecord(
+                    action_id=db_record.action_id,
+                    action_type=ActionType(db_record.action_type),
+                    target_reference=db_record.target_reference,
+                    authorization_reference=db_record.authorization_reference,
+                    parameters={},
+                    status=ActionStatus(db_record.status),
+                    current_result=ExecutionResult.NOT_ATTEMPTED,
+                    journey_id=db_record.journey_id
+                )
+            for a in self._operational_actions:
+                if a.action_id == action_id:
+                    return a
+            return None
+        finally:
+            db.close()
 
     def update_operational_action(
             self,
             action_id: str,
             new_status: ActionStatus,
             new_result: ExecutionResult):
-        for i, a in enumerate(self._operational_actions):
-            if a.action_id == action_id:
-                # Replace with new frozen dataclass instance
-                import dataclasses
-                updated = dataclasses.replace(a, status=new_status, current_result=new_result)
-                self._operational_actions[i] = updated
-                self._save()
-                return updated
-        return None
+            
+        # Update DB Model
+        from app.db.database import SessionLocal
+        from app.models.governance_storage import OperationalActionModel
+        db = SessionLocal()
+        try:
+            db_record = db.query(OperationalActionModel).filter(OperationalActionModel.action_id == action_id).first()
+            if db_record:
+                db_record.status = new_status.value
+                db.commit()
+                
+            # Also update in-memory cache for older tests
+            for i, a in enumerate(self._operational_actions):
+                if a.action_id == action_id:
+                    import dataclasses
+                    updated = dataclasses.replace(a, status=new_status, current_result=new_result)
+                    self._operational_actions[i] = updated
+                    return updated
+                    
+            if db_record:
+                return self.get_operational_action(action_id)
+            return None
+        finally:
+            db.close()
 
     def record_execution_attempt(self, attempt: ExecutionAttemptRecord):
         self._execution_attempts.append(attempt)
@@ -578,7 +615,23 @@ class GovernanceRegistry:
                 attempt.action_id}")
 
     def get_execution_attempts(self, action_id: str) -> List[ExecutionAttemptRecord]:
-        return [a for a in self._execution_attempts if a.action_id == action_id]
+        from app.db.database import SessionLocal
+        from app.models.governance_storage import ExecutionAttemptModel
+        db = SessionLocal()
+        try:
+            db_records = db.query(ExecutionAttemptModel).filter(ExecutionAttemptModel.action_id == action_id).all()
+            if db_records:
+                return [ExecutionAttemptRecord(
+                    attempt_id=r.attempt_id,
+                    action_id=r.action_id,
+                    attempt_number=1,
+                    connector="DB_LOADED",
+                    result=ExecutionResult(r.result),
+                    journey_id=r.journey_id
+                ) for r in db_records]
+            return [a for a in self._execution_attempts if a.action_id == action_id]
+        finally:
+            db.close()
 
     def record_operational_outcome(self, outcome: OperationalOutcomeRecord):
         self._operational_outcomes.append(outcome)

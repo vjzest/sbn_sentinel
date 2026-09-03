@@ -76,23 +76,49 @@ def verify_health(
 def readiness_gate(db: Session = Depends(get_db)):
     """
     Verifies that the backend is fully initialized and ready to serve traffic.
-    Checks DB connectivity.
+    Checks DB connectivity, governance rules, and configurations.
     """
-    status_dict = {"ready": False, "database": "Disconnected", "auth": "Unverified", "governance": "Uninitialized"}
+    status_dict = {
+        "ready": False,
+        "database": "Disconnected",
+        "auth": "Unverified",
+        "governance": "Uninitialized",
+        "config": "Unverified",
+        "pf_connector": "Uninitialized"
+    }
 
     try:
+        # 1. Database Check
         db.execute(text("SELECT 1"))
         status_dict["database"] = "Connected"
         status_dict["auth"] = "Verified"  # In V1 we assume if DB is up auth is reachable
         
-        # Check governance registry initialization
+        # 2. Governance Registry Check
         from app.services.governance_registry import governance_registry
         if governance_registry._policies or governance_registry._rules:
             status_dict["governance"] = "Initialized"
         else:
             status_dict["governance"] = "Warning: Empty"
             
-        status_dict["ready"] = True
+        # 3. Config Check
+        from app.core.config import settings
+        if settings.ENVIRONMENT:
+            status_dict["config"] = "Verified"
+            
+        # 4. Connector Check
+        from app.services.connector_manager import connector_manager
+        if hasattr(connector_manager, '_connector_registry') and len(connector_manager._connector_registry) > 0:
+            status_dict["pf_connector"] = "Initialized"
+        else:
+            status_dict["pf_connector"] = "Warning: No Connectors"
+
+        # Overall readiness requires all critical checks to pass
+        if (status_dict["database"] == "Connected" and 
+            status_dict["governance"] == "Initialized" and
+            status_dict["config"] == "Verified" and
+            status_dict["pf_connector"] == "Initialized"):
+            status_dict["ready"] = True
+            
     except Exception as e:
         status_dict["database"] = f"Failed: {str(e)}"
 
