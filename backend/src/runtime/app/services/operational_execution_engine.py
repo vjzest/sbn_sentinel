@@ -63,7 +63,7 @@ class OperationalExecutionEngine(BaseService):
             org_scope = initiator_scope.get("org_id")
             if org_scope and org_scope != "SYSTEM_GLOBAL":
                 from app.db.database import SessionLocal
-                from app.models.governance_storage import RecommendationModel
+                from app.models.governance_storage import RecommendationModel, RuleEvaluationModel
                 import json
                 
                 db = SessionLocal()
@@ -75,9 +75,16 @@ class OperationalExecutionEngine(BaseService):
                     if not rec:
                         return {"status": "ERROR", "message": "AUTHORIZATION_FAILURE: Orphaned decision."}
                     
-                    # Recommendation context carries the true evaluated context (including org_id)
-                    rec_content = json.loads(rec.content)
-                    true_org_id = rec_content.get("org_id") or rec_content.get("event", {}).get("org_id")
+                    # Instead of parsing prose recommendation text, go to the source of truth:
+                    # The rule evaluation inputs that triggered this recommendation.
+                    eval_record = db.query(RuleEvaluationModel).filter(
+                        RuleEvaluationModel.evaluation_id == rec.rule_evaluation_id).first()
+                        
+                    if not eval_record:
+                         return {"status": "ERROR", "message": "AUTHORIZATION_FAILURE: Missing evaluation context."}
+                         
+                    inputs = json.loads(eval_record.input_values_json) if eval_record.input_values_json else {}
+                    true_org_id = inputs.get("org_id") or inputs.get("event", {}).get("org_id")
                     
                     if not true_org_id or true_org_id != org_scope:
                         return {

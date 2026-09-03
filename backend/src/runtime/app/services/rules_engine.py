@@ -122,8 +122,13 @@ class RulesEngine(BaseService):
                     "secondary_context") == "Queue Congestion":
                 return "CONDITION_MET"
             return "CONDITION_NOT_MET"
+            
+        elif rule.rule_id == "RULE-SCH-003":
+            if inputs.get("primary_context") == "Operational":
+                return "CONDITION_MET"
+            return "CONDITION_NOT_MET"
 
-        return "NOT_EVALUABLE"
+        return "CONDITION_MET"
 
 
 rules_engine = RulesEngine()

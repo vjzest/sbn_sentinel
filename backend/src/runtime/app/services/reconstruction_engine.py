@@ -83,28 +83,15 @@ class ReconstructionEngine:
             import json
             inputs = json.loads(eval_record.input_values_json) if eval_record.input_values_json else {}
 
-            rule_result = "NOT_EVALUABLE"
-            if historical_rule.rule_id == "RULE-SCH-001":
-                if inputs.get("primary_context") == "Operational" and inputs.get(
-                        "secondary_context") == "Provider Schedule Gap":
-                    rule_result = "CONDITION_MET"
-                else:
-                    rule_result = "CONDITION_NOT_MET"
-            elif historical_rule.rule_id == "RULE-SCH-002":
-                if inputs.get("primary_context") == "Operational" and inputs.get(
-                        "secondary_context") == "Queue Congestion":
-                    rule_result = "CONDITION_MET"
-                else:
-                    rule_result = "CONDITION_NOT_MET"
-            elif historical_rule.rule_id == "RULE-SCH-003":
-                # Ensure the engine can run the rule logic based on inputs (simplified logic based on test/usage)
-                if inputs.get("primary_context") == "Operational":
-                    rule_result = "CONDITION_MET"
-                else:
-                    rule_result = "CONDITION_NOT_MET"
-            else:
-                # Default true for other mock rules, relying on the actual evaluation history
-                rule_result = "CONDITION_MET"
+            # Execute real rule engine logic dynamically, discarding the hardcoded stubs.
+            from app.services.rules_engine import rules_engine
+            
+            try:
+                # evaluate rule logic strictly with the historical inputs
+                rule_result = rules_engine._execute_rule_logic(historical_rule, inputs)
+            except Exception as e:
+                logger.error(f"Rule reproduction failed: {e}")
+                rule_result = "NOT_EVALUABLE"
 
             # 3b. Reproduce Recommendation
             reproduced_rec = {}
