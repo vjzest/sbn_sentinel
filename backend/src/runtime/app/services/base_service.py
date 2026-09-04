@@ -44,19 +44,14 @@ class BaseService(ABC):
 
         # SES-003: Observability (Log interaction start)
         logger.debug(
-            f"[SES-003] -> {
-                self.service_name} invoked by {
-                request.calling_module} | correlation_id={
-                request.correlation_id}")
+            f"[SES-003] -> {self.service_name} invoked by {request.calling_module} | correlation_id={request.correlation_id}")
 
         warnings = []
         try:
             # SES-003: Validate Target Service
             if request.target_service != self.service_name:
                 raise ValueError(
-                    f"Request routed to wrong service. Expected {
-                        self.service_name}, got {
-                        request.target_service}")
+                    f"Request routed to wrong service. Expected {self.service_name}, got {request.target_service}")
 
             # Execute actual business logic
             result = self._process(request.payload)

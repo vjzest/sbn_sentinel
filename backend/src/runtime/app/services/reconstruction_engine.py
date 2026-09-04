@@ -49,29 +49,27 @@ class ReconstructionEngine:
                 return ReproductionResult(
                     "NOT_REPRODUCIBLE", {}, {}, "RecommendationModel lacks historical bindings.")
 
-            # 2. Fetch Historical Logic Versions
-            historical_mapping = self.registry.get_recommendation_mapping_by_version(
-                record.mapping_id, record.mapping_version)
-            if not historical_mapping:
-                return ReproductionResult(
-                    "NOT_REPRODUCIBLE", {}, {}, f"Historical mapping {
-                        record.mapping_id} version {
-                        record.mapping_version} no longer exists in registry.")
-
-            historical_rule = self.registry.get_rule_by_version(
-                historical_mapping.applicable_rule_id, "V1")
-            if not historical_rule:
-                return ReproductionResult(
-                    "NOT_REPRODUCIBLE", {}, {}, "Historical rule no longer exists in registry.")
-
-            # 3. Deterministic Reconstruction
-            
             # Fetch real historical inputs used for the evaluation (Issue #6 Fix)
             eval_record = db.query(RuleEvaluationModel).filter(
                 RuleEvaluationModel.evaluation_id == record.rule_evaluation_id).first()
             if not eval_record:
                 return ReproductionResult(
                     "NOT_REPRODUCIBLE", {}, {}, "No RuleEvaluationModel found for recommendation.")
+
+            # 2. Fetch Historical Logic Versions
+            historical_mapping = self.registry.get_recommendation_mapping_by_version(
+                record.mapping_id, record.mapping_version)
+            if not historical_mapping:
+                return ReproductionResult(
+                    "NOT_REPRODUCIBLE", {}, {}, f"Historical mapping {record.mapping_id} version {record.mapping_version} no longer exists in registry.")
+
+            historical_rule = self.registry.get_rule_by_version(
+                eval_record.rule_id, eval_record.rule_version)
+            if not historical_rule:
+                return ReproductionResult(
+                    "NOT_REPRODUCIBLE", {}, {}, f"Historical rule {eval_record.rule_id} version {eval_record.rule_version} no longer exists in registry.")
+
+            # 3. Deterministic Reconstruction
 
             # 3a. Reproduce Rule Logic (isolated context)
             original_rec = {
@@ -85,7 +83,7 @@ class ReconstructionEngine:
 
             # Execute real rule engine logic dynamically, discarding the hardcoded stubs.
             from app.services.rules_engine import rules_engine
-            
+
             try:
                 # evaluate rule logic strictly with the historical inputs
                 rule_result = rules_engine._execute_rule_logic(historical_rule, inputs)

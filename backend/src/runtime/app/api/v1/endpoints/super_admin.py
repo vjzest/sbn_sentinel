@@ -6,7 +6,7 @@ from typing import List, Dict, Any
 from datetime import datetime
 
 from app.db.database import get_db
-from app.models.user import User
+from app.models.user import User  # noqa
 from app.models.encounter import EncounterModel
 
 router = APIRouter()

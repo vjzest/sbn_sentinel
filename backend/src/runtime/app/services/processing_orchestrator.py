@@ -325,9 +325,7 @@ class ProcessingOrchestrator:
 
             db.commit()
             self.logger.debug(
-                f"[L4] DCE resolved context for event {
-                    event.id}: {
-                    event.decision_context.primary_context}")
+                f"[L4] DCE resolved context for event {event.id}: {event.decision_context.primary_context}")
             return event
         except Exception as e:
             return self._fail_event(event, db, layer="L4-Context", error=e)
@@ -370,9 +368,7 @@ class ProcessingOrchestrator:
 
             db.commit()
             self.logger.debug(
-                f"[L5] Policy Engine completed for event {
-                    event.id}. Permitted: {
-                    event.policy_result.get('is_permitted')}")
+                f"[L5] Policy Engine completed for event {event.id}. Permitted: {event.policy_result.get('is_permitted')}")
             return event
         except Exception as e:
             return self._fail_event(event, db, layer="L5-Policy", error=e)
@@ -428,9 +424,7 @@ class ProcessingOrchestrator:
 
             db.commit()
             self.logger.debug(
-                f"[L6] Rules Engine evaluated event {
-                    event.id} -> finding: {
-                    event.rule_findings[0].rule_id if event.rule_findings else 'Unknown'}")
+                f"[L6] Rules Engine evaluated event {event.id} -> finding: {event.rule_findings[0].rule_id if event.rule_findings else 'Unknown'}")
             return event
 
         except Exception as e:
@@ -526,7 +520,7 @@ class ProcessingOrchestrator:
                 try:
                     data_audit_engine.log_failure_event(
                         user_system="system@sentinel.local",
-                        module=f"ProcessingOrchestrator:L8-Revenue",
+                        module="ProcessingOrchestrator:L8-Revenue",
                         correlation_id=event.id,
                         error_category="Business Rule Error",
                         severity="Warning",
@@ -534,7 +528,7 @@ class ProcessingOrchestrator:
                         recovery_outcome="Degraded",
                         resolution_status="Operational Intel preserved, Revenue Intel skipped."
                     )
-                except Exception as e_audit:
+                except Exception as e_audit:  # noqa
                     pass
                 return event
 
@@ -553,8 +547,7 @@ class ProcessingOrchestrator:
 
         except Exception as e:
             self.logger.warning(
-                f"[L8] Revenue Intelligence Engine exception. Applying Graceful Degradation. Error: {
-                    str(e)}")
+                f"[L8] Revenue Intelligence Engine exception. Applying Graceful Degradation. Error: {str(e)}")
             return event
 
     # ─────────────────────────────────────────────

@@ -133,13 +133,20 @@ def test_a021_historical_reconstruction():
 
     # Inject historical logic
     policy = PolicyVersion(policy_id=policy_id, version="V1", content="", lifecycle_state=LifecycleState.ACTIVE)
-    rule = RuleVersion(rule_id=rule_id, version="V1", logic_description="", lifecycle_state=LifecycleState.ACTIVE, inputs=[], allowed_outputs=[], governing_policy_id=policy_id, governing_policy_version="V1")
+    rule = RuleVersion(rule_id=rule_id, version="V1", logic_description="", lifecycle_state=LifecycleState.ACTIVE,
+                       inputs=[], allowed_outputs=[], governing_policy_id=policy_id, governing_policy_version="V1")
     mapping = RecommendationMapping(
-        mapping_id=mapping_id, version="V1", applicable_rule_id=rule_id, eligible_result="CONDITION_MET",
-        recommendation_template="Test Action", authority_requirement=AuthorityRequirement.INFORMATIONAL, priority="High", lifecycle_state=LifecycleState.ACTIVE,
-        business_impact_template=None, expected_outcome_template=None
-    )
-    
+        mapping_id=mapping_id,
+        version="V1",
+        applicable_rule_id=rule_id,
+        eligible_result="CONDITION_MET",
+        recommendation_template="Test Action",
+        authority_requirement=AuthorityRequirement.INFORMATIONAL,
+        priority="High",
+        lifecycle_state=LifecycleState.ACTIVE,
+        business_impact_template=None,
+        expected_outcome_template=None)
+
     governance_registry.register_policy(policy)
     governance_registry.register_rule(rule)
     governance_registry.register_recommendation_mapping(mapping)
@@ -215,7 +222,7 @@ def test_e2e_authentic_journey():
     headers = {"Authorization": f"Bearer {token}"}
 
     # 2. Check Readiness Gate
-    ready_res = client.get("/api/v1/health/ready")
+    ready_res = client.get("/api/v1/health/ready", headers=headers)
     assert ready_res.status_code == 200, f"Readiness gate failed: {ready_res.text}"
 
     # 3. Access Protected Route

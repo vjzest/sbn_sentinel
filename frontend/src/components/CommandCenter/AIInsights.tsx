@@ -4,6 +4,7 @@ import { BrainCircuit, TrendingDown, TrendingUp, CheckCircle2, ChevronRight, Loa
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '@/store';
 import { incrementActionsTaken } from '@/store/slices/signalSlice';
+import { executeGovernedRecommendation } from '@/utils/governance';
 
 export const AIInsights: React.FC = () => {
   const [actionStatus, setActionStatus] = useState<'pending' | 'approved' | 'dismissed' | 'blocked' | 'error'>('pending');
@@ -29,66 +30,18 @@ export const AIInsights: React.FC = () => {
   const handleApprove = async () => {
     if (!latestInsightSignal) return;
     setActionStatus('pending');
-    dispatch(incrementActionsTaken());
     
     try {
-      // Step 1: Record Human Decision
-      const decisionRes = await fetchWithAuth(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/decisions`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          recommendation_id: latestInsightSignal.id, // Using signal ID assuming it maps to recommendation
-          decision_type: "APPROVED"
-        })
-      });
+      const result = await executeGovernedRecommendation(
+        latestInsightSignal.id, // Using signal ID assuming it maps to recommendation
+        "UPDATE_OPERATIONAL_STATUS", // Supported action type
+        `SIGNAL-${latestInsightSignal.id}`
+      );
       
-      const decisionData = await decisionRes.json();
-      if (!decisionRes.ok) {
-         setActionStatus('error');
-         return;
-      }
+      setActionStatus(result.status);
       
-      const decisionId = decisionData.decision_id;
-
-      // Step 2: Create Action
-      const actionRes = await fetchWithAuth(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/actions`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          decision_id: decisionId,
-          action_type: "SCHEDULE_SYNC", // Replace with appropriate action type later if dynamic
-          target_reference: `SIGNAL-${latestInsightSignal.id}`,
-          parameters: {}
-        })
-      });
-
-      const actionData = await actionRes.json();
-      if (!actionRes.ok) {
-         setActionStatus('error');
-         return;
-      }
-
-      const actionId = actionData.action_id;
-
-      // Step 3: Execute Action
-      const execRes = await fetchWithAuth(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/actions/execute`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          action_id: actionId
-        })
-      });
-      
-      const execData = await execRes.json();
-      
-      if (!execRes.ok) {
-        if (execRes.status === 409 || execData.detail?.includes('blocked') || execData.detail?.includes('BLOCKED')) {
-          setActionStatus('blocked');
-        } else {
-          setActionStatus('error');
-        }
-      } else {
-        setActionStatus('approved');
+      if (result.status === 'approved') {
+        dispatch(incrementActionsTaken());
       }
       
     } catch (e) {

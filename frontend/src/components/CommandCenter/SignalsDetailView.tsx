@@ -5,6 +5,7 @@ import { Activity, Phone, Mail, Calendar, ChevronRight, X, Clock, Database, Spar
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '@/store';
 import { incrementActionsTaken, SignalEvent } from '@/store/slices/signalSlice';
+import { executeGovernedRecommendation } from '@/utils/governance';
 
 export const SignalsDetailView: React.FC = () => {
   const dispatch = useDispatch();
@@ -127,66 +128,26 @@ export const SignalsDetailView: React.FC = () => {
     setIsDispatching(true);
 
     try {
-      // Step 1: Decision
-      const decisionResponse = await fetchWithAuth(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/decisions`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          recommendation_id: selectedSignal.metadata?.recommendation_id || selectedSignal.id,
-          decision_type: 'APPROVED',
-          reason: 'Clinician approved via UI'
-        })
-      });
-
-      if (!decisionResponse.ok) {
-        throw new Error('Decision rejection');
-      }
+      const recommendationId = selectedSignal.metadata?.recommendation_id || selectedSignal.id;
       
-      const decisionData = await decisionResponse.json();
-      const decisionId = decisionData.decision_id;
-
-      // Step 2: Action Creation
-      const actionResponse = await fetchWithAuth(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/actions`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          decision_id: decisionId,
-          action_type: 'SEND_NOTIFICATION',
-          target_reference: `SIGNAL-${selectedSignal.id}`,
-          parameters: {}
-        })
-      });
-
-      if (!actionResponse.ok) {
-        throw new Error('Action creation rejection');
-      }
-      
-      const actionData = await actionResponse.json();
-      const actionId = actionData.action_id;
-
-      // Step 3: Execution
-      const execRes = await fetchWithAuth(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/actions/execute`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          action_id: actionId
-        })
-      });
-
-      const execData = await execRes.json();
+      const result = await executeGovernedRecommendation(
+        recommendationId,
+        'SEND_NOTIFICATION',
+        `SIGNAL-${selectedSignal.id}`
+      );
 
       await fetchAuditLogs();
 
       setIsDispatching(false);
       setIsDispatched(true);
 
-      if (!execRes.ok && (execRes.status === 409 || execData.detail?.includes('blocked') || execData.detail?.includes('BLOCKED'))) {
+      if (result.status === 'blocked') {
         setOutcomeState('BLOCKED' as any);
         setResolutionState('BLOCKED' as any);
       } else {
         setOutcomeState('PENDING');
         setResolutionState('UNRESOLVED');
-        if (execRes.ok) {
+        if (result.status === 'approved') {
            dispatch(incrementActionsTaken());
         }
       }

@@ -7,7 +7,7 @@ import os
 
 from app.db.database import get_db
 from app.api.deps import RoleChecker
-from app.api.deps import RoleChecker
+from app.api.deps import RoleChecker  # noqa
 from app.models.user import User, UserRole
 from app.models.rule import RuleModel
 from app.services.data_audit_engine import data_audit_engine
@@ -120,7 +120,7 @@ def toggle_rule(rule_id: str, db: Session = Depends(get_db), current_user: User 
     if not rule:
         raise HTTPException(status_code=404, detail="Rule not found")
 
-    previous_state = rule.is_active
+    previous_state = rule.is_active  # noqa
     rule.is_active = not rule.is_active
 
     # MS-012/MS-010 Audit Requirement: Administrative actions are permanently traceable

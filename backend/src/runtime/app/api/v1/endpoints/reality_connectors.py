@@ -69,8 +69,7 @@ async def connect_new_system(connector_in: ConnectorCreate, db: Session = Depend
     if existing:
         raise HTTPException(
             status_code=400,
-            detail=f"Connector with ID '{
-                connector_in.id}' already exists.")
+            detail=f"Connector with ID '{connector_in.id}' already exists.")
 
     # Live Verification for Practice Fusion
     if "Practice Fusion" in connector_in.name and connector_in.config and connector_in.config.get(
@@ -87,8 +86,7 @@ async def connect_new_system(connector_in: ConnectorCreate, db: Session = Depend
             # Prevent saving the connection if authentication fails
             raise HTTPException(
                 status_code=401,
-                detail=f"Invalid Practice Fusion Credentials: {
-                    str(e)}")
+                detail=f"Invalid Practice Fusion Credentials: {str(e)}")
 
     new_connector = ConnectorModel(
         id=connector_in.id,

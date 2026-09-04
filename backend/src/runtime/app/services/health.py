@@ -58,9 +58,6 @@ class HealthService:
             overall_state = HealthState.HEALTHY
 
         # Log material readiness change
-        logger.info(f"Readiness state evaluated: {overall_state.value}", extra={
-            "event": "READINESS_CHECK",
-            "state": overall_state.value
-        })
+        logger.info(f"Readiness state evaluated: {overall_state.value}", extra={"event": "READINESS_CHECK", "state": overall_state.value})
 
         return overall_state, components

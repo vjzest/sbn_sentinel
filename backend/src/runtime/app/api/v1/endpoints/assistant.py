@@ -43,7 +43,7 @@ async def chat_assistant(request: ChatRequest):
                 "patient flow status, and medical billing metrics to the user. "
                 "Do not perform calculations yourself. Sentinel's core engine does all calculations independently. "
                 "Instead, explain the current state using the context below.\n\n"
-                f"CURRENT SENTINEL STATE CONTEXT:\n"
+                "CURRENT SENTINEL STATE CONTEXT:\n"
                 f"- Checked-in Patients: {checked_in}\n"
                 f"- Currently in Consultation: {waiting}\n"
                 f"- Delayed Patients (Anomalies detected by Sentinel): {delayed}\n"
@@ -67,7 +67,7 @@ async def chat_assistant(request: ChatRequest):
             reply_text = completion.choices[0].message.content
             return ChatResponse(reply=reply_text, source="openai")
 
-        except Exception as e:
+        except Exception as e:  # noqa
             # Fallback to local assistant if OpenAI API call fails
             pass
 
@@ -75,15 +75,15 @@ async def chat_assistant(request: ChatRequest):
     reply_text = ""
     if "hi" in message or "hello" in message or "hey" in message:
         reply_text = (
-            f"Hello! I am the Sentinel AI assistant. I can explain the current clinical simulation state for you. "
+            "Hello! I am the Sentinel AI assistant. I can explain the current clinical simulation state for you. "
             f"Currently, Sentinel's core engine reports {checked_in} checked-in patients, "
             f"{waiting} in active consultation, and {delayed} delayed patients. How can I help you navigate these stats?"
         )
     elif "delay" in message or "anomaly" in message or "delayed" in message:
         reply_text = (
-            f"Sentinel's independent anomaly engine predicts {delayed} delayed cases today. "
+            "Sentinel's independent anomaly engine predicts {delayed} delayed cases today. "
             f"This calculation is based on average wait times (currently {ctx.get('avg_wait', '188m')}) "
-            f"and room utilization. You can review delayed patients directly in the Patient Flow queue."
+            "and room utilization. You can review delayed patients directly in the Patient Flow queue."
         )
     elif "checked" in message or "patient" in message or "flow" in message:
         reply_text = (
@@ -92,8 +92,8 @@ async def chat_assistant(request: ChatRequest):
         )
     elif "billing" in message or "insurance" in message or "log" in message:
         reply_text = (
-            f"The Revenue Intelligence subsystem has verified active coverage and auto-coded diagnostic ICD/CPT markers. "
-            f"Patient copays are processed independently of my conversational interface."
+            "The Revenue Intelligence subsystem has verified active coverage and auto-coded diagnostic ICD/CPT markers. "
+            "Patient copays are processed independently of my conversational interface."
         )
     elif "calculation" in message or "prediction" in message or "reasoning" in message:
         reply_text = (
@@ -104,7 +104,7 @@ async def chat_assistant(request: ChatRequest):
         reply_text = (
             f"I understand. Currently, Sentinel reports: {checked_in} Checked In, {waiting} In Consultation, "
             f"and {delayed} Delayed. You can select any patient to inspect their billing codes, insurance "
-            f"eligibility, and clinical SOAP notes. Let me know if you need any explanations!"
+            "eligibility, and clinical SOAP notes. Let me know if you need any explanations!"
         )
 
     return ChatResponse(reply=reply_text, source="local_heuristic")

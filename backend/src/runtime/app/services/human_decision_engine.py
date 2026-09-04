@@ -67,8 +67,7 @@ class HumanDecisionEngine(BaseService):
 
         if decision_type not in auth_config.allowed_decisions:
             logger.warning(
-                f"[HumanDecisionEngine] UNAUTHORIZED: Role {actor_role} cannot make decision {
-                    decision_type.value}.")
+                f"[HumanDecisionEngine] UNAUTHORIZED: Role {actor_role} cannot make decision {decision_type.value}.")
             return {"status": "ERROR", "message": "NOT AUTHORIZED FOR THIS DECISION TYPE."}
 
         is_override = decision_type == DecisionType.OVERRIDDEN
@@ -81,8 +80,7 @@ class HumanDecisionEngine(BaseService):
         if decision_type in auth_config.requires_reason_for and not reason:
             return {
                 "status": "ERROR",
-                "message": f"A reason is required for decision: {
-                    decision_type.value}"}
+                "message": f"A reason is required for decision: {decision_type.value}"}
 
         # 5. Idempotency / Concurrency Check (HDA-025, HDA-026)
         # Check if the recommendation already has an active CURRENT decision.
