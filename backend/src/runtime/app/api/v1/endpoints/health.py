@@ -4,6 +4,8 @@ from sqlalchemy import text
 from typing import Dict, Any
 
 from app.db.database import SessionLocal
+from app.api.deps import get_current_user
+from app.models.user import User
 
 router = APIRouter()
 
@@ -61,8 +63,7 @@ def verify_health(
         from app.services.rules_engine import rules_engine
         # Ensure rules engine is instantiated and cache variables exist
         if hasattr(rules_engine, '_cache_ttl_seconds'):
-            health_status["rules_engine_cache"] = f"Enabled (TTL: {
-                rules_engine._cache_ttl_seconds}s)"
+            health_status["rules_engine_cache"] = f"Enabled (TTL: {rules_engine._cache_ttl_seconds}s)"
         else:
             health_status["rules_engine_cache"] = "Warning: Cache disabled or uninitialized"
     except Exception as e:
@@ -73,7 +74,10 @@ def verify_health(
 
 
 @router.get("/ready", summary="Readiness Gate")
-def readiness_gate(db: Session = Depends(get_db)):
+def readiness_gate(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
     """
     Verifies that the backend is fully initialized and ready to serve traffic.
     Checks DB connectivity, governance rules, and configurations.
@@ -92,19 +96,19 @@ def readiness_gate(db: Session = Depends(get_db)):
         db.execute(text("SELECT 1"))
         status_dict["database"] = "Connected"
         status_dict["auth"] = "Verified"  # In V1 we assume if DB is up auth is reachable
-        
+
         # 2. Governance Registry Check
         from app.services.governance_registry import governance_registry
         if governance_registry._policies or governance_registry._rules:
             status_dict["governance"] = "Initialized"
         else:
             status_dict["governance"] = "Warning: Empty"
-            
+
         # 3. Config Check
         from app.core.config import settings
         if settings.ENVIRONMENT:
             status_dict["config"] = "Verified"
-            
+
         # 4. Connector Check
         from app.services.connector_manager import connector_manager
         if hasattr(connector_manager, '_connector_registry') and len(connector_manager._connector_registry) > 0:
@@ -113,12 +117,12 @@ def readiness_gate(db: Session = Depends(get_db)):
             status_dict["pf_connector"] = "Warning: No Connectors"
 
         # Overall readiness requires all critical checks to pass
-        if (status_dict["database"] == "Connected" and 
+        if (status_dict["database"] == "Connected" and
             status_dict["governance"] == "Initialized" and
             status_dict["config"] == "Verified" and
-            status_dict["pf_connector"] == "Initialized"):
+                status_dict["pf_connector"] == "Initialized"):
             status_dict["ready"] = True
-            
+
     except Exception as e:
         status_dict["database"] = f"Failed: {str(e)}"
 

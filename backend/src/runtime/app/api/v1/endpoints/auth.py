@@ -65,7 +65,7 @@ def register_user(user_in: RegisterVerifyRequest, db: Session = Depends(get_db))
         OTPModel.email == user_in.email,
         OTPModel.otp_code == user_in.otp,
         OTPModel.purpose == "signup",
-        OTPModel.is_used == False
+        OTPModel.is_used is False
     ).order_by(OTPModel.created_at.desc()).first()
 
     if not otp_record or datetime.utcnow() - otp_record.created_at > timedelta(minutes=settings.OTP_EXPIRE_MINUTES):
@@ -170,7 +170,7 @@ def reset_password(payload: ResetPasswordRequest, db: Session = Depends(get_db))
         OTPModel.email == payload.email,
         OTPModel.otp_code == payload.otp,
         OTPModel.purpose == "reset_password",
-        OTPModel.is_used == False
+        OTPModel.is_used is False
     ).order_by(OTPModel.created_at.desc()).first()
 
     if not otp_record or datetime.utcnow() - otp_record.created_at > timedelta(minutes=settings.OTP_EXPIRE_MINUTES):
@@ -193,7 +193,7 @@ def accept_invite(payload: ResetPasswordRequest, db: Session = Depends(get_db)):
         OTPModel.email == payload.email,
         OTPModel.otp_code == payload.otp,
         OTPModel.purpose == "invite",
-        OTPModel.is_used == False
+        OTPModel.is_used is False
     ).order_by(OTPModel.created_at.desc()).first()
 
     if not otp_record or datetime.utcnow() - otp_record.created_at > timedelta(minutes=settings.OTP_EXPIRE_MINUTES):

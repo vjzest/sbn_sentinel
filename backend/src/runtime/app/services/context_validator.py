@@ -34,8 +34,14 @@ class ContextValidator:
         context_package["evidence"]["freshness"] = freshness
 
         # 4. Context Quality Evaluation (Fix for Issue #9)
-        has_retrieval_failure = any(ev.get("retrieval_status") == "FAILED" if isinstance(ev, dict) else getattr(ev, "retrieval_status", None) == "FAILED" for ev in context_package["evidence"]["used"])
-        
+        has_retrieval_failure = any(
+            ev.get("retrieval_status") == "FAILED" if isinstance(
+                ev,
+                dict) else getattr(
+                ev,
+                "retrieval_status",
+                None) == "FAILED" for ev in context_package["evidence"]["used"])
+
         if len(missing) > 0 or len(conflicts) > 0 or freshness.get("is_stale") or has_retrieval_failure:
             context_package["governance"]["sufficiency_status"] = "INSUFFICIENT"
             # AIS-002: "Incomplete contexts should still be generated but clearly marked."

@@ -96,7 +96,7 @@ def list_events(
             default=50,
             le=200,
             description="Maximum events to return"),
-    state: Optional[str] = Query(
+    state: Optional[str] = Query(  # noqa
             default=None,
             description="Filter by state: Completed, Failed, Retrying, etc."),
         event_type: Optional[str] = Query(

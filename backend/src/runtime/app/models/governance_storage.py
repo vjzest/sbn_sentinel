@@ -56,6 +56,8 @@ class OperationalActionModel(Base):
     action_type = Column(String)
     target_reference = Column(String)
     status = Column(String)
+    current_result = Column(String)
+    parameters_json = Column(Text)
     created_at = Column(String)
 
 

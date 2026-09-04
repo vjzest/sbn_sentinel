@@ -29,7 +29,7 @@ class RevenueIntelligenceEngine(BaseService):
         rule_finding = payload.get("finding", {})
         if isinstance(rule_finding, list):
             rule_finding = rule_finding[0] if rule_finding else {}
-        dce_context = payload.get("context", {})
+        dce_context = payload.get("context", {})  # noqa
 
         rule_id = rule_finding.get("rule_id", "")
 

@@ -115,21 +115,12 @@ class ConformanceReport:
         lines = [
             sep,
             "  SESR-011 CONFORMANCE REPORT",
-            f"  Report ID  : {
-                self.report_id}",
-            f"  Scenario   : {
-                self.scenario_name}",
-            f"  Event ID   : {
-                self.event_id or 'N/A'}",
-            f"  Overall    : {
-                self.overall_status.value}",
-            f"  Checks     : {
-                self.passed_checks} passed / {
-                self.failed_checks} failed / {
-                self.skipped_checks} skipped (total: {
-                self.total_checks})",
-            f"  Generated  : {
-                self.generated_at.isoformat()}",
+            f"  Report ID  : {self.report_id}",
+            f"  Scenario   : {self.scenario_name}",
+            f"  Event ID   : {self.event_id or 'N/A'}",
+            f"  Overall    : {self.overall_status.value}",
+            f"  Checks     : {self.passed_checks} passed / {self.failed_checks} failed / {self.skipped_checks} skipped (total: {self.total_checks})",
+            f"  Generated  : {self.generated_at.isoformat()}",
             sep,
         ]
         for result in self.check_results:

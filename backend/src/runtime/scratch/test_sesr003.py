@@ -6,6 +6,7 @@ from app.services.governance_registry import (
 from app.services.policy_engine import policy_engine
 from app.services.rules_engine import rules_engine
 
+
 class TestSESR003(unittest.TestCase):
 
     def setUp(self):
@@ -79,7 +80,7 @@ class TestSESR003(unittest.TestCase):
             approval_state="PENDING"
         )
         governance_registry.register_policy(draft_pol)
-        
+
         # Evaluate now -> Should still pick V1
         now = datetime.utcnow()
         applicable = governance_registry.get_applicable_policies(now)
@@ -92,13 +93,13 @@ class TestSESR003(unittest.TestCase):
             "primary_context": "Operational"
             # Missing secondary_context
         }
-        
+
         # Mock policy pass
         class MockPolicyResult:
             is_permitted = True
-        
+
         res = rules_engine._process({"decision_context": dc, "policy_result": MockPolicyResult()})
-        
+
         findings = res.get("findings", [])
         self.assertEqual(len(findings), 1)
         self.assertEqual(findings[0]["result"], "NOT_EVALUABLE")
@@ -113,15 +114,16 @@ class TestSESR003(unittest.TestCase):
             "primary_context": "Operational",
             "secondary_context": "Provider Schedule Gap"
         }
-        
+
         class MockPolicyResult:
             is_permitted = True
-        
+
         res = rules_engine._process({"decision_context": dc, "policy_result": MockPolicyResult()})
-        
+
         findings = res.get("findings", [])
         self.assertEqual(len(findings), 1)
         self.assertEqual(findings[0]["result"], "CONDITION_MET")
+
 
 if __name__ == "__main__":
     unittest.main()

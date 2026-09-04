@@ -2,7 +2,7 @@ from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum
 from typing import Optional, List, Dict, Any
-from uuid import UUID
+from uuid import UUID  # noqa
 from app.db.database import SessionLocal
 from app.models.governance_storage import (
     RecommendationModel, HumanDecisionModel,
@@ -344,43 +344,15 @@ class GovernanceRegistry:
             self._rules: List[RuleVersion] = []
             self._evaluations: List[RuleEvaluationRecord] = []
             self._recommendation_mappings: List[RecommendationMapping] = []
-            self._recommendations: List[RecommendationRecord] = []
-            self._human_decisions: List[HumanDecisionRecord] = []
-            self._authority_configs: Dict[str, AuthorityConfiguration] = {}
-            self._operational_actions: List[OperationalActionRecord] = []
-            self._execution_attempts: List[ExecutionAttemptRecord] = []
-            self._operational_outcomes: List[OperationalOutcomeRecord] = []
+        pass
 
     def _load(self) -> Optional[dict]:
         return None
 
     def _save(self):
-        from app.db.database import SessionLocal
-        from app.models.governance_storage import GovernanceStorageModel
-        from app.core.json_utils import dumps
-
-        state = {
-            '_policies': self._policies,
-            '_rules': self._rules,
-            '_evaluations': self._evaluations,
-            '_recommendation_mappings': self._recommendation_mappings,
-            '_recommendations': self._recommendations,
-            '_human_decisions': self._human_decisions,
-            '_authority_configs': self._authority_configs,
-            '_operational_actions': self._operational_actions,
-            '_execution_attempts': self._execution_attempts,
-            '_operational_outcomes': self._operational_outcomes,
-        }
-        db = SessionLocal()
-        try:
-            # Issue #3: Legacy JSON dual-write is completely removed.
-            # State is now 100% relational only.
-            pass
-        finally:
-            db.close()
+        pass
 
     def register_policy(self, policy: PolicyVersion):
-        self._policies.append(policy)
         self._save()
 
     def register_rule(self, rule: RuleVersion):
@@ -389,7 +361,7 @@ class GovernanceRegistry:
 
     def record_evaluation(self, record: RuleEvaluationRecord):
         self._evaluations.append(record)
-        
+
         db = SessionLocal()
         try:
             import json
@@ -412,7 +384,7 @@ class GovernanceRegistry:
             raise
         finally:
             db.close()
-            
+
         logger.debug(
             f"[GovernanceRegistry] Recorded evaluation {record.evaluation_id} -> {record.result}")
 
@@ -422,14 +394,14 @@ class GovernanceRegistry:
 
     def record_recommendation(self, record: RecommendationRecord):
         self._recommendations.append(record)
-        
+
         db = SessionLocal()
         try:
             db.add(RecommendationModel(
                 recommendation_id=record.recommendation_id,
                 decision_context_id=record.decision_context_id,
                 rule_evaluation_id=record.rule_evaluation_id,
-                journey_id=record.journey_id, # Issue #3: Removed "UNKNOWN" fallback
+                journey_id=record.journey_id,  # Issue #3: Removed "UNKNOWN" fallback
                 mapping_id=record.mapping_id,
                 mapping_version=record.mapping_version,
                 content=record.recommendation_content,
@@ -441,17 +413,39 @@ class GovernanceRegistry:
         except Exception as e:
             db.rollback()
             logger.error(f"DB Error saving recommendation: {e}")
-            raise # Issue #3: Abort, do not swallow error
+            raise  # Issue #3: Abort, do not swallow error
         finally:
             db.close()
-            
+
         logger.debug(f"[GovernanceRegistry] Recorded recommendation {record.recommendation_id}")
 
     def get_recommendation(self, recommendation_id: str) -> Optional[RecommendationRecord]:
-        for r in self._recommendations:
-            if r.recommendation_id == recommendation_id:
-                return r
-        return None
+        from app.db.database import SessionLocal
+        from app.models.governance_storage import RecommendationModel
+        from dateutil.parser import parse
+        db = SessionLocal()
+        try:
+            db_record = db.query(RecommendationModel).filter(RecommendationModel.recommendation_id == recommendation_id).first()
+            if db_record:
+                return RecommendationRecord(
+                    recommendation_id=db_record.recommendation_id,
+                    mapping_id=db_record.mapping_id,
+                    mapping_version=db_record.mapping_version,
+                    decision_context_id=db_record.decision_context_id,
+                    rule_evaluation_id=db_record.rule_evaluation_id,
+                    recommendation_content=db_record.content,
+                    status=RecommendationStatus(db_record.status),
+                    authority_requirement=AuthorityRequirement.INFORMATIONAL,  # Migrated later
+                    priority=db_record.priority,
+                    generated_at=parse(db_record.generated_at),
+                    journey_id=db_record.journey_id
+                )
+            for r in self._recommendations:
+                if r.recommendation_id == recommendation_id:
+                    return r
+            return None
+        finally:
+            db.close()
 
     def register_authority_config(self, config: AuthorityConfiguration):
         self._authority_configs[config.role] = config
@@ -462,13 +456,13 @@ class GovernanceRegistry:
 
     def record_human_decision(self, decision: HumanDecisionRecord):
         self._human_decisions.append(decision)
-        
+
         db = SessionLocal()
         try:
             db.add(HumanDecisionModel(
                 decision_id=decision.decision_id,
                 recommendation_id=decision.recommendation_id,
-                journey_id=decision.journey_id, # Issue #3: Removed "UNKNOWN" fallback
+                journey_id=decision.journey_id,  # Issue #3: Removed "UNKNOWN" fallback
                 actor_id=decision.actor_id,
                 decision_type=decision.decision_type.value,
                 status=decision.status.value,
@@ -478,14 +472,12 @@ class GovernanceRegistry:
         except Exception as e:
             db.rollback()
             logger.error(f"DB Error saving decision: {e}")
-            raise # Issue #3: Abort
+            raise  # Issue #3: Abort
         finally:
             db.close()
-            
+
         logger.debug(
-            f"[GovernanceRegistry] Recorded human decision {
-                decision.decision_id} by {
-                decision.actor_id}")
+            f"[GovernanceRegistry] Recorded human decision {decision.decision_id} by {decision.actor_id}")
 
     def get_human_decision(self, decision_id: str) -> Optional[HumanDecisionRecord]:
         from app.db.database import SessionLocal
@@ -499,7 +491,7 @@ class GovernanceRegistry:
                     recommendation_id=db_record.recommendation_id,
                     actor_id=db_record.actor_id,
                     decision_type=DecisionType(db_record.decision_type),
-                    authority_basis="Unknown", # Will be migrated fully later
+                    authority_basis="Unknown",  # Will be migrated fully later
                     status=DecisionStatus(db_record.status),
                     journey_id=db_record.journey_id
                 )
@@ -513,26 +505,29 @@ class GovernanceRegistry:
 
     def record_operational_action(self, action: OperationalActionRecord):
         self._operational_actions.append(action)
-        
+
         db = SessionLocal()
         try:
+            import json
             db.add(OperationalActionModel(
                 action_id=action.action_id,
                 authorization_reference=action.authorization_reference,
-                journey_id=action.journey_id, # Issue #3: Removed "UNKNOWN" fallback
+                journey_id=action.journey_id,  # Issue #3: Removed "UNKNOWN" fallback
                 action_type=action.action_type.value,
                 target_reference=action.target_reference,
                 status=action.status.value,
+                current_result=action.current_result.value,
+                parameters_json=json.dumps(action.parameters),
                 created_at=action.created_at.isoformat()
             ))
             db.commit()
         except Exception as e:
             db.rollback()
             logger.error(f"DB Error saving action: {e}")
-            raise # Issue #3: Abort
+            raise  # Issue #3: Abort
         finally:
             db.close()
-            
+
         logger.debug(f"[GovernanceRegistry] Recorded operational action {action.action_id}")
 
     def get_operational_action(self, action_id: str) -> Optional[OperationalActionRecord]:
@@ -542,14 +537,16 @@ class GovernanceRegistry:
         try:
             db_record = db.query(OperationalActionModel).filter(OperationalActionModel.action_id == action_id).first()
             if db_record:
+                import json
+            
                 return OperationalActionRecord(
                     action_id=db_record.action_id,
                     action_type=ActionType(db_record.action_type),
                     target_reference=db_record.target_reference,
                     authorization_reference=db_record.authorization_reference,
-                    parameters={},
+                    parameters=json.loads(db_record.parameters_json) if getattr(db_record, "parameters_json", None) else {},
                     status=ActionStatus(db_record.status),
-                    current_result=ExecutionResult.NOT_ATTEMPTED,
+                    current_result=ExecutionResult(db_record.current_result) if getattr(db_record, "current_result", None) else ExecutionResult.NOT_ATTEMPTED,
                     journey_id=db_record.journey_id
                 )
             for a in self._operational_actions:
@@ -564,17 +561,18 @@ class GovernanceRegistry:
             action_id: str,
             new_status: ActionStatus,
             new_result: ExecutionResult):
-            
+
         # Update DB Model
         from app.db.database import SessionLocal
         from app.models.governance_storage import OperationalActionModel
         db = SessionLocal()
         try:
-            db_record = db.query(OperationalActionModel).filter(OperationalActionModel.action_id == action_id).first()
+            db_record = db.query(OperationalActionModel).filter(OperationalActionModel.action_id == action_id).with_for_update().first()
             if db_record:
                 db_record.status = new_status.value
+                db_record.current_result = new_result.value
                 db.commit()
-                
+
             # Also update in-memory cache for older tests
             for i, a in enumerate(self._operational_actions):
                 if a.action_id == action_id:
@@ -582,7 +580,7 @@ class GovernanceRegistry:
                     updated = dataclasses.replace(a, status=new_status, current_result=new_result)
                     self._operational_actions[i] = updated
                     return updated
-                    
+
             if db_record:
                 return self.get_operational_action(action_id)
             return None
@@ -591,13 +589,13 @@ class GovernanceRegistry:
 
     def record_execution_attempt(self, attempt: ExecutionAttemptRecord):
         self._execution_attempts.append(attempt)
-        
+
         db = SessionLocal()
         try:
             db.add(ExecutionAttemptModel(
                 attempt_id=attempt.attempt_id,
                 action_id=attempt.action_id,
-                journey_id=attempt.journey_id, # Issue #3: Removed "UNKNOWN" fallback
+                journey_id=attempt.journey_id,  # Issue #3: Removed "UNKNOWN" fallback
                 result=attempt.result.value,
                 attempt_timestamp=attempt.attempt_timestamp.isoformat()
             ))
@@ -605,14 +603,12 @@ class GovernanceRegistry:
         except Exception as e:
             db.rollback()
             logger.error(f"DB Error saving attempt: {e}")
-            raise # Issue #3: Abort
+            raise  # Issue #3: Abort
         finally:
             db.close()
-            
+
         logger.debug(
-            f"[GovernanceRegistry] Recorded execution attempt {
-                attempt.attempt_id} for action {
-                attempt.action_id}")
+            f"[GovernanceRegistry] Recorded execution attempt {attempt.attempt_id} for action {attempt.action_id}")
 
     def get_execution_attempts(self, action_id: str) -> List[ExecutionAttemptRecord]:
         from app.db.database import SessionLocal
@@ -635,13 +631,13 @@ class GovernanceRegistry:
 
     def record_operational_outcome(self, outcome: OperationalOutcomeRecord):
         self._operational_outcomes.append(outcome)
-        
+
         db = SessionLocal()
         try:
             db.add(OperationalOutcomeModel(
                 outcome_id=outcome.outcome_id,
                 action_id=outcome.action_id,
-                journey_id=outcome.journey_id, # Issue #3: Removed "UNKNOWN" fallback
+                journey_id=outcome.journey_id,  # Issue #3: Removed "UNKNOWN" fallback
                 confirmation_state=outcome.confirmation_state.value,
                 resolution_state=outcome.resolution_state.value,
                 created_at=outcome.created_at.isoformat()
@@ -650,24 +646,58 @@ class GovernanceRegistry:
         except Exception as e:
             db.rollback()
             logger.error(f"DB Error saving outcome: {e}")
-            raise # Issue #3: Abort
+            raise  # Issue #3: Abort
         finally:
             db.close()
-            
+
         logger.debug(f"[GovernanceRegistry] Recorded operational outcome {outcome.outcome_id}")
 
     def get_operational_outcome(self, outcome_id: str) -> Optional[OperationalOutcomeRecord]:
-        for o in self._operational_outcomes:
-            if o.outcome_id == outcome_id:
-                return o
-        return None
+        from app.db.database import SessionLocal
+        from app.models.governance_storage import OperationalOutcomeModel
+        db = SessionLocal()
+        try:
+            db_record = db.query(OperationalOutcomeModel).filter(OperationalOutcomeModel.outcome_id == outcome_id).first()
+            if db_record:
+                return OperationalOutcomeRecord(
+                    outcome_id=db_record.outcome_id,
+                    action_id=db_record.action_id,
+                    expected_outcome=None,
+                    observed_outcome=None,
+                    confirmation_state=OutcomeConfirmationState(db_record.confirmation_state),
+                    resolution_state=OutcomeResolutionState(db_record.resolution_state),
+                    journey_id=db_record.journey_id
+                )
+            for o in self._operational_outcomes:
+                if o.outcome_id == outcome_id:
+                    return o
+            return None
+        finally:
+            db.close()
 
     def get_operational_outcome_by_action(
             self, action_id: str) -> Optional[OperationalOutcomeRecord]:
-        for o in self._operational_outcomes:
-            if o.action_id == action_id:
-                return o
-        return None
+        from app.db.database import SessionLocal
+        from app.models.governance_storage import OperationalOutcomeModel
+        db = SessionLocal()
+        try:
+            db_record = db.query(OperationalOutcomeModel).filter(OperationalOutcomeModel.action_id == action_id).first()
+            if db_record:
+                return OperationalOutcomeRecord(
+                    outcome_id=db_record.outcome_id,
+                    action_id=db_record.action_id,
+                    expected_outcome=None,
+                    observed_outcome=None,
+                    confirmation_state=OutcomeConfirmationState(db_record.confirmation_state),
+                    resolution_state=OutcomeResolutionState(db_record.resolution_state),
+                    journey_id=db_record.journey_id
+                )
+            for o in self._operational_outcomes:
+                if o.action_id == action_id:
+                    return o
+            return None
+        finally:
+            db.close()
 
     # ======================================================
     # SESR-008: Continuity Validation
@@ -756,15 +786,31 @@ class GovernanceRegistry:
         from app.core.exceptions import PersistenceError
         if kwargs.pop("simulate_persistence_error", False):
             raise PersistenceError("Database connection failed during Operational Outcome commit.")
-
-        for i, o in enumerate(self._operational_outcomes):
-            if o.outcome_id == outcome_id:
-                import dataclasses
-                updated = dataclasses.replace(o, **kwargs)
-                self._operational_outcomes[i] = updated
-                self._save()
-                return updated
-        return None
+            
+        from app.db.database import SessionLocal
+        from app.models.governance_storage import OperationalOutcomeModel
+        db = SessionLocal()
+        try:
+            db_record = db.query(OperationalOutcomeModel).filter(OperationalOutcomeModel.outcome_id == outcome_id).with_for_update().first()
+            if db_record:
+                if "confirmation_state" in kwargs:
+                    db_record.confirmation_state = kwargs["confirmation_state"].value
+                if "resolution_state" in kwargs:
+                    db_record.resolution_state = kwargs["resolution_state"].value
+                db.commit()
+                
+            for i, o in enumerate(self._operational_outcomes):
+                if o.outcome_id == outcome_id:
+                    import dataclasses
+                    updated = dataclasses.replace(o, **kwargs)
+                    self._operational_outcomes[i] = updated
+                    return updated
+                    
+            if db_record:
+                return self.get_operational_outcome(outcome_id)
+            return None
+        finally:
+            db.close()
 
     def get_applicable_recommendation_mapping(
             self,

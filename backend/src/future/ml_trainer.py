@@ -1,3 +1,4 @@
+import json
 import os
 import joblib
 import pandas as pd
@@ -8,9 +9,11 @@ from sklearn.pipeline import Pipeline
 from sklearn.model_selection import train_test_split
 
 # Sample training data generation
+
+
 def generate_synthetic_data(num_samples=1000):
     data = []
-    
+
     templates = [
         {"text": "Patient {name} appointment marked as No-Show.", "priority": "High", "action": "Auto-send rescheduling SMS to patient.", "insight": "Revenue loss of $150."},
         {"text": "New appointment booked by {name}.", "priority": "Low", "action": "Prepare intake forms.", "insight": "High priority walk-in expected."},
@@ -23,32 +26,31 @@ def generate_synthetic_data(num_samples=1000):
         {"text": "Urgent consultation requested by {name}.", "priority": "Critical", "action": "Alert duty doctor immediately.", "insight": "Potential clinical emergency."},
         {"text": "Prescription refill requested for {name}.", "priority": "Medium", "action": "Send to pharmacy queue.", "insight": "Routine medication management."}
     ]
-    
+
     names = ["John", "Jane", "Alice", "Bob", "Michael", "Sarah", "David", "Emma"]
-    
+
     for _ in range(num_samples):
         template = random.choice(templates)
         name = random.choice(names)
         text = template["text"].format(name=name)
-        
+
         # Add some random noise to make the model generalize better
         noise = random.choice(["", " Please check.", " ASAP.", " Note this.", " Status pending."])
-        
+
         data.append({
             "text": text + noise,
             "priority": template["priority"],
             "action": template["action"],
             "insight": template["insight"]
         })
-        
+
     return pd.DataFrame(data)
 
-import json
 
 def train_and_save_models():
     print("Generating synthetic clinical data...")
     df_synthetic = generate_synthetic_data(2000)
-    
+
     # --- The Data Flywheel: Load real AI-verified recommendations ---
     real_data = []
     log_file = "local_training_data.jsonl"
@@ -62,7 +64,7 @@ def train_and_save_models():
                         real_data.append(point)
                 except Exception:
                     pass
-    
+
     if real_data:
         df_real = pd.DataFrame(real_data)
         df = pd.concat([df_synthetic, df_real], ignore_index=True)
@@ -70,14 +72,14 @@ def train_and_save_models():
     else:
         df = df_synthetic
         print("Training on synthetic dataset only.")
-    
+
     print("Training Priority Detection Model (Model 1)...")
     pipeline_priority = Pipeline([
         ('tfidf', TfidfVectorizer(ngram_range=(1, 2))),
         ('clf', RandomForestClassifier(n_estimators=100, random_state=42))
     ])
     pipeline_priority.fit(df['text'], df['priority'])
-    
+
     print("Training Action Recommendation Model (Model 2)...")
     pipeline_action = Pipeline([
         ('tfidf', TfidfVectorizer(ngram_range=(1, 2))),
@@ -91,14 +93,15 @@ def train_and_save_models():
         ('clf', RandomForestClassifier(n_estimators=100, random_state=42))
     ])
     pipeline_insight.fit(df['text'], df['insight'])
-    
+
     # Save the models
     os.makedirs('models', exist_ok=True)
     joblib.dump(pipeline_priority, 'models/priority_model.pkl')
     joblib.dump(pipeline_action, 'models/action_model.pkl')
     joblib.dump(pipeline_insight, 'models/insight_model.pkl')
-    
+
     print("Models trained and saved successfully in 'models/' directory!")
+
 
 if __name__ == "__main__":
     train_and_save_models()

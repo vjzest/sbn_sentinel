@@ -43,15 +43,13 @@ class OperationalExecutionEngine(BaseService):
         if decision.status != DecisionStatus.RECORDED:
             return {
                 "status": "ERROR",
-                "message": f"Decision is not in a valid state for action creation. Status: {
-                    decision.status.value}"}
+                "message": f"Decision is not in a valid state for action creation. Status: {decision.status.value}"}
 
         from app.services.governance_registry import DecisionType
         if decision.decision_type in [DecisionType.REJECTED, DecisionType.RETURNED_FOR_REVIEW]:
             return {
                 "status": "ERROR",
-                "message": f"Cannot create action for decision type: {
-                    decision.decision_type.value}"}
+                "message": f"Cannot create action for decision type: {decision.decision_type.value}"}
 
         try:
             action_type = ActionType(action_type_str.upper())
@@ -63,30 +61,27 @@ class OperationalExecutionEngine(BaseService):
             org_scope = initiator_scope.get("org_id")
             if org_scope and org_scope != "SYSTEM_GLOBAL":
                 from app.db.database import SessionLocal
-                from app.models.governance_storage import RecommendationModel, RuleEvaluationModel
-                import json
-                
+                from app.models.encounter import EncounterModel
+                from app.models.organization import OrganizationClinicModel
+
                 db = SessionLocal()
                 try:
-                    # Issue #2 Fix: Resolve true ownership from persisted DB record, NOT client parameters.
-                    rec = db.query(RecommendationModel).filter(
-                        RecommendationModel.recommendation_id == decision.recommendation_id).first()
+                    # Item 1: Resolve actual target ownership via target_reference
+                    true_org_id = None
                     
-                    if not rec:
-                        return {"status": "ERROR", "message": "AUTHORIZATION_FAILURE: Orphaned decision."}
+                    encounter = db.query(EncounterModel).filter(EncounterModel.id == target_reference).first()
+                    if encounter and encounter.clinic_id:
+                        org_clinic = db.query(OrganizationClinicModel).filter(OrganizationClinicModel.id == encounter.clinic_id).first()
+                        if org_clinic:
+                            true_org_id = org_clinic.organization_id
                     
-                    # Instead of parsing prose recommendation text, go to the source of truth:
-                    # The rule evaluation inputs that triggered this recommendation.
-                    eval_record = db.query(RuleEvaluationModel).filter(
-                        RuleEvaluationModel.evaluation_id == rec.rule_evaluation_id).first()
-                        
-                    if not eval_record:
-                         return {"status": "ERROR", "message": "AUTHORIZATION_FAILURE: Missing evaluation context."}
-                         
-                    inputs = json.loads(eval_record.input_values_json) if eval_record.input_values_json else {}
-                    true_org_id = inputs.get("org_id") or inputs.get("event", {}).get("org_id")
-                    
-                    if not true_org_id or true_org_id != org_scope:
+                    # If target is a clinic directly
+                    if not true_org_id:
+                        org_clinic = db.query(OrganizationClinicModel).filter(OrganizationClinicModel.id == target_reference).first()
+                        if org_clinic:
+                            true_org_id = org_clinic.organization_id
+
+                    if true_org_id and true_org_id != org_scope:
                         return {
                             "status": "ERROR",
                             "message": f"AUTHORIZATION_SCOPE_MISMATCH: Action target (true_org={true_org_id}) is outside user's governed scope ({org_scope})."}
@@ -132,8 +127,7 @@ class OperationalExecutionEngine(BaseService):
         if action.status not in [ActionStatus.CREATED, ActionStatus.READY, ActionStatus.FAILED]:
             return {
                 "eligible": False,
-                "reason": f"ACTION_NOT_READY (Current status: {
-                    action.status.value})"}
+                "reason": f"ACTION_NOT_READY (Current status: {action.status.value})"}
 
         if action.current_result in [ExecutionResult.SUCCESS, ExecutionResult.UNKNOWN]:
             return {"eligible": False, "reason": f"PREVIOUS_RESULT_{action.current_result.value}"}
@@ -147,8 +141,7 @@ class OperationalExecutionEngine(BaseService):
         if decision.status != DecisionStatus.RECORDED:
             return {
                 "eligible": False,
-                "reason": f"AUTHORIZATION_NOT_RECORDED (Status: {
-                    decision.status.value})"}
+                "reason": f"AUTHORIZATION_NOT_RECORDED (Status: {decision.status.value})"}
 
         # EXV-009: Action expiration
         if action.execute_by and datetime.utcnow() > action.execute_by:
