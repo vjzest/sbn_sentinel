@@ -5,7 +5,11 @@ from typing import Dict, Any
 
 from app.db.database import SessionLocal
 from app.api.deps import get_current_user
-from app.models.user import User
+from app.models.user import User, UserRole
+from fastapi import HTTPException
+import logging
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -35,15 +39,15 @@ def verify_health(
         "rules_engine_cache": "Unknown"
     }
 
-    # 1. Database Connectivity
+    # 1. DB Connectivity
     try:
         db.execute(text("SELECT 1"))
-        health_status["database"] = "Connected"
+        health_status["database"] = "Operational"
     except Exception as e:
         health_status["database"] = f"Failed: {str(e)}"
         health_status["status"] = "Degraded"
 
-    # 2. Connector Manager State
+    # 2. Connector Health State
     try:
         from app.services.connector_manager import connector_manager
         # In python a dict has length, verify the manager initialized the registry
@@ -80,54 +84,69 @@ def readiness_gate(
 ):
     """
     Verifies that the backend is fully initialized and ready to serve traffic.
-    Checks DB connectivity, governance rules, and configurations.
+    Positively proves active user session, effective role, org/clinic scope, DB,
+    governance registry, configuration, processing services, and Practice Fusion readiness.
     """
-    status_dict = {
-        "ready": False,
-        "database": "Disconnected",
-        "auth": "Unverified",
-        "governance": "Uninitialized",
-        "config": "Unverified",
-        "pf_connector": "Uninitialized"
+    # 1. Database Check
+    db_ok = False
+    try:
+        db.execute(text("SELECT 1"))
+        db_ok = True
+    except Exception as e:
+        logger.error(f"[Readiness] DB check failed: {e}")
+        db_ok = False
+
+    # 2. Session Check
+    session_ok = bool(current_user and getattr(current_user, "is_active", False))
+
+    # 3. Role Check
+    allowed_operational_roles = [
+        UserRole.SYSTEM_ADMINISTRATOR.value,
+        UserRole.ORGANIZATION_ADMINISTRATOR.value,
+        UserRole.CLINIC_MANAGER.value,
+        UserRole.FRONT_DESK.value,
+        UserRole.READ_ONLY_AUDITOR.value
+    ]
+    role_ok = bool(current_user and getattr(current_user, "role", None) in allowed_operational_roles)
+
+    # 4. Scope Check (System Admin has global scope; other roles require org_id)
+    if current_user and getattr(current_user, "role", None) == UserRole.SYSTEM_ADMINISTRATOR.value:
+        scope_ok = True
+    else:
+        scope_ok = bool(current_user and getattr(current_user, "org_id", None))
+
+    # 5. Governance Registry Check
+    from app.services.governance_registry import governance_registry
+    governance_ok = bool(governance_registry._policies or governance_registry._rules)
+
+    # 6. Configuration Check
+    from app.core.config import settings
+    config_ok = bool(getattr(settings, "ENVIRONMENT", None))
+
+    # 7. Practice Fusion Connector Readiness Check
+    from app.services.connector_manager import connector_manager
+    pf_ok = bool(connector_manager.is_ready("PRACTICE_FUSION"))
+
+    # 8. Processing Services Readiness Check
+    try:
+        from app.services.processing_orchestrator import processing_orchestrator
+        processing_ok = bool(processing_orchestrator is not None)
+    except Exception as e:
+        logger.error(f"[Readiness] Processing orchestrator check failed: {e}")
+        processing_ok = False
+
+    checks = {
+        "db": db_ok,
+        "session": session_ok,
+        "role": role_ok,
+        "scope": scope_ok,
+        "governance": governance_ok,
+        "config": config_ok,
+        "pf": pf_ok,
+        "processing": processing_ok
     }
 
-    try:
-        # 1. Database Check
-        db.execute(text("SELECT 1"))
-        status_dict["database"] = "Connected"
-        status_dict["auth"] = "Verified"  # In V1 we assume if DB is up auth is reachable
+    if not all(checks.values()):
+        raise HTTPException(status_code=503, detail={"ready": False, "checks": checks})
 
-        # 2. Governance Registry Check
-        from app.services.governance_registry import governance_registry
-        if governance_registry._policies or governance_registry._rules:
-            status_dict["governance"] = "Initialized"
-        else:
-            status_dict["governance"] = "Warning: Empty"
-
-        # 3. Config Check
-        from app.core.config import settings
-        if settings.ENVIRONMENT:
-            status_dict["config"] = "Verified"
-
-        # 4. Connector Check
-        from app.services.connector_manager import connector_manager
-        if hasattr(connector_manager, '_connector_registry') and len(connector_manager._connector_registry) > 0:
-            status_dict["pf_connector"] = "Initialized"
-        else:
-            status_dict["pf_connector"] = "Warning: No Connectors"
-
-        # Overall readiness requires all critical checks to pass
-        if (status_dict["database"] == "Connected" and
-            status_dict["governance"] == "Initialized" and
-            status_dict["config"] == "Verified" and
-                status_dict["pf_connector"] == "Initialized"):
-            status_dict["ready"] = True
-
-    except Exception as e:
-        status_dict["database"] = f"Failed: {str(e)}"
-
-    if not status_dict["ready"]:
-        from fastapi import HTTPException
-        raise HTTPException(status_code=503, detail=status_dict)
-
-    return status_dict
+    return {"ready": True, "checks": checks}

@@ -125,15 +125,25 @@ export const SignalsDetailView: React.FC = () => {
 
   const triggerAction = async () => {
     if (!selectedSignal) return;
+
+    // Fail closed: must carry an authoritative recommendation_id
+    const recommendationId = selectedSignal.metadata?.recommendation_id;
+    if (!recommendationId) {
+      setOutcomeState('BLOCKED' as any);
+      setResolutionState('BLOCKED' as any);
+      return;
+    }
+
     setIsDispatching(true);
 
     try {
-      const recommendationId = selectedSignal.metadata?.recommendation_id || selectedSignal.id;
-      
+      const allowedAction = selectedSignal.metadata?.allowed_action_type || 'SEND_NOTIFICATION';
+      const targetRef = selectedSignal.metadata?.target_reference || `SIGNAL-${selectedSignal.id}`;
+
       const result = await executeGovernedRecommendation(
         recommendationId,
-        'SEND_NOTIFICATION',
-        `SIGNAL-${selectedSignal.id}`
+        allowedAction,
+        targetRef
       );
 
       await fetchAuditLogs();

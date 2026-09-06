@@ -56,37 +56,65 @@ class OperationalExecutionEngine(BaseService):
         except ValueError:
             return {"status": "ERROR", "message": f"Invalid action type: {action_type_str}"}
 
-        # P0-05 / P0-06 / SESR-005: Trusted Scope Enforcement (Item 3)
+        # P0-05 / P0-06 / SESR-005: Trusted Scope Enforcement (Item 1)
         if initiator_scope:
-            org_scope = initiator_scope.get("org_id")
-            if org_scope and org_scope != "SYSTEM_GLOBAL":
-                from app.db.database import SessionLocal
-                from app.models.encounter import EncounterModel
-                from app.models.organization import OrganizationClinicModel
+            from app.db.database import SessionLocal
+            from app.models.encounter import EncounterModel
+            from app.models.organization import OrganizationClinicModel
 
-                db = SessionLocal()
-                try:
-                    # Item 1: Resolve actual target ownership via target_reference
-                    true_org_id = None
-                    
-                    encounter = db.query(EncounterModel).filter(EncounterModel.id == target_reference).first()
-                    if encounter and encounter.clinic_id:
-                        org_clinic = db.query(OrganizationClinicModel).filter(OrganizationClinicModel.id == encounter.clinic_id).first()
-                        if org_clinic:
-                            true_org_id = org_clinic.organization_id
-                    
-                    # If target is a clinic directly
-                    if not true_org_id:
-                        org_clinic = db.query(OrganizationClinicModel).filter(OrganizationClinicModel.id == target_reference).first()
-                        if org_clinic:
-                            true_org_id = org_clinic.organization_id
+            db = SessionLocal()
+            try:
+                # Resolve authoritative target ownership
+                target_org_id = None
+                target_clinic_id = None
+                target_journey_id = None
 
-                    if true_org_id and true_org_id != org_scope:
+                encounter = db.query(EncounterModel).filter(EncounterModel.id == target_reference).first()
+                if encounter:
+                    target_clinic_id = encounter.clinic_id
+                    target_journey_id = getattr(encounter, "journey_id", None)
+                    if target_clinic_id:
+                        org_clinic = db.query(OrganizationClinicModel).filter(
+                            OrganizationClinicModel.id == target_clinic_id).first()
+                        if org_clinic:
+                            target_org_id = org_clinic.organization_id
+                else:
+                    # Check if target is a clinic directly
+                    org_clinic = db.query(OrganizationClinicModel).filter(
+                        OrganizationClinicModel.id == target_reference).first()
+                    if org_clinic:
+                        target_org_id = org_clinic.organization_id
+                        target_clinic_id = org_clinic.id
+
+                # Fail-Closed Invariant: target must be positively resolved
+                if not target_org_id:
+                    return {
+                        "status": "ERROR",
+                        "message": f"TARGET_NOT_FOUND_OR_UNSUPPORTED: Target '{target_reference}' cannot be authoritatively resolved."
+                    }
+
+                org_scope = initiator_scope.get("org_id")
+                clinic_scope = initiator_scope.get("clinic_id")
+
+                if org_scope and org_scope != "SYSTEM_GLOBAL":
+                    if target_org_id != org_scope:
                         return {
                             "status": "ERROR",
-                            "message": f"AUTHORIZATION_SCOPE_MISMATCH: Action target (true_org={true_org_id}) is outside user's governed scope ({org_scope})."}
-                finally:
-                    db.close()
+                            "message": f"CROSS_ORG: Action target (true_org={target_org_id}) is outside user's governed scope ({org_scope})."
+                        }
+                    if clinic_scope and target_clinic_id and target_clinic_id != clinic_scope:
+                        return {
+                            "status": "ERROR",
+                            "message": f"CROSS_CLINIC: Action target (true_clinic={target_clinic_id}) is outside user's clinic scope ({clinic_scope})."
+                        }
+
+                if target_journey_id and decision.journey_id and target_journey_id != decision.journey_id:
+                    return {
+                        "status": "ERROR",
+                        "message": f"TARGET_JOURNEY_MISMATCH: Target journey {target_journey_id} does not match decision journey {decision.journey_id}."
+                    }
+            finally:
+                db.close()
 
         # SESR-008: Inherit journey_id from the authorizing decision
         journey_id = decision.journey_id

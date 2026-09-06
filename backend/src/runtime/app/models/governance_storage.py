@@ -77,4 +77,6 @@ class OperationalOutcomeModel(Base):
     journey_id = Column(String, nullable=False, index=True)
     confirmation_state = Column(String)
     resolution_state = Column(String)
+    expected_outcome_json = Column(Text, nullable=True)
+    observed_outcome_json = Column(Text, nullable=True)
     created_at = Column(String)
