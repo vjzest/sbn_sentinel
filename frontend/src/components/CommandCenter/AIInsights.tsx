@@ -29,21 +29,32 @@ export const AIInsights: React.FC = () => {
 
   const handleApprove = async () => {
     if (!latestInsightSignal) return;
+
+    // Fail closed: must carry authoritative recommendation_id
+    const recommendationId = latestInsightSignal.metadata?.recommendation_id;
+    if (!recommendationId) {
+      setActionStatus('blocked');
+      return;
+    }
+
     setActionStatus('pending');
-    
+
     try {
+      const allowedAction = latestInsightSignal.metadata?.allowed_action_type || "UPDATE_OPERATIONAL_STATUS";
+      const targetRef = latestInsightSignal.metadata?.target_reference || `SIGNAL-${latestInsightSignal.id}`;
+
       const result = await executeGovernedRecommendation(
-        latestInsightSignal.id, // Using signal ID assuming it maps to recommendation
-        "UPDATE_OPERATIONAL_STATUS", // Supported action type
-        `SIGNAL-${latestInsightSignal.id}`
+        recommendationId,
+        allowedAction,
+        targetRef
       );
-      
+
       setActionStatus(result.status);
-      
+
       if (result.status === 'approved') {
         dispatch(incrementActionsTaken());
       }
-      
+
     } catch (e) {
       console.error("Failed to execute action sequence:", e);
       setActionStatus('error');

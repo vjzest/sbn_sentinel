@@ -32,12 +32,9 @@ async def create_operational_action(request: CreateActionRequest, current_user: 
         parameters=request.parameters,
         initiator_scope={
             "user_id": current_user.id,
-            "org_id": getattr(
-                current_user,
-                "org_id",
-                None)} if hasattr(
-            current_user,
-            "id") else None)
+            "org_id": getattr(current_user, "org_id", None),
+            "clinic_id": getattr(current_user, "clinic_id", None)
+        } if hasattr(current_user, "id") else None)
 
     if result["status"] == "ERROR":
         raise HTTPException(status_code=400, detail=result["message"])

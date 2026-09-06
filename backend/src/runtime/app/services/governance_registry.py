@@ -336,15 +336,16 @@ class GovernanceRegistry:
     """
 
     def __init__(self):
-        loaded = self._load()
-        if loaded:
-            self.__dict__.update(loaded)
-        else:
-            self._policies: List[PolicyVersion] = []
-            self._rules: List[RuleVersion] = []
-            self._evaluations: List[RuleEvaluationRecord] = []
-            self._recommendation_mappings: List[RecommendationMapping] = []
-        pass
+        self._policies: List[PolicyVersion] = []
+        self._rules: List[RuleVersion] = []
+        self._evaluations: List[RuleEvaluationRecord] = []
+        self._recommendation_mappings: List[RecommendationMapping] = []
+        self._recommendations: List[RecommendationRecord] = []
+        self._human_decisions: List[HumanDecisionRecord] = []
+        self._authority_configs: Dict[str, AuthorityConfiguration] = {}
+        self._operational_actions: List[OperationalActionRecord] = []
+        self._execution_attempts: List[ExecutionAttemptRecord] = []
+        self._operational_outcomes: List[OperationalOutcomeRecord] = []
 
     def _load(self) -> Optional[dict]:
         return None
@@ -353,6 +354,7 @@ class GovernanceRegistry:
         pass
 
     def register_policy(self, policy: PolicyVersion):
+        self._policies.append(policy)
         self._save()
 
     def register_rule(self, rule: RuleVersion):
@@ -387,6 +389,38 @@ class GovernanceRegistry:
 
         logger.debug(
             f"[GovernanceRegistry] Recorded evaluation {record.evaluation_id} -> {record.result}")
+
+    def get_rule_evaluation(self, evaluation_id: str) -> Optional[RuleEvaluationRecord]:
+        from app.db.database import SessionLocal
+        from app.models.governance_storage import RuleEvaluationModel
+        import json
+        from dateutil.parser import parse
+        db = SessionLocal()
+        try:
+            row = db.query(RuleEvaluationModel).filter(
+                RuleEvaluationModel.evaluation_id == evaluation_id).first()
+            if row:
+                ts = parse(row.evaluation_timestamp) if isinstance(
+                    row.evaluation_timestamp, str) else row.evaluation_timestamp
+                inputs = json.loads(row.input_values_json) if row.input_values_json else {}
+                return RuleEvaluationRecord(
+                    evaluation_id=row.evaluation_id,
+                    decision_context_id=row.decision_context_id,
+                    policy_id=row.policy_id,
+                    policy_version=row.policy_version,
+                    rule_id=row.rule_id,
+                    rule_version=row.rule_version,
+                    result=row.result,
+                    evaluation_timestamp=ts,
+                    input_values=inputs,
+                    journey_id=row.journey_id
+                )
+            for e in self._evaluations:
+                if e.evaluation_id == evaluation_id:
+                    return e
+            return None
+        finally:
+            db.close()
 
     def register_recommendation_mapping(self, mapping: RecommendationMapping):
         self._recommendation_mappings.append(mapping)
@@ -634,12 +668,19 @@ class GovernanceRegistry:
 
         db = SessionLocal()
         try:
+            import json
+            expected_json = json.dumps(
+                outcome.expected_outcome) if outcome.expected_outcome is not None else None
+            observed_json = json.dumps(
+                outcome.observed_outcome) if outcome.observed_outcome is not None else None
             db.add(OperationalOutcomeModel(
                 outcome_id=outcome.outcome_id,
                 action_id=outcome.action_id,
                 journey_id=outcome.journey_id,  # Issue #3: Removed "UNKNOWN" fallback
                 confirmation_state=outcome.confirmation_state.value,
                 resolution_state=outcome.resolution_state.value,
+                expected_outcome_json=expected_json,
+                observed_outcome_json=observed_json,
                 created_at=outcome.created_at.isoformat()
             ))
             db.commit()
@@ -655,15 +696,23 @@ class GovernanceRegistry:
     def get_operational_outcome(self, outcome_id: str) -> Optional[OperationalOutcomeRecord]:
         from app.db.database import SessionLocal
         from app.models.governance_storage import OperationalOutcomeModel
+        import json
         db = SessionLocal()
         try:
-            db_record = db.query(OperationalOutcomeModel).filter(OperationalOutcomeModel.outcome_id == outcome_id).first()
+            db_record = db.query(OperationalOutcomeModel).filter(
+                OperationalOutcomeModel.outcome_id == outcome_id).first()
             if db_record:
+                expected = json.loads(
+                    db_record.expected_outcome_json) if getattr(
+                    db_record, "expected_outcome_json", None) else None
+                observed = json.loads(
+                    db_record.observed_outcome_json) if getattr(
+                    db_record, "observed_outcome_json", None) else None
                 return OperationalOutcomeRecord(
                     outcome_id=db_record.outcome_id,
                     action_id=db_record.action_id,
-                    expected_outcome=None,
-                    observed_outcome=None,
+                    expected_outcome=expected,
+                    observed_outcome=observed,
                     confirmation_state=OutcomeConfirmationState(db_record.confirmation_state),
                     resolution_state=OutcomeResolutionState(db_record.resolution_state),
                     journey_id=db_record.journey_id
@@ -679,15 +728,23 @@ class GovernanceRegistry:
             self, action_id: str) -> Optional[OperationalOutcomeRecord]:
         from app.db.database import SessionLocal
         from app.models.governance_storage import OperationalOutcomeModel
+        import json
         db = SessionLocal()
         try:
-            db_record = db.query(OperationalOutcomeModel).filter(OperationalOutcomeModel.action_id == action_id).first()
+            db_record = db.query(OperationalOutcomeModel).filter(
+                OperationalOutcomeModel.action_id == action_id).first()
             if db_record:
+                expected = json.loads(
+                    db_record.expected_outcome_json) if getattr(
+                    db_record, "expected_outcome_json", None) else None
+                observed = json.loads(
+                    db_record.observed_outcome_json) if getattr(
+                    db_record, "observed_outcome_json", None) else None
                 return OperationalOutcomeRecord(
                     outcome_id=db_record.outcome_id,
                     action_id=db_record.action_id,
-                    expected_outcome=None,
-                    observed_outcome=None,
+                    expected_outcome=expected,
+                    observed_outcome=observed,
                     confirmation_state=OutcomeConfirmationState(db_record.confirmation_state),
                     resolution_state=OutcomeResolutionState(db_record.resolution_state),
                     journey_id=db_record.journey_id
@@ -726,28 +783,23 @@ class GovernanceRegistry:
         parent_journey_id = None
 
         if parent_type == "evaluation":
-            parent_record = next(
-                (r for r in self._evaluations if r.evaluation_id == parent_id), None)
+            parent_record = self.get_rule_evaluation(parent_id)
             if parent_record:
                 parent_journey_id = parent_record.journey_id
         elif parent_type == "recommendation":
-            parent_record = next(
-                (r for r in self._recommendations if r.recommendation_id == parent_id), None)
+            parent_record = self.get_recommendation(parent_id)
             if parent_record:
                 parent_journey_id = parent_record.journey_id
         elif parent_type == "decision":
-            parent_record = next(
-                (d for d in self._human_decisions if d.decision_id == parent_id), None)
+            parent_record = self.get_human_decision(parent_id)
             if parent_record:
                 parent_journey_id = parent_record.journey_id
         elif parent_type == "action":
-            parent_record = next(
-                (a for a in self._operational_actions if a.action_id == parent_id), None)
+            parent_record = self.get_operational_action(parent_id)
             if parent_record:
                 parent_journey_id = parent_record.journey_id
         elif parent_type == "outcome":
-            parent_record = next(
-                (o for o in self._operational_outcomes if o.outcome_id == parent_id), None)
+            parent_record = self.get_operational_outcome(parent_id)
             if parent_record:
                 parent_journey_id = parent_record.journey_id
         else:

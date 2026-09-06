@@ -86,5 +86,13 @@ class ConnectorManager:
         finally:
             db.close()
 
+    def is_ready(self, connector_name: str = "PRACTICE_FUSION") -> bool:
+        """SES-005 / SESR-011: Verify readiness for a specific connector."""
+        normalized = connector_name.upper().replace("_", " ").strip()
+        for name in self._connector_registry:
+            if normalized in name.upper() or name.upper() in normalized:
+                return True
+        return False
+
 
 connector_manager = ConnectorManager()
