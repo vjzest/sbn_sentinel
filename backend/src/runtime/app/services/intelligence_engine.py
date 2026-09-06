@@ -121,10 +121,11 @@ class IntelligenceEngine(BaseService):
         )
         governance_registry.record_recommendation(record)
 
-        explainability_log = f"Governed by {
-            mapping.mapping_id} (Version {
-            mapping.version}) for {rule_id} ({result}). Authority: {
-            mapping.authority_requirement.value}"
+        explainability_log = (
+            f"Governed by {mapping.mapping_id} "
+            f"(Version {mapping.version}) for {rule_id} ({result}). "
+            f"Authority: {mapping.authority_requirement.value}"
+        )
 
         decision_record = {
             "evidence": payload.get("evidence", "Evidence not provided to L7"),
