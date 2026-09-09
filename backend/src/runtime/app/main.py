@@ -73,10 +73,31 @@ def create_app() -> FastAPI:
                 print("[SUCCESS] Super Admin seeded: superadmin@sbnsentinel.com / [HIDDEN]")
             else:
                 print("[SUCCESS] Super Admin already exists.")
+
+            # Seed default healthy Practice Fusion connector if missing
+            from app.models.connector import ConnectorModel
+            from datetime import datetime
+            pf_conn = db.query(ConnectorModel).filter(
+                ConnectorModel.name.ilike("%Practice Fusion%")
+            ).first()
+            if not pf_conn:
+                db.add(ConnectorModel(
+                    id="CONN-PF-001",
+                    name="Practice Fusion EHR",
+                    type="EHR",
+                    status="Healthy",
+                    latency_ms=45,
+                    last_sync=datetime.utcnow(),
+                    access_token="pf_valid_token_default"
+                ))
+                db.commit()
+                print("[SUCCESS] Practice Fusion Connector seeded.")
         except Exception as e:
-            print(f"[WARNING] Could not seed super admin: {e}")
+            print(f"[WARNING] Could not seed bootstrap data: {e}")
         finally:
             db.close()
+
+    seed_data()
 
     return app
 
