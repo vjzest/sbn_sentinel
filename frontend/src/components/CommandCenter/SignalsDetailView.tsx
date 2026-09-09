@@ -149,48 +149,53 @@ export const SignalsDetailView: React.FC = () => {
       await fetchAuditLogs();
 
       setIsDispatching(false);
-      setIsDispatched(true);
 
-      if (result.status === 'blocked') {
+      if (result.status === 'approved') {
+        setIsDispatched(true);
+        setOutcomeState('PENDING');
+        setResolutionState('UNRESOLVED');
+        dispatch(incrementActionsTaken());
+
+        // Add to Clinical Reminders in localStorage only on approved execution
+        if (selectedSignal.recommended_action) {
+          const saved = localStorage.getItem('clinicalReminders');
+          let currentReminders = [];
+          if (saved) {
+            try {
+              currentReminders = JSON.parse(saved);
+            } catch (e) {
+              console.error(e);
+            }
+          }
+          const exists = currentReminders.some((r: any) => r.text === selectedSignal.recommended_action);
+          if (!exists) {
+            const newReminder = {
+              id: `signal-${selectedSignal.id}`,
+              text: selectedSignal.recommended_action,
+              source: selectedSignal.source || 'Deterministic Policy Engine',
+              timestamp: new Date().toISOString(),
+              completed: false
+            };
+            currentReminders.unshift(newReminder);
+            localStorage.setItem('clinicalReminders', JSON.stringify(currentReminders));
+            window.dispatchEvent(new Event('clinicalRemindersUpdated'));
+          }
+        }
+      } else if (result.status === 'blocked') {
+        setIsDispatched(false);
         setOutcomeState('BLOCKED' as any);
         setResolutionState('BLOCKED' as any);
       } else {
-        setOutcomeState('PENDING');
-        setResolutionState('UNRESOLVED');
-        if (result.status === 'approved') {
-           dispatch(incrementActionsTaken());
-        }
-      }
-
-      // Add to Clinical Reminders in localStorage
-      if (selectedSignal.recommended_action) {
-        const saved = localStorage.getItem('clinicalReminders');
-        let currentReminders = [];
-        if (saved) {
-          try {
-            currentReminders = JSON.parse(saved);
-          } catch (e) {
-            console.error(e);
-          }
-        }
-        const exists = currentReminders.some((r: any) => r.text === selectedSignal.recommended_action);
-        if (!exists) {
-          const newReminder = {
-            id: `signal-${selectedSignal.id}`,
-            text: selectedSignal.recommended_action,
-            source: selectedSignal.source || 'Deterministic Policy Engine',
-            timestamp: new Date().toISOString(),
-            completed: false
-          };
-          currentReminders.unshift(newReminder);
-          localStorage.setItem('clinicalReminders', JSON.stringify(currentReminders));
-          window.dispatchEvent(new Event('clinicalRemindersUpdated'));
-        }
+        setIsDispatched(false);
+        setOutcomeState(null);
+        setResolutionState(null);
       }
     } catch (e) {
       console.error("Failed to approve decision:", e);
       setIsDispatching(false);
-      // Could show error state here
+      setIsDispatched(false);
+      setOutcomeState(null);
+      setResolutionState(null);
     }
   };
 

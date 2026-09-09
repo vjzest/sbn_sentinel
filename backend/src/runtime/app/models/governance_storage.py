@@ -80,3 +80,56 @@ class OperationalOutcomeModel(Base):
     expected_outcome_json = Column(Text, nullable=True)
     observed_outcome_json = Column(Text, nullable=True)
     created_at = Column(String)
+
+
+class GovernedPolicyVersionModel(Base):
+    __tablename__ = "governed_policy_versions"
+    policy_id = Column(String, primary_key=True)
+    version = Column(String, primary_key=True)
+    lifecycle_state = Column(String, nullable=False)
+    content = Column(Text, nullable=False)
+    effective_from = Column(String, nullable=True)
+    effective_until = Column(String, nullable=True)
+    approval_state = Column(String, nullable=True)
+    approved_by = Column(String, nullable=True)
+    approval_timestamp = Column(String, nullable=True)
+    previous_version = Column(String, nullable=True)
+    created_at = Column(String, nullable=True)
+    scope = Column(String, default="Global")
+
+
+class GovernedRuleVersionModel(Base):
+    __tablename__ = "governed_rule_versions"
+    rule_id = Column(String, primary_key=True)
+    version = Column(String, primary_key=True)
+    governing_policy_id = Column(String, nullable=False)
+    governing_policy_version = Column(String, nullable=False)
+    lifecycle_state = Column(String, nullable=False)
+    logic_description = Column(Text, nullable=True)
+    inputs_json = Column(Text, nullable=True)
+    allowed_outputs_json = Column(Text, nullable=True)
+    effective_from = Column(String, nullable=True)
+    effective_until = Column(String, nullable=True)
+    approval_state = Column(String, nullable=True)
+    approved_by = Column(String, nullable=True)
+    approval_timestamp = Column(String, nullable=True)
+    previous_version = Column(String, nullable=True)
+    created_at = Column(String, nullable=True)
+
+
+class GovernedRecommendationMappingModel(Base):
+    __tablename__ = "governed_recommendation_mappings"
+    mapping_id = Column(String, primary_key=True)
+    version = Column(String, primary_key=True)
+    applicable_rule_id = Column(String, nullable=False)
+    eligible_result = Column(String, nullable=False)
+    recommendation_template = Column(Text, nullable=False)
+    authority_requirement = Column(String, nullable=False)
+    priority = Column(String, nullable=False)
+    lifecycle_state = Column(String, nullable=False)
+    business_impact_template = Column(Text, nullable=True)
+    expected_outcome_template = Column(Text, nullable=True)
+    problem_template = Column(Text, nullable=True)
+    effective_from = Column(String, nullable=True)
+    created_at = Column(String, nullable=True)
+

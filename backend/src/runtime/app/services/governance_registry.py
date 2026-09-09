@@ -354,16 +354,96 @@ class GovernanceRegistry:
         pass
 
     def register_policy(self, policy: PolicyVersion):
-        self._policies.append(policy)
-        self._save()
+        from app.db.database import SessionLocal
+        from app.models.governance_storage import GovernedPolicyVersionModel
+        db = SessionLocal()
+        try:
+            row = db.query(GovernedPolicyVersionModel).filter_by(
+                policy_id=policy.policy_id, version=policy.version
+            ).first()
+            if not row:
+                eff_from = policy.effective_from.isoformat() if policy.effective_from else None
+                eff_until = policy.effective_until.isoformat() if policy.effective_until else None
+                app_ts = policy.approval_timestamp.isoformat() if policy.approval_timestamp else None
+                cr_at = policy.created_at.isoformat() if policy.created_at else None
+                ls = policy.lifecycle_state.value if hasattr(policy.lifecycle_state, "value") else str(policy.lifecycle_state)
+                db.add(GovernedPolicyVersionModel(
+                    policy_id=policy.policy_id,
+                    version=policy.version,
+                    lifecycle_state=ls,
+                    content=policy.content,
+                    effective_from=eff_from,
+                    effective_until=eff_until,
+                    approval_state=policy.approval_state,
+                    approved_by=policy.approved_by,
+                    approval_timestamp=app_ts,
+                    previous_version=policy.previous_version,
+                    created_at=cr_at,
+                    scope=policy.scope
+                ))
+                db.commit()
+            if not any(p.policy_id == policy.policy_id and p.version == policy.version for p in self._policies):
+                self._policies.append(policy)
+            self._save()
+        except Exception as e:
+            db.rollback()
+            logger.error(f"Error persisting policy version: {e}")
+            raise
+        finally:
+            db.close()
 
     def register_rule(self, rule: RuleVersion):
-        self._rules.append(rule)
-        self._save()
+        import json
+        from app.db.database import SessionLocal
+        from app.models.governance_storage import GovernedRuleVersionModel
+        db = SessionLocal()
+        try:
+            row = db.query(GovernedRuleVersionModel).filter_by(
+                rule_id=rule.rule_id, version=rule.version
+            ).first()
+            if not row:
+                inputs_data = [
+                    {
+                        "input_name": i.input_name,
+                        "input_type": i.input_type,
+                        "required": i.required,
+                        "expected_source": i.expected_source
+                    } for i in (rule.inputs or [])
+                ]
+                eff_from = rule.effective_from.isoformat() if rule.effective_from else None
+                eff_until = rule.effective_until.isoformat() if rule.effective_until else None
+                app_ts = rule.approval_timestamp.isoformat() if rule.approval_timestamp else None
+                cr_at = rule.created_at.isoformat() if rule.created_at else None
+                ls = rule.lifecycle_state.value if hasattr(rule.lifecycle_state, "value") else str(rule.lifecycle_state)
+                db.add(GovernedRuleVersionModel(
+                    rule_id=rule.rule_id,
+                    version=rule.version,
+                    governing_policy_id=rule.governing_policy_id,
+                    governing_policy_version=rule.governing_policy_version,
+                    lifecycle_state=ls,
+                    logic_description=rule.logic_description,
+                    inputs_json=json.dumps(inputs_data),
+                    allowed_outputs_json=json.dumps(rule.allowed_outputs or []),
+                    effective_from=eff_from,
+                    effective_until=eff_until,
+                    approval_state=rule.approval_state,
+                    approved_by=rule.approved_by,
+                    approval_timestamp=app_ts,
+                    previous_version=rule.previous_version,
+                    created_at=cr_at
+                ))
+                db.commit()
+            if not any(r.rule_id == rule.rule_id and r.version == rule.version for r in self._rules):
+                self._rules.append(rule)
+            self._save()
+        except Exception as e:
+            db.rollback()
+            logger.error(f"Error persisting rule version: {e}")
+            raise
+        finally:
+            db.close()
 
     def record_evaluation(self, record: RuleEvaluationRecord):
-        self._evaluations.append(record)
-
         db = SessionLocal()
         try:
             import json
@@ -380,6 +460,7 @@ class GovernanceRegistry:
                 journey_id=record.journey_id
             ))
             db.commit()
+            self._evaluations.append(record)
         except Exception as e:
             db.rollback()
             logger.error(f"DB Error saving rule evaluation: {e}")
@@ -423,12 +504,45 @@ class GovernanceRegistry:
             db.close()
 
     def register_recommendation_mapping(self, mapping: RecommendationMapping):
-        self._recommendation_mappings.append(mapping)
-        self._save()
+        from app.db.database import SessionLocal
+        from app.models.governance_storage import GovernedRecommendationMappingModel
+        db = SessionLocal()
+        try:
+            row = db.query(GovernedRecommendationMappingModel).filter_by(
+                mapping_id=mapping.mapping_id, version=mapping.version
+            ).first()
+            if not row:
+                eff_from = mapping.effective_from.isoformat() if mapping.effective_from else None
+                cr_at = mapping.created_at.isoformat() if mapping.created_at else None
+                ar = mapping.authority_requirement.value if hasattr(mapping.authority_requirement, "value") else str(mapping.authority_requirement)
+                ls = mapping.lifecycle_state.value if hasattr(mapping.lifecycle_state, "value") else str(mapping.lifecycle_state)
+                db.add(GovernedRecommendationMappingModel(
+                    mapping_id=mapping.mapping_id,
+                    version=mapping.version,
+                    applicable_rule_id=mapping.applicable_rule_id,
+                    eligible_result=mapping.eligible_result,
+                    recommendation_template=mapping.recommendation_template,
+                    authority_requirement=ar,
+                    priority=mapping.priority,
+                    lifecycle_state=ls,
+                    business_impact_template=mapping.business_impact_template,
+                    expected_outcome_template=mapping.expected_outcome_template,
+                    problem_template=mapping.problem_template,
+                    effective_from=eff_from,
+                    created_at=cr_at
+                ))
+                db.commit()
+            if not any(m.mapping_id == mapping.mapping_id and m.version == mapping.version for m in self._recommendation_mappings):
+                self._recommendation_mappings.append(mapping)
+            self._save()
+        except Exception as e:
+            db.rollback()
+            logger.error(f"Error persisting recommendation mapping: {e}")
+            raise
+        finally:
+            db.close()
 
     def record_recommendation(self, record: RecommendationRecord):
-        self._recommendations.append(record)
-
         db = SessionLocal()
         try:
             db.add(RecommendationModel(
@@ -444,6 +558,7 @@ class GovernanceRegistry:
                 generated_at=record.generated_at.isoformat()
             ))
             db.commit()
+            self._recommendations.append(record)
         except Exception as e:
             db.rollback()
             logger.error(f"DB Error saving recommendation: {e}")
@@ -489,8 +604,6 @@ class GovernanceRegistry:
         return self._authority_configs.get(role)
 
     def record_human_decision(self, decision: HumanDecisionRecord):
-        self._human_decisions.append(decision)
-
         db = SessionLocal()
         try:
             db.add(HumanDecisionModel(
@@ -503,6 +616,7 @@ class GovernanceRegistry:
                 decision_timestamp=decision.decision_timestamp.isoformat()
             ))
             db.commit()
+            self._human_decisions.append(decision)
         except Exception as e:
             db.rollback()
             logger.error(f"DB Error saving decision: {e}")
@@ -538,8 +652,6 @@ class GovernanceRegistry:
             db.close()
 
     def record_operational_action(self, action: OperationalActionRecord):
-        self._operational_actions.append(action)
-
         db = SessionLocal()
         try:
             import json
@@ -555,6 +667,7 @@ class GovernanceRegistry:
                 created_at=action.created_at.isoformat()
             ))
             db.commit()
+            self._operational_actions.append(action)
         except Exception as e:
             db.rollback()
             logger.error(f"DB Error saving action: {e}")
@@ -622,8 +735,6 @@ class GovernanceRegistry:
             db.close()
 
     def record_execution_attempt(self, attempt: ExecutionAttemptRecord):
-        self._execution_attempts.append(attempt)
-
         db = SessionLocal()
         try:
             db.add(ExecutionAttemptModel(
@@ -634,6 +745,7 @@ class GovernanceRegistry:
                 attempt_timestamp=attempt.attempt_timestamp.isoformat()
             ))
             db.commit()
+            self._execution_attempts.append(attempt)
         except Exception as e:
             db.rollback()
             logger.error(f"DB Error saving attempt: {e}")
@@ -664,8 +776,6 @@ class GovernanceRegistry:
             db.close()
 
     def record_operational_outcome(self, outcome: OperationalOutcomeRecord):
-        self._operational_outcomes.append(outcome)
-
         db = SessionLocal()
         try:
             import json
@@ -684,6 +794,7 @@ class GovernanceRegistry:
                 created_at=outcome.created_at.isoformat()
             ))
             db.commit()
+            self._operational_outcomes.append(outcome)
         except Exception as e:
             db.rollback()
             logger.error(f"DB Error saving outcome: {e}")
@@ -864,12 +975,55 @@ class GovernanceRegistry:
         finally:
             db.close()
 
+    def _ensure_policies_loaded(self):
+        if not self._policies:
+            from app.db.database import SessionLocal
+            from app.models.governance_storage import GovernedPolicyVersionModel
+            db = SessionLocal()
+            try:
+                rows = db.query(GovernedPolicyVersionModel).all()
+                for row in rows:
+                    p = self.get_policy_by_version(row.policy_id, row.version)
+                    if p and not any(x.policy_id == p.policy_id and x.version == p.version for x in self._policies):
+                        self._policies.append(p)
+            finally:
+                db.close()
+
+    def _ensure_rules_loaded(self):
+        if not self._rules:
+            from app.db.database import SessionLocal
+            from app.models.governance_storage import GovernedRuleVersionModel
+            db = SessionLocal()
+            try:
+                rows = db.query(GovernedRuleVersionModel).all()
+                for row in rows:
+                    r = self.get_rule_by_version(row.rule_id, row.version)
+                    if r and not any(x.rule_id == r.rule_id and x.version == r.version for x in self._rules):
+                        self._rules.append(r)
+            finally:
+                db.close()
+
+    def _ensure_mappings_loaded(self):
+        if not self._recommendation_mappings:
+            from app.db.database import SessionLocal
+            from app.models.governance_storage import GovernedRecommendationMappingModel
+            db = SessionLocal()
+            try:
+                rows = db.query(GovernedRecommendationMappingModel).all()
+                for row in rows:
+                    m = self.get_recommendation_mapping_by_version(row.mapping_id, row.version)
+                    if m and not any(x.mapping_id == m.mapping_id and x.version == m.version for x in self._recommendation_mappings):
+                        self._recommendation_mappings.append(m)
+            finally:
+                db.close()
+
     def get_applicable_recommendation_mapping(
             self,
             rule_id: str,
             result: str,
             eval_time: datetime) -> Optional[RecommendationMapping]:
         """RGV-005: Deterministic Mapping Resolution"""
+        self._ensure_mappings_loaded()
         applicable = []
         for m in self._recommendation_mappings:
             if m.applicable_rule_id == rule_id and m.eligible_result == result and m.is_applicable(
@@ -884,6 +1038,7 @@ class GovernanceRegistry:
 
     def get_applicable_policies(self, eval_time: datetime) -> List[PolicyVersion]:
         """PRR-003: Resolve Applicable Policy Version"""
+        self._ensure_policies_loaded()
         applicable = []
         # Find latest active policy per policy_id that is effective
         for p_id in set(p.policy_id for p in self._policies):
@@ -901,6 +1056,7 @@ class GovernanceRegistry:
             policy_version: str,
             eval_time: datetime) -> List[RuleVersion]:
         """PRR-004: Resolve Applicable Rule Version"""
+        self._ensure_rules_loaded()
         applicable = []
         mapped_rules = [r for r in self._rules if r.governing_policy_id ==
                         policy_id and r.governing_policy_version == policy_version]
@@ -913,25 +1069,129 @@ class GovernanceRegistry:
         return applicable
 
     def get_policy_by_version(self, policy_id: str, version: str) -> Optional[PolicyVersion]:
-        for p in self._policies:
-            if p.policy_id == policy_id and p.version == version:
-                return p
-        return None
+        from app.db.database import SessionLocal
+        from app.models.governance_storage import GovernedPolicyVersionModel
+        from dateutil.parser import parse
+        db = SessionLocal()
+        try:
+            row = db.query(GovernedPolicyVersionModel).filter_by(
+                policy_id=policy_id, version=version
+            ).one_or_none()
+            if row:
+                eff_from = parse(row.effective_from) if row.effective_from else None
+                eff_until = parse(row.effective_until) if row.effective_until else None
+                app_ts = parse(row.approval_timestamp) if row.approval_timestamp else None
+                cr_at = parse(row.created_at) if row.created_at else datetime.utcnow()
+                ls = LifecycleState(row.lifecycle_state) if row.lifecycle_state in [e.value for e in LifecycleState] else LifecycleState.ACTIVE
+                return PolicyVersion(
+                    policy_id=row.policy_id,
+                    version=row.version,
+                    content=row.content,
+                    lifecycle_state=ls,
+                    effective_from=eff_from,
+                    effective_until=eff_until,
+                    approval_state=row.approval_state or "PENDING",
+                    approved_by=row.approved_by,
+                    approval_timestamp=app_ts,
+                    previous_version=row.previous_version,
+                    created_at=cr_at,
+                    scope=row.scope or "Global"
+                )
+            for p in self._policies:
+                if p.policy_id == policy_id and p.version == version:
+                    return p
+            return None
+        finally:
+            db.close()
 
     def get_rule_by_version(self, rule_id: str, version: str) -> Optional[RuleVersion]:
-        for r in self._rules:
-            if r.rule_id == rule_id and r.version == version:
-                return r
-        return None
+        import json
+        from app.db.database import SessionLocal
+        from app.models.governance_storage import GovernedRuleVersionModel
+        from dateutil.parser import parse
+        db = SessionLocal()
+        try:
+            row = db.query(GovernedRuleVersionModel).filter_by(
+                rule_id=rule_id, version=version
+            ).one_or_none()
+            if row:
+                eff_from = parse(row.effective_from) if row.effective_from else None
+                eff_until = parse(row.effective_until) if row.effective_until else None
+                app_ts = parse(row.approval_timestamp) if row.approval_timestamp else None
+                cr_at = parse(row.created_at) if row.created_at else datetime.utcnow()
+                raw_inputs = json.loads(row.inputs_json) if row.inputs_json else []
+                inputs = [
+                    RuleInputDefinition(
+                        input_name=i.get("input_name", ""),
+                        input_type=i.get("input_type", "str"),
+                        required=i.get("required", True),
+                        expected_source=i.get("expected_source", "DecisionContext")
+                    ) for i in raw_inputs
+                ]
+                outputs = json.loads(row.allowed_outputs_json) if row.allowed_outputs_json else []
+                ls = LifecycleState(row.lifecycle_state) if row.lifecycle_state in [e.value for e in LifecycleState] else LifecycleState.ACTIVE
+                return RuleVersion(
+                    rule_id=row.rule_id,
+                    version=row.version,
+                    logic_description=row.logic_description or "",
+                    lifecycle_state=ls,
+                    inputs=inputs,
+                    allowed_outputs=outputs,
+                    governing_policy_id=row.governing_policy_id,
+                    governing_policy_version=row.governing_policy_version,
+                    effective_from=eff_from,
+                    effective_until=eff_until,
+                    approval_state=row.approval_state or "PENDING",
+                    approved_by=row.approved_by,
+                    approval_timestamp=app_ts,
+                    previous_version=row.previous_version,
+                    created_at=cr_at
+                )
+            for r in self._rules:
+                if r.rule_id == rule_id and r.version == version:
+                    return r
+            return None
+        finally:
+            db.close()
 
     def get_recommendation_mapping_by_version(
             self,
             mapping_id: str,
             version: str) -> Optional[RecommendationMapping]:
-        for m in self._recommendation_mappings:
-            if m.mapping_id == mapping_id and m.version == version:
-                return m
-        return None
+        from app.db.database import SessionLocal
+        from app.models.governance_storage import GovernedRecommendationMappingModel
+        from dateutil.parser import parse
+        db = SessionLocal()
+        try:
+            row = db.query(GovernedRecommendationMappingModel).filter_by(
+                mapping_id=mapping_id, version=version
+            ).one_or_none()
+            if row:
+                eff_from = parse(row.effective_from) if row.effective_from else None
+                cr_at = parse(row.created_at) if row.created_at else datetime.utcnow()
+                ar = AuthorityRequirement(row.authority_requirement) if row.authority_requirement in [e.value for e in AuthorityRequirement] else AuthorityRequirement.INFORMATIONAL
+                ls = LifecycleState(row.lifecycle_state) if row.lifecycle_state in [e.value for e in LifecycleState] else LifecycleState.ACTIVE
+                return RecommendationMapping(
+                    mapping_id=row.mapping_id,
+                    version=row.version,
+                    applicable_rule_id=row.applicable_rule_id,
+                    eligible_result=row.eligible_result,
+                    recommendation_template=row.recommendation_template,
+                    authority_requirement=ar,
+                    priority=row.priority,
+                    lifecycle_state=ls,
+                    business_impact_template=row.business_impact_template or "",
+                    expected_outcome_template=row.expected_outcome_template or "",
+                    problem_template=row.problem_template or "",
+                    effective_from=eff_from,
+                    created_at=cr_at
+                )
+            for m in self._recommendation_mappings:
+                if m.mapping_id == mapping_id and m.version == version:
+                    return m
+            return None
+        finally:
+            db.close()
 
 
 governance_registry = GovernanceRegistry()
