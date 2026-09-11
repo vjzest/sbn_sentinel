@@ -87,7 +87,11 @@ class ConnectorManager:
             db.close()
 
     def is_ready(self, connector_name: str = "PRACTICE_FUSION") -> bool:
-        """SES-005 / SESR-011: Verify operational readiness for a specific connector."""
+        """SES-005 / SESR-011: Verify operational readiness for a specific connector.
+        Fail-closed: returns False if the connector record is absent, unhealthy,
+        or missing credentials. Does NOT create a connector record -- that is
+        exclusively the responsibility of the startup seeding path in main.py.
+        """
         db = SessionLocal()
         try:
             search_name = "%Practice Fusion%" if "PRACTICE" in connector_name.upper() else f"%{connector_name}%"
@@ -95,20 +99,6 @@ class ConnectorManager:
                 ConnectorModel.name.ilike(search_name)
             ).first()
             if not row:
-                if "PRACTICE" in connector_name.upper():
-                    from datetime import datetime
-                    new_conn = ConnectorModel(
-                        id="CONN-PF-001",
-                        name="Practice Fusion EHR",
-                        type="EHR",
-                        status="Healthy",
-                        latency_ms=45,
-                        last_sync=datetime.utcnow(),
-                        access_token="pf_valid_token_default"
-                    )
-                    db.add(new_conn)
-                    db.commit()
-                    return True
                 return False
             if row.status not in {"Healthy", "Ready"}:
                 return False
