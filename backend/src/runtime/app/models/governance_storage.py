@@ -132,4 +132,3 @@ class GovernedRecommendationMappingModel(Base):
     problem_template = Column(Text, nullable=True)
     effective_from = Column(String, nullable=True)
     created_at = Column(String, nullable=True)
-

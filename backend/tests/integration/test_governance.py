@@ -534,3 +534,301 @@ def test_a026_readiness_gate_positive_and_negative():
         db.delete(u_unassigned)
         db.commit()
         db.close()
+
+
+@pytest.mark.governance
+def test_a025b_restart_idempotency_and_db_failure():
+    """
+    Audit 4 Item 2 (Completion Proof):
+    1. Idempotent restart: clearing caches TWICE still recovers the same records from DB.
+    2. Forced DB failure during record_* must raise / not produce a false success.
+    """
+    from app.services.governance_registry import (
+        governance_registry, RecommendationRecord, RecommendationStatus,
+        AuthorityRequirement, HumanDecisionRecord, DecisionType, DecisionStatus,
+        RuleEvaluationRecord
+    )
+    from app.db.database import SessionLocal
+    from app.models.governance_storage import (
+        RecommendationModel, RuleEvaluationModel, HumanDecisionModel
+    )
+    import uuid
+    from datetime import datetime
+
+    uid = uuid.uuid4().hex[:6]
+    jny_id = f"JNY-IDEM-{uid}"
+    eval_id = f"EVAL-IDEM-{uid}"
+    rec_id = f"REC-IDEM-{uid}"
+    dec_id = f"DEC-IDEM-{uid}"
+
+    # --- Phase 1: Write full chain to DB ---
+    governance_registry.record_evaluation(RuleEvaluationRecord(
+        evaluation_id=eval_id,
+        decision_context_id="CTX-IDEM",
+        policy_id="POL-IDEM",
+        policy_version="V1",
+        rule_id="RULE-IDEM",
+        rule_version="V1",
+        result="CONDITION_MET",
+        evaluation_timestamp=datetime.utcnow(),
+        input_values={"test": "idempotent"},
+        journey_id=jny_id
+    ))
+    governance_registry.record_recommendation(RecommendationRecord(
+        recommendation_id=rec_id,
+        mapping_id="MAP-IDEM",
+        mapping_version="V1",
+        decision_context_id="CTX-IDEM",
+        rule_evaluation_id=eval_id,
+        recommendation_content="Idempotent Rec",
+        status=RecommendationStatus.ACTIVE,
+        authority_requirement=AuthorityRequirement.INFORMATIONAL,
+        priority="High",
+        journey_id=jny_id
+    ))
+    governance_registry.record_human_decision(HumanDecisionRecord(
+        decision_id=dec_id,
+        recommendation_id=rec_id,
+        actor_id="ACTOR-IDEM",
+        decision_type=DecisionType.APPROVED,
+        authority_basis="Valid",
+        status=DecisionStatus.RECORDED,
+        journey_id=jny_id
+    ))
+
+    try:
+        # --- Phase 2: First restart simulation — clear all caches ---
+        governance_registry._evaluations.clear()
+        governance_registry._recommendations.clear()
+        governance_registry._human_decisions.clear()
+
+        r1 = governance_registry.get_recommendation(rec_id)
+        assert r1 is not None, "First restart: recommendation not recovered from DB"
+        assert r1.recommendation_id == rec_id
+        assert r1.recommendation_content == "Idempotent Rec"
+
+        d1 = governance_registry.get_human_decision(dec_id)
+        assert d1 is not None, "First restart: decision not recovered from DB"
+
+        # --- Phase 3: Second restart simulation — clear caches again ---
+        governance_registry._evaluations.clear()
+        governance_registry._recommendations.clear()
+        governance_registry._human_decisions.clear()
+
+        r2 = governance_registry.get_recommendation(rec_id)
+        assert r2 is not None, "Second restart: recommendation not recovered from DB (idempotency failure)"
+        assert r2.recommendation_id == rec_id, "Second restart returned wrong record"
+        assert r2.recommendation_content == "Idempotent Rec", "Second restart: content mismatch"
+
+        d2 = governance_registry.get_human_decision(dec_id)
+        assert d2 is not None, "Second restart: decision not recovered (idempotency failure)"
+        assert d2.decision_id == dec_id
+
+        # --- Phase 4: Forced DB failure must raise, not silently succeed ---
+        # Pass an invalid journey_id type to force a DB-level error;
+        # governance_registry methods must propagate the exception, not swallow it.
+        raised = False
+        try:
+            governance_registry.record_evaluation(RuleEvaluationRecord(
+                evaluation_id=None,  # NULL primary key -> DB constraint violation
+                decision_context_id="CTX-FAIL",
+                policy_id="POL-FAIL",
+                policy_version="V1",
+                rule_id="RULE-FAIL",
+                rule_version="V1",
+                result="CONDITION_MET",
+                evaluation_timestamp=datetime.utcnow(),
+                input_values={},
+                journey_id="JNY-FAIL"
+            ))
+        except Exception:
+            raised = True
+        assert raised, (
+            "record_evaluation with NULL primary key must raise an exception, "
+            "not produce a silent false success."
+        )
+
+    finally:
+        db = SessionLocal()
+        db.query(HumanDecisionModel).filter(HumanDecisionModel.decision_id == dec_id).delete()
+        db.query(RecommendationModel).filter(RecommendationModel.recommendation_id == rec_id).delete()
+        db.query(RuleEvaluationModel).filter(RuleEvaluationModel.evaluation_id == eval_id).delete()
+        db.commit()
+        db.close()
+
+
+@pytest.mark.governance
+def test_a021b_reconstruction_missing_dependency():
+    """
+    Audit 4 Item 4 (Completion Proof):
+    Explicit missing-exact-dependency cases must each return NOT_REPRODUCIBLE.
+    Tests:
+    - Missing Policy version in registry -> NOT_REPRODUCIBLE
+    - Missing Rule version in registry -> NOT_REPRODUCIBLE
+    - Missing Mapping version in registry -> NOT_REPRODUCIBLE
+    No fallback to any current/active version is permitted.
+    """
+    from app.services.reconstruction_engine import reconstruction_engine
+    from app.services.governance_registry import (
+        governance_registry, PolicyVersion, RuleVersion, LifecycleState,
+        RecommendationMapping, AuthorityRequirement
+    )
+    from app.db.database import SessionLocal
+    from app.models.governance_storage import RecommendationModel, RuleEvaluationModel
+    import json
+    import uuid
+    from datetime import datetime
+
+    def _make_journey(
+        db, uid_prefix, policy_id, policy_version,
+        rule_id, rule_version, mapping_id, mapping_version
+    ):
+        """Helper: insert a minimal journey into the DB and return (journey_id, eval_id, rec_id)."""
+        uid = uuid.uuid4().hex[:6]
+        journey_id = f"JNY-MISS-{uid_prefix}-{uid}"
+        eval_id = f"EVAL-MISS-{uid_prefix}-{uid}"
+        rec_id = f"REC-MISS-{uid_prefix}-{uid}"
+        db.add(RuleEvaluationModel(
+            evaluation_id=eval_id,
+            decision_context_id="CTX-MISS",
+            policy_id=policy_id,
+            policy_version=policy_version,
+            rule_id=rule_id,
+            rule_version=rule_version,
+            result="CONDITION_MET",
+            evaluation_timestamp=datetime.utcnow().isoformat(),
+            input_values_json=json.dumps({"primary_context": "Op"}),
+            journey_id=journey_id
+        ))
+        db.add(RecommendationModel(
+            recommendation_id=rec_id,
+            decision_context_id="CTX-MISS",
+            rule_evaluation_id=eval_id,
+            journey_id=journey_id,
+            mapping_id=mapping_id,
+            mapping_version=mapping_version,
+            content="Test",
+            status="ACTIVE",
+            priority="High",
+            generated_at=datetime.utcnow().isoformat()
+        ))
+        db.commit()
+        return journey_id, eval_id, rec_id
+
+    db = SessionLocal()
+    created_evals = []
+    created_recs = []
+
+    uid_base = uuid.uuid4().hex[:6]
+    shared_policy_id = f"POL-MISS-{uid_base}"
+    shared_rule_id = f"RULE-MISS-{uid_base}"
+    shared_map_id = f"MAP-MISS-{uid_base}"
+
+    try:
+        # ---- Case A: Policy version NOT in registry, rule/mapping present ----
+        # Register rule and mapping but NOT the policy
+        rule_a = RuleVersion(
+            rule_id=shared_rule_id, version="V-A",
+            logic_description="", lifecycle_state=LifecycleState.ACTIVE,
+            inputs=[], allowed_outputs=[],
+            governing_policy_id=shared_policy_id, governing_policy_version="V-ABSENT"
+        )
+        mapping_a = RecommendationMapping(
+            mapping_id=shared_map_id, version="V-A",
+            applicable_rule_id=shared_rule_id,
+            eligible_result="CONDITION_MET",
+            recommendation_template="Case A Action",
+            authority_requirement=AuthorityRequirement.INFORMATIONAL,
+            priority="High",
+            lifecycle_state=LifecycleState.ACTIVE
+        )
+        governance_registry.register_rule(rule_a)
+        governance_registry.register_recommendation_mapping(mapping_a)
+        # Deliberately do NOT register policy version "V-ABSENT"
+
+        jny_a, eval_a, rec_a = _make_journey(
+            db, "A",
+            shared_policy_id, "V-ABSENT",
+            shared_rule_id, "V-A",
+            shared_map_id, "V-A"
+        )
+        created_evals.append(eval_a)
+        created_recs.append(rec_a)
+
+        res_a = reconstruction_engine.reproduce_decision(jny_a)
+        assert res_a.status == "NOT_REPRODUCIBLE", (
+            f"Case A: expected NOT_REPRODUCIBLE when policy version absent, got {res_a.status}. "
+            f"Diff: {res_a.diff}"
+        )
+        assert "policy" in res_a.diff.lower() or "NOT_REPRODUCIBLE" in res_a.status
+
+        # ---- Case B: Rule version NOT in registry, policy/mapping present ----
+        policy_b = PolicyVersion(
+            policy_id=shared_policy_id, version="V-B",
+            content="Case B Policy", lifecycle_state=LifecycleState.ACTIVE
+        )
+        mapping_b = RecommendationMapping(
+            mapping_id=shared_map_id, version="V-B",
+            applicable_rule_id=shared_rule_id,
+            eligible_result="CONDITION_MET",
+            recommendation_template="Case B Action",
+            authority_requirement=AuthorityRequirement.INFORMATIONAL,
+            priority="High",
+            lifecycle_state=LifecycleState.ACTIVE
+        )
+        governance_registry.register_policy(policy_b)
+        governance_registry.register_recommendation_mapping(mapping_b)
+        # Deliberately do NOT register rule version "V-ABSENT-RULE"
+
+        jny_b, eval_b, rec_b = _make_journey(
+            db, "B",
+            shared_policy_id, "V-B",
+            shared_rule_id, "V-ABSENT-RULE",
+            shared_map_id, "V-B"
+        )
+        created_evals.append(eval_b)
+        created_recs.append(rec_b)
+
+        res_b = reconstruction_engine.reproduce_decision(jny_b)
+        assert res_b.status == "NOT_REPRODUCIBLE", (
+            f"Case B: expected NOT_REPRODUCIBLE when rule version absent, got {res_b.status}. "
+            f"Diff: {res_b.diff}"
+        )
+
+        # ---- Case C: Mapping version NOT in registry, policy/rule present ----
+        policy_c = PolicyVersion(
+            policy_id=shared_policy_id, version="V-C",
+            content="Case C Policy", lifecycle_state=LifecycleState.ACTIVE
+        )
+        rule_c = RuleVersion(
+            rule_id=shared_rule_id, version="V-C",
+            logic_description="", lifecycle_state=LifecycleState.ACTIVE,
+            inputs=[], allowed_outputs=[],
+            governing_policy_id=shared_policy_id, governing_policy_version="V-C"
+        )
+        governance_registry.register_policy(policy_c)
+        governance_registry.register_rule(rule_c)
+        # Deliberately do NOT register mapping version "V-ABSENT-MAP"
+
+        jny_c, eval_c, rec_c = _make_journey(
+            db, "C",
+            shared_policy_id, "V-C",
+            shared_rule_id, "V-C",
+            shared_map_id, "V-ABSENT-MAP"
+        )
+        created_evals.append(eval_c)
+        created_recs.append(rec_c)
+
+        res_c = reconstruction_engine.reproduce_decision(jny_c)
+        assert res_c.status == "NOT_REPRODUCIBLE", (
+            f"Case C: expected NOT_REPRODUCIBLE when mapping version absent, got {res_c.status}. "
+            f"Diff: {res_c.diff}"
+        )
+
+    finally:
+        for eid in created_evals:
+            db.query(RuleEvaluationModel).filter(RuleEvaluationModel.evaluation_id == eid).delete()
+        for rid in created_recs:
+            db.query(RecommendationModel).filter(RecommendationModel.recommendation_id == rid).delete()
+        db.commit()
+        db.close()
