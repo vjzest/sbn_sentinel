@@ -583,14 +583,19 @@ def test_a025b_real_two_process_restart():
     # Forced DB failure during record_* must raise / not produce a false success.
     from app.services.governance_registry import governance_registry, RuleEvaluationRecord
     from datetime import datetime
+    import warnings
+    from sqlalchemy.exc import SAWarning
+    
     raised = False
     try:
-        governance_registry.record_evaluation(RuleEvaluationRecord(
-            evaluation_id=None,  # NULL primary key -> DB constraint violation
-            decision_context_id="CTX-FAIL", policy_id="POL-FAIL", policy_version="V1",
-            rule_id="RULE-FAIL", rule_version="V1", result="CONDITION_MET",
-            evaluation_timestamp=datetime.utcnow(), input_values={}, journey_id="JNY-FAIL"
-        ))
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", SAWarning)
+            governance_registry.record_evaluation(RuleEvaluationRecord(
+                evaluation_id=None,  # NULL primary key -> DB constraint violation
+                decision_context_id="CTX-FAIL", policy_id="POL-FAIL", policy_version="V1",
+                rule_id="RULE-FAIL", rule_version="V1", result="CONDITION_MET",
+                evaluation_timestamp=datetime.utcnow(), input_values={}, journey_id="JNY-FAIL"
+            ))
     except Exception:
         raised = True
     assert raised, "record_evaluation with NULL primary key must raise an exception."
