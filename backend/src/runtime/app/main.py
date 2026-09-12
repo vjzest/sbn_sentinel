@@ -74,24 +74,15 @@ def create_app() -> FastAPI:
             else:
                 print("[SUCCESS] Super Admin already exists.")
 
-            # Seed default healthy Practice Fusion connector if missing
+            # Do not create a production-ready PF connector at startup.
             from app.models.connector import ConnectorModel
-            from datetime import datetime
+            import logging
+            logger = logging.getLogger(__name__)
             pf_conn = db.query(ConnectorModel).filter(
                 ConnectorModel.name.ilike("%Practice Fusion%")
             ).first()
             if not pf_conn:
-                db.add(ConnectorModel(
-                    id="CONN-PF-001",
-                    name="Practice Fusion EHR",
-                    type="EHR",
-                    status="Healthy",
-                    latency_ms=45,
-                    last_sync=datetime.utcnow(),
-                    access_token="pf_valid_token_default"
-                ))
-                db.commit()
-                print("[SUCCESS] Practice Fusion Connector seeded.")
+                logger.warning("Practice Fusion connector not configured. Readiness gate will fail-closed.")
         except Exception as e:
             print(f"[WARNING] Could not seed bootstrap data: {e}")
         finally:

@@ -325,7 +325,14 @@ def test_e2e_authentic_journey():
         role=UserRole.SYSTEM_ADMINISTRATOR.value,
         is_active=True
     )
+    from app.models.connector import ConnectorModel
+    from datetime import datetime
+    pf = ConnectorModel(
+        id=f"CONN-PF-{uuid.uuid4().hex[:6]}", name="Practice Fusion EHR", type="EHR",
+        status="Healthy", latency_ms=45, last_sync=datetime.utcnow(), access_token="mock_token"
+    )
     db.add(user)
+    db.add(pf)
     db.commit()
 
     # 1. Login
@@ -343,6 +350,7 @@ def test_e2e_authentic_journey():
     assert clinics_res.status_code == 200, "Protected route access failed"
 
     db.delete(user)
+    db.delete(pf)
     db.commit()
     db.close()
 
@@ -508,7 +516,15 @@ def test_a026_readiness_gate_positive_and_negative():
         role=UserRole.UNASSIGNED.value,
         is_active=True
     )
-    db.add_all([u_active, u_unassigned])
+    
+    from app.models.connector import ConnectorModel
+    from datetime import datetime
+    pf = ConnectorModel(
+        id=f"CONN-PF-{uuid.uuid4().hex[:6]}", name="Practice Fusion EHR", type="EHR",
+        status="Healthy", latency_ms=45, last_sync=datetime.utcnow(), access_token="mock_token"
+    )
+    
+    db.add_all([u_active, u_unassigned, pf])
     db.commit()
 
     try:
@@ -532,129 +548,77 @@ def test_a026_readiness_gate_positive_and_negative():
     finally:
         db.delete(u_active)
         db.delete(u_unassigned)
+        db.delete(pf)
         db.commit()
         db.close()
 
 
 @pytest.mark.governance
-def test_a025b_restart_idempotency_and_db_failure():
+def test_a025b_real_two_process_restart():
     """
     Audit 4 Item 2 (Completion Proof):
-    1. Idempotent restart: clearing caches TWICE still recovers the same records from DB.
-    2. Forced DB failure during record_* must raise / not produce a false success.
+    Real two-process test for durable persistence.
+    Process A creates governed chain and exits.
+    Process B starts in fresh interpreter against same DB and retrieves exact data.
     """
-    from app.services.governance_registry import (
-        governance_registry, RecommendationRecord, RecommendationStatus,
-        AuthorityRequirement, HumanDecisionRecord, DecisionType, DecisionStatus,
-        RuleEvaluationRecord
-    )
-    from app.db.database import SessionLocal
-    from app.models.governance_storage import (
-        RecommendationModel, RuleEvaluationModel, HumanDecisionModel
-    )
-    import uuid
+    import subprocess
+    import sys
+    import os
+    import json
+
+    helpers_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "../helpers"))
+    write_script = os.path.join(helpers_dir, "write_governed_fixture.py")
+    read_script = os.path.join(helpers_dir, "read_and_assert_fixture.py")
+
+    # Process A
+    res_a = subprocess.run([sys.executable, write_script], capture_output=True, text=True, check=True)
+    out_a = res_a.stdout.strip().splitlines()[-1]
+    data = json.loads(out_a)
+
+    # Process B
+    res_b = subprocess.run([sys.executable, read_script, data["jny_id"], data["rec_id"], data["dec_id"]], capture_output=True, text=True)
+    assert res_b.returncode == 0, f"Process B failed: {res_b.stderr} {res_b.stdout}"
+    assert "SUCCESS" in res_b.stdout
+
+    # Forced DB failure during record_* must raise / not produce a false success.
+    from app.services.governance_registry import governance_registry, RuleEvaluationRecord
     from datetime import datetime
-
-    uid = uuid.uuid4().hex[:6]
-    jny_id = f"JNY-IDEM-{uid}"
-    eval_id = f"EVAL-IDEM-{uid}"
-    rec_id = f"REC-IDEM-{uid}"
-    dec_id = f"DEC-IDEM-{uid}"
-
-    # --- Phase 1: Write full chain to DB ---
-    governance_registry.record_evaluation(RuleEvaluationRecord(
-        evaluation_id=eval_id,
-        decision_context_id="CTX-IDEM",
-        policy_id="POL-IDEM",
-        policy_version="V1",
-        rule_id="RULE-IDEM",
-        rule_version="V1",
-        result="CONDITION_MET",
-        evaluation_timestamp=datetime.utcnow(),
-        input_values={"test": "idempotent"},
-        journey_id=jny_id
-    ))
-    governance_registry.record_recommendation(RecommendationRecord(
-        recommendation_id=rec_id,
-        mapping_id="MAP-IDEM",
-        mapping_version="V1",
-        decision_context_id="CTX-IDEM",
-        rule_evaluation_id=eval_id,
-        recommendation_content="Idempotent Rec",
-        status=RecommendationStatus.ACTIVE,
-        authority_requirement=AuthorityRequirement.INFORMATIONAL,
-        priority="High",
-        journey_id=jny_id
-    ))
-    governance_registry.record_human_decision(HumanDecisionRecord(
-        decision_id=dec_id,
-        recommendation_id=rec_id,
-        actor_id="ACTOR-IDEM",
-        decision_type=DecisionType.APPROVED,
-        authority_basis="Valid",
-        status=DecisionStatus.RECORDED,
-        journey_id=jny_id
-    ))
-
+    raised = False
     try:
-        # --- Phase 2: First restart simulation — clear all caches ---
-        governance_registry._evaluations.clear()
-        governance_registry._recommendations.clear()
-        governance_registry._human_decisions.clear()
+        governance_registry.record_evaluation(RuleEvaluationRecord(
+            evaluation_id=None,  # NULL primary key -> DB constraint violation
+            decision_context_id="CTX-FAIL", policy_id="POL-FAIL", policy_version="V1",
+            rule_id="RULE-FAIL", rule_version="V1", result="CONDITION_MET",
+            evaluation_timestamp=datetime.utcnow(), input_values={}, journey_id="JNY-FAIL"
+        ))
+    except Exception:
+        raised = True
+    assert raised, "record_evaluation with NULL primary key must raise an exception."
 
-        r1 = governance_registry.get_recommendation(rec_id)
-        assert r1 is not None, "First restart: recommendation not recovered from DB"
-        assert r1.recommendation_id == rec_id
-        assert r1.recommendation_content == "Idempotent Rec"
 
-        d1 = governance_registry.get_human_decision(dec_id)
-        assert d1 is not None, "First restart: decision not recovered from DB"
+@pytest.mark.governance
+def test_a021_cross_process_historical_reconstruction():
+    """
+    Audit 4 Item 4: Real cross-process historical reconstruction.
+    Process A writes V1 journey and V2 active rules.
+    Process B reconstructs V1 journey in fresh interpreter.
+    """
+    import subprocess
+    import sys
+    import os
+    import json
 
-        # --- Phase 3: Second restart simulation — clear caches again ---
-        governance_registry._evaluations.clear()
-        governance_registry._recommendations.clear()
-        governance_registry._human_decisions.clear()
+    helpers_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "../helpers"))
+    write_script = os.path.join(helpers_dir, "reconstruction_v1_write.py")
+    read_script = os.path.join(helpers_dir, "reconstruction_v2_read.py")
 
-        r2 = governance_registry.get_recommendation(rec_id)
-        assert r2 is not None, "Second restart: recommendation not recovered from DB (idempotency failure)"
-        assert r2.recommendation_id == rec_id, "Second restart returned wrong record"
-        assert r2.recommendation_content == "Idempotent Rec", "Second restart: content mismatch"
+    res_a = subprocess.run([sys.executable, write_script], capture_output=True, text=True, check=True)
+    out_a = res_a.stdout.strip().splitlines()[-1]
+    data = json.loads(out_a)
 
-        d2 = governance_registry.get_human_decision(dec_id)
-        assert d2 is not None, "Second restart: decision not recovered (idempotency failure)"
-        assert d2.decision_id == dec_id
-
-        # --- Phase 4: Forced DB failure must raise, not silently succeed ---
-        # Pass an invalid journey_id type to force a DB-level error;
-        # governance_registry methods must propagate the exception, not swallow it.
-        raised = False
-        try:
-            governance_registry.record_evaluation(RuleEvaluationRecord(
-                evaluation_id=None,  # NULL primary key -> DB constraint violation
-                decision_context_id="CTX-FAIL",
-                policy_id="POL-FAIL",
-                policy_version="V1",
-                rule_id="RULE-FAIL",
-                rule_version="V1",
-                result="CONDITION_MET",
-                evaluation_timestamp=datetime.utcnow(),
-                input_values={},
-                journey_id="JNY-FAIL"
-            ))
-        except Exception:
-            raised = True
-        assert raised, (
-            "record_evaluation with NULL primary key must raise an exception, "
-            "not produce a silent false success."
-        )
-
-    finally:
-        db = SessionLocal()
-        db.query(HumanDecisionModel).filter(HumanDecisionModel.decision_id == dec_id).delete()
-        db.query(RecommendationModel).filter(RecommendationModel.recommendation_id == rec_id).delete()
-        db.query(RuleEvaluationModel).filter(RuleEvaluationModel.evaluation_id == eval_id).delete()
-        db.commit()
-        db.close()
+    res_b = subprocess.run([sys.executable, read_script, data["jny_id"], data["rec_id"], data["eval_id"]], capture_output=True, text=True)
+    assert res_b.returncode == 0, f"Process B failed: {res_b.stderr} {res_b.stdout}"
+    assert "SUCCESS" in res_b.stdout
 
 
 @pytest.mark.governance
@@ -830,5 +794,95 @@ def test_a021b_reconstruction_missing_dependency():
             db.query(RuleEvaluationModel).filter(RuleEvaluationModel.evaluation_id == eid).delete()
         for rid in created_recs:
             db.query(RecommendationModel).filter(RecommendationModel.recommendation_id == rid).delete()
+        db.commit()
+        db.close()
+
+
+@pytest.mark.governance
+def test_a026b_practice_fusion_readiness():
+    """
+    Audit 4 Item 7: Practice Fusion Readiness
+    - No PF ConnectorModel in DB -> 503, pf=false
+    - Only unrelated connector -> 503, pf=false
+    - PF record exists but no credential -> 503
+    - PF status is Warning -> 503
+    - Properly configured, real Healthy PF connector -> 200, pf=true
+    """
+    from app.db.database import SessionLocal
+    from app.models.user import User, UserRole
+    from app.core.security import get_password_hash
+    from app.models.connector import ConnectorModel
+    import uuid
+    from datetime import datetime
+
+    # We need TestClient
+    from fastapi.testclient import TestClient
+    from app.main import app
+    local_client = TestClient(app)
+
+    db = SessionLocal()
+    uid = uuid.uuid4().hex[:6]
+    admin_email = f"pf_ready_{uid}@sbnsentinel.com"
+
+    u_admin = User(
+        email=admin_email,
+        hashed_password=get_password_hash("Test@123"),
+        full_name="PF Admin",
+        role=UserRole.SYSTEM_ADMINISTRATOR.value,
+        is_active=True
+    )
+    db.add(u_admin)
+    db.commit()
+
+    try:
+        # Get auth token
+        res = local_client.post("/api/v1/auth/login", json={"email": admin_email, "password": "Test@123"})
+        token = res.json()["access_token"]
+        headers = {"Authorization": f"Bearer {token}"}
+
+        # 1. No PF ConnectorModel -> 503, pf=false
+        db.query(ConnectorModel).delete()
+        db.commit()
+        r1 = local_client.get("/api/v1/health/ready", headers=headers)
+        assert r1.status_code == 503
+        assert r1.json()["detail"]["checks"]["pf"] is False
+
+        # 2. Only an unrelated connector exists -> 503, pf=false
+        db.add(ConnectorModel(
+            id="CONN-OTHER", name="Random CRM", type="CRM", status="Healthy",
+            latency_ms=10, last_sync=datetime.utcnow(), access_token="token"
+        ))
+        db.commit()
+        r2 = local_client.get("/api/v1/health/ready", headers=headers)
+        assert r2.status_code == 503
+        assert r2.json()["detail"]["checks"]["pf"] is False
+
+        # 3. PF record exists but no credential/token -> 503
+        pf1 = ConnectorModel(
+            id="CONN-PF-TEST", name="Practice Fusion EHR", type="EHR", status="Healthy",
+            latency_ms=10, last_sync=datetime.utcnow(), access_token=None
+        )
+        db.add(pf1)
+        db.commit()
+        r3 = local_client.get("/api/v1/health/ready", headers=headers)
+        assert r3.status_code == 503
+
+        # 4. PF status is Warning or Disconnected -> 503
+        pf1.access_token = "some_token"
+        pf1.status = "Warning"
+        db.commit()
+        r4 = local_client.get("/api/v1/health/ready", headers=headers)
+        assert r4.status_code == 503
+
+        # 5. Properly configured, real Healthy PF connector -> 200, pf=true
+        pf1.status = "Healthy"
+        db.commit()
+        r5 = local_client.get("/api/v1/health/ready", headers=headers)
+        assert r5.status_code == 200
+        assert r5.json()["ready"] is True
+
+    finally:
+        db.delete(u_admin)
+        db.query(ConnectorModel).delete()
         db.commit()
         db.close()
