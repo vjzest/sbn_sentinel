@@ -3,36 +3,25 @@ from fastapi import APIRouter
 from pydantic import BaseModel
 from typing import Optional, Dict, Any, List
 from openai import OpenAI
-
 router = APIRouter()
-
-
 class ChatRequest(BaseModel):
     message: str
     history: Optional[List[Dict[str, str]]] = []
     context: Optional[Dict[str, Any]] = None
-
-
 class ChatResponse(BaseModel):
     reply: str
     source: str
-
-
 # Retrieve key from environment
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-
-
 @router.post("/chat", response_model=ChatResponse)
 async def chat_assistant(request: ChatRequest):
     message = request.message.lower().strip()
     ctx = request.context or {}
-
     # Extract operational context safely
     checked_in = ctx.get("checked_in", 200)
     waiting = ctx.get("waiting", 57)
     delayed = ctx.get("delayed", 88)
     active_patient = ctx.get("active_patient", "None selected")
-
     # 1. If OpenAI API Key is present, use GPT-4o for natural language explanation
     if OPENAI_API_KEY:
         try:
@@ -50,27 +39,22 @@ async def chat_assistant(request: ChatRequest):
                 f"- Active selected patient: {active_patient}\n"
                 "Please respond to the user's message in a helpful, conversational manner, referencing the context if relevant."
             )
-
             messages = [{"role": "system", "content": system_prompt}]
             for turn in request.history or []:
                 messages.append({"role": turn.get("role", "user"),
                                 "content": turn.get("content", "")})
             messages.append({"role": "user", "content": request.message})
-
             completion = client.chat.completions.create(
                 model="gpt-4o",
                 messages=messages,
                 max_tokens=250,
                 temperature=0.7
             )
-
             reply_text = completion.choices[0].message.content
             return ChatResponse(reply=reply_text, source="openai")
-
         except Exception as e:  # noqa
             # Fallback to local assistant if OpenAI API call fails
             pass
-
     # 2. Local heuristic fallback responder (context-aware & extremely robust)
     reply_text = ""
     if "hi" in message or "hello" in message or "hey" in message:
@@ -106,5 +90,4 @@ async def chat_assistant(request: ChatRequest):
             f"and {delayed} Delayed. You can select any patient to inspect their billing codes, insurance "
             "eligibility, and clinical SOAP notes. Let me know if you need any explanations!"
         )
-
     return ChatResponse(reply=reply_text, source="local_heuristic")
