@@ -4,15 +4,23 @@ from pydantic import BaseModel
 from typing import Optional, Dict, Any, List
 from openai import OpenAI
 router = APIRouter()
+
+
 class ChatRequest(BaseModel):
     message: str
     history: Optional[List[Dict[str, str]]] = []
     context: Optional[Dict[str, Any]] = None
+
+
 class ChatResponse(BaseModel):
     reply: str
     source: str
+
+
 # Retrieve key from environment
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+
+
 @router.post("/chat", response_model=ChatResponse)
 async def chat_assistant(request: ChatRequest):
     message = request.message.lower().strip()
