@@ -1,6 +1,6 @@
 import React from 'react';
 import { mapGovernedState, SemanticState } from '@/utils/governedPresentation';
-import { CheckCircle2, AlertTriangle, AlertCircle, Clock, HelpCircle, XCircle } from 'lucide-react';
+import { CheckCircle2, AlertTriangle, Clock, HelpCircle, XCircle } from 'lucide-react';
 
 interface GovernedStatusProps {
   state: string;
