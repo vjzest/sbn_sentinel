@@ -1,7 +1,7 @@
 import { fetchWithAuth } from './fetchWithAuth';
 
 export interface GovernanceExecutionResult {
-  status: 'approved' | 'blocked' | 'error';
+  status: 'executed' | 'blocked' | 'error';
   decisionId?: string;
   actionId?: string;
   attemptId?: string;
@@ -69,7 +69,7 @@ export const executeGovernedRecommendation = async (
     }
     
     return { 
-      status: 'approved', 
+      status: 'executed', 
       decisionId, 
       actionId, 
       attemptId: execData.attempt_id,

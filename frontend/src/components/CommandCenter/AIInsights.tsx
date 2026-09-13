@@ -5,9 +5,12 @@ import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '@/store';
 import { incrementActionsTaken } from '@/store/slices/signalSlice';
 import { executeGovernedRecommendation } from '@/utils/governance';
+import { GovernedStatus } from '@/components/GovernedUI/GovernedStatus';
+import { CriticalStateBanner } from '@/components/GovernedUI/CriticalStateBanner';
+import { DataState } from '@/components/GovernedUI/DataState';
 
 export const AIInsights: React.FC = () => {
-  const [actionStatus, setActionStatus] = useState<'pending' | 'approved' | 'dismissed' | 'blocked' | 'error'>('pending');
+  const [actionStatus, setActionStatus] = useState<'pending' | 'executed' | 'dismissed' | 'blocked' | 'error'>('pending');
   const [activeModelName, setActiveModelName] = useState('GPT-4o');
   const signals = useSelector((state: RootState) => state.signals.events);
   const dispatch = useDispatch();
@@ -51,7 +54,7 @@ export const AIInsights: React.FC = () => {
 
       setActionStatus(result.status);
 
-      if (result.status === 'approved') {
+      if (result.status === 'executed') {
         dispatch(incrementActionsTaken());
       }
 
@@ -140,31 +143,23 @@ export const AIInsights: React.FC = () => {
 
 
         {/* Approval Success State */}
-        {actionStatus === 'approved' && (
-          <div className="bg-[#10B981]/20 border border-[#10B981]/30 rounded-[16px] p-5 flex items-center justify-between flex-1 animate-in fade-in">
-             <div className="flex flex-wrap items-center gap-2 sm:gap-3 w-full md:w-auto">
-              <CheckCircle2 className="w-5 h-5 text-[#10B981]" />
-              <span className="text-sm font-bold text-[#34D399]">Action Approved & Dispatched.</span>
+        {actionStatus === 'executed' && (
+          <div className="bg-[#10B981]/10 border border-[#10B981]/30 rounded-[16px] p-5 flex items-center justify-between flex-1 animate-in fade-in">
+             <div className="flex flex-col gap-2">
+              <span className="text-sm font-bold text-[#34D399]">Action Dispatched.</span>
+              <GovernedStatus state="EXECUTED" />
             </div>
           </div>
         )}
         
         {/* Blocked State */}
         {actionStatus === 'blocked' && (
-          <div className="bg-[#EF4444]/20 border border-[#EF4444]/30 rounded-[16px] p-5 flex items-center justify-between flex-1 animate-in fade-in">
-             <div className="flex flex-wrap items-center gap-2 sm:gap-3 w-full md:w-auto">
-              <span className="text-sm font-bold text-[#F87171]">Action BLOCKED: Missing integration or not implemented.</span>
-            </div>
-          </div>
+          <CriticalStateBanner state="BLOCKED" reason="Missing integration or not implemented." />
         )}
         
         {/* Error State */}
         {actionStatus === 'error' && (
-          <div className="bg-amber-500/20 border border-amber-500/30 rounded-[16px] p-5 flex items-center justify-between flex-1 animate-in fade-in">
-             <div className="flex flex-wrap items-center gap-2 sm:gap-3 w-full md:w-auto">
-              <span className="text-sm font-bold text-amber-500">Action Failed.</span>
-            </div>
-          </div>
+          <CriticalStateBanner state="ERROR" reason="Action Failed." />
         )}
           </>
         )}

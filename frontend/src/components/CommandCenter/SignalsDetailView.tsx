@@ -6,7 +6,9 @@ import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '@/store';
 import { incrementActionsTaken, SignalEvent } from '@/store/slices/signalSlice';
 import { executeGovernedRecommendation } from '@/utils/governance';
-
+import { GovernedStatus } from '@/components/GovernedUI/GovernedStatus';
+import { DataState } from '@/components/GovernedUI/DataState';
+import { CriticalStateBanner } from '@/components/GovernedUI/CriticalStateBanner';
 export const SignalsDetailView: React.FC = () => {
   const dispatch = useDispatch();
   const reduxSignals = useSelector((state: RootState) => state.signals.events);
@@ -150,7 +152,7 @@ export const SignalsDetailView: React.FC = () => {
 
       setIsDispatching(false);
 
-      if (result.status === 'approved') {
+      if (result.status === 'executed') {
         setIsDispatched(true);
         setOutcomeState('PENDING');
         setResolutionState('UNRESOLVED');
@@ -409,7 +411,9 @@ export const SignalsDetailView: React.FC = () => {
               <tbody className="text-sm font-semibold text-white">
                 {filteredSignals.length === 0 ? (
                   <tr>
-                    <td colSpan={5} className="py-8 text-center text-white/50 font-medium">No matching signals active in database.</td>
+                    <td colSpan={5} className="py-8">
+                      <DataState state="empty" message="No matching signals active in database." className="bg-transparent border-0" />
+                    </td>
                   </tr>
                 ) : (
                   filteredSignals.map((signal) => {
@@ -688,18 +692,19 @@ export const SignalsDetailView: React.FC = () => {
                     <h5 className="text-xs font-extrabold text-[#3B82F6] uppercase tracking-wider mb-2 flex items-center gap-1">
                       <Database className="w-3.5 h-3.5" /> Operational Outcome (SESR-007)
                     </h5>
-                    <div className="grid grid-cols-2 gap-4">
+                    
+                    {outcomeState === 'BLOCKED' && (
+                      <CriticalStateBanner state="BLOCKED" reason="Execution was blocked by backend governance rules." />
+                    )}
+                    
+                    <div className="grid grid-cols-2 gap-4 mt-2">
                       <div>
-                        <p className="text-[10px] text-white/50 uppercase tracking-widest font-bold">Confirmation State</p>
-                        <p className={`text-xs font-bold ${outcomeState === 'CONFIRMED' ? 'text-emerald-400' : outcomeState === 'BLOCKED' ? 'text-red-400' : 'text-amber-400'}`}>
-                          {outcomeState || 'PENDING'}
-                        </p>
+                        <p className="text-[10px] text-white/50 uppercase tracking-widest font-bold mb-1">Confirmation State</p>
+                        <GovernedStatus state={outcomeState || 'PENDING'} />
                       </div>
                       <div>
-                        <p className="text-[10px] text-white/50 uppercase tracking-widest font-bold">Resolution State</p>
-                        <p className={`text-xs font-bold ${resolutionState === 'RESOLVED' ? 'text-emerald-400' : resolutionState === 'BLOCKED' ? 'text-red-400' : 'text-amber-400'}`}>
-                          {resolutionState || 'UNRESOLVED'}
-                        </p>
+                        <p className="text-[10px] text-white/50 uppercase tracking-widest font-bold mb-1">Resolution State</p>
+                        <GovernedStatus state={resolutionState || 'UNRESOLVED'} />
                       </div>
                     </div>
                   </div>
