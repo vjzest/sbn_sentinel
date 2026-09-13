@@ -1,11 +1,17 @@
 import React from 'react';
-import { expect, test, describe } from 'vitest';
+import { expect, test, describe, vi } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { mapGovernedState } from '../utils/governedPresentation';
+import { executeGovernedRecommendation } from '../utils/governance';
 import { GovernedStatus } from '../components/GovernedUI/GovernedStatus';
 import { DataState } from '../components/GovernedUI/DataState';
 import { HistoricalStateMarker } from '../components/GovernedUI/HistoricalStateMarker';
 import { CriticalStateBanner } from '../components/GovernedUI/CriticalStateBanner';
+
+vi.mock('../utils/fetchWithAuth', () => ({
+  fetchWithAuth: vi.fn()
+}));
+import { fetchWithAuth } from '../utils/fetchWithAuth';
 
 describe('SDS-D1: Governed UI Foundation & State Contract', () => {
 
@@ -55,7 +61,8 @@ describe('SDS-D1: Governed UI Foundation & State Contract', () => {
   });
 
   // T06 — Blocked action
-  test('T06: Blocked action - backend denial stays BLOCKED; UI does not advance to dispatched/executed', () => {
+  test('T06: Blocked action - backend denial stays BLOCKED; UI does not advance to dispatched/executed', async () => {
+    // 1. Presentation aspect
     const res = mapGovernedState('BLOCKED');
     expect(res.semantic).toBe('critical');
     expect(res.critical).toBe(true);
@@ -63,6 +70,17 @@ describe('SDS-D1: Governed UI Foundation & State Contract', () => {
     const html = renderToStaticMarkup(<CriticalStateBanner state="BLOCKED" reason="Denied by policy" />);
     expect(html).toContain('BLOCKED');
     expect(html).toContain('Denied by policy');
+
+    // 2. Execution path aspect (Actual Adopter Mock)
+    // Setup fetchWithAuth mock to return success for decision and action creation, but 409 blocked for execution
+    const fetchMock = vi.mocked(fetchWithAuth);
+    fetchMock.mockResolvedValueOnce({ ok: true, json: async () => ({ decision_id: 'd1' }) } as Response);
+    fetchMock.mockResolvedValueOnce({ ok: true, json: async () => ({ action_id: 'a1' }) } as Response);
+    fetchMock.mockResolvedValueOnce({ ok: false, status: 409, json: async () => ({ detail: 'blocked by policy' }) } as Response);
+
+    const execResult = await executeGovernedRecommendation('rec1', 'ACTION', 'ref1');
+    expect(execResult.status).toBe('blocked');
+    expect(execResult.status).not.toBe('executed');
   });
 
   // T07 — Same state, same meaning
@@ -100,13 +118,27 @@ describe('SDS-D1: Governed UI Foundation & State Contract', () => {
   });
 
   // T10 — Frontend cannot grant authority
-  test('T10: Frontend cannot grant authority - visible action + backend denial stays denied', () => {
+  test('T10: Frontend cannot grant authority - visible action + backend denial stays denied', async () => {
+    // 1. Presentation mapping
     const res = mapGovernedState('DENIED');
     expect(res.semantic).toBe('critical');
     
     const html = renderToStaticMarkup(<GovernedStatus state="DENIED" />);
     expect(html).toContain('DENIED');
     expect(html).not.toContain('SUCCESS');
+
+    // 2. Execution path aspect
+    // Ensure if backend responds with 403 or non-OK without blocked keyword, it translates to error (never success/executed)
+    const fetchMock = vi.mocked(fetchWithAuth);
+    fetchMock.mockReset();
+    fetchMock.mockResolvedValueOnce({ ok: true, json: async () => ({ decision_id: 'd2' }) } as Response);
+    fetchMock.mockResolvedValueOnce({ ok: true, json: async () => ({ action_id: 'a2' }) } as Response);
+    fetchMock.mockResolvedValueOnce({ ok: false, status: 403, json: async () => ({ detail: 'unauthorized execution' }) } as Response);
+
+    const execResult = await executeGovernedRecommendation('rec2', 'ACTION', 'ref2');
+    expect(execResult.status).toBe('error');
+    // Cannot be executed if backend denied/errored
+    expect(execResult.status).not.toBe('executed');
   });
 
 });
