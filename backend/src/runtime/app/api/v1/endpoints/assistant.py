@@ -33,7 +33,15 @@ async def chat_assistant(request: ChatRequest):
     # 1. If OpenAI API Key is present, use GPT-4o for natural language explanation
     if OPENAI_API_KEY:
         try:
-            client = OpenAI(api_key=OPENAI_API_KEY)
+            if OPENAI_API_KEY.startswith("AI") or OPENAI_API_KEY.startswith("AQ"):
+                client = OpenAI(
+                    api_key=OPENAI_API_KEY,
+                    base_url="https://generativelanguage.googleapis.com/v1beta/openai/"
+                )
+                model_name = "gemini-1.5-flash"
+            else:
+                client = OpenAI(api_key=OPENAI_API_KEY)
+                model_name = "gpt-4o"
 
             system_prompt = (
                 "You are SBN Sentinel's Conversational Assistant. Your role is to explain clinical telemetry, "
@@ -47,16 +55,20 @@ async def chat_assistant(request: ChatRequest):
                 f"- Active selected patient: {active_patient}\n"
                 "Please respond to the user's message in a helpful, conversational manner, referencing the context if relevant."
             )
+
+            # Convert history to OpenAI format
             messages = [{"role": "system", "content": system_prompt}]
             for turn in request.history or []:
                 messages.append({"role": turn.get("role", "user"),
                                 "content": turn.get("content", "")})
+            
             messages.append({"role": "user", "content": request.message})
+
             completion = client.chat.completions.create(
-                model="gpt-4o",
+                model=model_name,
                 messages=messages,
-                max_tokens=250,
-                temperature=0.7
+                temperature=0.7,
+                max_tokens=250
             )
             reply_text = completion.choices[0].message.content
             return ChatResponse(reply=reply_text, source="openai")

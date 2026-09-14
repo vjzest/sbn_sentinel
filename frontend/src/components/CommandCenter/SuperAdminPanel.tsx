@@ -5,6 +5,7 @@ import {
   Settings, Server, Search, CheckCircle2, XCircle, MoreVertical,
   LogOut, ShieldCheck, Mail, Calendar, Menu, X
 } from 'lucide-react';
+import { Button } from '@/components/UI/Button';
 
 interface SuperAdminProps {
   onLogout: () => void;
@@ -170,7 +171,7 @@ export const SuperAdminPanel: React.FC<SuperAdminProps> = ({ onLogout, user }) =
 
   if (isLoading) {
     return (
-      <div className="min-h-screen w-full bg-[#0B1121] flex flex-col gap-4 items-center justify-center">
+      <div className="min-h-screen w-full bg-[var(--color-canvas)] flex flex-col gap-4 items-center justify-center">
         <div className="w-10 h-10 border-4 border-slate-700 border-t-[#6C4CF6] rounded-full animate-spin"></div>
         <span className="text-white/70 font-medium text-lg">Initializing Super Admin environment...</span>
       </div>
@@ -178,7 +179,7 @@ export const SuperAdminPanel: React.FC<SuperAdminProps> = ({ onLogout, user }) =
   }
 
   return (
-    <div className="flex h-screen bg-[#120524] text-white font-sans overflow-hidden w-full absolute inset-0 p-3 gap-3">
+    <div className="flex h-screen bg-[var(--color-surface)] text-white font-sans overflow-hidden w-full absolute inset-0 p-3 gap-3">
 
       {/* Mobile Sidebar Overlay */}
       {isMobileMenuOpen && (
@@ -189,7 +190,7 @@ export const SuperAdminPanel: React.FC<SuperAdminProps> = ({ onLogout, user }) =
       )}
 
       {/* Admin Sidebar */}
-      <aside className={`w-[260px] bg-gradient-to-br from-[#2E1055] to-[#120524] shadow-[0_20px_60px_rgba(46,16,85,0.3)] rounded-[24px] text-white border border-white/10 flex flex-col fixed md:relative z-[60] h-full transition-transform duration-300 ease-in-out shrink-0 ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-[300px] md:translate-x-0'}`}>
+      <aside className={`w-[260px] bg-gradient-to-br from-[var(--color-surface-raised)] to-[var(--color-surface)] shadow-[0_20px_60px_rgba(46,16,85,0.3)] rounded-[24px] text-white border border-white/10 flex flex-col fixed md:relative z-[60] h-full transition-transform duration-300 ease-in-out shrink-0 ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-[300px] md:translate-x-0'}`}>
         <div className="p-6 pb-5 border-b border-white/10 flex items-center justify-between">
           <div className="flex flex-wrap items-center gap-2 sm:gap-3 w-full md:w-auto">
             <div className="w-10 h-10 rounded-[16px] bg-white/10 border border-white/10 flex items-center justify-center font-black text-xl shadow-lg">
@@ -197,8 +198,8 @@ export const SuperAdminPanel: React.FC<SuperAdminProps> = ({ onLogout, user }) =
             </div>
             <div>
               <h1 className="text-sm font-black tracking-tight leading-none">Super Admin</h1>
-              <p className="text-[9px] text-[#A78BFA] tracking-[0.2em] uppercase font-black mt-1.5 flex items-center gap-1.5">
-                SaaS Control <span className="w-1.5 h-1.5 bg-[#10B981] rounded-full animate-pulse shadow-[0_0_8px_#10B981]"></span>
+              <p className="text-[9px] text-[var(--color-accent)] tracking-[0.2em] uppercase font-black mt-1.5 flex items-center gap-1.5">
+                SaaS Control <span className="w-1.5 h-1.5 bg-[var(--color-semantic-positive)] rounded-full animate-pulse shadow-[0_0_8px_var(--color-semantic-positive)]"></span>
               </p>
             </div>
           </div>
@@ -288,28 +289,28 @@ export const SuperAdminPanel: React.FC<SuperAdminProps> = ({ onLogout, user }) =
           {activeTab === 'overview' && (
             <div className="space-y-8 animate-in fade-in duration-500 max-w-[1400px] mx-auto">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <div className="bg-gradient-to-br from-[#2E1055] to-[#120524] p-6 rounded-2xl border border-white/10 border border-white/10 shadow-sm">
+                <div className="bg-gradient-to-br from-[var(--color-surface-raised)] to-[var(--color-surface)] p-6 rounded-2xl border border-white/10 border border-white/10 shadow-sm">
                   <div className="w-10 h-10 rounded-2xl bg-blue-500/20 text-blue-400 flex items-center justify-center mb-4">
                     <Building2 className="w-5 h-5" />
                   </div>
                   <p className="text-xs text-white/60 font-bold uppercase tracking-wider">Total Clinics</p>
                   <p className="text-3xl font-black text-white mt-1">{(stats?.total_clinics || 0)}</p>
                 </div>
-                <div className="bg-gradient-to-br from-[#2E1055] to-[#120524] p-6 rounded-2xl border border-white/10 border border-white/10 shadow-sm">
-                  <div className="w-10 h-10 rounded-2xl bg-[#2E1055]/20 text-[#A78BFA] flex items-center justify-center mb-4">
+                <div className="bg-gradient-to-br from-[var(--color-surface-raised)] to-[var(--color-surface)] p-6 rounded-2xl border border-white/10 border border-white/10 shadow-sm">
+                  <div className="w-10 h-10 rounded-2xl bg-[var(--color-surface-raised)]/20 text-[var(--color-accent)] flex items-center justify-center mb-4">
                     <Users className="w-5 h-5" />
                   </div>
                   <p className="text-xs text-white/60 font-bold uppercase tracking-wider">Active Users</p>
                   <p className="text-3xl font-black text-white mt-1">{(stats?.active_users || 0)}</p>
                 </div>
-                <div className="bg-gradient-to-br from-[#2E1055] to-[#120524] p-6 rounded-2xl border border-white/10 border border-white/10 shadow-sm">
+                <div className="bg-gradient-to-br from-[var(--color-surface-raised)] to-[var(--color-surface)] p-6 rounded-2xl border border-white/10 border border-white/10 shadow-sm">
                   <div className="w-10 h-10 rounded-2xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center mb-4">
                     <DollarSign className="w-5 h-5" />
                   </div>
                   <p className="text-xs text-white/60 font-bold uppercase tracking-wider">Platform Revenue MRR</p>
                   <p className="text-3xl font-black text-white mt-1">{(stats?.platform_revenue_formatted || '$0.00')}</p>
                 </div>
-                <div className="bg-gradient-to-br from-[#2E1055] to-[#120524] p-6 rounded-2xl border border-white/10 border border-white/10 shadow-sm">
+                <div className="bg-gradient-to-br from-[var(--color-surface-raised)] to-[var(--color-surface)] p-6 rounded-2xl border border-white/10 border border-white/10 shadow-sm">
                   <div className="w-10 h-10 rounded-2xl bg-purple-500/20 text-purple-400 flex items-center justify-center mb-4">
                     <BrainCircuit className="w-5 h-5" />
                   </div>
@@ -319,7 +320,7 @@ export const SuperAdminPanel: React.FC<SuperAdminProps> = ({ onLogout, user }) =
               </div>
 
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                <div className="bg-gradient-to-br from-[#2E1055] to-[#120524] border border-white/10 rounded-2xl p-6 shadow-sm">
+                <div className="bg-gradient-to-br from-[var(--color-surface-raised)] to-[var(--color-surface)] border border-white/10 rounded-2xl p-6 shadow-sm">
                   <h3 className="text-base font-bold text-white mb-6">Recent Clinic Activity</h3>
                   <div className="space-y-4">
                     {clinics.slice(0, 5).map((clinic, i) => (
@@ -341,8 +342,8 @@ export const SuperAdminPanel: React.FC<SuperAdminProps> = ({ onLogout, user }) =
                   </div>
                 </div>
 
-                <div className="bg-gradient-to-br from-[#2E1055] to-[#120524] rounded-2xl p-6 shadow-lg relative overflow-hidden">
-                  <div className="absolute top-0 right-0 w-64 h-64 bg-[#2E1055]/20 rounded-full blur-[80px]"></div>
+                <div className="bg-gradient-to-br from-[var(--color-surface-raised)] to-[var(--color-surface)] rounded-2xl p-6 shadow-lg relative overflow-hidden">
+                  <div className="absolute top-0 right-0 w-64 h-64 bg-[var(--color-surface-raised)]/20 rounded-full blur-[80px]"></div>
                   <h3 className="text-base font-bold text-white mb-6 flex items-center gap-2">
                     <Server className="w-5 h-5 text-indigo-400" /> System Health
                   </h3>
@@ -354,7 +355,7 @@ export const SuperAdminPanel: React.FC<SuperAdminProps> = ({ onLogout, user }) =
                         <span className="text-white font-bold">45%</span>
                       </div>
                       <div className="w-full bg-white/10 rounded-full h-2">
-                        <div className="bg-[#2E1055] h-2 rounded-full" style={{ width: '45%' }}></div>
+                        <div className="bg-[var(--color-surface-raised)] h-2 rounded-full" style={{ width: '45%' }}></div>
                       </div>
                     </div>
                     <div>
@@ -389,7 +390,7 @@ export const SuperAdminPanel: React.FC<SuperAdminProps> = ({ onLogout, user }) =
                 <div className="flex gap-3">
                   <div className="relative">
                     <Search className="w-4 h-4 text-white/50 absolute left-3 top-1/2 -translate-y-1/2" />
-                    <input type="text" placeholder="Search users..." className="pl-9 pr-4 py-2 bg-white/5 border border-white/10 rounded-lg text-sm focus:outline-none focus:border-[#2E1055]" />
+                    <input type="text" placeholder="Search users..." className="pl-9 pr-4 py-2 bg-white/5 border border-white/10 rounded-lg text-sm focus:outline-none focus:border-[var(--color-surface-raised)]" />
                   </div>
                 </div>
               </div>
@@ -415,7 +416,7 @@ export const SuperAdminPanel: React.FC<SuperAdminProps> = ({ onLogout, user }) =
                         </td>
                         <td className="p-4 text-sm font-medium text-white/70">{u.clinic}</td>
                         <td className="p-4">
-                          <span className={`px-2.5 py-1 text-[10px] font-bold rounded-full uppercase tracking-wider ${u.role === 'super_admin' ? 'bg-[#2E1055]/20 text-white' :
+                          <span className={`px-2.5 py-1 text-[10px] font-bold rounded-full uppercase tracking-wider ${u.role === 'super_admin' ? 'bg-[var(--color-surface-raised)]/20 text-white' :
                               u.role === 'clinic_admin' ? 'bg-purple-500/20 text-purple-400' :
                                 'bg-blue-500/20 text-blue-400'
                             }`}>
@@ -437,7 +438,7 @@ export const SuperAdminPanel: React.FC<SuperAdminProps> = ({ onLogout, user }) =
                           <button
                             onClick={() => toggleUserStatus(u.id)}
                             disabled={u.role === 'super_admin'}
-                            className="text-xs font-bold text-[#A78BFA] hover:text-indigo-400 disabled:opacity-30 disabled:cursor-not-allowed"
+                            className="text-xs font-bold text-[var(--color-accent)] hover:text-indigo-400 disabled:opacity-30 disabled:cursor-not-allowed"
                           >
                             {u.is_active ? 'Suspend' : 'Activate'}
                           </button>
@@ -458,16 +459,16 @@ export const SuperAdminPanel: React.FC<SuperAdminProps> = ({ onLogout, user }) =
                   <h3 className="text-base font-bold text-white">Registered Clinics (Tenants)</h3>
                   <p className="text-sm text-white/60 mt-1">Manage isolated workspaces and subscriptions.</p>
                 </div>
-                <button onClick={() => setIsInviteOpen(true)} className="bg-[#2E1055] hover:bg-[#120524] text-white px-4 py-2 rounded-2xl text-sm font-bold shadow-sm transition-colors">
+                <Button onClick={() => setIsInviteOpen(true)} variant="secondary" className="shadow-sm">
                   + Add Clinic
-                </button>
+                </Button>
               </div>
 
               {clinics.length === 0 ? (
                 <div className="p-12 text-center text-white/60 font-medium">
                   <Building2 className="w-12 h-12 mx-auto mb-4 text-white/60" />
                   <p>No clinics registered yet.</p>
-                  <button onClick={() => setIsInviteOpen(true)} className="text-[#A78BFA] font-bold mt-2 hover:underline">Register your first clinic</button>
+                  <button onClick={() => setIsInviteOpen(true)} className="text-[var(--color-accent)] font-bold mt-2 hover:underline">Register your first clinic</button>
                 </div>
               ) : (
                 <div className="overflow-x-auto">
@@ -530,7 +531,7 @@ export const SuperAdminPanel: React.FC<SuperAdminProps> = ({ onLogout, user }) =
               ) : (
                 <div className="space-y-4 p-6 bg-white/5">
                   {pendingApprovals.map((req) => (
-                    <div key={req.id} className="bg-gradient-to-br from-[#2E1055] to-[#120524] border border-white/10 rounded-2xl p-6 shadow-sm relative overflow-hidden group">
+                    <div key={req.id} className="bg-gradient-to-br from-[var(--color-surface-raised)] to-[var(--color-surface)] border border-white/10 rounded-2xl p-6 shadow-sm relative overflow-hidden group">
                       <div className="absolute top-0 left-0 w-1 h-full bg-orange-400"></div>
                       <div className="flex justify-between items-start mb-6">
                         <div className="flex gap-4">
@@ -546,21 +547,23 @@ export const SuperAdminPanel: React.FC<SuperAdminProps> = ({ onLogout, user }) =
                           </div>
                         </div>
                         <div className="flex gap-2">
-                          <button
+                          <Button
                             onClick={() => setPendingApprovals(prev => prev.filter(p => p.id !== req.id))}
-                            className="px-4 py-2 bg-rose-50 hover:bg-rose-500/30 text-rose-600 rounded-xl text-xs font-bold transition-colors"
+                            variant="ghost"
+                            className="text-rose-600 hover:text-rose-500"
                           >
                             Reject
-                          </button>
-                          <button
+                          </Button>
+                          <Button
                             onClick={() => {
                               setClinics([...clinics, { name: req.name, owner: req.owner, usersCount: 1, plan: 'Pro', status: 'Active' }]);
                               setPendingApprovals(prev => prev.filter(p => p.id !== req.id));
                             }}
-                            className="px-6 py-2 bg-[#2E1055] hover:bg-[#120524] text-white rounded-xl text-xs font-bold shadow-sm transition-colors"
+                            variant="secondary"
+                            className="shadow-sm"
                           >
                             Approve & Provision
-                          </button>
+                          </Button>
                         </div>
                       </div>
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-6 pt-4 border-t border-white/10">
@@ -633,11 +636,11 @@ export const SuperAdminPanel: React.FC<SuperAdminProps> = ({ onLogout, user }) =
             <div className="bg-white/5 border border-white/10 rounded-2xl shadow-sm animate-in fade-in max-w-[1400px] mx-auto p-6">
               <h3 className="text-base font-bold text-white mb-6">OpenAI & LLM Token Usage</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-                <div className="p-6 border border-[#EEEAFE] bg-[#2E1055]/20/50 rounded-2xl">
-                  <BrainCircuit className="w-8 h-8 text-[#A78BFA] mb-4" />
+                <div className="p-6 border border-[var(--color-text-primary)] bg-[var(--color-surface-raised)]/20/50 rounded-2xl">
+                  <BrainCircuit className="w-8 h-8 text-[var(--color-accent)] mb-4" />
                   <p className="text-white/70 text-sm font-bold mb-1">Total Tokens Used (MTD)</p>
                   <p className="text-4xl font-black text-white">42.8M</p>
-                  <p className="text-xs text-[#A78BFA] font-medium mt-2">Est. Cost: $428.00</p>
+                  <p className="text-xs text-[var(--color-accent)] font-medium mt-2">Est. Cost: $428.00</p>
                 </div>
                 <div className="p-6 border border-emerald-100 bg-emerald-50/50 rounded-2xl">
                   <Activity className="w-8 h-8 text-emerald-600 mb-4" />
@@ -651,7 +654,7 @@ export const SuperAdminPanel: React.FC<SuperAdminProps> = ({ onLogout, user }) =
                 {clinics.slice(0, 3).map((c, i) => (
                   <div key={i} className="flex justify-between items-center p-4 border border-white/10 rounded-2xl">
                     <span className="text-sm font-bold text-white">{c.name}</span>
-                    <span className="text-sm font-medium text-white/60">{(Math.random() * 5 + 1).toFixed(1)}M tokens</span>
+                    <span className="text-sm font-medium text-white/60">{((i * 1.7) % 5 + 1).toFixed(1)}M tokens</span>
                   </div>
                 ))}
                 {clinics.length === 0 && <p className="text-sm text-white/60">No data available.</p>}
@@ -666,17 +669,17 @@ export const SuperAdminPanel: React.FC<SuperAdminProps> = ({ onLogout, user }) =
               <div className="space-y-6 max-w-2xl">
                 <div>
                   <label className="block text-sm font-bold text-white mb-2">Platform Name</label>
-                  <input type="text" defaultValue="SBN Sentinel" className="w-full border border-white/10 rounded-2xl px-4 py-3 text-sm focus:outline-none focus:border-[#2E1055] bg-white/5" />
+                  <input type="text" defaultValue="SBN Sentinel" className="w-full border border-white/10 rounded-2xl px-4 py-3 text-sm focus:outline-none focus:border-[var(--color-surface-raised)] bg-white/5" />
                 </div>
                 <div>
                   <label className="block text-sm font-bold text-white mb-2">Master LLM API Key (OpenAI)</label>
-                  <input type="password" defaultValue="sk-sentinel-abcdef1234567890" className="w-full border border-white/10 rounded-2xl px-4 py-3 text-sm focus:outline-none focus:border-[#2E1055] bg-white/5" />
+                  <input type="password" defaultValue="sk-sentinel-abcdef1234567890" className="w-full border border-white/10 rounded-2xl px-4 py-3 text-sm focus:outline-none focus:border-[var(--color-surface-raised)] bg-white/5" />
                 </div>
                 <div>
                   <label className="block text-sm font-bold text-white mb-2">Default LLM Engine</label>
-                  <select className="w-full border border-white/10 rounded-2xl px-4 py-3 text-sm focus:outline-none focus:border-[#2E1055] bg-white/5">
-                    <option className="bg-[#120524] text-white">GPT-4o (Default)</option>
-                    <option className="bg-[#120524] text-white">Claude 3.5 Sonnet</option>
+                  <select className="w-full border border-white/10 rounded-2xl px-4 py-3 text-sm focus:outline-none focus:border-[var(--color-surface-raised)] bg-white/5">
+                    <option className="bg-[var(--color-surface)] text-white">GPT-4o (Default)</option>
+                    <option className="bg-[var(--color-surface)] text-white">Claude 3.5 Sonnet</option>
                   </select>
                 </div>
                 <div>
@@ -684,7 +687,7 @@ export const SuperAdminPanel: React.FC<SuperAdminProps> = ({ onLogout, user }) =
                   <div className="flex flex-wrap items-center gap-2 sm:gap-3 w-full md:w-auto">
                     <div
                       onClick={togglePasmeMaintenance}
-                      className={`w-12 h-6 rounded-full relative cursor-pointer transition-colors ${maintenanceMode ? 'bg-rose-500' : 'bg-[#2E1055]'}`}
+                      className={`w-12 h-6 rounded-full relative cursor-pointer transition-colors ${maintenanceMode ? 'bg-rose-500' : 'bg-[var(--color-surface-raised)]'}`}
                       role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); e.currentTarget.click(); } }} >
                       <div className={`w-5 h-5 bg-white rounded-full absolute top-0.5 shadow-sm transition-all ${maintenanceMode ? 'left-[26px]' : 'left-0.5'}`}></div>
                     </div>
@@ -704,7 +707,7 @@ export const SuperAdminPanel: React.FC<SuperAdminProps> = ({ onLogout, user }) =
                         </div>
                         <button
                           onClick={() => togglePasmeRule(rule.rule_id)}
-                          className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors ${rule.is_active ? 'bg-[#2E1055] text-white' : 'bg-white/10 text-white/60 hover:bg-white/20 hover:text-white'}`}
+                          className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors ${rule.is_active ? 'bg-[var(--color-surface-raised)] text-white' : 'bg-white/10 text-white/60 hover:bg-white/20 hover:text-white'}`}
                         >
                           {rule.is_active ? 'Active' : 'Disabled'}
                         </button>
@@ -744,7 +747,7 @@ export const SuperAdminPanel: React.FC<SuperAdminProps> = ({ onLogout, user }) =
               <h3 className="text-base font-bold text-white mb-2">SESR Architecture Conformance Validation</h3>
               <p className="text-sm text-white/60 mb-6">Run automated checks against the backend validation engine to ensure compliance with SESR-001 through SESR-012 standards.</p>
               
-              <div className="bg-[#120524] border border-emerald-500/30 rounded-2xl p-8 text-center max-w-2xl mx-auto mt-12">
+              <div className="bg-[var(--color-surface)] border border-emerald-500/30 rounded-2xl p-8 text-center max-w-2xl mx-auto mt-12">
                 <ShieldCheck className="w-16 h-16 text-emerald-500/50 mx-auto mb-4" />
                 <h4 className="text-xl font-bold text-white mb-2">Run Conformance Suite</h4>
                 <p className="text-sm text-white/50 mb-6">Executes `conformance_engine.py` on the backend to verify all decision boundaries, logging traces, and human authority rules are currently enforced.</p>
@@ -759,7 +762,7 @@ export const SuperAdminPanel: React.FC<SuperAdminProps> = ({ onLogout, user }) =
           {activeTab === 'audit-logs' && (
             <div className="bg-white/5 border border-white/10 rounded-2xl shadow-sm animate-in fade-in max-w-[1400px] mx-auto p-6">
               <h3 className="text-base font-bold text-white mb-6 flex items-center gap-2">
-                <ShieldCheck className="w-5 h-5 text-[#A78BFA]" /> Super Admin Audit Trail
+                <ShieldCheck className="w-5 h-5 text-[var(--color-accent)]" /> Super Admin Audit Trail
               </h3>
               <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse">
@@ -776,7 +779,7 @@ export const SuperAdminPanel: React.FC<SuperAdminProps> = ({ onLogout, user }) =
                       <tr key={log.id} className="border-b border-white/10 hover:bg-white/10 transition-colors cursor-pointer">
                         <td className="p-4 text-xs font-bold text-white">{log.time}</td>
                         <td className="p-4">
-                          <span className="px-2 py-1 text-[10px] font-bold uppercase rounded bg-[#2E1055]/20 text-white border border-[#EEEAFE]">
+                          <span className="px-2 py-1 text-[10px] font-bold uppercase rounded bg-[var(--color-surface-raised)]/20 text-white border border-[var(--color-text-primary)]">
                             {log.action.replace('_', ' ')}
                           </span>
                         </td>
@@ -795,7 +798,7 @@ export const SuperAdminPanel: React.FC<SuperAdminProps> = ({ onLogout, user }) =
         {/* Invite Modal */}
         {isInviteOpen && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center bg-gray-900/40 backdrop-blur-sm animate-in fade-in">
-            <div className="bg-[#120524] rounded-[24px] w-full max-w-md p-8 shadow-2xl animate-in zoom-in-95">
+            <div className="bg-[var(--color-surface)] rounded-[24px] w-full max-w-md p-8 shadow-2xl animate-in zoom-in-95">
               <h3 className="text-xl font-bold text-white mb-2">Register New Clinic</h3>
               <p className="text-sm text-white/60 mb-6">Create a new tenant workspace and invite the owner.</p>
 
@@ -808,31 +811,31 @@ export const SuperAdminPanel: React.FC<SuperAdminProps> = ({ onLogout, user }) =
               <form onSubmit={handleInvite} className="space-y-4">
                 <div>
                   <label className="block text-xs font-bold text-white/60 uppercase mb-1">Clinic Name</label>
-                  <input required type="text" value={inviteForm.clinic_name} onChange={e => setInviteForm({ ...inviteForm, clinic_name: e.target.value })} className="w-full border border-white/10 rounded-2xl px-4 py-3 text-sm focus:outline-none focus:border-[#2E1055] bg-white/5" placeholder="e.g. City Heart Clinic" />
+                  <input required type="text" value={inviteForm.clinic_name} onChange={e => setInviteForm({ ...inviteForm, clinic_name: e.target.value })} className="w-full border border-white/10 rounded-2xl px-4 py-3 text-sm focus:outline-none focus:border-[var(--color-surface-raised)] bg-white/5" placeholder="e.g. City Heart Clinic" />
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-white/60 uppercase mb-1">Owner Name</label>
-                  <input required type="text" value={inviteForm.full_name} onChange={e => setInviteForm({ ...inviteForm, full_name: e.target.value })} className="w-full border border-white/10 rounded-2xl px-4 py-3 text-sm focus:outline-none focus:border-[#2E1055] bg-white/5" placeholder="Dr. John Doe" />
+                  <input required type="text" value={inviteForm.full_name} onChange={e => setInviteForm({ ...inviteForm, full_name: e.target.value })} className="w-full border border-white/10 rounded-2xl px-4 py-3 text-sm focus:outline-none focus:border-[var(--color-surface-raised)] bg-white/5" placeholder="Dr. John Doe" />
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-white/60 uppercase mb-1">Owner Email</label>
-                  <input required type="email" value={inviteForm.email} onChange={e => setInviteForm({ ...inviteForm, email: e.target.value })} className="w-full border border-white/10 rounded-2xl px-4 py-3 text-sm focus:outline-none focus:border-[#2E1055] bg-white/5" placeholder="doctor@clinic.com" />
+                  <input required type="email" value={inviteForm.email} onChange={e => setInviteForm({ ...inviteForm, email: e.target.value })} className="w-full border border-white/10 rounded-2xl px-4 py-3 text-sm focus:outline-none focus:border-[var(--color-surface-raised)] bg-white/5" placeholder="doctor@clinic.com" />
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-white/60 uppercase mb-1">Temporary Password</label>
-                  <input required type="text" value={inviteForm.temp_password} onChange={e => setInviteForm({ ...inviteForm, temp_password: e.target.value })} className="w-full border border-white/10 rounded-2xl px-4 py-3 text-sm focus:outline-none focus:border-[#2E1055] bg-white/5" placeholder="e.g. Clinic@2026" />
+                  <input required type="text" value={inviteForm.temp_password} onChange={e => setInviteForm({ ...inviteForm, temp_password: e.target.value })} className="w-full border border-white/10 rounded-2xl px-4 py-3 text-sm focus:outline-none focus:border-[var(--color-surface-raised)] bg-white/5" placeholder="e.g. Clinic@2026" />
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-white/60 uppercase mb-1">Subscription Plan</label>
-                  <select value={inviteForm.plan} onChange={e => setInviteForm({ ...inviteForm, plan: e.target.value })} className="w-full border border-white/10 rounded-2xl px-4 py-3 text-sm focus:outline-none focus:border-[#2E1055] bg-white/5">
-                    <option value="Basic" className="bg-[#120524] text-white">Basic Plan</option>
-                    <option value="Pro" className="bg-[#120524] text-white">Pro Plan (Most Popular)</option>
-                    <option value="Enterprise" className="bg-[#120524] text-white">Enterprise Plan</option>
+                  <select value={inviteForm.plan} onChange={e => setInviteForm({ ...inviteForm, plan: e.target.value })} className="w-full border border-white/10 rounded-2xl px-4 py-3 text-sm focus:outline-none focus:border-[var(--color-surface-raised)] bg-white/5">
+                    <option value="Basic" className="bg-[var(--color-surface)] text-white">Basic Plan</option>
+                    <option value="Pro" className="bg-[var(--color-surface)] text-white">Pro Plan (Most Popular)</option>
+                    <option value="Enterprise" className="bg-[var(--color-surface)] text-white">Enterprise Plan</option>
                   </select>
                 </div>
                 <div className="flex gap-3 mt-8">
                   <button type="button" onClick={() => setIsInviteOpen(false)} className="flex-1 px-4 py-3 bg-white/10 text-white rounded-2xl text-sm font-bold hover:bg-white/20">Cancel</button>
-                  <button type="submit" className="flex-1 px-4 py-3 bg-[#2E1055] text-white rounded-2xl text-sm font-bold hover:bg-[#120524]">Create Tenant</button>
+                  <button type="submit" className="flex-1 px-4 py-3 bg-[var(--color-surface-raised)] text-white rounded-2xl text-sm font-bold hover:bg-[var(--color-surface)]">Create Tenant</button>
                 </div>
               </form>
             </div>

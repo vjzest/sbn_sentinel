@@ -44,7 +44,7 @@ export const ConnectorsView: React.FC = () => {
     } else if (lowerName.includes('gmail') || lowerName.includes('outlook') || lowerName.includes('workspace')) {
       return { Icon: Mail, color: 'text-orange-400', bg: 'bg-orange-500/20' };
     } else if (lowerName.includes('stripe')) {
-      return { Icon: CreditCard, color: 'text-[#A78BFA]', bg: 'bg-[#A78BFA]/20' };
+      return { Icon: CreditCard, color: 'text-[var(--color-accent)]', bg: 'bg-[var(--color-accent)]/20' };
     } else if (lowerName.includes('zoom')) {
       return { Icon: Video, color: 'text-sky-400', bg: 'bg-sky-500/20' };
     } else if (lowerName.includes('kareo')) {
@@ -55,7 +55,7 @@ export const ConnectorsView: React.FC = () => {
     if (type.includes('EHR')) {
       return { Icon: Database, color: 'text-emerald-400', bg: 'bg-emerald-500/20' };
     } else if (type.includes('Billing')) {
-      return { Icon: CreditCard, color: 'text-[#A78BFA]', bg: 'bg-[#A78BFA]/20' };
+      return { Icon: CreditCard, color: 'text-[var(--color-accent)]', bg: 'bg-[var(--color-accent)]/20' };
     } else if (type.includes('Voice') || type.includes('SMS')) {
       return { Icon: Phone, color: 'text-blue-400', bg: 'bg-blue-500/20' };
     }
@@ -266,7 +266,7 @@ export const ConnectorsView: React.FC = () => {
             setConnectError(null);
             setIsAddModalOpen(true);
           }}
-          className="flex items-center gap-2 bg-gradient-to-r from-[#2E1055] to-[#120524] hover:from-[#120524] hover:to-[#6D28D9] text-white font-bold px-6 py-3 rounded-[14px] transition-transform active:scale-95 shadow-[0_4px_14px_rgba(79,70,229,0.3)]"
+          className="flex items-center gap-2 bg-gradient-to-r from-[var(--color-surface-raised)] to-[var(--color-surface)] hover:from-[var(--color-surface)] hover:to-[#6D28D9] text-white font-bold px-6 py-3 rounded-[14px] transition-transform active:scale-95 shadow-[0_4px_14px_rgba(79,70,229,0.3)]"
         >
           <Plus className="w-4 h-4" /> Add Integration
         </button>
@@ -275,12 +275,12 @@ export const ConnectorsView: React.FC = () => {
       {/* Top Stats */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
         {[
-          { title: 'Connected Systems', value: isLoading ? '...' : `${connectors.length}`, color: 'blue', line: '#3B82F6' },
-          { title: 'Healthy Connections', value: isLoading ? '...' : `${connectedCount}`, color: 'green', line: '#10B981' },
-          { title: 'Syncing', value: isLoading ? '...' : `${syncingCount}`, color: 'orange', line: '#F59E0B' },
-          { title: 'Offline / Needs Alert', value: isLoading ? '...' : `${attentionCount}`, color: 'red', line: '#EF4444' },
+          { title: 'Connected Systems', value: isLoading ? '...' : `${connectors.length}`, color: 'blue', line: 'var(--color-accent)' },
+          { title: 'Healthy Connections', value: isLoading ? '...' : `${connectedCount}`, color: 'green', line: 'var(--color-semantic-positive)' },
+          { title: 'Syncing', value: isLoading ? '...' : `${syncingCount}`, color: 'orange', line: 'var(--color-semantic-attention)' },
+          { title: 'Offline / Needs Alert', value: isLoading ? '...' : `${attentionCount}`, color: 'red', line: 'var(--color-semantic-critical)' },
         ].map((stat, i) => (
-          <div key={i} className="bg-gradient-to-br from-[#2E1055] to-[#120524] border border-white/10 rounded-[24px] p-6 shadow-[0_20px_50px_rgba(46,16,85,0.3)] card-hover flex justify-between items-center text-white transition-all duration-300">
+          <div key={i} className="bg-gradient-to-br from-[var(--color-surface-raised)] to-[var(--color-surface)] border border-white/10 rounded-[24px] p-6 shadow-[0_20px_50px_rgba(46,16,85,0.3)] card-hover flex justify-between items-center text-white transition-all duration-300">
             <div>
               <p className="text-[11px] text-white/70 uppercase font-extrabold tracking-widest mb-1">{stat.title}</p>
               <p className="text-[28px] font-extrabold text-white">{stat.value}</p>
@@ -297,7 +297,7 @@ export const ConnectorsView: React.FC = () => {
       {/* Grid */}
       {isLoading ? (
         <div className="flex items-center justify-center py-20">
-          <div className="w-12 h-12 border-4 border-[#EEF4FF] border-t-[#2E1055] rounded-full animate-spin mb-4"></div>
+          <div className="w-12 h-12 border-4 border-[#EEF4FF] border-t-[var(--color-surface-raised)] rounded-full animate-spin mb-4"></div>
           <span className="ml-4 font-bold text-white/70">Synchronizing connector status...</span>
         </div>
       ) : (
@@ -307,7 +307,7 @@ export const ConnectorsView: React.FC = () => {
             const isThisSyncing = syncingId === conn.id || conn.status === 'Syncing';
 
             return (
-              <div key={conn.id} className={`bg-gradient-to-br from-[#2E1055] to-[#120524] border border-white/10 rounded-[24px] p-6 shadow-[0_20px_50px_rgba(46,16,85,0.3)] card-hover flex flex-col justify-between group transition-all duration-500 text-white ${pulse && idx === (events.length % 6) ? 'scale-[1.02] ring-2 ring-white/30 shadow-lg' : ''}`}>
+              <div key={conn.id} className={`bg-gradient-to-br from-[var(--color-surface-raised)] to-[var(--color-surface)] border border-white/10 rounded-[24px] p-6 shadow-[0_20px_50px_rgba(46,16,85,0.3)] card-hover flex flex-col justify-between group transition-all duration-500 text-white ${pulse && idx === (events.length % 6) ? 'scale-[1.02] ring-2 ring-white/30 shadow-lg' : ''}`}>
                 <div className="flex justify-between items-start mb-6">
                   <div className="flex items-center gap-4">
                     <div className={`p-4 ${bg} rounded-[16px]`}>
@@ -327,7 +327,7 @@ export const ConnectorsView: React.FC = () => {
                       title="Sync Now"
                       className="p-2 hover:bg-white/10 rounded-full text-white/50 hover:text-white transition-colors"
                     >
-                      <RefreshCw className={`w-4 h-4 ${isThisSyncing ? 'animate-spin text-[#F59E0B]' : ''}`} />
+                      <RefreshCw className={`w-4 h-4 ${isThisSyncing ? 'animate-spin text-[var(--color-semantic-attention)]' : ''}`} />
                     </button>
                     <button 
                       onClick={() => setDisconnectingConnector(conn)}
@@ -341,9 +341,9 @@ export const ConnectorsView: React.FC = () => {
 
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2 bg-white/5 border border-white/10 px-3 py-1.5 rounded-[8px]">
-                     {conn.status === 'Connected' && <CheckCircle2 className="w-3.5 h-3.5 text-[#10B981]" />}
-                     {conn.status === 'Syncing' && <RefreshCw className="w-3.5 h-3.5 text-[#F59E0B] animate-spin" />}
-                     {conn.status === 'Needs attention' && <AlertTriangle className="w-3.5 h-3.5 text-[#EF4444]" />}
+                     {conn.status === 'Connected' && <CheckCircle2 className="w-3.5 h-3.5 text-[var(--color-semantic-positive)]" />}
+                     {conn.status === 'Syncing' && <RefreshCw className="w-3.5 h-3.5 text-[var(--color-semantic-attention)] animate-spin" />}
+                     {conn.status === 'Needs attention' && <AlertTriangle className="w-3.5 h-3.5 text-[var(--color-semantic-critical)]" />}
                      <span className="text-[11px] font-extrabold text-white">{conn.status}</span>
                   </div>
                   <span className="text-[11px] font-bold text-white/50 flex items-center gap-1">
@@ -380,14 +380,14 @@ export const ConnectorsView: React.FC = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Timeline */}
-        <div className="bg-gradient-to-br from-[#2E1055] to-[#120524] border border-white/10 rounded-[24px] p-8 shadow-[0_20px_50px_rgba(46,16,85,0.3)] text-white col-span-1">
+        <div className="bg-gradient-to-br from-[var(--color-surface-raised)] to-[var(--color-surface)] border border-white/10 rounded-[24px] p-8 shadow-[0_20px_50px_rgba(46,16,85,0.3)] text-white col-span-1">
            <h3 className="text-base font-bold text-white mb-6">Connection Activity</h3>
            <div className="space-y-6 relative before:absolute before:inset-0 before:ml-[11px] before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-white/20 before:to-transparent max-h-[400px] overflow-y-auto custom-scrollbar">
               {events.slice(0, 8).map((log, i) => {
-                let logTypeColor = 'bg-[#3B82F6]'; // default blue
-                if (log.source.toLowerCase().includes('kareo')) logTypeColor = 'bg-[#EF4444]'; // red
-                else if (log.source.toLowerCase().includes('practice fusion')) logTypeColor = 'bg-[#10B981]'; // green
-                else if (log.source.toLowerCase().includes('gmail')) logTypeColor = 'bg-[#F59E0B]'; // orange
+                let logTypeColor = 'bg-[var(--color-accent)]'; // default blue
+                if (log.source.toLowerCase().includes('kareo')) logTypeColor = 'bg-[var(--color-semantic-critical)]'; // red
+                else if (log.source.toLowerCase().includes('practice fusion')) logTypeColor = 'bg-[var(--color-semantic-positive)]'; // green
+                else if (log.source.toLowerCase().includes('gmail')) logTypeColor = 'bg-[var(--color-semantic-attention)]'; // orange
 
                 return (
                   <div key={i} className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active">
@@ -405,7 +405,7 @@ export const ConnectorsView: React.FC = () => {
         </div>
 
         {/* Charts */}
-        <div className="bg-gradient-to-br from-[#2E1055] to-[#120524] border border-white/10 rounded-[24px] p-8 shadow-[0_20px_50px_rgba(46,16,85,0.3)] text-white col-span-2 flex flex-col">
+        <div className="bg-gradient-to-br from-[var(--color-surface-raised)] to-[var(--color-surface)] border border-white/10 rounded-[24px] p-8 shadow-[0_20px_50px_rgba(46,16,85,0.3)] text-white col-span-2 flex flex-col">
           <div className="flex items-center justify-between mb-8">
              <h3 className="text-base font-bold text-white">Integration Health</h3>
              <button className="text-[11px] font-bold text-blue-400 bg-blue-500/20 text-blue-300 px-3 py-1.5 rounded-full transition-all">System Health: {Math.max(90, 98 - (events.length % 3))}%</button>
@@ -415,7 +415,7 @@ export const ConnectorsView: React.FC = () => {
             <div className="w-1/3 flex flex-col justify-center items-center relative">
                <svg viewBox="0 0 36 36" className="w-32 h-32 transform -rotate-90">
                   <circle cx="18" cy="18" r="15.915" fill="transparent" stroke="rgba(255,255,255,0.1)" strokeWidth="3"></circle>
-                  <circle cx="18" cy="18" r="15.915" fill="transparent" stroke="#10B981" strokeWidth="3" strokeDasharray={`${Math.max(90, 98 - (events.length % 3))} ${100 - Math.max(90, 98 - (events.length % 3))}`} className="transition-all duration-1000"></circle>
+                  <circle cx="18" cy="18" r="15.915" fill="transparent" stroke="var(--color-semantic-positive)" strokeWidth="3" strokeDasharray={`${Math.max(90, 98 - (events.length % 3))} ${100 - Math.max(90, 98 - (events.length % 3))}`} className="transition-all duration-1000"></circle>
                </svg>
                <div className="absolute inset-0 flex flex-col items-center justify-center">
                  <span className="text-2xl font-extrabold text-white">{Math.max(90, 98 - (events.length % 3))}%</span>
@@ -427,13 +427,13 @@ export const ConnectorsView: React.FC = () => {
                  <svg viewBox="0 0 400 120" className="w-full h-full preserve-aspect-ratio-none">
                     <defs>
                       <linearGradient id="apiGrad" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor="#3B82F6" stopOpacity={0.2}/>
-                        <stop offset="100%" stopColor="#3B82F6" stopOpacity={0}/>
+                        <stop offset="0%" stopColor="var(--color-accent)" stopOpacity={0.2}/>
+                        <stop offset="100%" stopColor="var(--color-accent)" stopOpacity={0}/>
                       </linearGradient>
                     </defs>
                     <g className="transition-transform duration-1000" style={{ transform: `translateY(${Math.sin(events.length) * 10}px)` }}>
                       <path d="M0,80 C100,20 200,100 300,40 C350,10 380,60 400,20 L400,120 L0,120 Z" fill="url(#apiGrad)"/>
-                      <path d="M0,80 C100,20 200,100 300,40 C350,10 380,60 400,20" fill="none" stroke="#3B82F6" strokeWidth="3" strokeLinecap="round"/>
+                      <path d="M0,80 C100,20 200,100 300,40 C350,10 380,60 400,20" fill="none" stroke="var(--color-accent)" strokeWidth="3" strokeLinecap="round"/>
                     </g>
                  </svg>
                </div>
@@ -445,7 +445,7 @@ export const ConnectorsView: React.FC = () => {
       {/* Add Integration Modal */}
       {isAddModalOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-[#111827]/40 backdrop-blur-sm animate-in fade-in">
-          <div className="bg-gradient-to-br from-[#2E1055] to-[#120524] border border-white/10 rounded-[24px] w-full max-w-lg p-8 shadow-[0_20px_50px_rgba(46,16,85,0.3)] relative text-white animate-in zoom-in-95 duration-300 max-h-[90vh] overflow-y-auto">
+          <div className="bg-gradient-to-br from-[var(--color-surface-raised)] to-[var(--color-surface)] border border-white/10 rounded-[24px] w-full max-w-lg p-8 shadow-[0_20px_50px_rgba(46,16,85,0.3)] relative text-white animate-in zoom-in-95 duration-300 max-h-[90vh] overflow-y-auto">
             <button 
               onClick={() => {
                 setIsAddModalOpen(false);
@@ -459,7 +459,7 @@ export const ConnectorsView: React.FC = () => {
             {!selectedSystem ? (
               <>
                 <h3 className="text-xl font-extrabold text-white mb-2 flex items-center gap-2">
-                  <Plus className="w-5 h-5 text-[#A78BFA]" /> Connect New System
+                  <Plus className="w-5 h-5 text-[var(--color-accent)]" /> Connect New System
                 </h3>
                 <p className="text-sm font-medium text-white/70 mb-6">Select a system from the Sentinel Marketplace to integrate with your practice.</p>
                 
@@ -474,18 +474,18 @@ export const ConnectorsView: React.FC = () => {
                      <div 
                        key={sys.name} 
                        onClick={() => handleSelectSystem(sys.name)}
-                       className="flex items-center justify-between p-4 border border-white/10 rounded-[16px] hover:border-[#A78BFA]/50 hover:bg-white/10 cursor-pointer transition-all group"
+                       className="flex items-center justify-between p-4 border border-white/10 rounded-[16px] hover:border-[var(--color-accent)]/50 hover:bg-white/10 cursor-pointer transition-all group"
                      >
                         <div className="flex flex-wrap items-center gap-2 sm:gap-3 w-full md:w-auto">
-                          <div className="w-10 h-10 bg-white/5 border border-white/10 rounded-full flex items-center justify-center group-hover:border-[#2E1055] bg-white/5 transition-all">
-                            <Database className="w-4 h-4 text-white/70 group-hover:text-[#A78BFA]" />
+                          <div className="w-10 h-10 bg-white/5 border border-white/10 rounded-full flex items-center justify-center group-hover:border-[var(--color-surface-raised)] bg-white/5 transition-all">
+                            <Database className="w-4 h-4 text-white/70 group-hover:text-[var(--color-accent)]" />
                           </div>
                           <div>
                             <p className="text-sm font-bold text-white">{sys.name}</p>
                             <p className="text-[10px] text-white/50 font-bold uppercase">{sys.type}</p>
                           </div>
                         </div>
-                        <button className="text-[11px] font-bold text-[#A78BFA] px-4 py-2 bg-transparent border border-white/20 rounded-[8px] group-hover:bg-emerald-500 group-hover:border-transparent group-hover:text-white transition-colors">
+                        <button className="text-[11px] font-bold text-[var(--color-accent)] px-4 py-2 bg-transparent border border-white/20 rounded-[8px] group-hover:bg-emerald-500 group-hover:border-transparent group-hover:text-white transition-colors">
                           Connect
                         </button>
                      </div>
@@ -513,7 +513,7 @@ export const ConnectorsView: React.FC = () => {
                       placeholder="e.g. dr.patel@clinic.com"
                       value={ssoUsername}
                       onChange={(e) => setSsoUsername(e.target.value)}
-                      className="w-full bg-white/5 border border-white/10 rounded-[16px] py-3 px-4 text-sm font-bold text-white outline-none focus:border-[#A78BFA] focus:bg-white/10 transition-all"
+                      className="w-full bg-white/5 border border-white/10 rounded-[16px] py-3 px-4 text-sm font-bold text-white outline-none focus:border-[var(--color-accent)] focus:bg-white/10 transition-all"
                       required 
                     />
                   </div>
@@ -524,7 +524,7 @@ export const ConnectorsView: React.FC = () => {
                       placeholder="••••••••••••"
                       value={ssoPassword}
                       onChange={(e) => setSsoPassword(e.target.value)}
-                      className="w-full bg-white/5 border border-white/10 rounded-[16px] py-3 px-4 text-sm font-bold text-white outline-none focus:border-[#A78BFA] focus:bg-white/10 transition-all"
+                      className="w-full bg-white/5 border border-white/10 rounded-[16px] py-3 px-4 text-sm font-bold text-white outline-none focus:border-[var(--color-accent)] focus:bg-white/10 transition-all"
                       required 
                     />
                   </div>
@@ -595,7 +595,7 @@ export const ConnectorsView: React.FC = () => {
       {/* Details Modal */}
       {detailsModalData && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-[#111827]/40 backdrop-blur-sm animate-in fade-in">
-          <div className="bg-gradient-to-br from-[#2E1055] to-[#120524] border border-white/10 rounded-[24px] w-full max-w-2xl p-8 shadow-[0_20px_50px_rgba(46,16,85,0.3)] relative text-white animate-in zoom-in-95 duration-300">
+          <div className="bg-gradient-to-br from-[var(--color-surface-raised)] to-[var(--color-surface)] border border-white/10 rounded-[24px] w-full max-w-2xl p-8 shadow-[0_20px_50px_rgba(46,16,85,0.3)] relative text-white animate-in zoom-in-95 duration-300">
             <button onClick={() => setDetailsModalData(null)} className="absolute top-6 right-6 text-white/50 hover:text-white transition-colors">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
             </button>
@@ -606,7 +606,7 @@ export const ConnectorsView: React.FC = () => {
             
             <div className="bg-[#111827] rounded-[16px] p-6 overflow-hidden">
                <div className="flex items-center justify-between border-b border-[#374151] pb-3 mb-4">
-                  <span className="text-[10px] font-mono text-[#10B981]">STATUS: ACTIVE (200 OK)</span>
+                  <span className="text-[10px] font-mono text-[var(--color-semantic-positive)]">STATUS: ACTIVE (200 OK)</span>
                   <span className="text-[10px] font-mono text-white/50">{detailsModalData.timestamp}</span>
                </div>
                <pre className="text-xs font-mono text-[#A7F3D0] overflow-x-auto whitespace-pre-wrap">
@@ -635,7 +635,7 @@ export const ConnectorsView: React.FC = () => {
       {/* Custom modern Disconnect Confirmation Modal */}
       {disconnectingConnector && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-[#111827]/40 backdrop-blur-sm animate-in fade-in">
-          <div className="bg-gradient-to-br from-[#2E1055] to-[#120524] border border-white/10 rounded-[24px] w-full max-w-md p-8 shadow-[0_20px_50px_rgba(46,16,85,0.3)] relative text-white animate-in zoom-in-95 duration-300">
+          <div className="bg-gradient-to-br from-[var(--color-surface-raised)] to-[var(--color-surface)] border border-white/10 rounded-[24px] w-full max-w-md p-8 shadow-[0_20px_50px_rgba(46,16,85,0.3)] relative text-white animate-in zoom-in-95 duration-300">
             <button 
               onClick={() => setDisconnectingConnector(null)} 
               className="absolute top-6 right-6 text-white/50 hover:text-white transition-colors"

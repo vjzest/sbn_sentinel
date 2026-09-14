@@ -165,7 +165,7 @@ export const TeamMessagingView: React.FC<{ currentUser?: { full_name: string }; 
                     <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm ${isActive ? 'bg-blue-500/30 text-blue-400' : 'bg-white/10 text-white/70'}`}>
                       {contact.name.charAt(0)}
                     </div>
-                    <div className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-[#120524] ${contact.status === 'online' ? 'bg-emerald-400' : contact.status === 'away' ? 'bg-amber-400' : 'bg-gray-400'}`} />
+                    <div className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-[var(--color-surface)] ${contact.status === 'online' ? 'bg-emerald-400' : contact.status === 'away' ? 'bg-amber-400' : 'bg-gray-400'}`} />
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex justify-between items-center">
@@ -185,7 +185,7 @@ export const TeamMessagingView: React.FC<{ currentUser?: { full_name: string }; 
         <div className="flex-1 bg-white/5 border border-white/10 rounded-[20px] premium-shadow flex flex-col min-w-0 relative overflow-hidden">
           {activeContact ? (
             <>
-              <div className="p-4 border-b border-white/10 flex items-center gap-3 bg-[#120524]/50 backdrop-blur-md z-10">
+              <div className="p-4 border-b border-white/10 flex items-center gap-3 bg-[var(--color-surface)]/50 backdrop-blur-md z-10">
                 <div className="w-10 h-10 rounded-full bg-blue-500/20 flex items-center justify-center font-bold text-blue-400">{activeContact.charAt(0)}</div>
                 <div>
                   <h3 className="text-base font-bold text-white">{activeContact}</h3>
@@ -213,7 +213,7 @@ export const TeamMessagingView: React.FC<{ currentUser?: { full_name: string }; 
                 ))}
               </div>
 
-              <div className="p-4 border-t border-white/10 bg-[#120524]/50 backdrop-blur-md">
+              <div className="p-4 border-t border-white/10 bg-[var(--color-surface)]/50 backdrop-blur-md">
                 <div className="flex items-end gap-3">
                   <div className="flex-1 bg-white/5 border border-white/10 rounded-[16px] p-1 flex items-center">
                     <input type="text" value={newMessageText} onChange={(e) => setNewMessageText(e.target.value)}

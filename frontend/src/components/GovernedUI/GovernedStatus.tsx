@@ -12,17 +12,17 @@ interface GovernedStatusProps {
 const getSemanticStyles = (semantic: SemanticState) => {
   switch (semantic) {
     case 'positive':
-      return 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30';
+      return 'bg-[var(--color-semantic-positive)]/20 text-[var(--color-semantic-positive)] border-[var(--color-semantic-positive)]/30';
     case 'attention':
-      return 'bg-amber-500/20 text-amber-400 border-amber-500/30';
+      return 'bg-[var(--color-semantic-attention)]/20 text-[var(--color-semantic-attention)] border-[var(--color-semantic-attention)]/30';
     case 'critical':
-      return 'bg-red-500/20 text-red-400 border-red-500/30';
+      return 'bg-[var(--color-semantic-critical)]/20 text-[var(--color-semantic-critical)] border-[var(--color-semantic-critical)]/30';
     case 'disabled':
-      return 'bg-slate-500/20 text-slate-400 border-slate-500/30';
+      return 'bg-[var(--color-semantic-neutral)]/20 text-[var(--color-semantic-neutral)] border-[var(--color-semantic-neutral)]/30';
     case 'neutral':
     case 'unknown':
     default:
-      return 'bg-white/10 text-white/70 border-white/20';
+      return 'bg-[var(--color-semantic-unknown)]/10 text-[var(--color-semantic-unknown)] border-[var(--color-semantic-unknown)]/20';
   }
 };
 

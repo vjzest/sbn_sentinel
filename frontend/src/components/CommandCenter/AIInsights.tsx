@@ -72,14 +72,14 @@ export const AIInsights: React.FC = () => {
   }, [latestInsightSignal?.id]);
 
   return (
-    <div className="bg-gradient-to-br from-[#2E1055] to-[#120524] border border-white/10 text-white rounded-[24px] p-6 shadow-[0_20px_50px_rgba(46,16,85,0.3)] h-[480px] flex flex-col card-hover hover:-translate-y-1 transition-all duration-300">
+    <div className="bg-gradient-to-br from-[var(--color-surface-raised)] to-[var(--color-surface)] border border-white/10 text-white rounded-[24px] p-6 shadow-[0_20px_50px_rgba(46,16,85,0.3)] h-[480px] flex flex-col card-hover hover:-translate-y-1 transition-all duration-300">
       
       <div className="flex items-center justify-between mb-6">
         <h3 className="text-base font-bold text-white flex items-center gap-2">
-          <BrainCircuit className="w-5 h-5 text-[#2E1055]" />
+          <BrainCircuit className="w-5 h-5 text-[var(--color-surface-raised)]" />
           Deterministic Policy Engine
         </h3>
-        <span className="text-[10px] font-bold bg-[#120524]/20 text-[#C4B5FD] px-2.5 py-1 rounded-full border border-[#EDE9FE]">
+        <span className="text-[10px] font-bold bg-[var(--color-surface)]/20 text-[#C4B5FD] px-2.5 py-1 rounded-full border border-[#EDE9FE]">
           {activeModelName}
         </span>
       </div>
@@ -98,16 +98,16 @@ export const AIInsights: React.FC = () => {
               <div className="flex gap-4">
                 <div className="mt-0.5">
                   {latestInsightSignal.ai_insight?.includes('loss') ? (
-                    <TrendingDown className="w-4 h-4 text-[#EF4444]" />
+                    <TrendingDown className="w-4 h-4 text-[var(--color-semantic-critical)]" />
                   ) : (
-                    <TrendingUp className="w-4 h-4 text-[#10B981]" />
+                    <TrendingUp className="w-4 h-4 text-[var(--color-semantic-positive)]" />
                   )}
                 </div>
                 <div>
                   <p className="text-[13px] text-white mb-2 font-semibold leading-relaxed">
                     {latestInsightSignal.message}
                   </p>
-                  <p className={`text-[13px] font-bold ${latestInsightSignal.ai_insight?.includes('loss') ? 'text-[#EF4444]' : 'text-[#10B981]'}`}>
+                  <p className={`text-[13px] font-bold ${latestInsightSignal.ai_insight?.includes('loss') ? 'text-[var(--color-semantic-critical)]' : 'text-[var(--color-semantic-positive)]'}`}>
                     Operational Status: Requires Review
                   </p>
                 </div>
@@ -116,11 +116,11 @@ export const AIInsights: React.FC = () => {
 
             {/* Action Box */}
             {actionStatus === 'pending' && (
-              <div className="bg-[#3B82F6]/20 border border-white/20 rounded-[16px] p-5 animate-in slide-in-from-bottom-4 flex-1">
+              <div className="bg-[var(--color-accent)]/20 border border-white/20 rounded-[16px] p-5 animate-in slide-in-from-bottom-4 flex-1">
                 <h4 className="text-[10px] text-[#2563EB] uppercase tracking-widest font-extrabold mb-3">Governed Action</h4>
                 <div className="flex gap-4">
                   <div className="mt-0.5">
-                    <div className="w-5 h-5 rounded-full bg-white/5 border border-[#3B82F6] flex items-center justify-center">
+                    <div className="w-5 h-5 rounded-full bg-white/5 border border-[var(--color-accent)] flex items-center justify-center">
                       <CheckCircle2 className="w-3 h-3 text-[#2563EB]" />
                     </div>
                   </div>
@@ -129,7 +129,7 @@ export const AIInsights: React.FC = () => {
                       {latestInsightSignal.recommended_action || "Acknowledge event to continue tracking."}
                     </p>
                     <div className="flex gap-3">
-                      <button onClick={handleApprove} className="bg-[#2E1055] hover:bg-[#120524] text-white font-bold text-xs px-5 py-2.5 rounded-[10px] shadow-[0_4px_10px_rgba(79,70,229,0.3)] transition-transform active:scale-95">
+                      <button onClick={handleApprove} className="bg-[var(--color-surface-raised)] hover:bg-[var(--color-surface)] text-white font-bold text-xs px-5 py-2.5 rounded-[10px] shadow-[0_4px_10px_rgba(79,70,229,0.3)] transition-transform active:scale-95">
                         Approve Action
                       </button>
                       <button onClick={() => setActionStatus('dismissed')} className="bg-white/10 border border-white/10 hover:bg-white/20 text-white font-bold text-xs px-5 py-2.5 rounded-[10px] shadow-sm transition-transform active:scale-95">
@@ -144,9 +144,9 @@ export const AIInsights: React.FC = () => {
 
         {/* Approval Success State */}
         {actionStatus === 'executed' && (
-          <div className="bg-[#10B981]/10 border border-[#10B981]/30 rounded-[16px] p-5 flex items-center justify-between flex-1 animate-in fade-in">
+          <div className="bg-[var(--color-semantic-positive)]/10 border border-[var(--color-semantic-positive)]/30 rounded-[16px] p-5 flex items-center justify-between flex-1 animate-in fade-in">
              <div className="flex flex-col gap-2">
-              <span className="text-sm font-bold text-[#34D399]">Action Dispatched.</span>
+              <span className="text-sm font-bold text-[var(--color-semantic-positive)]">Action Dispatched.</span>
               <GovernedStatus state="EXECUTED" />
             </div>
           </div>
@@ -177,7 +177,7 @@ export const AIInsights: React.FC = () => {
         </div>
         <div className="text-right">
           <p className="text-xl font-extrabold text-white leading-none">Verified</p>
-          <p className="text-[9px] font-bold text-[#10B981] uppercase tracking-wider">Ready for Execution</p>
+          <p className="text-[9px] font-bold text-[var(--color-semantic-positive)] uppercase tracking-wider">Ready for Execution</p>
         </div>
       </div>
 

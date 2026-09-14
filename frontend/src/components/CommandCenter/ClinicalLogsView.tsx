@@ -157,13 +157,13 @@ export const ClinicalLogsView: React.FC = () => {
             .header-logo {
               font-size: 24px;
               font-weight: 800;
-              color: #2E1055;
+              color: var(--color-surface-raised);
               letter-spacing: -0.025em;
             }
             .header-sublogo {
               font-size: 10px;
               font-weight: 700;
-              color: #10B981;
+              color: var(--color-semantic-positive);
               text-transform: uppercase;
               letter-spacing: 0.1em;
               display: block;
@@ -191,7 +191,7 @@ export const ClinicalLogsView: React.FC = () => {
               font-weight: 800;
               text-transform: uppercase;
               letter-spacing: 0.05em;
-              color: #2E1055;
+              color: var(--color-surface-raised);
               margin-top: 25px;
               margin-bottom: 12px;
               border-bottom: 1px solid #F3F4F6;
@@ -224,13 +224,13 @@ export const ClinicalLogsView: React.FC = () => {
               width: 32%;
             }
             .soap-card {
-              border-left: 4px solid #2E1055;
+              border-left: 4px solid var(--color-surface-raised);
               padding-left: 16px;
               margin-bottom: 20px;
             }
-            .soap-card.s { border-left-color: #3B82F6; }
-            .soap-card.o { border-left-color: #10B981; }
-            .soap-card.a { border-left-color: #F59E0B; }
+            .soap-card.s { border-left-color: var(--color-accent); }
+            .soap-card.o { border-left-color: var(--color-semantic-positive); }
+            .soap-card.a { border-left-color: var(--color-semantic-attention); }
             .soap-card.p { border-left-color: #8B5CF6; }
             
             .soap-title {
@@ -249,7 +249,7 @@ export const ClinicalLogsView: React.FC = () => {
             }
             .rx-box {
               background-color: #EEF2FF;
-              border: 1.5px dashed #2E1055;
+              border: 1.5px dashed var(--color-surface-raised);
               border-radius: 12px;
               padding: 16px;
               margin-top: 15px;
@@ -611,7 +611,7 @@ export const ClinicalLogsView: React.FC = () => {
           </button>
           <button
             onClick={() => setShowAddModal(true)}
-            className="flex items-center justify-center gap-2 bg-[#2E1055] hover:bg-[#120524] text-white font-bold text-xs px-4 py-2.5 rounded-[16px] whitespace-nowrap shrink-0 premium-shadow transition-all hover:scale-105 active:scale-95"
+            className="flex items-center justify-center gap-2 bg-[var(--color-surface-raised)] hover:bg-[var(--color-surface)] text-white font-bold text-xs px-4 py-2.5 rounded-[16px] whitespace-nowrap shrink-0 premium-shadow transition-all hover:scale-105 active:scale-95"
           >
             <Plus className="w-4 h-4" /> Add Encounter
           </button>
@@ -621,9 +621,9 @@ export const ClinicalLogsView: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
 
         {/* Logs Table */}
-        <div className="lg:col-span-2 bg-gradient-to-br from-[#2E1055] to-[#120524] border border-white/10 rounded-[24px] p-8 shadow-[0_20px_50px_rgba(46,16,85,0.3)] text-white">
+        <div className="lg:col-span-2 bg-gradient-to-br from-[var(--color-surface-raised)] to-[var(--color-surface)] border border-white/10 rounded-[24px] p-8 shadow-[0_20px_50px_rgba(46,16,85,0.3)] text-white">
           <h3 className="text-base font-bold text-white mb-6 flex items-center gap-2">
-            <FileText className="w-5 h-5 text-[#2E1055]" /> Recent Encounters
+            <FileText className="w-5 h-5 text-[var(--color-surface-raised)]" /> Recent Encounters
           </h3>
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
@@ -647,7 +647,7 @@ export const ClinicalLogsView: React.FC = () => {
                 {filteredEncounters.map((log) => (
                   <tr
                     key={log.id}
-                    className={`border-b border-white/10 hover:bg-transparent/5 transition-colors last:border-0 cursor-pointer ${activeBillId === log.id ? 'bg-blue-500/20/50 border-l-4 border-l-[#2E1055]' : ''}`}
+                    className={`border-b border-white/10 hover:bg-transparent/5 transition-colors last:border-0 cursor-pointer ${activeBillId === log.id ? 'bg-blue-500/20/50 border-l-4 border-l-[var(--color-surface-raised)]' : ''}`}
                     onClick={() => handleGenerateBill(log.id)}
                   >
                     <td className="py-4 px-2 font-mono text-blue-400 text-xs">{log.id}</td>
@@ -669,7 +669,7 @@ export const ClinicalLogsView: React.FC = () => {
                       {log.billing_status === 'Pending' ? (
                         <button
                           onClick={(e) => { e.stopPropagation(); handleGenerateBill(log.id); }}
-                          className="text-[11px] font-bold text-white bg-[#2E1055] px-4 py-2 rounded-[10px] hover:bg-[#120524] transition-all hover:scale-105 active:scale-95 flex items-center gap-1 ml-auto"
+                          className="text-[11px] font-bold text-white bg-[var(--color-surface-raised)] px-4 py-2 rounded-[10px] hover:bg-[var(--color-surface)] transition-all hover:scale-105 active:scale-95 flex items-center gap-1 ml-auto"
                         >
                           <Receipt className="w-3 h-3" /> Generate Bill
                         </button>
@@ -690,7 +690,7 @@ export const ClinicalLogsView: React.FC = () => {
         </div>
 
         {/* AI Billing Assistant Widget */}
-        <div className="bg-gradient-to-br from-[#2E1055] to-[#120524] border border-white/10 rounded-[24px] p-8 shadow-[0_20px_50px_rgba(46,16,85,0.3)] text-white flex flex-col relative overflow-hidden self-start sticky top-6">
+        <div className="bg-gradient-to-br from-[var(--color-surface-raised)] to-[var(--color-surface)] border border-white/10 rounded-[24px] p-8 shadow-[0_20px_50px_rgba(46,16,85,0.3)] text-white flex flex-col relative overflow-hidden self-start sticky top-6">
           {/* Background decorative blob */}
           <div className="absolute -top-20 -right-20 w-64 h-64 bg-blue-500/20 rounded-full blur-[60px] pointer-events-none"></div>
 
@@ -736,7 +736,7 @@ export const ClinicalLogsView: React.FC = () => {
                     </button>
                     <button
                       onClick={() => handleDownloadChart(activeEncounter)}
-                      className="flex-1 bg-white hover:bg-[#E2E8F0] text-[#120524] font-bold text-xs py-2.5 rounded-[16px] flex items-center justify-center gap-1.5"
+                      className="flex-1 bg-white hover:bg-[#E2E8F0] text-[var(--color-surface)] font-bold text-xs py-2.5 rounded-[16px] flex items-center justify-center gap-1.5"
                     >
                       <Download className="w-3.5 h-3.5" /> Download Chart
                     </button>
@@ -756,7 +756,7 @@ export const ClinicalLogsView: React.FC = () => {
                       onClick={() => setActiveTab('billing')}
                       className={`flex-1 py-2 text-xs font-bold rounded-[10px] transition-all cursor-pointer ${
                         activeTab === 'billing'
-                          ? 'bg-transparent text-[#2E1055] shadow-sm border border-white/10/30'
+                          ? 'bg-transparent text-[var(--color-surface-raised)] shadow-sm border border-white/10/30'
                           : 'text-white/70 hover:text-white'
                       }`}
                     >
@@ -766,7 +766,7 @@ export const ClinicalLogsView: React.FC = () => {
                       onClick={() => setActiveTab('clinical')}
                       className={`flex-1 py-2 text-xs font-bold rounded-[10px] transition-all cursor-pointer ${
                         activeTab === 'clinical'
-                          ? 'bg-transparent text-[#2E1055] shadow-sm border border-white/10/30'
+                          ? 'bg-transparent text-[var(--color-surface-raised)] shadow-sm border border-white/10/30'
                           : 'text-white/70 hover:text-white'
                       }`}
                     >
@@ -883,11 +883,11 @@ export const ClinicalLogsView: React.FC = () => {
                         {/* Patient Profile & Visit History */}
                         <div className="bg-white/5 rounded-[18px] p-4 border border-white/10">
                           <p className="text-[10px] font-extrabold text-white/50 uppercase tracking-wider mb-2 flex items-center gap-1.5">
-                            <Users className="w-3.5 h-3.5 text-[#2E1055]" /> Patient Profile & History
+                            <Users className="w-3.5 h-3.5 text-[var(--color-surface-raised)]" /> Patient Profile & History
                           </p>
 
                           <div className="flex items-center gap-2 mb-3 bg-white/5 p-2.5 rounded-[16px] border border-white/10">
-                            <div className="w-8 h-8 rounded-full bg-blue-500/20 flex items-center justify-center text-xs font-bold text-[#2E1055]">
+                            <div className="w-8 h-8 rounded-full bg-blue-500/20 flex items-center justify-center text-xs font-bold text-[var(--color-surface-raised)]">
                               {activeEncounter?.patient_name?.split(' ').map((n: string) => n[0]).join('') || '?'}
                             </div>
                             <div>
@@ -901,11 +901,11 @@ export const ClinicalLogsView: React.FC = () => {
                             <p className="text-[9px] font-extrabold text-white/70 uppercase tracking-wider mb-2">Visit History ({encounters.filter(e => e.patient_name === activeEncounter?.patient_name && e.id !== activeEncounter?.id).length + 1} visits)</p>
                             <div className="space-y-2 max-h-[140px] overflow-y-auto pr-1">
                               {/* Current Visit */}
-                              <div className="flex gap-2.5 items-start bg-[#2E1055]/20 p-2 rounded-[8px] border border-[#2E1055]/50">
-                                <div className="w-1.5 h-1.5 rounded-full bg-[#2E1055] mt-1.5"></div>
+                              <div className="flex gap-2.5 items-start bg-[var(--color-surface-raised)]/20 p-2 rounded-[8px] border border-[var(--color-surface-raised)]/50">
+                                <div className="w-1.5 h-1.5 rounded-full bg-[var(--color-surface-raised)] mt-1.5"></div>
                                 <div className="flex-1 text-xs">
                                   <div className="flex justify-between">
-                                    <span className="font-bold text-[#2E1055]">Current Visit</span>
+                                    <span className="font-bold text-[var(--color-surface-raised)]">Current Visit</span>
                                     <span className="text-[9px] font-bold text-white/70">{activeEncounter?.date}</span>
                                   </div>
                                   <p className="text-[10px] font-semibold text-white mt-0.5">{activeEncounter?.diagnosis} ({activeEncounter?.type})</p>
@@ -943,10 +943,10 @@ export const ClinicalLogsView: React.FC = () => {
                           </div>
 
                           <p className="text-[10px] font-extrabold text-white/50 uppercase tracking-wider mb-2 flex items-center gap-1.5">
-                            <Sparkles className="w-3.5 h-3.5 text-[#2E1055]" /> Prescribed Medications
+                            <Sparkles className="w-3.5 h-3.5 text-[var(--color-surface-raised)]" /> Prescribed Medications
                           </p>
-                          <div className="bg-[#2E1055]/20 p-3 rounded-[16px] border border-[#2E1055]/50 text-xs font-bold text-white flex items-center gap-2">
-                            <div className="w-2 h-2 rounded-full bg-[#2E1055] shrink-0"></div>
+                          <div className="bg-[var(--color-surface-raised)]/20 p-3 rounded-[16px] border border-[var(--color-surface-raised)]/50 text-xs font-bold text-white flex items-center gap-2">
+                            <div className="w-2 h-2 rounded-full bg-[var(--color-surface-raised)] shrink-0"></div>
                             <span>{activeEncounter?.medications || 'No medications prescribed.'}</span>
                           </div>
                         </div>
@@ -956,9 +956,9 @@ export const ClinicalLogsView: React.FC = () => {
                       <div className="pt-4 border-t border-white/10">
                         <button
                           onClick={() => handleDownloadChart(activeEncounter)}
-                          className="w-full bg-white hover:bg-[#E2E8F0] text-[#120524] font-bold text-xs py-3 rounded-[16px] shadow-sm transition-transform active:scale-95 flex items-center justify-center gap-2 cursor-pointer"
+                          className="w-full bg-white hover:bg-[#E2E8F0] text-[var(--color-surface)] font-bold text-xs py-3 rounded-[16px] shadow-sm transition-transform active:scale-95 flex items-center justify-center gap-2 cursor-pointer"
                         >
-                          <Printer className="w-4 h-4 text-[#120524]" /> View & Print Medical Summary
+                          <Printer className="w-4 h-4 text-[var(--color-surface)]" /> View & Print Medical Summary
                         </button>
                       </div>
                     </div>
@@ -1063,7 +1063,7 @@ export const ClinicalLogsView: React.FC = () => {
 
           {/* Watermark badge style */}
           <div style={{ textAlign: 'center', marginTop: '16px', marginBottom: '32px' }}>
-            <div style={{ display: 'inline-block', border: '3px double #10B981', color: '#10B981', padding: '8px 16px', fontSize: '14px', fontWeight: 'bold', textTransform: 'uppercase', transform: 'rotate(-2deg)' }}>
+            <div style={{ display: 'inline-block', border: '3px double var(--color-semantic-positive)', color: 'var(--color-semantic-positive)', padding: '8px 16px', fontSize: '14px', fontWeight: 'bold', textTransform: 'uppercase', transform: 'rotate(-2deg)' }}>
               {billingSuccess === 'Paid' ? 'PAID & RECORDED' : 'CLAIM FILED'}
             </div>
           </div>
@@ -1079,11 +1079,11 @@ export const ClinicalLogsView: React.FC = () => {
       {/* Doctor's Add Encounter Modal */}
       {mounted && showAddModal && createPortal(
         <div className="fixed inset-0 z-[1000] bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in">
-          <div className="bg-[#120524] border border-white/10 w-full max-w-lg rounded-[28px] overflow-hidden premium-shadow animate-in zoom-in-95 duration-200">
+          <div className="bg-[var(--color-surface)] border border-white/10 w-full max-w-lg rounded-[28px] overflow-hidden premium-shadow animate-in zoom-in-95 duration-200">
             {/* Header */}
             <div className="bg-white/5 border-b border-white/10 px-6 py-4 flex justify-between items-center">
               <div className="flex items-center gap-2">
-                <div className="p-1.5 rounded-lg bg-[#EEEAFE] text-[#2E1055]">
+                <div className="p-1.5 rounded-lg bg-[var(--color-text-primary)] text-[var(--color-surface-raised)]">
                   <FileText className="w-4 h-4" />
                 </div>
                 <div>
@@ -1110,7 +1110,7 @@ export const ClinicalLogsView: React.FC = () => {
                   value={patientName}
                   onChange={(e) => setPatientName(e.target.value)}
                   placeholder="e.g. Robert Pattinson"
-                  className="w-full bg-transparent/5 border border-white/10 rounded-[16px] px-4 py-2.5 text-sm font-bold text-white outline-none focus:border-[#2E1055] focus:ring-1 focus:ring-[#2E1055] transition-all placeholder:text-white/50"
+                  className="w-full bg-transparent/5 border border-white/10 rounded-[16px] px-4 py-2.5 text-sm font-bold text-white outline-none focus:border-[var(--color-surface-raised)] focus:ring-1 focus:ring-[var(--color-surface-raised)] transition-all placeholder:text-white/50"
                 />
               </div>
 
@@ -1121,13 +1121,13 @@ export const ClinicalLogsView: React.FC = () => {
                   <select
                     value={providerName}
                     onChange={(e) => setProviderName(e.target.value)}
-                    className="w-full bg-transparent/5 border border-white/10 rounded-[16px] px-3 py-2.5 text-sm font-bold text-white outline-none focus:border-[#2E1055] focus:ring-1 focus:ring-[#2E1055] transition-all cursor-pointer"
+                    className="w-full bg-transparent/5 border border-white/10 rounded-[16px] px-3 py-2.5 text-sm font-bold text-white outline-none focus:border-[var(--color-surface-raised)] focus:ring-1 focus:ring-[var(--color-surface-raised)] transition-all cursor-pointer"
                   >
                     {Array.from(new Set([
                       ...clinicDoctors,
                       ...encounters.map(e => e.provider_name).filter(Boolean)
                     ])).map((docName) => (
-                      <option key={docName} value={docName} className="bg-[#120524] text-white">
+                      <option key={docName} value={docName} className="bg-[var(--color-surface)] text-white">
                         {docName}
                       </option>
                     ))}
@@ -1138,12 +1138,12 @@ export const ClinicalLogsView: React.FC = () => {
                   <select
                     value={visitType}
                     onChange={(e) => setVisitType(e.target.value)}
-                    className="w-full bg-transparent/5 border border-white/10 rounded-[16px] px-3 py-2.5 text-sm font-bold text-white outline-none focus:border-[#2E1055] focus:ring-1 focus:ring-[#2E1055] transition-all cursor-pointer"
+                    className="w-full bg-transparent/5 border border-white/10 rounded-[16px] px-3 py-2.5 text-sm font-bold text-white outline-none focus:border-[var(--color-surface-raised)] focus:ring-1 focus:ring-[var(--color-surface-raised)] transition-all cursor-pointer"
                   >
-                    <option value="Consultation" className="bg-[#120524] text-white">Consultation</option>
-                    <option value="Urgent Care" className="bg-[#120524] text-white">Urgent Care</option>
-                    <option value="Checkup" className="bg-[#120524] text-white">Checkup</option>
-                    <option value="X-Ray / Consult" className="bg-[#120524] text-white">X-Ray / Consult</option>
+                    <option value="Consultation" className="bg-[var(--color-surface)] text-white">Consultation</option>
+                    <option value="Urgent Care" className="bg-[var(--color-surface)] text-white">Urgent Care</option>
+                    <option value="Checkup" className="bg-[var(--color-surface)] text-white">Checkup</option>
+                    <option value="X-Ray / Consult" className="bg-[var(--color-surface)] text-white">X-Ray / Consult</option>
                   </select>
                 </div>
               </div>
@@ -1158,7 +1158,7 @@ export const ClinicalLogsView: React.FC = () => {
                     value={diagnosis}
                     onChange={(e) => setDiagnosis(e.target.value)}
                     placeholder="e.g. Acute Bronchitis"
-                    className="w-full bg-transparent/5 border border-white/10 rounded-[16px] px-4 py-2.5 text-sm font-bold text-white outline-none focus:border-[#2E1055] focus:ring-1 focus:ring-[#2E1055] transition-all placeholder:text-white/50"
+                    className="w-full bg-transparent/5 border border-white/10 rounded-[16px] px-4 py-2.5 text-sm font-bold text-white outline-none focus:border-[var(--color-surface-raised)] focus:ring-1 focus:ring-[var(--color-surface-raised)] transition-all placeholder:text-white/50"
                   />
                 </div>
                 <div>
@@ -1169,7 +1169,7 @@ export const ClinicalLogsView: React.FC = () => {
                     value={copayAmount}
                     onChange={(e) => setCopayAmount(e.target.value)}
                     placeholder="30.00"
-                    className="w-full bg-transparent/5 border border-white/10 rounded-[16px] px-4 py-2.5 text-sm font-bold text-white outline-none focus:border-[#2E1055] focus:ring-1 focus:ring-[#2E1055] transition-all"
+                    className="w-full bg-transparent/5 border border-white/10 rounded-[16px] px-4 py-2.5 text-sm font-bold text-white outline-none focus:border-[var(--color-surface-raised)] focus:ring-1 focus:ring-[var(--color-surface-raised)] transition-all"
                   />
                 </div>
               </div>
@@ -1182,7 +1182,7 @@ export const ClinicalLogsView: React.FC = () => {
                   value={clinicalNotes}
                   onChange={(e) => setClinicalNotes(e.target.value)}
                   placeholder="Subjective: Patient reports dry cough... Objective: Normal breath sounds... Assessment: Acute bronchitis... Plan: Antibiotics/Inhaler..."
-                  className="w-full bg-transparent/5 border border-white/10 rounded-[16px] px-4 py-2.5 text-sm font-semibold text-white outline-none focus:border-[#2E1055] focus:ring-1 focus:ring-[#2E1055] transition-all placeholder:text-white/50 resize-none"
+                  className="w-full bg-transparent/5 border border-white/10 rounded-[16px] px-4 py-2.5 text-sm font-semibold text-white outline-none focus:border-[var(--color-surface-raised)] focus:ring-1 focus:ring-[var(--color-surface-raised)] transition-all placeholder:text-white/50 resize-none"
                 />
               </div>
 
@@ -1194,7 +1194,7 @@ export const ClinicalLogsView: React.FC = () => {
                   value={medications}
                   onChange={(e) => setMedications(e.target.value)}
                   placeholder="e.g. Amoxicillin 500mg daily, Albuterol Inhaler"
-                  className="w-full bg-transparent/5 border border-white/10 rounded-[16px] px-4 py-2.5 text-sm font-bold text-white outline-none focus:border-[#2E1055] focus:ring-1 focus:ring-[#2E1055] transition-all placeholder:text-white/50"
+                  className="w-full bg-transparent/5 border border-white/10 rounded-[16px] px-4 py-2.5 text-sm font-bold text-white outline-none focus:border-[var(--color-surface-raised)] focus:ring-1 focus:ring-[var(--color-surface-raised)] transition-all placeholder:text-white/50"
                 />
               </div>
 
@@ -1209,7 +1209,7 @@ export const ClinicalLogsView: React.FC = () => {
                 </button>
                 <button
                   type="submit"
-                  className="bg-[#2E1055] hover:bg-[#120524] text-white font-bold text-xs px-6 py-2.5 rounded-[16px] transition-all hover:scale-105 active:scale-95 flex items-center gap-1.5"
+                  className="bg-[var(--color-surface-raised)] hover:bg-[var(--color-surface)] text-white font-bold text-xs px-6 py-2.5 rounded-[16px] transition-all hover:scale-105 active:scale-95 flex items-center gap-1.5"
                 >
                   <Check className="w-3.5 h-3.5" /> Save Encounter
                 </button>

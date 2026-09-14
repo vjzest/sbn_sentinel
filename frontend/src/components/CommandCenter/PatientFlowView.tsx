@@ -459,7 +459,7 @@ export const PatientFlowView: React.FC = () => {
           .logo-icon {
             width: 40px;
             height: 40px;
-            background: #2E1055;
+            background: var(--color-surface-raised);
             border-radius: 10px;
             display: flex;
             align-items: center;
@@ -491,7 +491,7 @@ export const PatientFlowView: React.FC = () => {
             text-transform: uppercase;
             letter-spacing: 1px;
             font-weight: 800;
-            color: #2E1055;
+            color: var(--color-surface-raised);
             margin-top: 25px;
             margin-bottom: 12px;
             border-bottom: 1px solid #e5e7eb;
@@ -613,7 +613,7 @@ export const PatientFlowView: React.FC = () => {
       </head>
       <body>
         <div class="print-btn-container" style="text-align: right; margin-bottom: 15px;">
-          <button onclick="window.print()" style="background: #2E1055; color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 700; font-size: 12px; cursor: pointer; transition: background 0.2s;">Print / Save as PDF</button>
+          <button onclick="window.print()" style="background: var(--color-surface-raised); color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 700; font-size: 12px; cursor: pointer; transition: background 0.2s;">Print / Save as PDF</button>
         </div>
         <div class="header">
           <div class="logo-area">
@@ -748,7 +748,7 @@ export const PatientFlowView: React.FC = () => {
           </button>
 
           {showFilter && (
-            <div className="absolute top-12 left-0 w-48 bg-gradient-to-br from-[#2E1055] to-[#120524] rounded-[16px] shadow-[0_20px_50px_rgba(46,16,85,0.3)] border border-white/10 p-2 z-30 animate-in slide-in-from-top-2">
+            <div className="absolute top-12 left-0 w-48 bg-gradient-to-br from-[var(--color-surface-raised)] to-[var(--color-surface)] rounded-[16px] shadow-[0_20px_50px_rgba(46,16,85,0.3)] border border-white/10 p-2 z-30 animate-in slide-in-from-top-2">
               <div onClick={() => {setActiveFilter('Cardiology'); setShowFilter(false); }} className="px-3 py-2 hover:bg-white/10 rounded-[8px] cursor-pointer text-xs font-bold text-white">Cardiology Only</div>
               <div onClick={() => {setActiveFilter('General Practice'); setShowFilter(false); }} className="px-3 py-2 hover:bg-white/10 rounded-[8px] cursor-pointer text-xs font-bold text-white">General Practice</div>
               <div onClick={() => {setActiveFilter('Pediatrics'); setShowFilter(false); }} className="px-3 py-2 hover:bg-white/10 rounded-[8px] cursor-pointer text-xs font-bold text-white">Pediatrics</div>
@@ -757,19 +757,19 @@ export const PatientFlowView: React.FC = () => {
               {activeFilter && (
                 <>
                   <div className="h-px bg-white/10 my-1"></div>
-                  <div onClick={() => {setActiveFilter(''); setShowFilter(false); }} className="px-3 py-2 hover:bg-[#FEF2F2] text-[#EF4444] rounded-[8px] cursor-pointer text-xs font-bold">Clear Filters</div>
+                  <div onClick={() => {setActiveFilter(''); setShowFilter(false); }} className="px-3 py-2 hover:bg-[#FEF2F2] text-[var(--color-semantic-critical)] rounded-[8px] cursor-pointer text-xs font-bold">Clear Filters</div>
                 </>
               )}
             </div>
           )}
-          <button onClick={handleExport} className={`flex items-center gap-2 font-bold text-xs px-4 py-2.5 rounded-[16px] premium-shadow transition-colors ${isExporting ? 'bg-[#10B981] text-white hover:bg-[#059669]' : 'bg-white/5 border border-white/10 text-white hover:bg-white/10 active:scale-95'}`}>
+          <button onClick={handleExport} className={`flex items-center gap-2 font-bold text-xs px-4 py-2.5 rounded-[16px] premium-shadow transition-colors ${isExporting ? 'bg-[var(--color-semantic-positive)] text-white hover:bg-[#059669]' : 'bg-white/5 border border-white/10 text-white hover:bg-white/10 active:scale-95'}`}>
             {isExporting ? <Check className="w-4 h-4 animate-bounce" /> : <Download className="w-4 h-4 text-white/70" />} {isExporting ? 'Exported!' : 'Export'}
           </button>
           <button onClick={() => setDateFilter(dateFilter === 'Today' ? 'Yesterday' : dateFilter === 'Yesterday' ? 'Last 7 Days' : 'Today')} className="flex items-center justify-center gap-2 bg-white/5 border border-white/10 text-white font-bold text-xs px-4 py-2.5 rounded-[16px] premium-shadow whitespace-nowrap shrink-0 hover:bg-white/10 transition-colors active:scale-95">
             <Calendar className="w-4 h-4 text-white/70" /> {dateFilter}
           </button>
-          <div className="flex items-center gap-2 bg-[#ECFDF5] text-[#10B981] border border-emerald-500/30 font-bold text-xs px-4 py-2.5 rounded-[16px] premium-shadow">
-            <div className="w-2.5 h-2.5 rounded-full bg-[#10B981] animate-pulse shadow-[0_0_8px_#10B981]"></div>
+          <div className="flex items-center gap-2 bg-[#ECFDF5] text-[var(--color-semantic-positive)] border border-emerald-500/30 font-bold text-xs px-4 py-2.5 rounded-[16px] premium-shadow">
+            <div className="w-2.5 h-2.5 rounded-full bg-[var(--color-semantic-positive)] animate-pulse shadow-[0_0_8px_var(--color-semantic-positive)]"></div>
             Live Status
           </div>
         </div>
@@ -778,17 +778,17 @@ export const PatientFlowView: React.FC = () => {
       {/* Top Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         {[
-          { title: 'Checked In', value: encounters.filter(e => e.status === 'Waiting').length, trend: `+${(eLen % 4) + 1}%`, icon: UserCheck, color: 'text-[#3B82F6]', bg: 'bg-blue-500/20', line: '#3B82F6' },
-          { title: 'In Consultation', value: encounters.filter(e => e.status === 'In Room').length, trend: `+${(eLen % 2) + 1}%`, icon: Stethoscope, color: 'text-[#10B981]', bg: 'bg-emerald-500/20', line: '#10B981' },
-          { title: 'Avg Wait Time', value: '14m', trend: `-${eLen % 2}m`, icon: Clock, color: 'text-[#F59E0B]', bg: 'bg-orange-500/20', line: '#F59E0B' },
-          { title: 'Delayed', value: encounters.filter(e => e.status === 'Delayed').length, trend: `+${eLen % 2}`, icon: AlertCircle, color: 'text-[#EF4444]', bg: 'bg-red-500/20', line: '#EF4444' },
+          { title: 'Checked In', value: encounters.filter(e => e.status === 'Waiting').length, trend: `+${(eLen % 4) + 1}%`, icon: UserCheck, color: 'text-[var(--color-accent)]', bg: 'bg-blue-500/20', line: 'var(--color-accent)' },
+          { title: 'In Consultation', value: encounters.filter(e => e.status === 'In Room').length, trend: `+${(eLen % 2) + 1}%`, icon: Stethoscope, color: 'text-[var(--color-semantic-positive)]', bg: 'bg-emerald-500/20', line: 'var(--color-semantic-positive)' },
+          { title: 'Avg Wait Time', value: '14m', trend: `-${eLen % 2}m`, icon: Clock, color: 'text-[var(--color-semantic-attention)]', bg: 'bg-orange-500/20', line: 'var(--color-semantic-attention)' },
+          { title: 'Delayed', value: encounters.filter(e => e.status === 'Delayed').length, trend: `+${eLen % 2}`, icon: AlertCircle, color: 'text-[var(--color-semantic-critical)]', bg: 'bg-red-500/20', line: 'var(--color-semantic-critical)' },
         ].map((stat, i) => (
-          <div key={i} className="bg-gradient-to-br from-[#2E1055] to-[#120524] border border-white/10 rounded-[24px] p-6 shadow-[0_20px_50px_rgba(46,16,85,0.3)] card-hover flex justify-between items-center text-white transition-all duration-300">
+          <div key={i} className="bg-gradient-to-br from-[var(--color-surface-raised)] to-[var(--color-surface)] border border-white/10 rounded-[24px] p-6 shadow-[0_20px_50px_rgba(46,16,85,0.3)] card-hover flex justify-between items-center text-white transition-all duration-300">
             <div>
               <p className="text-[11px] text-white/70 uppercase font-extrabold tracking-widest mb-1">{stat.title}</p>
               <div className="flex items-end gap-3">
                 <p className="text-[28px] font-extrabold text-white leading-none transition-all">{stat.value}</p>
-                <span className={`text-[11px] font-bold mb-1 transition-colors ${stat.trend.startsWith('+') ? 'text-[#10B981]' : 'text-[#EF4444]'}`}>{stat.trend}</span>
+                <span className={`text-[11px] font-bold mb-1 transition-colors ${stat.trend.startsWith('+') ? 'text-[var(--color-semantic-positive)]' : 'text-[var(--color-semantic-critical)]'}`}>{stat.trend}</span>
               </div>
             </div>
             <div className="flex flex-col items-end gap-3">
@@ -808,11 +808,11 @@ export const PatientFlowView: React.FC = () => {
       </div>
 
       {/* Patient Journey Timeline */}
-      <div className="bg-gradient-to-br from-[#2E1055] to-[#120524] border border-white/10 rounded-[24px] p-8 shadow-[0_20px_50px_rgba(46,16,85,0.3)] card-hover text-white">
+      <div className="bg-gradient-to-br from-[var(--color-surface-raised)] to-[var(--color-surface)] border border-white/10 rounded-[24px] p-8 shadow-[0_20px_50px_rgba(46,16,85,0.3)] card-hover text-white">
         <h3 className="text-base font-bold text-white mb-8">Patient Journey (Live Example)</h3>
         <div className="flex items-center justify-between relative">
           <div className="absolute left-8 right-8 top-1/2 -translate-y-1/2 h-1 bg-white/10 -z-10 rounded-full"></div>
-          <div className="absolute left-8 right-1/3 top-1/2 -translate-y-1/2 h-1 bg-gradient-to-r from-[#10B981] to-[#3B82F6] -z-10 rounded-full transition-all duration-1000" style={{ width: `${Math.min(100, (manualStep !== null ? manualStep : (eLen % 6)) * 20)}%` }}></div>
+          <div className="absolute left-8 right-1/3 top-1/2 -translate-y-1/2 h-1 bg-gradient-to-r from-[var(--color-semantic-positive)] to-[var(--color-accent)] -z-10 rounded-full transition-all duration-1000" style={{ width: `${Math.min(100, (manualStep !== null ? manualStep : (eLen % 6)) * 20)}%` }}></div>
 
           {[
             { label: 'Check In' },
@@ -834,7 +834,7 @@ export const PatientFlowView: React.FC = () => {
                     <img src={`https://i.pravatar.cc/150?img=${33 + (eLen % 5)}`} className="w-8 h-8 rounded-full border-2 border-white premium-shadow" alt="Avatar" />
                   </div>
                 )}
-                <div className={`w-5 h-5 rounded-full shadow-sm z-10 transition-all duration-500 group-hover:scale-125 ${status === 'done' ? 'bg-[#10B981]' : status === 'current' ? 'bg-[#3B82F6] border-4 border-blue-500/30 scale-125' : 'bg-[#2E1055] border-4 border-white/20 group-hover:border-blue-500/30'}`}></div>
+                <div className={`w-5 h-5 rounded-full shadow-sm z-10 transition-all duration-500 group-hover:scale-125 ${status === 'done' ? 'bg-[var(--color-semantic-positive)]' : status === 'current' ? 'bg-[var(--color-accent)] border-4 border-blue-500/30 scale-125' : 'bg-[var(--color-surface-raised)] border-4 border-white/20 group-hover:border-blue-500/30'}`}></div>
                 <span className={`text-[11px] font-extrabold uppercase tracking-wider transition-colors ${status === 'pending' ? 'text-white/50 group-hover:text-white/70' : 'text-white'}`}>{step.label}</span>
               </div>
             );
@@ -854,7 +854,7 @@ export const PatientFlowView: React.FC = () => {
               </div>
               <div className="space-y-3">
                 {pendingAssignments.map((assignment, idx) => (
-                  <div key={idx} className="bg-[#120524]/60 rounded-xl p-4 border border-amber-500/20 flex items-center justify-between">
+                  <div key={idx} className="bg-[var(--color-surface)]/60 rounded-xl p-4 border border-amber-500/20 flex items-center justify-between">
                     <div>
                       <p className="text-sm font-semibold text-white/90">
                         Assign <span className="font-bold text-white">{assignment.patientName}</span> to <span className="font-bold text-amber-300">{assignment.roomName}</span>
@@ -883,7 +883,7 @@ export const PatientFlowView: React.FC = () => {
             </div>
           )}
 
-          <div className="bg-gradient-to-br from-[#2E1055] to-[#120524] border border-white/10 rounded-[24px] p-8 shadow-[0_20px_50px_rgba(46,16,85,0.3)] text-white">
+          <div className="bg-gradient-to-br from-[var(--color-surface-raised)] to-[var(--color-surface)] border border-white/10 rounded-[24px] p-8 shadow-[0_20px_50px_rgba(46,16,85,0.3)] text-white">
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-base font-bold text-white">Live Waiting Queue</h3>
             </div>
@@ -908,13 +908,13 @@ export const PatientFlowView: React.FC = () => {
                   )}
                   {filteredEncounters.map((row, i) => {
                     let sBg = 'bg-orange-500/20';
-                    let sText = 'text-[#F59E0B]';
+                    let sText = 'text-[var(--color-semantic-attention)]';
                     if (row.status === 'In Room') {
                       sBg = 'bg-emerald-500/20';
-                      sText = 'text-[#10B981]';
+                      sText = 'text-[var(--color-semantic-positive)]';
                     } else if (row.status === 'Delayed') {
                       sBg = 'bg-red-500/20';
-                      sText = 'text-[#EF4444]';
+                      sText = 'text-[var(--color-semantic-critical)]';
                     } else if (row.status === 'Completed') {
                       sBg = 'bg-blue-500/20';
                       sText = 'text-blue-400';
@@ -927,7 +927,7 @@ export const PatientFlowView: React.FC = () => {
                             <img src={row.avatar || 'https://i.pravatar.cc/150?img=1'} className="w-8 h-8 rounded-full border border-white/10" alt="" />
                             <div>
                               <p className="text-sm font-bold text-white leading-tight transition-all">{row.patient_name}</p>
-                              <p className="text-[10px] text-[#EF4444] font-extrabold uppercase mt-0.5">{row.priority} Priority</p>
+                              <p className="text-[10px] text-[var(--color-semantic-critical)] font-extrabold uppercase mt-0.5">{row.priority} Priority</p>
                             </div>
                           </div>
                         </td>
@@ -956,10 +956,10 @@ export const PatientFlowView: React.FC = () => {
                             }}
                             className="bg-white/10 border border-white/10 text-[11px] font-bold text-white/70 rounded-[8px] px-2.5 py-1 outline-none cursor-pointer hover:bg-white/5 hover:text-white transition-colors"
                           >
-                            <option className="bg-[#120524] text-white" value="Waiting">Waiting</option>
-                            <option className="bg-[#120524] text-white" value="In Room">In Room</option>
-                            <option className="bg-[#120524] text-white" value="Completed">Completed</option>
-                            <option className="bg-[#120524] text-white" value="Delayed">Delayed</option>
+                            <option className="bg-[var(--color-surface)] text-white" value="Waiting">Waiting</option>
+                            <option className="bg-[var(--color-surface)] text-white" value="In Room">In Room</option>
+                            <option className="bg-[var(--color-surface)] text-white" value="Completed">Completed</option>
+                            <option className="bg-[var(--color-surface)] text-white" value="Delayed">Delayed</option>
                           </select>
                         </td>
                         <td className="py-4 px-2 text-right">
@@ -1006,10 +1006,10 @@ export const PatientFlowView: React.FC = () => {
 
         {/* Heat Map & AI suggestions */}
         <div className="flex flex-col gap-6 self-start sticky top-6">
-          <div className="bg-gradient-to-br from-[#2E1055] to-[#120524] border border-white/10 rounded-[24px] p-8 shadow-[0_20px_50px_rgba(46,16,85,0.3)] text-white flex-1">
+          <div className="bg-gradient-to-br from-[var(--color-surface-raised)] to-[var(--color-surface)] border border-white/10 rounded-[24px] p-8 shadow-[0_20px_50px_rgba(46,16,85,0.3)] text-white flex-1">
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-base font-bold text-white flex items-center gap-2">
-                <LayoutGrid className="w-5 h-5 text-[#A78BFA]" /> Clinic Heat Map
+                <LayoutGrid className="w-5 h-5 text-[var(--color-accent)]" /> Clinic Heat Map
               </h3>
               <button
                 onClick={() => setIsAddRoomModalOpen(true)}
@@ -1085,10 +1085,10 @@ export const PatientFlowView: React.FC = () => {
             </div>
           </div>
 
-          <div className="bg-gradient-to-br from-[#2E1055] to-[#120524] border border-white/10 rounded-[24px] p-8 shadow-[0_20px_50px_rgba(46,16,85,0.3)] relative overflow-hidden text-white">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-[#2E1055] rounded-full blur-[50px] opacity-30 animate-pulse"></div>
+          <div className="bg-gradient-to-br from-[var(--color-surface-raised)] to-[var(--color-surface)] border border-white/10 rounded-[24px] p-8 shadow-[0_20px_50px_rgba(46,16,85,0.3)] relative overflow-hidden text-white">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-[var(--color-surface-raised)] rounded-full blur-[50px] opacity-30 animate-pulse"></div>
             <h3 className="text-base font-bold flex items-center gap-2 mb-4">
-              <Activity className="w-5 h-5 text-[#3B82F6]" /> AI Suggestions
+              <Activity className="w-5 h-5 text-[var(--color-accent)]" /> AI Suggestions
             </h3>
             <p className="text-[13px] font-medium text-white/50 mb-6 leading-relaxed transition-all">
               {eLen % 2 === 0
@@ -1139,7 +1139,7 @@ export const PatientFlowView: React.FC = () => {
       {/* Health Card / Eligibility Modal */}
       {isHealthCardModalOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-md animate-in fade-in">
-          <div className="bg-[#120524] rounded-[32px] w-full max-w-4xl p-8 shadow-[0_30px_90px_rgba(0,0,0,0.9)] border border-white/20 relative animate-in zoom-in-95 duration-300 max-h-[90vh] overflow-y-auto text-white">
+          <div className="bg-[var(--color-surface)] rounded-[32px] w-full max-w-4xl p-8 shadow-[0_30px_90px_rgba(0,0,0,0.9)] border border-white/20 relative animate-in zoom-in-95 duration-300 max-h-[90vh] overflow-y-auto text-white">
             <button
               onClick={() => setIsHealthCardModalOpen(false)}
               className="absolute top-6 right-6 text-white/50 hover:text-white transition-colors p-2 hover:bg-white/5 rounded-full"
@@ -1159,9 +1159,9 @@ export const PatientFlowView: React.FC = () => {
               <div className="lg:col-span-5 space-y-6">
 
                 {/* Physical Health Card Mockup */}
-                <div className="relative aspect-[1.586/1] w-full rounded-[24px] bg-gradient-to-br from-[#1E1B4B] via-[#312E81] to-[#120524] p-6 text-white shadow-xl overflow-hidden border border-white/10">
+                <div className="relative aspect-[1.586/1] w-full rounded-[24px] bg-gradient-to-br from-[#1E1B4B] via-[#312E81] to-[var(--color-surface)] p-6 text-white shadow-xl overflow-hidden border border-white/10">
                   <div className="absolute top-0 right-0 w-48 h-48 bg-[#6366F1] rounded-full blur-[80px] opacity-40"></div>
-                  <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-[#2E1055] rounded-full blur-[70px] opacity-30"></div>
+                  <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-[var(--color-surface-raised)] rounded-full blur-[70px] opacity-30"></div>
 
                   {/* Top Bar */}
                   <div className="flex justify-between items-start relative z-10">
@@ -1202,14 +1202,14 @@ export const PatientFlowView: React.FC = () => {
                 {/* Scan Buttons */}
                 <div className="bg-white/5 border border-white/10 rounded-[20px] p-5 premium-shadow">
                   <h4 className="text-xs font-extrabold text-white mb-3 flex items-center gap-1.5">
-                    <Camera className="w-4 h-4 text-[#120524]" /> Sentinel AI OCR Reader
+                    <Camera className="w-4 h-4 text-[var(--color-surface)]" /> Sentinel AI OCR Reader
                   </h4>
                   <p className="text-xs text-white/70 mb-4">Simulate taking a snapshot of the health card. Our AI will automatically parse the parameters.</p>
 
                   <button
                     onClick={handleOCRScan}
                     disabled={isScanning}
-                    className="w-full py-3 bg-[#F5F3FF] border border-[#DDD6FE] hover:bg-white/10 text-[#120524] font-bold text-xs rounded-[16px] transition-all flex items-center justify-center gap-2 active:scale-98"
+                    className="w-full py-3 bg-[#F5F3FF] border border-[#DDD6FE] hover:bg-white/10 text-[var(--color-surface)] font-bold text-xs rounded-[16px] transition-all flex items-center justify-center gap-2 active:scale-98"
                   >
                     {isScanning ? (
                       <>
@@ -1223,7 +1223,7 @@ export const PatientFlowView: React.FC = () => {
                   </button>
 
                   {validation !== null && (
-                    <div className="mt-3 bg-[#ECFDF5] text-[#10B981] border border-emerald-500/30 px-3 py-2 rounded-[10px] text-[10px] font-extrabold flex justify-between items-center">
+                    <div className="mt-3 bg-[#ECFDF5] text-[var(--color-semantic-positive)] border border-emerald-500/30 px-3 py-2 rounded-[10px] text-[10px] font-extrabold flex justify-between items-center">
                       <span>OCR EXTRACTION MATCH</span>
                       <span className="bg-white/5 px-2 py-0.5 rounded-full border border-emerald-500/30">Verified</span>
                     </div>
@@ -1236,7 +1236,7 @@ export const PatientFlowView: React.FC = () => {
               <div className="lg:col-span-7 space-y-6">
 
                 {/* Form fields */}
-                <div className="bg-gradient-to-br from-[#2E1055] to-[#120524] border border-white/10 rounded-[24px] p-6 shadow-[0_20px_50px_rgba(46,16,85,0.3)] text-white space-y-4">
+                <div className="bg-gradient-to-br from-[var(--color-surface-raised)] to-[var(--color-surface)] border border-white/10 rounded-[24px] p-6 shadow-[0_20px_50px_rgba(46,16,85,0.3)] text-white space-y-4">
                   <h4 className="text-sm font-bold text-white border-b border-white/10 pb-3">Card Metadata Fields</h4>
 
                   <div className="grid grid-cols-2 gap-4">
@@ -1313,16 +1313,16 @@ export const PatientFlowView: React.FC = () => {
 
                 {/* Eligibility Result Container */}
                 {verificationResult ? (
-                  <div className="bg-gradient-to-br from-[#2E1055] to-[#120524] border border-white/10 rounded-[24px] p-6 shadow-[0_20px_50px_rgba(46,16,85,0.3)] text-white animate-in slide-in-from-bottom-2">
+                  <div className="bg-gradient-to-br from-[var(--color-surface-raised)] to-[var(--color-surface)] border border-white/10 rounded-[24px] p-6 shadow-[0_20px_50px_rgba(46,16,85,0.3)] text-white animate-in slide-in-from-bottom-2">
                     <div className="flex justify-between items-center border-b border-white/10 pb-4 mb-4">
                       <h4 className="text-sm font-bold text-white">Eligibility Response</h4>
                       <div className="flex items-center gap-1.5">
                         {verificationResult.eligibility_status === 'Active' ? (
-                          <span className="bg-[#ECFDF5] text-[#10B981] border border-emerald-500/30 px-3 py-1 rounded-[8px] text-[10px] font-extrabold flex items-center gap-1">
+                          <span className="bg-[#ECFDF5] text-[var(--color-semantic-positive)] border border-emerald-500/30 px-3 py-1 rounded-[8px] text-[10px] font-extrabold flex items-center gap-1">
                             <ShieldCheck className="w-3.5 h-3.5" /> ACTIVE COVERAGE
                           </span>
                         ) : (
-                          <span className="bg-[#FEF2F2] text-[#EF4444] border border-red-500/30 px-3 py-1 rounded-[8px] text-[10px] font-extrabold flex items-center gap-1">
+                          <span className="bg-[#FEF2F2] text-[var(--color-semantic-critical)] border border-red-500/30 px-3 py-1 rounded-[8px] text-[10px] font-extrabold flex items-center gap-1">
                             <ShieldAlert className="w-3.5 h-3.5" /> INACTIVE / EXPIRED
                           </span>
                         )}
@@ -1342,7 +1342,7 @@ export const PatientFlowView: React.FC = () => {
                           </div>
                           <div className="bg-white/5 border border-white/10 rounded-[16px] p-4 text-center">
                             <p className="text-[9px] font-extrabold text-white/70 uppercase tracking-wider mb-1">Deductible</p>
-                            <p className="text-lg font-extrabold text-[#10B981]">${verificationResult.deductible?.toFixed(2)}</p>
+                            <p className="text-lg font-extrabold text-[var(--color-semantic-positive)]">${verificationResult.deductible?.toFixed(2)}</p>
                           </div>
                         </div>
 
@@ -1356,7 +1356,7 @@ export const PatientFlowView: React.FC = () => {
                         <ShieldAlert className="w-5 h-5 shrink-0 mt-0.5" />
                         <div>
                           <p className="font-extrabold">Insurance Claim Warning</p>
-                          <p className="text-[#EF4444] font-medium mt-1">The patient's eligibility check failed. Any insurance claims submitted under this policy are likely to be rejected. Please request updated health credentials from subscriber.</p>
+                          <p className="text-[var(--color-semantic-critical)] font-medium mt-1">The patient's eligibility check failed. Any insurance claims submitted under this policy are likely to be rejected. Please request updated health credentials from subscriber.</p>
                         </div>
                       </div>
                     )}
@@ -1451,7 +1451,7 @@ export const PatientFlowView: React.FC = () => {
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-emerald-500/40 backdrop-blur-sm animate-in fade-in">
           <div className="bg-emerald-500 border border-[#1F2937] text-white rounded-[28px] w-full max-w-sm p-6 premium-shadow relative overflow-hidden animate-in zoom-in-95 duration-300">
             {/* Pulsing glow background */}
-            <div className="absolute top-[-30px] right-[-30px] w-32 h-32 bg-[#3B82F6] opacity-20 rounded-full blur-[40px]"></div>
+            <div className="absolute top-[-30px] right-[-30px] w-32 h-32 bg-[var(--color-accent)] opacity-20 rounded-full blur-[40px]"></div>
 
             <div className="flex flex-col items-center text-center space-y-6 pt-4">
               <div className="relative">
@@ -1508,7 +1508,7 @@ export const PatientFlowView: React.FC = () => {
         const isOccupied = roomAssignments[selectedRoom]?.status === 'Occupied';
         return (
           <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-md animate-in fade-in">
-            <div className={`bg-[#120524] rounded-[32px] w-full p-6 shadow-[0_30px_90px_rgba(0,0,0,0.9)] border border-white/20 relative animate-in zoom-in-95 duration-200 transition-all text-white ${isOccupied ? 'max-w-4xl' : 'max-w-md'}`}>
+            <div className={`bg-[var(--color-surface)] rounded-[32px] w-full p-6 shadow-[0_30px_90px_rgba(0,0,0,0.9)] border border-white/20 relative animate-in zoom-in-95 duration-200 transition-all text-white ${isOccupied ? 'max-w-4xl' : 'max-w-md'}`}>
               <button
                 onClick={() => {
                   setSelectedRoom(null);
@@ -1629,7 +1629,7 @@ export const PatientFlowView: React.FC = () => {
                                   </div>
                                   <div className="bg-white/5 p-2 rounded-lg border border-white/10">
                                     <span className="text-[8px] text-white/50 block font-bold">SpO2</span>
-                                    <span className="text-xs font-black text-[#A78BFA]">98%</span>
+                                    <span className="text-xs font-black text-[var(--color-accent)]">98%</span>
                                   </div>
                                 </div>
                               </div>
@@ -1666,7 +1666,7 @@ export const PatientFlowView: React.FC = () => {
                           <div className="space-y-4">
                             <div className="flex items-center justify-between pb-3 border-b border-white/10">
                               <h4 className="text-xs font-black text-white flex items-center gap-1.5">
-                                <FileText className="w-4 h-4 text-[#A78BFA]" />
+                                <FileText className="w-4 h-4 text-[var(--color-accent)]" />
                                 Clinical Charting Workspace
                               </h4>
                             </div>
@@ -1807,7 +1807,7 @@ export const PatientFlowView: React.FC = () => {
                                     <div>
                                       <div className="flex justify-between items-center mb-1">
                                         <label className="text-[10px] text-white/60 font-extrabold uppercase tracking-wider flex items-center gap-1">
-                                          <span className="w-4 h-4 rounded bg-[#E0D9FD] text-[#120524] font-bold flex items-center justify-center text-[9px]">P</span>
+                                          <span className="w-4 h-4 rounded bg-[#E0D9FD] text-[var(--color-surface)] font-bold flex items-center justify-center text-[9px]">P</span>
                                           Plan / Treatment
                                         </label>
                                         <span className="text-[8px] text-white/50 font-semibold">Next Steps</span>
@@ -1868,21 +1868,21 @@ export const PatientFlowView: React.FC = () => {
                                       </div>
                                       <div className="bg-white/5 p-2.5 rounded-lg border border-white/10">
                                         <span className="text-[8px] text-white/50 block font-bold">SpO2</span>
-                                        <span className="text-xs font-black text-[#A78BFA]">98%</span>
+                                        <span className="text-xs font-black text-[var(--color-accent)]">98%</span>
                                       </div>
                                     </div>
                                   </div>
 
                                   {/* Quick Actions / Verification Gateways */}
-                                  <div className="bg-[#EEEAFE]/50 border border-[#E0D9FD] rounded-[16px] p-4 space-y-3">
-                                    <span className="text-[9px] text-[#A78BFA] font-extrabold uppercase tracking-wider block">Verification & Communications</span>
+                                  <div className="bg-[var(--color-text-primary)]/50 border border-[#E0D9FD] rounded-[16px] p-4 space-y-3">
+                                    <span className="text-[9px] text-[var(--color-accent)] font-extrabold uppercase tracking-wider block">Verification & Communications</span>
                                     <div className="flex gap-2">
                                       <button
                                         onClick={() => {
                                           handleOpenHealthCard(enc.patient_name);
                                           setSelectedRoom(null);
                                         }}
-                                        className="flex-1 py-2 bg-[#F5F3FF] border border-[#DDD6FE] hover:bg-white/10 text-[#120524] font-bold text-xs rounded-[10px] transition-all flex items-center justify-center gap-1.5 active:scale-95 cursor-pointer"
+                                        className="flex-1 py-2 bg-[#F5F3FF] border border-[#DDD6FE] hover:bg-white/10 text-[var(--color-surface)] font-bold text-xs rounded-[10px] transition-all flex items-center justify-center gap-1.5 active:scale-95 cursor-pointer"
                                       >
                                         <CreditCard className="w-4 h-4" /> Verify Insurance
                                       </button>
@@ -1905,7 +1905,7 @@ export const PatientFlowView: React.FC = () => {
                               disabled={isSavingChart}
                               className={`flex-1 py-2.5 text-xs font-bold rounded-[10px] transition-all cursor-pointer text-center ${saveChartSuccess
                                   ? 'bg-emerald-50 text-emerald-600 border border-emerald-300'
-                                  : 'bg-[#2E1055] hover:bg-[#120524] text-white shadow-sm hover:scale-[1.01] active:scale-98'
+                                  : 'bg-[var(--color-surface-raised)] hover:bg-[var(--color-surface)] text-white shadow-sm hover:scale-[1.01] active:scale-98'
                                 }`}
                             >
                               {isSavingChart ? 'Saving Patient Record...' : saveChartSuccess ? '✓ Chart Notes Saved Successfully' : 'Save Charting Details'}
@@ -1981,7 +1981,7 @@ export const PatientFlowView: React.FC = () => {
                           onChange={(e) => setAssignTargetPatient(e.target.value)}
                           className="w-full bg-white/10 border border-white/10 text-xs font-bold text-white/70 rounded-[10px] px-3 py-2 outline-none cursor-pointer"
                         >
-                          <option value="" className="bg-[#120524] text-white">-- Select Patient from Queue --</option>
+                          <option value="" className="bg-[var(--color-surface)] text-white">-- Select Patient from Queue --</option>
                           {encounters
                             .filter(e => e.status && (e.status.toLowerCase() === 'waiting' || e.status.toLowerCase() === 'delayed'))
                             .sort((a, b) => {
@@ -1989,7 +1989,7 @@ export const PatientFlowView: React.FC = () => {
                               return (p[a.priority] ?? 4) - (p[b.priority] ?? 4);
                             })
                             .map(e => (
-                              <option key={e.id} value={e.id} className="bg-[#120524] text-white">
+                              <option key={e.id} value={e.id} className="bg-[var(--color-surface)] text-white">
                                 {e.patient_name} ({e.priority} priority — wait {e.wait_time})
                               </option>
                             ))
@@ -2008,9 +2008,9 @@ export const PatientFlowView: React.FC = () => {
                         onChange={(e) => setAssignTargetDoctor(e.target.value)}
                         className="w-full bg-white/10 border border-white/10 text-xs font-bold text-white/70 rounded-[10px] px-3 py-2 outline-none cursor-pointer"
                       >
-                        <option value="" className="bg-[#120524] text-white">-- Select Doctor --</option>
+                        <option value="" className="bg-[var(--color-surface)] text-white">-- Select Doctor --</option>
                         {CLINIC_DOCTORS.map(doc => (
-                          <option key={doc.id} value={doc.id} className="bg-[#120524] text-white" disabled={!doc.available}>
+                          <option key={doc.id} value={doc.id} className="bg-[var(--color-surface)] text-white" disabled={!doc.available}>
                             {doc.name} — {doc.specialty}{!doc.available ? ' (Unavailable)' : ''}
                           </option>
                         ))}
@@ -2116,7 +2116,7 @@ export const PatientFlowView: React.FC = () => {
       {/* Custom Glassmorphism Add Room Modal */}
       {isAddRoomModalOpen && (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-md animate-in fade-in">
-          <div className="bg-[#120524] border border-white/20 rounded-[28px] w-full max-w-md p-6 shadow-[0_25px_60px_rgba(0,0,0,0.9)] animate-in zoom-in-95 text-white">
+          <div className="bg-[var(--color-surface)] border border-white/20 rounded-[28px] w-full max-w-md p-6 shadow-[0_25px_60px_rgba(0,0,0,0.9)] animate-in zoom-in-95 text-white">
             <div className="flex justify-between items-center mb-4 border-b border-white/10 pb-3">
               <h3 className="text-base font-extrabold text-white flex items-center gap-2">
                 <LayoutGrid className="w-5 h-5 text-blue-400" /> Add Clinic Room
@@ -2139,7 +2139,7 @@ export const PatientFlowView: React.FC = () => {
             <select
               value={newRoomDoctor || ''}
               onChange={(e) => setNewRoomDoctor(e.target.value || null)}
-              className="w-full bg-[#120524] border border-white/20 rounded-[12px] p-3 text-xs font-bold text-white outline-none cursor-pointer mb-8"
+              className="w-full bg-[var(--color-surface)] border border-white/20 rounded-[12px] p-3 text-xs font-bold text-white outline-none cursor-pointer mb-8"
             >
               <option value="">-- No Doctor Assigned --</option>
               {CLINIC_DOCTORS.map(doc => (

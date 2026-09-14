@@ -7,6 +7,7 @@ from app.api.v1.api import api_router
 from app.db.database import engine
 from app.models.signal import Base
 from app.models.user import User, UserRole
+from app.models.otp import OTPModel  # noqa
 
 # Create tables in SQLite/PostgreSQL (if they don't exist)
 Base.metadata.create_all(bind=engine)

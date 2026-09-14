@@ -13,7 +13,7 @@ export default function SuperAdminPage() {
     const role = localStorage.getItem('userRole');
     const userData = localStorage.getItem('user');
 
-    if (!token || role !== 'super_admin') {
+    if (!token || (role !== 'super_admin' && role !== 'System Administrator')) {
       router.push('/');
     } else {
       setUser(JSON.parse(userData || '{}'));
