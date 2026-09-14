@@ -231,8 +231,25 @@ export default function Dashboard() {
     }
     
     setIsLoggedIn(true);
-    if (role) setUserRole(role);
-    setIsBooting(false);
+    
+    // Map backend roles to frontend internal roles
+    const normalizeRole = (r: string) => {
+      if (r === 'System Administrator') return 'super_admin';
+      if (r === 'Organization Administrator') return 'org_admin';
+      if (r === 'Clinic Administrator') return 'clinic_admin';
+      if (r === 'Operations Manager') return 'ops_manager';
+      if (r === 'Practice Manager') return 'practice_manager';
+      if (r === 'Staff') return 'staff';
+      return r;
+    };
+    
+    if (role) setUserRole(normalizeRole(role));
+    
+    if (sessionStorage.getItem('just_logged_in') === 'true') {
+      setIsBooting(true);
+    } else {
+      setIsBooting(false);
+    }
     
     // Load practice configuration from database
     fetchWithAuth(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/settings`)
@@ -269,7 +286,10 @@ export default function Dashboard() {
   }
 
   if (isBooting) {
-    return <BootScreen onComplete={() => setIsBooting(false)} />;
+    return <BootScreen onComplete={() => {
+      setIsBooting(false);
+      sessionStorage.removeItem('just_logged_in');
+    }} />;
   }
 
   return (
@@ -1072,14 +1092,14 @@ const SidebarItem = ({ icon: Icon, label, active, onClick, className = '' }: { i
     }}
     className={`group relative w-full flex items-center gap-3 px-4 py-2.5 rounded-[16px] transition-all duration-300 ${
       active 
-        ? 'bg-white/10 text-white font-extrabold border border-white/20 shadow-[0_4px_12px_rgba(0,0,0,0.1)]' 
+        ? 'bg-white/15 text-white font-black border border-white/20 shadow-lg' 
         : 'text-white/60 font-bold hover:bg-white/5 hover:text-white'
     } ${className}`}
   >
     {active && (
-      <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-6 bg-gradient-to-b from-[#2E1055] to-[#120524] rounded-r-full shadow-[0_0_8px_#2E1055]"></div>
+      <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[4px] h-6 bg-gradient-to-b from-indigo-400 to-purple-500 rounded-r-full shadow-[0_0_10px_#8b5cf6]"></div>
     )}
-    <Icon className={`w-5 h-5 transition-transform duration-300 group-hover:scale-110 ${active ? 'text-white/70' : 'text-white/60 group-hover:text-[#475569]'}`} />
+    <Icon className={`w-5 h-5 transition-transform duration-300 group-hover:scale-110 ${active ? 'text-white' : 'text-white/60 group-hover:text-white'}`} />
     <span className="text-sm tracking-wide">{label}</span>
   </button>
 );

@@ -74,11 +74,14 @@ export const AuditLogsView: React.FC = () => {
   const getActionBadge = (action?: string) => {
     if (!action) return <span className="px-2.5 py-1 rounded-md text-[11px] font-bold bg-white/10 text-white/70 border border-white/10">SYSTEM</span>;
     const actUpper = action.toUpperCase();
-    if (actUpper.includes('SECURITY') || actUpper.includes('FAILED')) {
+    if (actUpper.includes('FAILED') || actUpper.includes('ERROR')) {
       return <span className="px-2.5 py-1 rounded-md text-[11px] font-bold bg-rose-500/20 text-rose-400 border border-rose-500/30">{action}</span>;
     }
     if (actUpper.includes('LOGIN') || actUpper.includes('SUCCESS')) {
       return <span className="px-2.5 py-1 rounded-md text-[11px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">{action}</span>;
+    }
+    if (actUpper.includes('SECURITY')) {
+      return <span className="px-2.5 py-1 rounded-md text-[11px] font-bold bg-indigo-500/20 text-indigo-400 border border-indigo-500/30">{action}</span>;
     }
     return <span className="px-2.5 py-1 rounded-md text-[11px] font-bold bg-blue-500/20 text-blue-400 border border-blue-500/30">{action}</span>;
   };

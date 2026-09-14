@@ -13,7 +13,7 @@ export default function RootPage() {
     const role = localStorage.getItem('userRole');
 
     if (token) {
-      if (role === 'super_admin') {
+      if (role === 'super_admin' || role === 'System Administrator') {
         router.push('/super-admin');
       } else {
         router.push('/dashboard');
@@ -30,9 +30,11 @@ export default function RootPage() {
   return (
     <AuthScreen 
       onLogin={(role: string, user: any) => { 
-        if (role === 'super_admin') {
+        if (role === 'super_admin' || role === 'System Administrator') {
+          sessionStorage.setItem('just_logged_in', 'true');
           router.push('/super-admin');
         } else {
+          sessionStorage.setItem('just_logged_in', 'true');
           router.push('/dashboard');
         }
       }} 

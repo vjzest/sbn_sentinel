@@ -10,6 +10,11 @@ def send_email(to_email: str, subject: str, body: str, is_html: bool = False):
     if not settings.SMTP_SERVER or not settings.SMTP_USER or not settings.SMTP_PASSWORD:
         logger.warning(
             f"SMTP configuration is missing. Mocking email send to {to_email}: {subject}")
+        # Print out the body so we can see the OTP in the terminal
+        print(f"\n--- MOCKED EMAIL TO {to_email} ---")
+        print(f"Subject: {subject}")
+        print(body)
+        print("----------------------------------\n")
         return False
 
     try:

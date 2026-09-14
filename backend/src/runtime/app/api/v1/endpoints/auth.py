@@ -17,6 +17,7 @@ class RegisterInitiateRequest(BaseModel):
     email: EmailStr
     password: str
     full_name: str
+    role: str = "clinic_admin"
 
 
 @router.post("/register/initiate")
@@ -52,6 +53,7 @@ class RegisterVerifyRequest(BaseModel):
     password: str
     full_name: str
     otp: str
+    role: str = "clinic_admin"
 
 
 @router.post("/register")
@@ -65,18 +67,23 @@ def register_user(user_in: RegisterVerifyRequest, db: Session = Depends(get_db))
         OTPModel.email == user_in.email,
         OTPModel.otp_code == user_in.otp,
         OTPModel.purpose == "signup",
-        OTPModel.is_used is False
+        OTPModel.is_used == False  # noqa: E712
     ).order_by(OTPModel.created_at.desc()).first()
 
     if not otp_record or datetime.utcnow() - otp_record.created_at > timedelta(minutes=settings.OTP_EXPIRE_MINUTES):
         raise HTTPException(status_code=400, detail="Invalid or expired OTP")
 
     from app.models.user import UserRole
+    # Map frontend role to backend UserRole
+    assigned_role = UserRole.UNASSIGNED.value
+    if user_in.role == 'clinic_admin':
+        assigned_role = UserRole.ORGANIZATION_ADMINISTRATOR.value
+
     user = User(
         email=user_in.email,
         hashed_password=get_password_hash(user_in.password),
         full_name=user_in.full_name,
-        role=UserRole.UNASSIGNED.value
+        role=assigned_role
     )
     db.add(user)
     otp_record.is_used = True
@@ -170,7 +177,7 @@ def reset_password(payload: ResetPasswordRequest, db: Session = Depends(get_db))
         OTPModel.email == payload.email,
         OTPModel.otp_code == payload.otp,
         OTPModel.purpose == "reset_password",
-        OTPModel.is_used is False
+        OTPModel.is_used == False  # noqa: E712
     ).order_by(OTPModel.created_at.desc()).first()
 
     if not otp_record or datetime.utcnow() - otp_record.created_at > timedelta(minutes=settings.OTP_EXPIRE_MINUTES):
@@ -193,7 +200,7 @@ def accept_invite(payload: ResetPasswordRequest, db: Session = Depends(get_db)):
         OTPModel.email == payload.email,
         OTPModel.otp_code == payload.otp,
         OTPModel.purpose == "invite",
-        OTPModel.is_used is False
+        OTPModel.is_used == False  # noqa: E712
     ).order_by(OTPModel.created_at.desc()).first()
 
     if not otp_record or datetime.utcnow() - otp_record.created_at > timedelta(minutes=settings.OTP_EXPIRE_MINUTES):

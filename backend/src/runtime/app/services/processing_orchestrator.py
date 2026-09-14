@@ -318,7 +318,7 @@ class ProcessingOrchestrator:
             event.decision_context = DecisionContextModel(
                 primary_context=response.result_payload.get("primary_context", "Unknown"),
                 secondary_context=response.result_payload.get("secondary_context"),
-                evidence_state=json.dumps(getattr(event, "evidence_package", {})),
+                evidence_state=json.dumps(getattr(event, "evidence_package", {}), default=str),
                 reason=response.result_payload.get("reason")
             )
             event.layer4_duration_ms = (time.time() - t_start) * 1000

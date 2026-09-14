@@ -681,20 +681,20 @@ document.body
                               <span className="font-bold text-white">{member.name}</span>
                             </div>
                           </td>
-                          <td className="py-3.5 px-4 text-slate-500">{member.email}</td>
+                          <td className="py-3.5 px-4 text-white/60">{member.email}</td>
                           <td className="py-3.5 px-4">
                             <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
                               member.role.includes('Administrator') 
-                                ? 'bg-[var(--color-text-primary)] text-white border border-indigo-200'
+                                ? 'bg-indigo-500/20 text-indigo-300 border border-indigo-500/30'
                                 : member.role.includes('Manager')
-                                ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                                : 'bg-slate-50 text-slate-700 border border-slate-200'
+                                ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
+                                : 'bg-slate-500/20 text-slate-300 border border-slate-500/30'
                             }`}>
                               {member.role}
                             </span>
                           </td>
                           <td className="py-3.5 px-4">
-                            <span className="bg-[#ECFDF5] text-[var(--color-semantic-positive)] px-2 py-0.5 rounded text-[10px] font-extrabold uppercase border border-emerald-500/30">
+                            <span className="bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded text-[10px] font-extrabold uppercase border border-emerald-500/30">
                               {member.status}
                             </span>
                           </td>

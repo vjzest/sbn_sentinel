@@ -160,7 +160,7 @@ class DecisionContextEngine(BaseService):
         from app.services.context_serializer import ContextSerializer
 
         # We run this synchronously to avoid breaking the existing BaseService caller
-        import asyncio
+        import asyncio  # noqa
         builder = ContextBuilder(None)
         validator = ContextValidator(None)
         serializer = ContextSerializer()
