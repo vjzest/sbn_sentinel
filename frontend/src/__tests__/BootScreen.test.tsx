@@ -50,8 +50,12 @@ describe('BootScreen SDS-D2 Tests', () => {
     
     // Fast forward through all stages
     await act(async () => {
-      // Resolve all pending fetch promises and state updates
-      await new Promise(resolve => setTimeout(resolve, 0));
+      await Promise.resolve();
+      await vi.runAllTimersAsync();
+    });
+    
+    // Run timers again to process the useEffect timeouts (Stage 8 and 9)
+    await act(async () => {
       await vi.runAllTimersAsync();
     });
     
@@ -64,7 +68,8 @@ describe('BootScreen SDS-D2 Tests', () => {
     render(<BootScreen onComplete={onComplete} />);
     
     await act(async () => {
-      vi.advanceTimersByTime(5000); // Wait long enough for animation
+      await Promise.resolve();
+      await vi.runAllTimersAsync();
     });
     
     expect(screen.queryByText('Sentinel is ready.')).toBeNull();
@@ -92,6 +97,10 @@ describe('BootScreen SDS-D2 Tests', () => {
     mockFetch.mockResolvedValueOnce({ ok: true, json: async () => ({ ready: true }) });
     const { container } = render(<BootScreen onComplete={() => {}} />);
     
+    await act(async () => {
+      await Promise.resolve();
+    });
+
     // It should render transition-opacity instead of sweep
     const paths = container.querySelectorAll('path');
     let hasReducedMotionClass = false;
