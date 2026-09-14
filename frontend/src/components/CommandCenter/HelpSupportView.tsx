@@ -19,7 +19,7 @@ export const HelpSupportView: React.FC = () => {
     <div className="animate-in fade-in duration-500 max-w-[1200px] mx-auto space-y-8">
       
       {/* Header & Search */}
-      <div className="bg-gradient-to-br from-[#2E1055] to-[#120524] rounded-[24px] p-12 premium-shadow text-white relative overflow-hidden text-center flex flex-col items-center">
+      <div className="bg-gradient-to-br from-[var(--color-surface-raised)] to-[var(--color-surface)] rounded-[24px] p-12 premium-shadow text-white relative overflow-hidden text-center flex flex-col items-center">
          <div className="absolute top-[-100px] left-[-100px] w-64 h-64 bg-white/5 opacity-10 rounded-full blur-3xl"></div>
          <div className="absolute bottom-[-100px] right-[-100px] w-64 h-64 bg-white/5 opacity-10 rounded-full blur-3xl"></div>
          
@@ -49,7 +49,7 @@ export const HelpSupportView: React.FC = () => {
           <div 
             key={i} 
             onClick={() => window.open(card.link, '_blank')}
-            className={`bg-gradient-to-br from-[#2E1055] to-[#120524] border border-white/10 rounded-[24px] p-6 premium-shadow cursor-pointer transition-all ${card.hover} group`}
+            className={`bg-gradient-to-br from-[var(--color-surface-raised)] to-[var(--color-surface)] border border-white/10 rounded-[24px] p-6 premium-shadow cursor-pointer transition-all ${card.hover} group`}
           >
              <div className={`w-12 h-12 ${card.bg} rounded-[14px] flex items-center justify-center mb-5 group-hover:scale-110 transition-transform`}>
                <card.icon className={`w-6 h-6 ${card.color}`} />
@@ -62,7 +62,7 @@ export const HelpSupportView: React.FC = () => {
 
       {/* FAQs & Ticket Section */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-         <div className="bg-gradient-to-br from-[#2E1055] to-[#120524] border border-white/10 rounded-[24px] p-8 premium-shadow col-span-2">
+         <div className="bg-gradient-to-br from-[var(--color-surface-raised)] to-[var(--color-surface)] border border-white/10 rounded-[24px] p-8 premium-shadow col-span-2">
             <h3 className="text-xl font-bold text-white mb-6">Frequently Asked Questions</h3>
             <div className="space-y-4">
               {filteredFaqs.length > 0 ? filteredFaqs.map((faq, i) => (
@@ -93,14 +93,14 @@ export const HelpSupportView: React.FC = () => {
             </button>
          </div>
 
-         <div className="bg-gradient-to-br from-[#2E1055] to-[#120524] border border-white/10 rounded-[24px] p-8 premium-shadow text-white relative overflow-hidden flex flex-col justify-center">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-[#3B82F6] rounded-full blur-[60px] opacity-20"></div>
+         <div className="bg-gradient-to-br from-[var(--color-surface-raised)] to-[var(--color-surface)] border border-white/10 rounded-[24px] p-8 premium-shadow text-white relative overflow-hidden flex flex-col justify-center">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-[var(--color-accent)] rounded-full blur-[60px] opacity-20"></div>
             <h3 className="text-xl font-bold mb-3">Still need help?</h3>
             <p className="text-sm text-white/50 mb-6 leading-relaxed">Our enterprise support team is available 24/7 to assist with critical integrations and AI behavior.</p>
             
             <button 
               onClick={() => window.dispatchEvent(new CustomEvent('show-sentinel-toast', { detail: { msg: 'Creating new high-priority support ticket...', type: 'success' } }))}
-              className="w-full bg-white/5 text-[#120524] bg-white font-extrabold py-3.5 rounded-[16px] hover:bg-gray-200 transition-colors shadow-lg cursor-pointer"
+              className="w-full bg-white/5 text-[var(--color-surface)] bg-white font-extrabold py-3.5 rounded-[16px] hover:bg-gray-200 transition-colors shadow-lg cursor-pointer"
             >
               Open Support Ticket
             </button>

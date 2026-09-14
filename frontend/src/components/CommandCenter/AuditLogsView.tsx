@@ -96,7 +96,7 @@ export const AuditLogsView: React.FC = () => {
         <div className="flex flex-wrap items-center gap-2 sm:gap-3 w-full md:w-auto">
           <button
             onClick={handleExportAudit}
-            className="flex items-center justify-center gap-2 bg-[#2E1055] hover:bg-[#120524] border border-white/10 text-white font-bold text-xs px-4 py-2.5 rounded-[16px] premium-shadow transition-all hover:scale-105 active:scale-95 whitespace-nowrap shrink-0"
+            className="flex items-center justify-center gap-2 bg-[var(--color-surface-raised)] hover:bg-[var(--color-surface)] border border-white/10 text-white font-bold text-xs px-4 py-2.5 rounded-[16px] premium-shadow transition-all hover:scale-105 active:scale-95 whitespace-nowrap shrink-0"
           >
             <Download className="w-4 h-4" />
             Export Audit Log
@@ -104,7 +104,7 @@ export const AuditLogsView: React.FC = () => {
         </div>
       </div>
 
-      <div className="bg-gradient-to-br from-[#2E1055] to-[#120524] border border-white/10 rounded-[24px] overflow-hidden p-6 shadow-[0_20px_50px_rgba(46,16,85,0.3)] text-white">
+      <div className="bg-gradient-to-br from-[var(--color-surface-raised)] to-[var(--color-surface)] border border-white/10 rounded-[24px] overflow-hidden p-6 shadow-[0_20px_50px_rgba(46,16,85,0.3)] text-white">
         <div className="flex flex-col md:flex-row gap-4 mb-6">
           <div className="flex-1 relative">
             <Search className="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-white/60" />
@@ -121,9 +121,9 @@ export const AuditLogsView: React.FC = () => {
             onChange={(e) => setLogTypeFilter(e.target.value as any)}
             className="bg-white/5 border border-white/10 rounded-[12px] py-2.5 px-4 text-sm font-medium text-white outline-none focus:border-blue-500/50 transition-colors whitespace-nowrap"
           >
-            <option value="all" className="bg-[#120524]">All Events</option>
-            <option value="audit" className="bg-[#120524]">Business Audit Only</option>
-            <option value="telemetry" className="bg-[#120524]">System Telemetry Only</option>
+            <option value="all" className="bg-[var(--color-surface)]">All Events</option>
+            <option value="audit" className="bg-[var(--color-surface)]">Business Audit Only</option>
+            <option value="telemetry" className="bg-[var(--color-surface)]">System Telemetry Only</option>
           </select>
           <div className="bg-white/5 border border-white/10 text-white/80 px-4 py-2.5 rounded-[12px] text-xs font-bold flex items-center justify-center gap-2 whitespace-nowrap shrink-0">
             <Filter className="w-4 h-4 text-blue-400" /> Total Logs: <span className="text-white font-extrabold">{logs.length}</span>

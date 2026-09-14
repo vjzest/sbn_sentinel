@@ -438,7 +438,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onSaveSettings, acti
                     <tr key={idx} className="hover:bg-white/[0.02] transition-colors">
                       <td className="py-4 px-6">
                         <div className="flex flex-wrap items-center gap-2 sm:gap-3 w-full md:w-auto">
-                          <div className="w-8 h-8 rounded-full bg-[#2E1055] flex items-center justify-center">
+                          <div className="w-8 h-8 rounded-full bg-[var(--color-surface-raised)] flex items-center justify-center">
                             <Building className="w-4 h-4 text-white/70" />
                           </div>
                           <div>
@@ -543,7 +543,7 @@ document.body
                        type="text" 
                        value={practiceName} 
                        onChange={(e) => setPracticeName(e.target.value)}
-                       className="w-full bg-white/5 border border-white/10 rounded-[16px] py-3 px-4 text-sm font-bold text-white outline-none focus:border-[#2E1055] focus:bg-[#120524] transition-all"
+                       className="w-full bg-white/5 border border-white/10 rounded-[16px] py-3 px-4 text-sm font-bold text-white outline-none focus:border-[var(--color-surface-raised)] focus:bg-[var(--color-surface)] transition-all"
                      />
                    </div>
                    <div>
@@ -552,7 +552,7 @@ document.body
                        type="text" 
                        value={practicePhone} 
                        onChange={(e) => setPracticePhone(e.target.value)}
-                       className="w-full bg-white/5 border border-white/10 rounded-[16px] py-3 px-4 text-sm font-bold text-white outline-none focus:border-[#2E1055] focus:bg-[#120524] transition-all"
+                       className="w-full bg-white/5 border border-white/10 rounded-[16px] py-3 px-4 text-sm font-bold text-white outline-none focus:border-[var(--color-surface-raised)] focus:bg-[var(--color-surface)] transition-all"
                      />
                    </div>
                  </div>
@@ -565,12 +565,12 @@ document.body
                      <select 
                        value={timezone} 
                        onChange={(e) => setTimezone(e.target.value)}
-                       className="w-full bg-white/5 border border-white/10 rounded-[16px] py-3 px-3 text-sm font-bold text-white outline-none focus:border-[#2E1055] focus:bg-[#120524] transition-all cursor-pointer"
+                       className="w-full bg-white/5 border border-white/10 rounded-[16px] py-3 px-3 text-sm font-bold text-white outline-none focus:border-[var(--color-surface-raised)] focus:bg-[var(--color-surface)] transition-all cursor-pointer"
                      >
-                       <option value="Eastern Time (US & Canada)" className="bg-[#120524] text-white">Eastern Time (US & Canada)</option>
-                       <option value="Central Time (US & Canada)" className="bg-[#120524] text-white">Central Time (US & Canada)</option>
-                       <option value="Mountain Time (US & Canada)" className="bg-[#120524] text-white">Mountain Time (US & Canada)</option>
-                       <option value="Pacific Time (US & Canada)" className="bg-[#120524] text-white">Pacific Time (US & Canada)</option>
+                       <option value="Eastern Time (US & Canada)" className="bg-[var(--color-surface)] text-white">Eastern Time (US & Canada)</option>
+                       <option value="Central Time (US & Canada)" className="bg-[var(--color-surface)] text-white">Central Time (US & Canada)</option>
+                       <option value="Mountain Time (US & Canada)" className="bg-[var(--color-surface)] text-white">Mountain Time (US & Canada)</option>
+                       <option value="Pacific Time (US & Canada)" className="bg-[var(--color-surface)] text-white">Pacific Time (US & Canada)</option>
                      </select>
                    </div>
 
@@ -579,9 +579,9 @@ document.body
                      <select 
                        value={language} 
                        onChange={(e) => setLanguage(e.target.value)}
-                       className="w-full bg-white/5 border border-white/10 rounded-[16px] py-3 px-3 text-sm font-bold text-white outline-none focus:border-[#2E1055] focus:bg-[#120524] transition-all cursor-pointer"
+                       className="w-full bg-white/5 border border-white/10 rounded-[16px] py-3 px-3 text-sm font-bold text-white outline-none focus:border-[var(--color-surface-raised)] focus:bg-[var(--color-surface)] transition-all cursor-pointer"
                      >
-                       <option value="en" className="bg-[#120524] text-white">English (US)</option>
+                       <option value="en" className="bg-[var(--color-surface)] text-white">English (US)</option>
                      </select>
                    </div>
                  </div>
@@ -625,7 +625,7 @@ document.body
                            className={`px-4 py-2 border rounded-[10px] text-xs font-bold transition-all uppercase tracking-wider ${
                              themeMode === mode 
                                ? 'bg-[#111827] text-white border-[#111827]' 
-                               : 'bg-[#120524] text-white/70 border-white/10 hover:bg-white/10 transition-colors cursor-pointer'
+                               : 'bg-[var(--color-surface)] text-white/70 border-white/10 hover:bg-white/10 transition-colors cursor-pointer'
                            }`}
                          >
                            {mode}
@@ -645,13 +645,13 @@ document.body
                 <div className="flex justify-between items-start">
                   <div>
                     <h3 className="text-xl font-bold text-white mb-2 flex items-center gap-2">
-                      <Users className="w-5 h-5 text-[#A78BFA]" /> Team & Access Control
+                      <Users className="w-5 h-5 text-[var(--color-accent)]" /> Team & Access Control
                     </h3>
                     <p className="text-sm text-white/70 font-medium">Manage clinical staff members, physicians, and billing agents access permissions.</p>
                   </div>
                   <button 
                     onClick={() => setShowInviteModal(true)}
-                    className="flex items-center gap-1.5 bg-[#2E1055] hover:bg-[#120524] text-white font-bold text-xs px-4 py-2.5 rounded-[10px] transition-transform active:scale-95 cursor-pointer"
+                    className="flex items-center gap-1.5 bg-[var(--color-surface-raised)] hover:bg-[var(--color-surface)] text-white font-bold text-xs px-4 py-2.5 rounded-[10px] transition-transform active:scale-95 cursor-pointer"
                   >
                     <Plus className="w-4 h-4" /> Invite Staff Member
                   </button>
@@ -659,7 +659,7 @@ document.body
 
                 <div className="h-px w-full bg-white/10"></div>
 
-                <div className="overflow-x-auto border border-white/10 rounded-[16px] premium-shadow bg-[#120524]">
+                <div className="overflow-x-auto border border-white/10 rounded-[16px] premium-shadow bg-[var(--color-surface)]">
                   <table className="w-full text-left border-collapse">
                     <thead>
                       <tr className="bg-white/5 border-b border-white/10 text-[10px] uppercase font-extrabold text-white/70">
@@ -675,7 +675,7 @@ document.body
                         <tr key={member.id} className="border-b border-white/10 hover:bg-white/10 transition-colors cursor-pointer/50 last:border-0">
                           <td className="py-3.5 px-4">
                             <div className="flex items-center gap-2.5">
-                              <div className="w-8 h-8 rounded-full bg-[#EEF4FF] flex items-center justify-center text-[10px] font-bold text-[#A78BFA] border border-[#BFDBFE]">
+                              <div className="w-8 h-8 rounded-full bg-[#EEF4FF] flex items-center justify-center text-[10px] font-bold text-[var(--color-accent)] border border-[#BFDBFE]">
                                 {member.name.split(' ').map(n => n[0]).join('')}
                               </div>
                               <span className="font-bold text-white">{member.name}</span>
@@ -685,7 +685,7 @@ document.body
                           <td className="py-3.5 px-4">
                             <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
                               member.role.includes('Administrator') 
-                                ? 'bg-[#EEEAFE] text-white border border-indigo-200'
+                                ? 'bg-[var(--color-text-primary)] text-white border border-indigo-200'
                                 : member.role.includes('Manager')
                                 ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
                                 : 'bg-slate-50 text-slate-700 border border-slate-200'
@@ -694,7 +694,7 @@ document.body
                             </span>
                           </td>
                           <td className="py-3.5 px-4">
-                            <span className="bg-[#ECFDF5] text-[#10B981] px-2 py-0.5 rounded text-[10px] font-extrabold uppercase border border-emerald-500/30">
+                            <span className="bg-[#ECFDF5] text-[var(--color-semantic-positive)] px-2 py-0.5 rounded text-[10px] font-extrabold uppercase border border-emerald-500/30">
                               {member.status}
                             </span>
                           </td>
@@ -751,7 +751,7 @@ document.body
                            checked={notifySms}
                            onChange={() => setNotifySms(!notifySms)}
                          />
-                         <div className="w-11 h-6 bg-[#E5E7EB] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-[#120524] after:border-white/10 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#10B981]"></div>
+                         <div className="w-11 h-6 bg-[#E5E7EB] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-[var(--color-surface)] after:border-white/10 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[var(--color-semantic-positive)]"></div>
                       </label>
                    </div>
 
@@ -769,7 +769,7 @@ document.body
                            checked={notifyEmail}
                            onChange={() => setNotifyEmail(!notifyEmail)}
                          />
-                         <div className="w-11 h-6 bg-[#E5E7EB] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-[#120524] after:border-white/10 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#10B981]"></div>
+                         <div className="w-11 h-6 bg-[#E5E7EB] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-[var(--color-surface)] after:border-white/10 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[var(--color-semantic-positive)]"></div>
                       </label>
                    </div>
 
@@ -787,7 +787,7 @@ document.body
                            checked={notifyDesktop}
                            onChange={() => setNotifyDesktop(!notifyDesktop)}
                          />
-                         <div className="w-11 h-6 bg-[#E5E7EB] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-[#120524] after:border-white/10 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#10B981]"></div>
+                         <div className="w-11 h-6 bg-[#E5E7EB] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-[var(--color-surface)] after:border-white/10 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[var(--color-semantic-positive)]"></div>
                       </label>
                    </div>
 
@@ -805,7 +805,7 @@ document.body
                            checked={notifyCopay}
                            onChange={() => setNotifyCopay(!notifyCopay)}
                          />
-                         <div className="w-11 h-6 bg-[#E5E7EB] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-[#120524] after:border-white/10 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#10B981]"></div>
+                         <div className="w-11 h-6 bg-[#E5E7EB] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-[var(--color-surface)] after:border-white/10 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[var(--color-semantic-positive)]"></div>
                       </label>
                    </div>
 
@@ -819,11 +819,11 @@ document.body
                       <select 
                         value={reminderInterval}
                         onChange={(e) => setReminderInterval(e.target.value)}
-                        className="bg-white/5 border border-white/10 text-white text-sm font-bold rounded-[10px] focus:ring-[#2E1055] focus:border-[#2E1055] block p-2.5 outline-none cursor-pointer"
+                        className="bg-white/5 border border-white/10 text-white text-sm font-bold rounded-[10px] focus:ring-[var(--color-surface-raised)] focus:border-[var(--color-surface-raised)] block p-2.5 outline-none cursor-pointer"
                       >
-                        <option value="12h" className="bg-[#120524] text-white">12 Hours Prior</option>
-                        <option value="24h" className="bg-[#120524] text-white">24 Hours Prior</option>
-                        <option value="48h" className="bg-[#120524] text-white">48 Hours Prior</option>
+                        <option value="12h" className="bg-[var(--color-surface)] text-white">12 Hours Prior</option>
+                        <option value="24h" className="bg-[var(--color-surface)] text-white">24 Hours Prior</option>
+                        <option value="48h" className="bg-[var(--color-surface)] text-white">48 Hours Prior</option>
                       </select>
                    </div>
                 </div>
@@ -835,7 +835,7 @@ document.body
              <div className="space-y-6 animate-in fade-in">
                 <div>
                    <h3 className="text-xl font-bold text-white mb-2 flex items-center gap-2">
-                     <Database className="w-5 h-5 text-[#A78BFA]" /> System Connectors & Integrations
+                     <Database className="w-5 h-5 text-[var(--color-accent)]" /> System Connectors & Integrations
                    </h3>
                    <p className="text-sm text-white/70 font-medium">Verify active connection links and API synchronizations with clinic platforms.</p>
                 </div>
@@ -846,12 +846,12 @@ document.body
                   {integrationsList.map(integration => (
                     <div 
                       key={integration.id} 
-                      className="border border-white/10 rounded-[20px] p-5 flex justify-between items-center bg-white/5/50 hover:bg-[#120524] transition-all premium-shadow group"
+                      className="border border-white/10 rounded-[20px] p-5 flex justify-between items-center bg-white/5/50 hover:bg-[var(--color-surface)] transition-all premium-shadow group"
                     >
                       <div className="flex items-center gap-4">
                         <div className={`w-10 h-10 rounded-full flex items-center justify-center border ${
                           integration.connected 
-                            ? 'bg-[#ECFDF5] border-emerald-500/30 text-[#10B981]' 
+                            ? 'bg-[#ECFDF5] border-emerald-500/30 text-[var(--color-semantic-positive)]' 
                             : 'bg-slate-100 border-slate-200 text-slate-300'
                         }`}>
                           <Database className="w-5 h-5" />
@@ -878,7 +878,7 @@ document.body
                               checked={integration.connected}
                               onChange={() => handleToggleIntegration(integration.id)}
                             />
-                            <div className="w-11 h-6 bg-[#E5E7EB] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-[#120524] after:border-white/10 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#10B981]"></div>
+                            <div className="w-11 h-6 bg-[#E5E7EB] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-[var(--color-surface)] after:border-white/10 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[var(--color-semantic-positive)]"></div>
                          </label>
                       </div>
                     </div>
@@ -916,7 +916,7 @@ document.body
                         className={`p-5 rounded-[20px] border cursor-pointer transition-all flex flex-col justify-between premium-shadow ${
                           activePlan === plan.id 
                             ? 'border-[#2563EB] bg-[#EEF4FF]/50 ring-1 ring-[#2563EB]' 
-                            : 'border-white/10 bg-[#120524] hover:bg-slate-50'
+                            : 'border-white/10 bg-[var(--color-surface)] hover:bg-slate-50'
                         }`}
                       >
                         <div>
@@ -937,7 +937,7 @@ document.body
                 {/* Payment Card Details */}
                 <div className="flex justify-between items-center bg-white/5 p-5 border border-white/10 rounded-[18px]">
                   <div className="flex flex-wrap items-center gap-2 sm:gap-3 w-full md:w-auto">
-                    <div className="w-10 h-10 bg-[#120524] border border-white/10 rounded-full flex items-center justify-center text-[#2563EB]">
+                    <div className="w-10 h-10 bg-[var(--color-surface)] border border-white/10 rounded-full flex items-center justify-center text-[#2563EB]">
                       <CreditCard className="w-5 h-5" />
                     </div>
                     <div>
@@ -959,7 +959,7 @@ document.body
                 {/* Invoice Logs */}
                 <div>
                    <h4 className="text-[10px] font-extrabold text-white/50 uppercase tracking-wider mb-4">Past Transaction Receipts</h4>
-                   <div className="overflow-x-auto border border-white/10 rounded-[16px] premium-shadow bg-[#120524]">
+                   <div className="overflow-x-auto border border-white/10 rounded-[16px] premium-shadow bg-[var(--color-surface)]">
                       <table className="w-full text-left border-collapse">
                         <thead>
                           <tr className="bg-white/5 border-b border-white/10 text-[10px] uppercase font-extrabold text-white/70">
@@ -977,7 +977,7 @@ document.body
                               <td className="py-3.5 px-4 text-slate-500">{inv.date}</td>
                               <td className="py-3.5 px-4 text-slate-800 font-bold">${inv.amount.toFixed(2)}</td>
                               <td className="py-3.5 px-4">
-                                <span className="bg-[#ECFDF5] text-[#10B981] px-2 py-0.5 rounded text-[10px] font-extrabold uppercase border border-emerald-500/30">
+                                <span className="bg-[#ECFDF5] text-[var(--color-semantic-positive)] px-2 py-0.5 rounded text-[10px] font-extrabold uppercase border border-emerald-500/30">
                                   {inv.status}
                                 </span>
                               </td>
@@ -1017,7 +1017,7 @@ document.body
                    <p className="text-xs text-white/70 mt-2 font-bold">Fetching secure audit records...</p>
                  </div>
                ) : (
-                 <div className="overflow-x-auto border border-white/10 rounded-[16px] premium-shadow bg-[#120524]">
+                 <div className="overflow-x-auto border border-white/10 rounded-[16px] premium-shadow bg-[var(--color-surface)]">
                    <table className="w-full text-left border-collapse">
                      <thead>
                        <tr className="bg-white/5 border-b border-white/10 text-[10px] uppercase font-bold text-white/70">
@@ -1058,11 +1058,11 @@ document.body
       {/* Invite Staff Member Modal */}
       {showInviteModal && createPortal(
         <div className="fixed inset-0 z-[1000] bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in">
-          <div className="bg-[#120524] border border-white/10 w-full max-w-md rounded-[28px] overflow-hidden premium-shadow animate-in zoom-in-95 duration-200">
+          <div className="bg-[var(--color-surface)] border border-white/10 w-full max-w-md rounded-[28px] overflow-hidden premium-shadow animate-in zoom-in-95 duration-200">
             {/* Header */}
             <div className="bg-white/5 border-b border-white/10 px-6 py-4 flex justify-between items-center">
               <div className="flex items-center gap-2">
-                <div className="p-1.5 rounded-lg bg-[#EEEAFE] text-[#A78BFA]">
+                <div className="p-1.5 rounded-lg bg-[var(--color-text-primary)] text-[var(--color-accent)]">
                   <Users className="w-4 h-4" />
                 </div>
                 <div>
@@ -1088,7 +1088,7 @@ document.body
                   value={inviteName}
                   onChange={(e) => setInviteName(e.target.value)}
                   placeholder="e.g. Dr. Robert Pattinson"
-                  className="w-full bg-white/5 border border-white/10 rounded-[16px] px-4 py-2.5 text-sm font-bold text-white outline-none focus:border-[#2E1055] focus:ring-1 focus:ring-[#2E1055] transition-all placeholder:text-white/50"
+                  className="w-full bg-white/5 border border-white/10 rounded-[16px] px-4 py-2.5 text-sm font-bold text-white outline-none focus:border-[var(--color-surface-raised)] focus:ring-1 focus:ring-[var(--color-surface-raised)] transition-all placeholder:text-white/50"
                 />
               </div>
 
@@ -1100,7 +1100,7 @@ document.body
                   value={inviteEmail}
                   onChange={(e) => setInviteEmail(e.target.value)}
                   placeholder="e.g. r.pattinson@sentinel.com"
-                  className="w-full bg-white/5 border border-white/10 rounded-[16px] px-4 py-2.5 text-sm font-bold text-white outline-none focus:border-[#2E1055] focus:ring-1 focus:ring-[#2E1055] transition-all placeholder:text-white/50"
+                  className="w-full bg-white/5 border border-white/10 rounded-[16px] px-4 py-2.5 text-sm font-bold text-white outline-none focus:border-[var(--color-surface-raised)] focus:ring-1 focus:ring-[var(--color-surface-raised)] transition-all placeholder:text-white/50"
                 />
               </div>
 
@@ -1109,12 +1109,12 @@ document.body
                 <select
                   value={inviteRole}
                   onChange={(e) => setInviteRole(e.target.value)}
-                  className="w-full bg-white/5 border border-white/10 rounded-[16px] px-3 py-2.5 text-sm font-bold text-white outline-none focus:border-[#2E1055] focus:ring-1 focus:ring-[#2E1055] transition-all cursor-pointer"
+                  className="w-full bg-white/5 border border-white/10 rounded-[16px] px-3 py-2.5 text-sm font-bold text-white outline-none focus:border-[var(--color-surface-raised)] focus:ring-1 focus:ring-[var(--color-surface-raised)] transition-all cursor-pointer"
                 >
-                  <option value="Clinic Administrator" className="bg-[#120524] text-white">Clinic Administrator</option>
-                  <option value="Operations Manager" className="bg-[#120524] text-white">Operations Manager</option>
-                  <option value="Practice Manager" className="bg-[#120524] text-white">Practice Manager</option>
-                  <option value="Staff User" className="bg-[#120524] text-white">Staff User</option>
+                  <option value="Clinic Administrator" className="bg-[var(--color-surface)] text-white">Clinic Administrator</option>
+                  <option value="Operations Manager" className="bg-[var(--color-surface)] text-white">Operations Manager</option>
+                  <option value="Practice Manager" className="bg-[var(--color-surface)] text-white">Practice Manager</option>
+                  <option value="Staff User" className="bg-[var(--color-surface)] text-white">Staff User</option>
                 </select>
               </div>
 
@@ -1123,13 +1123,13 @@ document.body
                 <button
                   type="button"
                   onClick={() => setShowInviteModal(false)}
-                  className="bg-[#120524] border border-white/10 hover:bg-slate-50 text-slate-700 font-bold text-xs px-5 py-2.5 rounded-[16px] transition-colors cursor-pointer"
+                  className="bg-[var(--color-surface)] border border-white/10 hover:bg-slate-50 text-slate-700 font-bold text-xs px-5 py-2.5 rounded-[16px] transition-colors cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="bg-[#2E1055] hover:bg-[#120524] text-white font-bold text-xs px-6 py-2.5 rounded-[16px] transition-all hover:scale-105 active:scale-95 flex items-center gap-1.5 cursor-pointer"
+                  className="bg-[var(--color-surface-raised)] hover:bg-[var(--color-surface)] text-white font-bold text-xs px-6 py-2.5 rounded-[16px] transition-all hover:scale-105 active:scale-95 flex items-center gap-1.5 cursor-pointer"
                 >
                   <Check className="w-3.5 h-3.5" /> Send Invitation
                 </button>
@@ -1144,7 +1144,7 @@ document.body
       {showAddClinicModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowAddClinicModal(false)}></div>
-          <div className="relative w-full max-w-md bg-[#120524] border border-white/10 rounded-[24px] shadow-2xl p-6">
+          <div className="relative w-full max-w-md bg-[var(--color-surface)] border border-white/10 rounded-[24px] shadow-2xl p-6">
             <button onClick={() => setShowAddClinicModal(false)} className="absolute top-4 right-4 text-white/60 hover:text-white transition-colors">
               <X className="w-5 h-5" />
             </button>
@@ -1159,7 +1159,7 @@ document.body
                   placeholder="e.g. City Heart North"
                   value={newClinicName}
                   onChange={(e) => setNewClinicName(e.target.value)}
-                  className="w-full bg-white/5 border border-white/10 rounded-[12px] py-2.5 px-4 text-sm font-bold text-white outline-none focus:border-[#2E1055] transition-colors"
+                  className="w-full bg-white/5 border border-white/10 rounded-[12px] py-2.5 px-4 text-sm font-bold text-white outline-none focus:border-[var(--color-surface-raised)] transition-colors"
                 />
               </div>
               <div>
@@ -1169,7 +1169,7 @@ document.body
                   placeholder="e.g. 456 Medical Parkway, TX"
                   value={newClinicAddress}
                   onChange={(e) => setNewClinicAddress(e.target.value)}
-                  className="w-full bg-white/5 border border-white/10 rounded-[12px] py-2.5 px-4 text-sm font-bold text-white outline-none focus:border-[#2E1055] transition-colors"
+                  className="w-full bg-white/5 border border-white/10 rounded-[12px] py-2.5 px-4 text-sm font-bold text-white outline-none focus:border-[var(--color-surface-raised)] transition-colors"
                 />
               </div>
               <div>
@@ -1179,7 +1179,7 @@ document.body
                   placeholder="e.g. (555) 123-4567"
                   value={newClinicPhone}
                   onChange={(e) => setNewClinicPhone(e.target.value)}
-                  className="w-full bg-white/5 border border-white/10 rounded-[12px] py-2.5 px-4 text-sm font-bold text-white outline-none focus:border-[#2E1055] transition-colors"
+                  className="w-full bg-white/5 border border-white/10 rounded-[12px] py-2.5 px-4 text-sm font-bold text-white outline-none focus:border-[var(--color-surface-raised)] transition-colors"
                 />
               </div>
             </div>

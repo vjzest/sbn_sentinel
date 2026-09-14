@@ -26,7 +26,7 @@ export class ErrorScreen extends Component<Props, State> {
   public render() {
     if (this.state.hasError) {
       return (
-        <div className="flex-1 flex items-center justify-center min-h-screen w-full bg-[#120524] animate-in fade-in duration-500 font-sans">
+        <div className="flex-1 flex items-center justify-center min-h-screen w-full bg-[var(--color-surface)] animate-in fade-in duration-500 font-sans">
           <div className="max-w-md w-full text-center p-8 bg-white/5 border border-white/10 rounded-[24px] premium-shadow backdrop-blur-md">
             <div className="w-16 h-16 bg-amber-500/10 rounded-full flex items-center justify-center mx-auto mb-6 border border-amber-500/20">
               <AlertTriangle className="w-8 h-8 text-amber-500" />

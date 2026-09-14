@@ -65,10 +65,10 @@ export const SignalFeed: React.FC<SignalFeedProps> = ({ setActiveTab }) => {
 
   const getIcon = (type: string) => {
     switch (type) {
-      case 'EHR': return <Calendar className="w-4 h-4 text-[#F59E0B]" />;
-      case 'Phone': return <Phone className="w-4 h-4 text-[#EF4444]" />;
-      case 'Email': return <Mail className="w-4 h-4 text-[#3B82F6]" />;
-      default: return <Activity className="w-4 h-4 text-[#34D399]" />;
+      case 'EHR': return <Calendar className="w-4 h-4 text-[var(--color-semantic-attention)]" />;
+      case 'Phone': return <Phone className="w-4 h-4 text-[var(--color-semantic-critical)]" />;
+      case 'Email': return <Mail className="w-4 h-4 text-[var(--color-accent)]" />;
+      default: return <Activity className="w-4 h-4 text-[var(--color-semantic-positive)]" />;
     }
   };
 
@@ -77,26 +77,26 @@ export const SignalFeed: React.FC<SignalFeedProps> = ({ setActiveTab }) => {
       case 'EHR': return 'bg-[#FEF3C7]';
       case 'Phone': return 'bg-[#FEE2E2]';
       case 'Email': return 'bg-[#DBEAFE]';
-      default: return 'bg-[#10B981]/20';
+      default: return 'bg-[var(--color-semantic-positive)]/20';
     }
   };
 
   return (
-    <div className="bg-gradient-to-br from-[#2E1055] to-[#120524] border border-white/10 text-white rounded-[24px] p-6 flex flex-col h-[480px] shadow-[0_20px_50px_rgba(46,16,85,0.3)] card-hover hover:-translate-y-1 transition-all duration-300">
+    <div className="bg-gradient-to-br from-[var(--color-surface-raised)] to-[var(--color-surface)] border border-white/10 text-white rounded-[24px] p-6 flex flex-col h-[480px] shadow-[0_20px_50px_rgba(46,16,85,0.3)] card-hover hover:-translate-y-1 transition-all duration-300">
       <div className="flex items-center justify-between mb-6">
         <h3 className="text-base font-bold text-white flex items-center gap-2">
-          <Activity className="w-5 h-5 text-[#A78BFA]" />
+          <Activity className="w-5 h-5 text-[var(--color-accent)]" />
           Live Signal Feed
         </h3>
         
         <div className="flex items-center gap-2">
-          <span className={`text-[10px] font-extrabold uppercase tracking-wider ${autopilot ? 'text-[#2E1055] animate-pulse' : 'text-slate-300'}`}>
+          <span className={`text-[10px] font-extrabold uppercase tracking-wider ${autopilot ? 'text-[var(--color-surface-raised)] animate-pulse' : 'text-slate-300'}`}>
             {autopilot ? '⚡ Autopilot' : 'Autopilot'}
           </span>
           <button 
             onClick={() => setAutopilot(!autopilot)}
             className={`w-9 h-5 flex items-center rounded-full p-0.5 cursor-pointer transition-all duration-300 ${
-              autopilot ? 'bg-[#2E1055] justify-end' : 'bg-slate-300 justify-start'
+              autopilot ? 'bg-[var(--color-surface-raised)] justify-end' : 'bg-slate-300 justify-start'
             }`}
           >
             <span className="bg-white/5 w-4 h-4 rounded-full shadow-sm transition-all"></span>
@@ -122,8 +122,8 @@ export const SignalFeed: React.FC<SignalFeedProps> = ({ setActiveTab }) => {
               <div className="flex items-start justify-between mb-1">
                 <div className="flex items-center gap-2 mb-1">
                   <span className={`text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-[6px] border ${
-                    (signal as any).risk_level === 'Critical' ? 'bg-[#EF4444]/20 text-[#EF4444] border-[#EF4444]/30' : 
-                    (signal as any).risk_level === 'High' ? 'bg-[#F59E0B]/20 text-[#F59E0B] border-[#F59E0B]/30' : 
+                    (signal as any).risk_level === 'Critical' ? 'bg-[var(--color-semantic-critical)]/20 text-[var(--color-semantic-critical)] border-[var(--color-semantic-critical)]/30' : 
+                    (signal as any).risk_level === 'High' ? 'bg-[var(--color-semantic-attention)]/20 text-[var(--color-semantic-attention)] border-[var(--color-semantic-attention)]/30' : 
                     'bg-white/10 text-white border-white/20'
                   }`}>
                     {(signal as any).risk_level || 'Normal'} Priority
@@ -175,8 +175,8 @@ export const SignalFeed: React.FC<SignalFeedProps> = ({ setActiveTab }) => {
                   <p className="text-sm text-white font-bold leading-tight">{signal.message}</p>
                   
                   {hasAction && (
-                    <div className="mt-2 text-xs bg-[#2E1055]/20 border border-[#E0D9FD] rounded-lg p-2 text-[#A78BFA] font-semibold flex items-center gap-1.5 w-fit">
-                      <Sparkles className="w-3.5 h-3.5 text-[#2E1055] flex-shrink-0" />
+                    <div className="mt-2 text-xs bg-[var(--color-surface-raised)]/20 border border-[#E0D9FD] rounded-lg p-2 text-[var(--color-accent)] font-semibold flex items-center gap-1.5 w-fit">
+                      <Sparkles className="w-3.5 h-3.5 text-[var(--color-surface-raised)] flex-shrink-0" />
                       <span>Recommendation: {signal.recommended_action}</span>
                     </div>
                   )}
@@ -187,7 +187,7 @@ export const SignalFeed: React.FC<SignalFeedProps> = ({ setActiveTab }) => {
         })}
       </div>
  
-      <button onClick={() => setActiveTab && setActiveTab('signals')} className="mt-4 text-xs font-bold text-[#A78BFA] hover:underline flex items-center justify-center gap-1 w-full pt-4 border-t border-white/10 cursor-pointer">
+      <button onClick={() => setActiveTab && setActiveTab('signals')} className="mt-4 text-xs font-bold text-[var(--color-accent)] hover:underline flex items-center justify-center gap-1 w-full pt-4 border-t border-white/10 cursor-pointer">
         View All Signals <ChevronRight className="w-3 h-3" />
       </button>
 
@@ -196,7 +196,7 @@ export const SignalFeed: React.FC<SignalFeedProps> = ({ setActiveTab }) => {
           <div className="bg-white/10 border-white/10 text-white border-white/10 w-full max-w-lg rounded-[28px] overflow-hidden premium-shadow animate-in zoom-in-95 duration-200">
             <div className="bg-white/5 border-b border-white/10 px-6 py-4 flex justify-between items-center">
               <div className="flex items-center gap-2">
-                <div className="p-1.5 rounded-lg bg-[#120524]/50 border border-white/10 text-blue-400">
+                <div className="p-1.5 rounded-lg bg-[var(--color-surface)]/50 border border-white/10 text-blue-400">
                   <Activity className="w-4 h-4 animate-pulse" />
                 </div>
                 <div>
@@ -225,7 +225,7 @@ export const SignalFeed: React.FC<SignalFeedProps> = ({ setActiveTab }) => {
                 <div className="bg-white/5 rounded-2xl p-3 border border-white/10">
                   <span className="text-[9px] font-bold text-[#9CA3AF] uppercase tracking-wider block mb-1">Source System</span>
                   <p className="text-white font-bold flex items-center gap-1.5">
-                    <Database className="w-3.5 h-3.5 text-[#A78BFA]" />
+                    <Database className="w-3.5 h-3.5 text-[var(--color-accent)]" />
                     {selectedSignal.source}
                   </p>
                 </div>
@@ -246,9 +246,9 @@ export const SignalFeed: React.FC<SignalFeedProps> = ({ setActiveTab }) => {
               </div>
 
               {/* AI Intelligence Block */}
-              <div className="bg-[#2E1055]/20 border border-[#2E1055]/50 rounded-[20px] p-4">
+              <div className="bg-[var(--color-surface-raised)]/20 border border-[var(--color-surface-raised)]/50 rounded-[20px] p-4">
                 <div className="flex items-center gap-2 mb-2">
-                  <Activity className="w-4 h-4 text-[#2E1055]" />
+                  <Activity className="w-4 h-4 text-[var(--color-surface-raised)]" />
                   <span className="text-[10px] font-extrabold text-blue-400 uppercase tracking-widest">Deterministic Impact</span>
                 </div>
                 <p className="text-xs text-white/90 font-bold leading-relaxed mb-3">
@@ -256,7 +256,7 @@ export const SignalFeed: React.FC<SignalFeedProps> = ({ setActiveTab }) => {
                   <span className="text-white/50">Impact:</span> {selectedSignal.business_impact || 'None'}
                 </p>
                 <div className="bg-white/5 border border-white/10 rounded-lg p-2.5 text-[11px] text-white font-bold">
-                  <span className="text-[9px] uppercase font-bold text-[#EEEAFE]0 block mb-0.5">Recommended Action</span>
+                  <span className="text-[9px] uppercase font-bold text-[var(--color-text-primary)]0 block mb-0.5">Recommended Action</span>
                   {selectedSignal.recommended_action || "Route to practitioner for clinical review."}
                 </div>
               </div>

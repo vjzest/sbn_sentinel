@@ -131,7 +131,7 @@ export const RevenueReportsView: React.FC = () => {
       {/* Dynamic Notification Toast */}
       {mounted && toast && typeof window !== 'undefined' && createPortal(
         <div className="fixed top-6 right-6 z-[99999] bg-[#111827] text-white border border-[#374151] rounded-[16px] px-5 py-4 premium-shadow flex items-center gap-3 animate-in slide-in-from-top-6 duration-300 max-w-md">
-          <div className="w-8 h-8 rounded-full bg-emerald-950/50 flex items-center justify-center text-[#10B981]">
+          <div className="w-8 h-8 rounded-full bg-emerald-950/50 flex items-center justify-center text-[var(--color-semantic-positive)]">
             <CheckCircle2 className="w-4 h-4 text-yellow-300 animate-bounce" />
           </div>
           <div>
@@ -170,7 +170,7 @@ export const RevenueReportsView: React.FC = () => {
             </div>
           )}
 
-          <button onClick={handleExport} className={`flex items-center gap-2 text-white font-bold text-xs px-4 py-2.5 rounded-[16px] premium-shadow transition-colors ${isExporting ? 'bg-[#10B981] hover:bg-[#059669]' : 'bg-[#111827] hover:bg-[#1F2937]'}`}>
+          <button onClick={handleExport} className={`flex items-center gap-2 text-white font-bold text-xs px-4 py-2.5 rounded-[16px] premium-shadow transition-colors ${isExporting ? 'bg-[var(--color-semantic-positive)] hover:bg-[#059669]' : 'bg-[#111827] hover:bg-[#1F2937]'}`}>
             {isExporting ? <Check className="w-4 h-4" /> : <Download className="w-4 h-4" />}
             {isExporting ? 'Exported!' : 'Export CSV'}
           </button>
@@ -180,12 +180,12 @@ export const RevenueReportsView: React.FC = () => {
       {/* Dynamic Top Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         {[
-          { title: "Daily Revenue (Est)", value: `$${dailyRevenue.toLocaleString()}`, trend: `+${(4.2 + (eLen % 10) * 0.1).toFixed(1)}%`, icon: DollarSign, color: 'text-emerald-400', bg: 'bg-emerald-500/20', line: '#10B981' },
-          { title: "Saved by Sentinel AI", value: `$${savedRevenue.toLocaleString()}`, trend: `+${18 + (eLen % 3)}%`, icon: BrainCircuit, color: 'text-white', bg: 'bg-purple-500/20', line: '#120524' },
-          { title: "Pending Claims", value: pendingClaims, trend: `-${2 + (eLen % 2)}`, icon: FileText, color: 'text-orange-400', bg: 'bg-orange-500/20', line: '#F59E0B' },
-          { title: "Claim Denials", value: claimDenials, trend: `-${12 + (eLen % 4)}%`, icon: AlertCircle, color: 'text-red-400', bg: 'bg-red-500/20', line: '#EF4444' },
+          { title: "Daily Revenue (Est)", value: `$${dailyRevenue.toLocaleString()}`, trend: `+${(4.2 + (eLen % 10) * 0.1).toFixed(1)}%`, icon: DollarSign, color: 'text-emerald-400', bg: 'bg-emerald-500/20', line: 'var(--color-semantic-positive)' },
+          { title: "Saved by Sentinel AI", value: `$${savedRevenue.toLocaleString()}`, trend: `+${18 + (eLen % 3)}%`, icon: BrainCircuit, color: 'text-white', bg: 'bg-purple-500/20', line: 'var(--color-surface)' },
+          { title: "Pending Claims", value: pendingClaims, trend: `-${2 + (eLen % 2)}`, icon: FileText, color: 'text-orange-400', bg: 'bg-orange-500/20', line: 'var(--color-semantic-attention)' },
+          { title: "Claim Denials", value: claimDenials, trend: `-${12 + (eLen % 4)}%`, icon: AlertCircle, color: 'text-red-400', bg: 'bg-red-500/20', line: 'var(--color-semantic-critical)' },
         ].map((stat, i) => (
-          <div key={i} className="bg-gradient-to-br from-[#2E1055] to-[#120524] border border-white/10 rounded-[24px] p-6 shadow-[0_20px_50px_rgba(46,16,85,0.3)] text-white card-hover flex flex-col justify-between relative overflow-hidden transition-all duration-300">
+          <div key={i} className="bg-gradient-to-br from-[var(--color-surface-raised)] to-[var(--color-surface)] border border-white/10 rounded-[24px] p-6 shadow-[0_20px_50px_rgba(46,16,85,0.3)] text-white card-hover flex flex-col justify-between relative overflow-hidden transition-all duration-300">
              <div className="flex items-start justify-between relative z-10">
                 <div className={`p-3 ${stat.bg} rounded-[16px]`}>
                   <stat.icon className={`w-5 h-5 ${stat.color}`} />
@@ -215,11 +215,11 @@ export const RevenueReportsView: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         
         {/* Revenue Area Chart */}
-        <div className="bg-gradient-to-br from-[#2E1055] to-[#120524] border border-white/10 rounded-[24px] p-8 shadow-[0_20px_50px_rgba(46,16,85,0.3)] text-white col-span-2 flex flex-col h-[480px]">
+        <div className="bg-gradient-to-br from-[var(--color-surface-raised)] to-[var(--color-surface)] border border-white/10 rounded-[24px] p-8 shadow-[0_20px_50px_rgba(46,16,85,0.3)] text-white col-span-2 flex flex-col h-[480px]">
           <div className="flex items-center justify-between mb-8">
              <h3 className="text-base font-bold text-white">Revenue Projection ({filterRange})</h3>
              <div className="flex gap-2">
-                <button className="text-[11px] font-bold text-white bg-[#120524]/5 px-3 py-1.5 rounded-[8px] cursor-default">Line View</button>
+                <button className="text-[11px] font-bold text-white bg-[var(--color-surface)]/5 px-3 py-1.5 rounded-[8px] cursor-default">Line View</button>
              </div>
           </div>
           
@@ -227,8 +227,8 @@ export const RevenueReportsView: React.FC = () => {
              <svg viewBox="0 0 800 300" className="w-full h-full overflow-visible" preserveAspectRatio="none">
                 <defs>
                   <linearGradient id="mainChart" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#2E1055" stopOpacity={0.2}/>
-                    <stop offset="95%" stopColor="#2E1055" stopOpacity={0}/>
+                    <stop offset="5%" stopColor="var(--color-surface-raised)" stopOpacity={0.2}/>
+                    <stop offset="95%" stopColor="var(--color-surface-raised)" stopOpacity={0}/>
                   </linearGradient>
                 </defs>
                 <g className="text-white/50 text-[10px] font-mono font-bold" fill="currentColor">
@@ -250,8 +250,8 @@ export const RevenueReportsView: React.FC = () => {
  
                 <g className="transition-transform duration-500">
                   <path d="M20,180 C150,80 300,240 450,140 C600,40 700,100 800,60 L800,260 L20,260 Z" fill="url(#mainChart)"/>
-                  <path d="M20,180 C150,80 300,240 450,140 C600,40 700,100 800,60" fill="none" stroke="#2E1055" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"/>
-                  <circle cx="800" cy="60" r="6" fill="#2E1055" stroke="white" strokeWidth="3" className="animate-pulse" />
+                  <path d="M20,180 C150,80 300,240 450,140 C600,40 700,100 800,60" fill="none" stroke="var(--color-surface-raised)" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"/>
+                  <circle cx="800" cy="60" r="6" fill="var(--color-surface-raised)" stroke="white" strokeWidth="3" className="animate-pulse" />
                   
                   <g transform="translate(730, 15)">
                      <rect width="80" height="30" rx="12" fill="rgba(255,255,255,0.1)" />
@@ -264,7 +264,7 @@ export const RevenueReportsView: React.FC = () => {
  
         {/* Right Column: Breakdown */}
         <div className="flex flex-col gap-6">
-          <div className="bg-gradient-to-br from-[#2E1055] to-[#120524] border border-white/10 rounded-[24px] p-6 shadow-[0_20px_50px_rgba(46,16,85,0.3)] text-white">
+          <div className="bg-gradient-to-br from-[var(--color-surface-raised)] to-[var(--color-surface)] border border-white/10 rounded-[24px] p-6 shadow-[0_20px_50px_rgba(46,16,85,0.3)] text-white">
              <h3 className="text-base font-bold text-white mb-6 flex items-center gap-2">
                <PieChart className="w-5 h-5 text-blue-400" /> Real-time Claim Status
              </h3>
@@ -272,9 +272,9 @@ export const RevenueReportsView: React.FC = () => {
                 <div className="relative w-28 h-28">
                    <svg viewBox="0 0 36 36" className="w-full h-full transform -rotate-90">
                      <circle cx="18" cy="18" r="15.915" fill="transparent" stroke="rgba(255,255,255,0.1)" strokeWidth="4"></circle>
-                     <circle cx="18" cy="18" r="15.915" fill="transparent" stroke="#10B981" strokeWidth="4" strokeDasharray={`${paidPct} ${100 - paidPct}`} strokeDashoffset="0" className="transition-all duration-500"></circle>
-                     <circle cx="18" cy="18" r="15.915" fill="transparent" stroke="#F59E0B" strokeWidth="4" strokeDasharray={`${pendingPct} ${100 - pendingPct}`} strokeDashoffset={`-${paidPct}`} className="transition-all duration-500"></circle>
-                     <circle cx="18" cy="18" r="15.915" fill="transparent" stroke="#EF4444" strokeWidth="4" strokeDasharray={`${deniedPct} ${100 - deniedPct}`} strokeDashoffset={`-${paidPct + pendingPct}`} className="transition-all duration-500"></circle>
+                     <circle cx="18" cy="18" r="15.915" fill="transparent" stroke="var(--color-semantic-positive)" strokeWidth="4" strokeDasharray={`${paidPct} ${100 - paidPct}`} strokeDashoffset="0" className="transition-all duration-500"></circle>
+                     <circle cx="18" cy="18" r="15.915" fill="transparent" stroke="var(--color-semantic-attention)" strokeWidth="4" strokeDasharray={`${pendingPct} ${100 - pendingPct}`} strokeDashoffset={`-${paidPct}`} className="transition-all duration-500"></circle>
+                     <circle cx="18" cy="18" r="15.915" fill="transparent" stroke="var(--color-semantic-critical)" strokeWidth="4" strokeDasharray={`${deniedPct} ${100 - deniedPct}`} strokeDashoffset={`-${paidPct + pendingPct}`} className="transition-all duration-500"></circle>
                    </svg>
                    <div className="absolute inset-0 flex flex-col items-center justify-center">
                      <span className="text-xl font-extrabold text-white">{encounters.length}</span>
@@ -282,17 +282,17 @@ export const RevenueReportsView: React.FC = () => {
                 </div>
                 <div className="space-y-3">
                    <div className="flex items-center gap-2 text-sm">
-                     <div className="w-2.5 h-2.5 rounded-full bg-[#10B981]"></div>
+                     <div className="w-2.5 h-2.5 rounded-full bg-[var(--color-semantic-positive)]"></div>
                      <span className="text-white/70 font-medium">Paid</span>
                      <span className="font-bold text-white ml-2">{paidPct}%</span>
                    </div>
                    <div className="flex items-center gap-2 text-sm">
-                     <div className="w-2.5 h-2.5 rounded-full bg-[#F59E0B]"></div>
+                     <div className="w-2.5 h-2.5 rounded-full bg-[var(--color-semantic-attention)]"></div>
                      <span className="text-white/70 font-medium">Pending</span>
                      <span className="font-bold text-white ml-2">{pendingPct}%</span>
                    </div>
                    <div className="flex items-center gap-2 text-sm">
-                     <div className="w-2.5 h-2.5 rounded-full bg-[#EF4444]"></div>
+                     <div className="w-2.5 h-2.5 rounded-full bg-[var(--color-semantic-critical)]"></div>
                      <span className="text-white/70 font-medium">Denied</span>
                      <span className="font-bold text-white ml-2">{deniedPct}%</span>
                    </div>
@@ -301,12 +301,12 @@ export const RevenueReportsView: React.FC = () => {
           </div>
  
           <div className="bg-slate-900 rounded-[24px] p-6 premium-shadow relative overflow-hidden flex-1 flex flex-col justify-center">
-             <div className="absolute top-[-30px] right-[-30px] w-32 h-32 bg-[#10B981] opacity-20 rounded-full blur-[40px] animate-pulse"></div>
+             <div className="absolute top-[-30px] right-[-30px] w-32 h-32 bg-[var(--color-semantic-positive)] opacity-20 rounded-full blur-[40px] animate-pulse"></div>
              
              <h3 className="text-sm font-bold text-white flex items-center gap-2 mb-4">
                <BrainCircuit className="w-5 h-5 text-emerald-400 animate-pulse" /> AI Claims Audit & Recovery
              </h3>
-             <div className="bg-[#120524]/10 border border-white/20 rounded-[16px] p-4 backdrop-blur-sm shadow-sm mb-4">
+             <div className="bg-[var(--color-surface)]/10 border border-white/20 rounded-[16px] p-4 backdrop-blur-sm shadow-sm mb-4">
                 <p className="text-[10px] text-[#A7F3D0] uppercase font-extrabold tracking-widest mb-1">Opportunity Detected</p>
                 <p className="text-sm font-medium text-white leading-relaxed">
                   {claimsReviewed ? (
@@ -319,7 +319,7 @@ export const RevenueReportsView: React.FC = () => {
              <button 
                onClick={() => setShowClaimsModal(true)}
                disabled={claimsReviewed}
-               className={`w-full font-bold py-2.5 rounded-[10px] text-xs transition-transform hover:scale-[1.02] active:scale-95 shadow-lg select-none cursor-pointer ${claimsReviewed ? 'bg-gray-700 text-white/50 cursor-not-allowed shadow-none' : 'bg-[#10B981] hover:bg-[#059669] text-white shadow-[#10B981]/30'}`}
+               className={`w-full font-bold py-2.5 rounded-[10px] text-xs transition-transform hover:scale-[1.02] active:scale-95 shadow-lg select-none cursor-pointer ${claimsReviewed ? 'bg-gray-700 text-white/50 cursor-not-allowed shadow-none' : 'bg-[var(--color-semantic-positive)] hover:bg-[#059669] text-white shadow-[var(--color-semantic-positive)]/30'}`}
              >
                {claimsReviewed ? 'Claims Optimized' : 'Review Suggestion'}
              </button>
@@ -328,7 +328,7 @@ export const RevenueReportsView: React.FC = () => {
       </div>
  
       {/* Bottom Table */}
-      <div className="bg-gradient-to-br from-[#2E1055] to-[#120524] border border-white/10 rounded-[24px] p-8 shadow-[0_20px_50px_rgba(46,16,85,0.3)] text-white">
+      <div className="bg-gradient-to-br from-[var(--color-surface-raised)] to-[var(--color-surface)] border border-white/10 rounded-[24px] p-8 shadow-[0_20px_50px_rgba(46,16,85,0.3)] text-white">
         <h3 className="text-base font-bold text-white mb-6">Recent Billing Activity</h3>
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
@@ -382,9 +382,9 @@ export const RevenueReportsView: React.FC = () => {
                   <tr 
                     key={i} 
                     onClick={() => setSelectedClaimDetail({ ...row, sBg, sText })}
-                    className="border-b border-white/10 hover:bg-[#120524]/5 transition-colors last:border-0 cursor-pointer"
+                    className="border-b border-white/10 hover:bg-[var(--color-surface)]/5 transition-colors last:border-0 cursor-pointer"
                   >
-                    <td className="py-4 px-4 font-mono text-[#A78BFA] text-xs font-bold">{row.id}</td>
+                    <td className="py-4 px-4 font-mono text-[var(--color-accent)] text-xs font-bold">{row.id}</td>
                     <td className="py-4 px-4 font-bold">{enc.patient_name}</td>
                     <td className="py-4 px-4 font-bold text-xs">{row.code}</td>
                     <td className="py-4 px-4 text-white/70">{row.payer}</td>
@@ -405,7 +405,7 @@ export const RevenueReportsView: React.FC = () => {
       {/* Claim Detail Drawer / Popup */}
       {selectedClaimDetail && (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
-          <div className="bg-[#120524] border border-white/10 rounded-[24px] premium-shadow max-w-lg w-full overflow-hidden animate-in zoom-in-95 duration-300">
+          <div className="bg-[var(--color-surface)] border border-white/10 rounded-[24px] premium-shadow max-w-lg w-full overflow-hidden animate-in zoom-in-95 duration-300">
             <div className="flex items-center justify-between px-6 py-5 border-b border-white/10 bg-white/5">
               <div>
                 <span className="text-[10px] font-extrabold uppercase tracking-widest text-white/70">Claim Details</span>
@@ -413,7 +413,7 @@ export const RevenueReportsView: React.FC = () => {
               </div>
               <button 
                 onClick={() => setSelectedClaimDetail(null)} 
-                className="w-8 h-8 rounded-full bg-[#120524] border border-white/10 flex items-center justify-center hover:bg-[#120524]/5 transition-colors cursor-pointer"
+                className="w-8 h-8 rounded-full bg-[var(--color-surface)] border border-white/10 flex items-center justify-center hover:bg-[var(--color-surface)]/5 transition-colors cursor-pointer"
               >
                 <X className="w-4 h-4 text-white/70" />
               </button>
@@ -465,7 +465,7 @@ export const RevenueReportsView: React.FC = () => {
       {/* AI Revenue Review Suggestion Modal */}
       {showClaimsModal && (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
-          <div className="bg-[#120524] border border-white/10 rounded-[24px] premium-shadow max-w-md w-full overflow-hidden animate-in zoom-in-95 duration-300">
+          <div className="bg-[var(--color-surface)] border border-white/10 rounded-[24px] premium-shadow max-w-md w-full overflow-hidden animate-in zoom-in-95 duration-300">
             <div className="flex items-center justify-between px-6 py-5 border-b border-white/10 bg-white/5">
               <div className="flex items-center gap-2">
                 <BrainCircuit className="w-5 h-5 text-white" />
@@ -473,7 +473,7 @@ export const RevenueReportsView: React.FC = () => {
               </div>
               <button 
                 onClick={() => setShowClaimsModal(false)} 
-                className="w-8 h-8 rounded-full bg-[#120524] border border-white/10 flex items-center justify-center hover:bg-[#120524]/5 transition-colors cursor-pointer"
+                className="w-8 h-8 rounded-full bg-[var(--color-surface)] border border-white/10 flex items-center justify-center hover:bg-[var(--color-surface)]/5 transition-colors cursor-pointer"
               >
                 <X className="w-4 h-4 text-white/70" />
               </button>
@@ -508,13 +508,13 @@ export const RevenueReportsView: React.FC = () => {
               <div className="flex gap-3 pt-2">
                 <button 
                   onClick={() => setShowClaimsModal(false)}
-                  className="flex-1 bg-[#120524] border border-white/10 hover:bg-[#120524]/5 text-white/60 font-bold py-2.5 rounded-[10px] text-xs transition-colors cursor-pointer"
+                  className="flex-1 bg-[var(--color-surface)] border border-white/10 hover:bg-[var(--color-surface)]/5 text-white/60 font-bold py-2.5 rounded-[10px] text-xs transition-colors cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button 
                   onClick={handleApproveRecode}
-                  className="flex-1 bg-[#10B981] hover:bg-[#059669] text-white font-bold py-2.5 rounded-[10px] text-xs shadow-lg shadow-emerald-500/20 transition-transform hover:scale-[1.01] active:scale-95 cursor-pointer"
+                  className="flex-1 bg-[var(--color-semantic-positive)] hover:bg-[#059669] text-white font-bold py-2.5 rounded-[10px] text-xs shadow-lg shadow-emerald-500/20 transition-transform hover:scale-[1.01] active:scale-95 cursor-pointer"
                 >
                   Approve Recode
                 </button>

@@ -87,19 +87,19 @@ export const SignalsDetailView: React.FC = () => {
 
   const getIcon = (type: string) => {
     switch (type) {
-      case 'EHR': return <Database className="w-4 h-4 text-[#F59E0B]" />;
-      case 'Phone': return <Phone className="w-4 h-4 text-[#EF4444]" />;
-      case 'Email': return <Mail className="w-4 h-4 text-[#3B82F6]" />;
-      default: return <Activity className="w-4 h-4 text-[#10B981]" />;
+      case 'EHR': return <Database className="w-4 h-4 text-[var(--color-semantic-attention)]" />;
+      case 'Phone': return <Phone className="w-4 h-4 text-[var(--color-semantic-critical)]" />;
+      case 'Email': return <Mail className="w-4 h-4 text-[var(--color-accent)]" />;
+      default: return <Activity className="w-4 h-4 text-[var(--color-semantic-positive)]" />;
     }
   };
 
   const getBgColor = (type: string) => {
     switch (type) {
-      case 'EHR': return 'bg-[#F59E0B]/20 text-[#FBBF24] border border-[#FDE68A]';
-      case 'Phone': return 'bg-[#EF4444]/20 text-[#F87171] border border-[#FCA5A5]';
-      case 'Email': return 'bg-[#3B82F6]/20 text-[#60A5FA] border border-[#BFDBFE]';
-      default: return 'bg-[#D1FAE5] text-[#10B981] border border-[#A7F3D0]';
+      case 'EHR': return 'bg-[var(--color-semantic-attention)]/20 text-[var(--color-semantic-attention)] border border-[#FDE68A]';
+      case 'Phone': return 'bg-[var(--color-semantic-critical)]/20 text-[var(--color-semantic-critical)] border border-[#FCA5A5]';
+      case 'Email': return 'bg-[var(--color-accent)]/20 text-[var(--color-accent)] border border-[#BFDBFE]';
+      default: return 'bg-[#D1FAE5] text-[var(--color-semantic-positive)] border border-[#A7F3D0]';
     }
   };
 
@@ -325,42 +325,42 @@ export const SignalsDetailView: React.FC = () => {
 
       {/* Metrics Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <div className="bg-gradient-to-br from-[#2E1055] to-[#120524] border border-white/10 p-6 rounded-[24px] shadow-[0_20px_50px_rgba(46,16,85,0.3)] flex items-center justify-between text-white">
+        <div className="bg-gradient-to-br from-[var(--color-surface-raised)] to-[var(--color-surface)] border border-white/10 p-6 rounded-[24px] shadow-[0_20px_50px_rgba(46,16,85,0.3)] flex items-center justify-between text-white">
           <div>
             <p className="text-xs font-bold text-white/70 uppercase tracking-widest mb-1">Total Signals</p>
             <p className="text-2xl font-black text-white">{isProd ? totalCount : 1284 + totalCount}</p>
           </div>
-          <span className="p-3 bg-[#3B82F6]/20 text-[#60A5FA] rounded-[16px]">
+          <span className="p-3 bg-[var(--color-accent)]/20 text-[var(--color-accent)] rounded-[16px]">
             <Cpu className="w-6 h-6" />
           </span>
         </div>
 
-        <div className="bg-gradient-to-br from-[#2E1055] to-[#120524] border border-white/10 p-6 rounded-[24px] shadow-[0_20px_50px_rgba(46,16,85,0.3)] flex items-center justify-between text-white">
+        <div className="bg-gradient-to-br from-[var(--color-surface-raised)] to-[var(--color-surface)] border border-white/10 p-6 rounded-[24px] shadow-[0_20px_50px_rgba(46,16,85,0.3)] flex items-center justify-between text-white">
           <div>
             <p className="text-xs font-bold text-white/70 uppercase tracking-widest mb-1">EHR (Practice Fusion)</p>
-            <p className="text-2xl font-black text-[#F59E0B]">{ehrCount} Active</p>
+            <p className="text-2xl font-black text-[var(--color-semantic-attention)]">{ehrCount} Active</p>
           </div>
-          <span className="p-3 bg-[#F59E0B]/20 text-[#FBBF24] rounded-[16px]">
+          <span className="p-3 bg-[var(--color-semantic-attention)]/20 text-[var(--color-semantic-attention)] rounded-[16px]">
             <Database className="w-6 h-6" />
           </span>
         </div>
 
-        <div className="bg-gradient-to-br from-[#2E1055] to-[#120524] border border-white/10 p-6 rounded-[24px] shadow-[0_20px_50px_rgba(46,16,85,0.3)] flex items-center justify-between text-white">
+        <div className="bg-gradient-to-br from-[var(--color-surface-raised)] to-[var(--color-surface)] border border-white/10 p-6 rounded-[24px] shadow-[0_20px_50px_rgba(46,16,85,0.3)] flex items-center justify-between text-white">
           <div>
             <p className="text-xs font-bold text-white/70 uppercase tracking-widest mb-1">Communication Logs</p>
-            <p className="text-2xl font-black text-[#3B82F6]">{phoneCount + emailCount} Transmitted</p>
+            <p className="text-2xl font-black text-[var(--color-accent)]">{phoneCount + emailCount} Transmitted</p>
           </div>
-          <span className="p-3 bg-[#3B82F6]/20 text-[#60A5FA] rounded-[16px]">
+          <span className="p-3 bg-[var(--color-accent)]/20 text-[var(--color-accent)] rounded-[16px]">
             <Mail className="w-6 h-6" />
           </span>
         </div>
 
-        <div className="bg-gradient-to-br from-[#2E1055] to-[#120524] border border-white/10 p-6 rounded-[24px] shadow-[0_20px_50px_rgba(46,16,85,0.3)] flex items-center justify-between text-white">
+        <div className="bg-gradient-to-br from-[var(--color-surface-raised)] to-[var(--color-surface)] border border-white/10 p-6 rounded-[24px] shadow-[0_20px_50px_rgba(46,16,85,0.3)] flex items-center justify-between text-white">
           <div>
             <p className="text-xs font-bold text-white/70 uppercase tracking-widest mb-1">Revenue Risk Triggers</p>
-            <p className="text-2xl font-black text-[#EF4444]">{lossRiskCount} Flagged</p>
+            <p className="text-2xl font-black text-[var(--color-semantic-critical)]">{lossRiskCount} Flagged</p>
           </div>
-          <span className="p-3 bg-[#EF4444]/20 text-[#F87171] rounded-[16px]">
+          <span className="p-3 bg-[var(--color-semantic-critical)]/20 text-[var(--color-semantic-critical)] rounded-[16px]">
             <AlertTriangle className="w-6 h-6 animate-pulse" />
           </span>
         </div>
@@ -368,7 +368,7 @@ export const SignalsDetailView: React.FC = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Main Signals Feed Table */}
-        <div className="lg:col-span-2 bg-gradient-to-br from-[#2E1055] to-[#120524] border border-white/10 rounded-[24px] p-8 shadow-[0_20px_50px_rgba(46,16,85,0.3)] text-white">
+        <div className="lg:col-span-2 bg-gradient-to-br from-[var(--color-surface-raised)] to-[var(--color-surface)] border border-white/10 rounded-[24px] p-8 shadow-[0_20px_50px_rgba(46,16,85,0.3)] text-white">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
             <div className="flex items-center gap-2 bg-white/5 border border-white/10 rounded-[14px] px-3.5 py-2 w-72">
               <Search className="w-4 h-4 text-white/70" />
@@ -428,7 +428,7 @@ export const SignalsDetailView: React.FC = () => {
                           setOutcomeState(null);
                           setResolutionState(null);
                         }}
-                        className={`border-b border-white/10 hover:bg-white/5 transition-all last:border-0 cursor-pointer ${selectedSignal?.id === signal.id ? 'bg-white/10 border-l-4 border-l-[#A78BFA]' : ''
+                        className={`border-b border-white/10 hover:bg-white/5 transition-all last:border-0 cursor-pointer ${selectedSignal?.id === signal.id ? 'bg-white/10 border-l-4 border-l-[var(--color-accent)]' : ''
                           }`}
                       >
                         <td className="py-4 px-2 font-mono text-[11px] text-[#2563EB]">{signal.id}</td>
@@ -474,9 +474,9 @@ export const SignalsDetailView: React.FC = () => {
         {/* Diagnostic Panel Sidebar */}
         <div className="flex flex-col gap-6">
           {/* SESR-009 System Capability Matrix */}
-          <div className="bg-gradient-to-br from-[#2E1055] to-[#120524] border border-white/10 rounded-[24px] p-8 shadow-[0_20px_50px_rgba(46,16,85,0.3)] text-white">
+          <div className="bg-gradient-to-br from-[var(--color-surface-raised)] to-[var(--color-surface)] border border-white/10 rounded-[24px] p-8 shadow-[0_20px_50px_rgba(46,16,85,0.3)] text-white">
             <h3 className="text-base font-extrabold text-white mb-6 flex items-center gap-2">
-              <Activity className="w-5 h-5 text-[#3B82F6]" /> System Capability Matrix
+              <Activity className="w-5 h-5 text-[var(--color-accent)]" /> System Capability Matrix
             </h3>
             <div className="space-y-4">
               <div className="flex justify-between items-center py-2 border-b border-white/10">
@@ -506,13 +506,13 @@ export const SignalsDetailView: React.FC = () => {
             </div>
           </div>
 
-          <div className="bg-gradient-to-br from-[#2E1055] to-[#120524] border border-white/10 rounded-[24px] p-8 shadow-[0_20px_50px_rgba(46,16,85,0.3)] text-white">
+          <div className="bg-gradient-to-br from-[var(--color-surface-raised)] to-[var(--color-surface)] border border-white/10 rounded-[24px] p-8 shadow-[0_20px_50px_rgba(46,16,85,0.3)] text-white">
             <h3 className="text-base font-extrabold text-white mb-6 flex items-center gap-2">
-              <Shield className="w-5 h-5 text-[#A78BFA]" /> Live Stream Status
+              <Shield className="w-5 h-5 text-[var(--color-accent)]" /> Live Stream Status
             </h3>
             <div className="space-y-4">
               <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-[16px] p-4 flex items-start gap-3">
-                <ShieldCheck className="w-5 h-5 text-[#10B981] flex-shrink-0 mt-0.5" />
+                <ShieldCheck className="w-5 h-5 text-[var(--color-semantic-positive)] flex-shrink-0 mt-0.5" />
                 <div>
                   <h4 className="text-sm font-bold text-emerald-400">Secure Compliant Tunnel</h4>
                   <p className="text-xs text-emerald-300 leading-relaxed mt-1 font-semibold">All socket connections utilize TLS 1.3 encryption with OAuth2 API authentication verification tokens.</p>
@@ -542,9 +542,9 @@ export const SignalsDetailView: React.FC = () => {
             </div>
           </div>
 
-          <div className="bg-gradient-to-br from-[#2E1055] to-[#120524] border border-white/10 rounded-[24px] p-8 shadow-[0_20px_50px_rgba(46,16,85,0.3)] flex-1 text-white">
+          <div className="bg-gradient-to-br from-[var(--color-surface-raised)] to-[var(--color-surface)] border border-white/10 rounded-[24px] p-8 shadow-[0_20px_50px_rgba(46,16,85,0.3)] flex-1 text-white">
             <h3 className="text-base font-extrabold text-white mb-6 flex items-center gap-2">
-              <CheckCircle2 className="w-5 h-5 text-[#10B981]" /> Action Dispatch History
+              <CheckCircle2 className="w-5 h-5 text-[var(--color-semantic-positive)]" /> Action Dispatch History
             </h3>
             <div className="space-y-4 max-h-[360px] overflow-y-auto custom-scrollbar pr-2">
               {auditLogs.length === 0 ? (
@@ -589,7 +589,7 @@ export const SignalsDetailView: React.FC = () => {
                 <div>
                   <h4 className="text-base font-extrabold text-white flex items-center gap-2">
                     Signal Diagnostic Report
-                    <span className="text-[10px] font-mono bg-[#2E1055]/20 border border-[#2E1055]/50 text-[#A78BFA] px-2 py-0.5 rounded-[6px]" title="SESR-008 Originating Signal ID">ID: {selectedSignal.id}</span>
+                    <span className="text-[10px] font-mono bg-[var(--color-surface-raised)]/20 border border-[var(--color-surface-raised)]/50 text-[var(--color-accent)] px-2 py-0.5 rounded-[6px]" title="SESR-008 Originating Signal ID">ID: {selectedSignal.id}</span>
                     {/* SESR-008 Traceability */}
                     {selectedSignal.correlation_id && (
                       <span className="text-[10px] font-mono bg-blue-500/20 border border-blue-500/50 text-blue-400 px-2 py-0.5 rounded-[6px]" title="SESR-008 Journey Identity">
@@ -642,7 +642,7 @@ export const SignalsDetailView: React.FC = () => {
               {/* Decision Context Engine Block */}
               <div className="bg-white/5 border border-white/10 rounded-[18px] p-4 flex gap-3 relative">
                 <div className="flex-1">
-                  <h5 className="text-xs font-extrabold text-[#A78BFA] uppercase tracking-wider mb-2 flex items-center gap-1">
+                  <h5 className="text-xs font-extrabold text-[var(--color-accent)] uppercase tracking-wider mb-2 flex items-center gap-1">
                     <Activity className="w-3.5 h-3.5" /> Decision Context Engine
                   </h5>
                   <div className="grid grid-cols-2 gap-4">
@@ -689,7 +689,7 @@ export const SignalsDetailView: React.FC = () => {
               {isDispatched && (
                 <div className="bg-white/5 border border-white/10 rounded-[18px] p-4 flex gap-3 relative animate-in slide-in-from-top-2">
                   <div className="flex-1">
-                    <h5 className="text-xs font-extrabold text-[#3B82F6] uppercase tracking-wider mb-2 flex items-center gap-1">
+                    <h5 className="text-xs font-extrabold text-[var(--color-accent)] uppercase tracking-wider mb-2 flex items-center gap-1">
                       <Database className="w-3.5 h-3.5" /> Operational Outcome (SESR-007)
                     </h5>
                     
@@ -751,7 +751,7 @@ export const SignalsDetailView: React.FC = () => {
 
                     <button
                       onClick={() => handleCopyId(selectedSignal.id)}
-                      className="text-[10px] font-extrabold text-[#A78BFA] hover:underline flex items-center gap-1 cursor-pointer"
+                      className="text-[10px] font-extrabold text-[var(--color-accent)] hover:underline flex items-center gap-1 cursor-pointer"
                     >
                       {copiedId === selectedSignal.id ? (
                         <>
@@ -770,7 +770,7 @@ export const SignalsDetailView: React.FC = () => {
                     <div className="space-y-1">
                       <span className="text-[9px] text-[#9CA3AF] font-bold uppercase block">Target EHR System</span>
                       <p className="text-xs font-bold text-white flex items-center gap-1.5">
-                        <Database className="w-3.5 h-3.5 text-[#F59E0B]" />
+                        <Database className="w-3.5 h-3.5 text-[var(--color-semantic-attention)]" />
                         {selectedSignal.source} (Secure Data R4 compliant)
                       </p>
                     </div>
@@ -794,7 +794,7 @@ export const SignalsDetailView: React.FC = () => {
                     </div>
                   </div>
                 ) : viewMode === 'inspector' ? (
-                  <div className="bg-[#120524] rounded-[16px] p-4 text-[11px] font-mono text-amber-400 overflow-x-auto max-h-48 custom-scrollbar border border-amber-500/30">
+                  <div className="bg-[var(--color-surface)] rounded-[16px] p-4 text-[11px] font-mono text-amber-400 overflow-x-auto max-h-48 custom-scrollbar border border-amber-500/30">
                     <pre>{JSON.stringify({
                       decision_context_id: `ctx-${selectedSignal.id}`,
                       evidence_snapshot: getSimulatedRawPayload(selectedSignal),
@@ -833,9 +833,9 @@ export const SignalsDetailView: React.FC = () => {
                   className={`flex items-center gap-2 font-bold text-xs px-5 py-2.5 rounded-[16px] premium-shadow transition-all ${isDispatched
                     ? 'bg-emerald-600 text-white cursor-default'
                     : (selectedSignal.status === 'expired' || selectedSignal.status === 'superseded')
-                      ? 'bg-[#120524] text-white/50 cursor-not-allowed border border-white/10'
+                      ? 'bg-[var(--color-surface)] text-white/50 cursor-not-allowed border border-white/10'
                       : isDispatching
-                        ? 'bg-[#120524] text-white opacity-50 cursor-wait'
+                        ? 'bg-[var(--color-surface)] text-white opacity-50 cursor-wait'
                         : 'bg-emerald-600 hover:bg-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.4)] text-white cursor-pointer hover:scale-105 active:scale-95'
                     }`}
                 >

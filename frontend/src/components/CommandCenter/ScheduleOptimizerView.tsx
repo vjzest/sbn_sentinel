@@ -95,7 +95,7 @@ export const ScheduleOptimizerView: React.FC = () => {
             <ChevronDown className={`w-4 h-4 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} />
           </div>
           {isDropdownOpen && (
-            <div className="absolute right-0 mt-3 w-48 bg-[#120524] border border-white/10 rounded-[16px] shadow-[0_20px_50px_rgba(46,16,85,0.3)] z-50 text-white animate-in fade-in slide-in-from-top-2">
+            <div className="absolute right-0 mt-3 w-48 bg-[var(--color-surface)] border border-white/10 rounded-[16px] shadow-[0_20px_50px_rgba(46,16,85,0.3)] z-50 text-white animate-in fade-in slide-in-from-top-2">
               <div className="p-2 space-y-1">
                 {['Today', 'This Week', 'Next Week', 'This Month'].map((range) => (
                   <button 
@@ -123,16 +123,16 @@ export const ScheduleOptimizerView: React.FC = () => {
             title: "Today's Capacity", 
             val: `${Math.min(100, 89 + (isOptimized ? 2 : 0) + (eLen % 2))}%`, 
             desc: "Current patient intake vs maximum daily clinic limit.",
-            line: '#2E1055', 
+            line: 'var(--color-surface-raised)', 
             bg: 'bg-blue-500/20', 
-            text: 'text-[#2E1055]', 
+            text: 'text-[var(--color-surface-raised)]', 
             icon: Zap 
           },
           { 
             title: "Booked Slots", 
             val: encounters.length + (isOptimized ? 1 : 0), 
             desc: "Active reservations booked across all clinic locations.",
-            line: '#10B981', 
+            line: 'var(--color-semantic-positive)', 
             bg: 'bg-emerald-500/20', 
             text: 'text-emerald-400', 
             icon: CheckCircle2 
@@ -141,7 +141,7 @@ export const ScheduleOptimizerView: React.FC = () => {
             title: "Available Slots", 
             val: Math.max(0, 15 - encounters.length - (isOptimized ? 1 : 0)), 
             desc: "Remaining open periods ready for emergency walks.",
-            line: '#F59E0B', 
+            line: 'var(--color-semantic-attention)', 
             bg: 'bg-orange-500/20', 
             text: 'text-orange-400', 
             icon: Clock 
@@ -150,13 +150,13 @@ export const ScheduleOptimizerView: React.FC = () => {
             title: "Avg Utilization", 
             val: `${Math.min(100, 95 + (isOptimized ? 1 : 0))}%`, 
             desc: "Provider shift efficiency rate and timing accuracy.",
-            line: '#3B82F6', 
+            line: 'var(--color-accent)', 
             bg: 'bg-blue-500/20', 
             text: 'text-blue-400', 
             icon: Users 
           },
         ].map((c, i) => (
-          <div key={i} className="bg-gradient-to-br from-[#2E1055] to-[#120524] border border-white/10 rounded-[24px] p-6 shadow-[0_20px_50px_rgba(46,16,85,0.3)] card-hover flex flex-col justify-between min-h-[160px] transition-all duration-300 text-white">
+          <div key={i} className="bg-gradient-to-br from-[var(--color-surface-raised)] to-[var(--color-surface)] border border-white/10 rounded-[24px] p-6 shadow-[0_20px_50px_rgba(46,16,85,0.3)] card-hover flex flex-col justify-between min-h-[160px] transition-all duration-300 text-white">
              <div className="flex justify-between items-start">
                <div>
                  <p className="text-[11px] text-white/70 uppercase font-extrabold tracking-widest mb-0.5">{c.title}</p>
@@ -183,7 +183,7 @@ export const ScheduleOptimizerView: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         
         {/* Main Weekly Calendar */}
-        <div className="bg-gradient-to-br from-[#2E1055] to-[#120524] border border-white/10 rounded-[24px] p-8 shadow-[0_20px_50px_rgba(46,16,85,0.3)] col-span-2 flex flex-col justify-between text-white">
+        <div className="bg-gradient-to-br from-[var(--color-surface-raised)] to-[var(--color-surface)] border border-white/10 rounded-[24px] p-8 shadow-[0_20px_50px_rgba(46,16,85,0.3)] col-span-2 flex flex-col justify-between text-white">
            <div>
              <div className="flex justify-between items-center mb-4">
                <div>
@@ -191,7 +191,7 @@ export const ScheduleOptimizerView: React.FC = () => {
                  <p className="text-xs text-white/70 font-semibold">Review clinic slot bookings and click open suggestions to resolve scheduling gaps.</p>
                </div>
                <div className="flex gap-2">
-                 <span className="flex items-center gap-1.5 text-[9px] font-black uppercase text-[#2E1055] bg-purple-500/20 px-2.5 py-1 rounded-full border border-purple-500/30">
+                 <span className="flex items-center gap-1.5 text-[9px] font-black uppercase text-[var(--color-surface-raised)] bg-purple-500/20 px-2.5 py-1 rounded-full border border-purple-500/30">
                    Mon - Fri View
                  </span>
                </div>
@@ -293,7 +293,7 @@ export const ScheduleOptimizerView: React.FC = () => {
                      {isOptimized ? (
                        <div 
                          onClick={() => showToast(`Encounter: Emily Davis (Waitlist filled via One-Click AI Optimization)`)}
-                         className="w-full bg-gradient-to-br from-[#2E1055] to-[#120524] text-white border border-[#DDD6FE] rounded-[16px] p-2 flex flex-col justify-between shadow-md cursor-pointer animate-in zoom-in duration-300 hover:scale-[1.02]"
+                         className="w-full bg-gradient-to-br from-[var(--color-surface-raised)] to-[var(--color-surface)] text-white border border-[#DDD6FE] rounded-[16px] p-2 flex flex-col justify-between shadow-md cursor-pointer animate-in zoom-in duration-300 hover:scale-[1.02]"
                        >
                          <div>
                            <p className="text-[9px] uppercase font-black text-[#E0D9FD] flex items-center gap-1">
@@ -370,7 +370,7 @@ export const ScheduleOptimizerView: React.FC = () => {
 
         {/* AI Recommendations Column */}
         <div className="flex flex-col gap-6">
-          <div className="bg-gradient-to-br from-[#2E1055] to-[#120524] rounded-[24px] p-6 premium-shadow text-white relative overflow-hidden flex flex-col justify-between min-h-[220px]">
+          <div className="bg-gradient-to-br from-[var(--color-surface-raised)] to-[var(--color-surface)] rounded-[24px] p-6 premium-shadow text-white relative overflow-hidden flex flex-col justify-between min-h-[220px]">
              <div className="absolute top-[-50px] right-[-50px] w-48 h-48 bg-transparent opacity-10 rounded-full blur-2xl animate-pulse"></div>
              
              <div>
@@ -403,7 +403,7 @@ export const ScheduleOptimizerView: React.FC = () => {
              </div>
           </div>
 
-          <div className="bg-gradient-to-br from-[#2E1055] to-[#120524] border border-white/10 rounded-[24px] p-6 shadow-[0_20px_50px_rgba(46,16,85,0.3)] flex-1 flex flex-col justify-between text-white">
+          <div className="bg-gradient-to-br from-[var(--color-surface-raised)] to-[var(--color-surface)] border border-white/10 rounded-[24px] p-6 shadow-[0_20px_50px_rgba(46,16,85,0.3)] flex-1 flex flex-col justify-between text-white">
              <div>
                <h3 className="text-base font-bold text-white">Smart Workflow Suggestions</h3>
                <p className="text-xs text-white/70 font-semibold mt-0.5 mb-4">

@@ -42,18 +42,18 @@ export const UserProfileView = () => {
     <div className="max-w-[1000px] mx-auto space-y-6 animate-in fade-in duration-500">
       
       {/* Header */}
-      <div className="bg-gradient-to-br from-[#2E1055] to-[#120524] p-8 rounded-[24px] border border-white/10 shadow-[0_20px_50px_rgba(46,16,85,0.3)] text-white relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-64 h-64 bg-[#EEEAFE]0/5 rounded-full blur-[80px] pointer-events-none"></div>
+      <div className="bg-gradient-to-br from-[var(--color-surface-raised)] to-[var(--color-surface)] p-8 rounded-[24px] border border-white/10 shadow-[0_20px_50px_rgba(46,16,85,0.3)] text-white relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-[var(--color-text-primary)]0/5 rounded-full blur-[80px] pointer-events-none"></div>
         <div className="flex items-center gap-6 relative z-10">
-          <div className="w-24 h-24 rounded-[20px] bg-gradient-to-br from-[#2E1055] to-[#120524] p-1 shadow-xl">
+          <div className="w-24 h-24 rounded-[20px] bg-gradient-to-br from-[var(--color-surface-raised)] to-[var(--color-surface)] p-1 shadow-xl">
             <div className="w-full h-full bg-white/5 rounded-[16px] flex items-center justify-center border-2 border-transparent">
-              <User className="w-10 h-10 text-[#A78BFA]" />
+              <User className="w-10 h-10 text-[var(--color-accent)]" />
             </div>
           </div>
           <div>
             <h2 className="text-3xl font-black text-white">{profileData.firstName} {profileData.lastName}</h2>
             <div className="flex items-center gap-3 mt-2">
-              <span className="px-3 py-1 bg-[#EEF2FF] text-[#A78BFA] text-xs font-bold rounded-lg uppercase tracking-wider">
+              <span className="px-3 py-1 bg-[#EEF2FF] text-[var(--color-accent)] text-xs font-bold rounded-lg uppercase tracking-wider">
                 {profileData.role}
               </span>
               <span className="text-sm font-bold text-white/70 flex items-center gap-1">
@@ -68,9 +68,9 @@ export const UserProfileView = () => {
         
         {/* Left Col - Security */}
         <div className="md:col-span-1 space-y-6">
-          <div className="bg-gradient-to-br from-[#2E1055] to-[#120524] p-6 rounded-[24px] border border-white/10 shadow-[0_20px_50px_rgba(46,16,85,0.3)] text-white">
+          <div className="bg-gradient-to-br from-[var(--color-surface-raised)] to-[var(--color-surface)] p-6 rounded-[24px] border border-white/10 shadow-[0_20px_50px_rgba(46,16,85,0.3)] text-white">
             <h3 className="text-lg font-bold text-white flex items-center gap-2 mb-6">
-              <Shield className="w-5 h-5 text-[#A78BFA]" /> Account Security
+              <Shield className="w-5 h-5 text-[var(--color-accent)]" /> Account Security
             </h3>
             
             <div className="space-y-4">
@@ -91,7 +91,7 @@ export const UserProfileView = () => {
 
         {/* Right Col - Profile Form */}
         <div className="md:col-span-2">
-          <div className="bg-gradient-to-br from-[#2E1055] to-[#120524] p-8 rounded-[24px] border border-white/10 shadow-[0_20px_50px_rgba(46,16,85,0.3)] text-white">
+          <div className="bg-gradient-to-br from-[var(--color-surface-raised)] to-[var(--color-surface)] p-8 rounded-[24px] border border-white/10 shadow-[0_20px_50px_rgba(46,16,85,0.3)] text-white">
             <h3 className="text-lg font-bold text-white mb-6">Personal Information</h3>
             
             <form onSubmit={handleSave} className="space-y-6">
@@ -102,7 +102,7 @@ export const UserProfileView = () => {
                     type="text"
                     value={profileData.firstName}
                     onChange={(e) => setProfileData({...profileData, firstName: e.target.value})}
-                    className="w-full bg-white/5 border border-white/10 rounded-2xl px-4 py-3 text-sm font-bold text-white outline-none focus:border-[#2E1055] focus:ring-1 focus:ring-[#2E1055] transition-all"
+                    className="w-full bg-white/5 border border-white/10 rounded-2xl px-4 py-3 text-sm font-bold text-white outline-none focus:border-[var(--color-surface-raised)] focus:ring-1 focus:ring-[var(--color-surface-raised)] transition-all"
                   />
                 </div>
                 <div>
@@ -111,7 +111,7 @@ export const UserProfileView = () => {
                     type="text"
                     value={profileData.lastName}
                     onChange={(e) => setProfileData({...profileData, lastName: e.target.value})}
-                    className="w-full bg-white/5 border border-white/10 rounded-2xl px-4 py-3 text-sm font-bold text-white outline-none focus:border-[#2E1055] focus:ring-1 focus:ring-[#2E1055] transition-all"
+                    className="w-full bg-white/5 border border-white/10 rounded-2xl px-4 py-3 text-sm font-bold text-white outline-none focus:border-[var(--color-surface-raised)] focus:ring-1 focus:ring-[var(--color-surface-raised)] transition-all"
                   />
                 </div>
               </div>
@@ -137,7 +137,7 @@ export const UserProfileView = () => {
                       type="tel"
                       value={profileData.phone}
                       onChange={(e) => setProfileData({...profileData, phone: e.target.value})}
-                      className="w-full bg-white/5 border border-white/10 rounded-2xl pl-11 pr-4 py-3 text-sm font-bold text-white outline-none focus:border-[#2E1055] focus:ring-1 focus:ring-[#2E1055] transition-all"
+                      className="w-full bg-white/5 border border-white/10 rounded-2xl pl-11 pr-4 py-3 text-sm font-bold text-white outline-none focus:border-[var(--color-surface-raised)] focus:ring-1 focus:ring-[var(--color-surface-raised)] transition-all"
                     />
                   </div>
                 </div>
@@ -154,7 +154,7 @@ export const UserProfileView = () => {
                 
                 <button
                   type="submit"
-                  className="bg-[#2E1055] hover:bg-[#120524] text-white px-6 py-3 rounded-2xl text-sm font-bold shadow-lg shadow-[#EEEAFE]0/25 transition-all hover:-translate-y-0.5 active:translate-y-0"
+                  className="bg-[var(--color-surface-raised)] hover:bg-[var(--color-surface)] text-white px-6 py-3 rounded-2xl text-sm font-bold shadow-lg shadow-[var(--color-text-primary)]0/25 transition-all hover:-translate-y-0.5 active:translate-y-0"
                 >
                   Save Changes
                 </button>
