@@ -20,7 +20,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="dark">
-      <body className={`${inter.className} antialiased bg-[#F7F9FC] text-[#111827]`}>
+      <body className={`${inter.className} antialiased bg-[var(--color-canvas)] text-[var(--color-text-primary)]`}>
         <StoreProvider>
           <ErrorScreen>
             <div className="min-h-screen relative w-full overflow-hidden animate-fade-in">

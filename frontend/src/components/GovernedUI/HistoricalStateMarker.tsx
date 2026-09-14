@@ -1,14 +1,12 @@
 import React from 'react';
 import { History } from 'lucide-react';
 import { GovernedStatus } from './GovernedStatus';
-
 interface HistoricalStateMarkerProps {
   isHistorical: boolean;
   stateAtTime: string;
   currentState?: string;
   timestamp: string;
 }
-
 export const HistoricalStateMarker: React.FC<HistoricalStateMarkerProps> = ({
   isHistorical,
   stateAtTime,
@@ -18,12 +16,11 @@ export const HistoricalStateMarker: React.FC<HistoricalStateMarkerProps> = ({
   if (!isHistorical) {
     return null;
   }
-
   return (
-    <div className="border border-slate-500/30 bg-slate-500/10 rounded-[12px] p-3 text-slate-300 my-2">
+    <div className="border border-[var(--color-semantic-unknown)]/30 bg-[var(--color-semantic-unknown)]/10 rounded-[12px] p-3 text-[var(--color-text-secondary)] my-2">
       <div className="flex items-center gap-2 mb-2">
-        <History className="w-4 h-4 text-slate-400" />
-        <span className="text-xs font-black tracking-widest uppercase">Historical Snapshot</span>
+        <History className="w-4 h-4 text-[var(--color-semantic-unknown)] opacity-80" />
+        <span className="text-xs font-bold uppercase tracking-wider text-[var(--color-semantic-unknown)]">Historical Snapshot</span>
       </div>
       <div className="flex items-center gap-4 text-xs font-semibold">
         <div>

@@ -20,7 +20,7 @@ describe('SDS-D1: Governed UI Foundation & State Contract', () => {
     const res1 = mapGovernedState('UNKNOWN');
     expect(res1.semantic).toBe('unknown');
     expect(res1.label).toBe('UNKNOWN');
-    
+
     const res2 = mapGovernedState(null);
     expect(res2.semantic).toBe('unknown');
     expect(res2.label).toBe('Unknown');
@@ -37,21 +37,19 @@ describe('SDS-D1: Governed UI Foundation & State Contract', () => {
   test('T03: Missing vs negative - missing/unavailable info stays missing/unavailable', () => {
     const emptyHtml = renderToStaticMarkup(<DataState state="empty" message="No data found." />);
     expect(emptyHtml).toContain('No data found.');
-    
+
     const unavHtml = renderToStaticMarkup(<DataState state="unavailable" message="Unavailable." />);
     expect(unavHtml).toContain('Unavailable.');
-    
+
     expect(unavHtml).not.toContain('FAILED');
     expect(emptyHtml).not.toContain('FAILED');
   });
-
   // T04 — Recommendation vs approval
   test('T04: Recommendation vs approval - recommendation without backend approval stays RECOMMENDED', () => {
     const res = mapGovernedState('RECOMMENDED');
-    expect(res.semantic).toBe('attention'); 
+    expect(res.semantic).toBe('attention');
     expect(res.label).toBe('RECOMMENDED');
   });
-
   // T05 — Approval vs execution
   test('T05: Approval vs execution - approved-but-unexecuted stays APPROVED, never shown as EXECUTED', () => {
     const res = mapGovernedState('APPROVED');
@@ -59,14 +57,13 @@ describe('SDS-D1: Governed UI Foundation & State Contract', () => {
     expect(res.label).toBe('APPROVED');
     expect(res.label).not.toBe('EXECUTED');
   });
-
   // T06 — Blocked action
   test('T06: Blocked action - backend denial stays BLOCKED; UI does not advance to dispatched/executed', async () => {
     // 1. Presentation aspect
     const res = mapGovernedState('BLOCKED');
     expect(res.semantic).toBe('critical');
     expect(res.critical).toBe(true);
-    
+
     const html = renderToStaticMarkup(<CriticalStateBanner state="BLOCKED" reason="Denied by policy" />);
     expect(html).toContain('BLOCKED');
     expect(html).toContain('Denied by policy');
@@ -93,11 +90,11 @@ describe('SDS-D1: Governed UI Foundation & State Contract', () => {
   // T08 — Historical state
   test('T08: Historical state - historical object is visibly historical and cannot appear current', () => {
     const html = renderToStaticMarkup(
-      <HistoricalStateMarker 
-        isHistorical={true} 
-        stateAtTime="APPROVED" 
-        currentState="EXECUTED" 
-        timestamp="2026-09-01T00:00:00Z" 
+      <HistoricalStateMarker
+        isHistorical={true}
+        stateAtTime="APPROVED"
+        currentState="EXECUTED"
+        timestamp="2026-09-01T00:00:00Z"
       />
     );
     expect(html).toContain('Historical Snapshot');
@@ -122,7 +119,7 @@ describe('SDS-D1: Governed UI Foundation & State Contract', () => {
     // 1. Presentation mapping
     const res = mapGovernedState('DENIED');
     expect(res.semantic).toBe('critical');
-    
+
     const html = renderToStaticMarkup(<GovernedStatus state="DENIED" />);
     expect(html).toContain('DENIED');
     expect(html).not.toContain('SUCCESS');

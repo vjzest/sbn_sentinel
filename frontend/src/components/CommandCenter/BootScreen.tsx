@@ -1,124 +1,198 @@
 'use client';
 import React, { useEffect, useState } from 'react';
-import { Activity, ShieldCheck, Database, HardDrive, Cpu, CheckCircle } from 'lucide-react';
+import { Activity, CheckCircle2, ShieldAlert } from 'lucide-react';
 
 interface BootScreenProps {
   onComplete: () => void;
 }
 
 export const BootScreen: React.FC<BootScreenProps> = ({ onComplete }) => {
-  const [logs, setLogs] = useState<string[]>([]);
-  const [currentStep, setCurrentStep] = useState(0);
+  const [stage, setStage] = useState(1);
+  const [healthStatus, setHealthStatus] = useState<'pending' | 'ready' | 'failed'>('pending');
+  const [errorMessage, setErrorMessage] = useState('');
+  
+  // Use a prefers-reduced-motion hook or media query check inside the component
+  const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
 
-  const steps = [
-    { text: 'Connecting to SBN Sentinel telemetry store...', icon: Database },
-    { text: 'Initializing EHR & reality connectors (Practice Fusion, Twilio)...', icon: HardDrive },
-    { text: 'Enforcing Security Controls and active audit logs...', icon: ShieldCheck },
-    { text: 'Starting SBN Rules Engine and anomaly detection...', icon: Cpu },
-    { text: 'Boot sequence complete. Opening Command Center...', icon: CheckCircle }
-  ];
+  useEffect(() => {
+    setPrefersReducedMotion(window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+  }, []);
 
   useEffect(() => {
     let isMounted = true;
 
     const performBoot = async () => {
       try {
-        // Step 0: Base UI wait
-        await new Promise(r => setTimeout(r, 500));
-        if (!isMounted) return;
-        setLogs(prev => [...prev, steps[0].text]);
-        setCurrentStep(1);
-
-        // Step 1: Actually fetch health
-        const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000'}/api/v1/health/ready`);
-        if (!res.ok) throw new Error('Backend unreachabe');
-        const healthData = await res.json();
+        // Stage 1: INITIALIZING
+        setStage(1);
+        await new Promise(r => setTimeout(r, 800));
         
         if (!isMounted) return;
-        
-        if (healthData.ready) {
-           setLogs(prev => [...prev, `System Status: Ready`]);
-           setCurrentStep(2);
-           await new Promise(r => setTimeout(r, 400));
-           
-           setLogs(prev => [...prev, `DB: ${healthData.database}, Auth: ${healthData.auth}, Gov: ${healthData.governance}`]);
-           setCurrentStep(3);
-           await new Promise(r => setTimeout(r, 400));
 
-           setLogs(prev => [...prev, steps[4].text]);
-           setCurrentStep(4);
-           
-           setTimeout(() => {
-             if (isMounted) onComplete();
-           }, 600);
-        } else {
-           throw new Error('Unhealthy status returned');
+        // Fire off readiness check concurrently while animation starts
+        fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000'}/api/v1/health/ready`)
+          .then(res => res.ok ? res.json() : Promise.reject(new Error('Backend unreachable')))
+          .then(data => {
+            if (isMounted) {
+              if (data.ready) {
+                setHealthStatus('ready');
+              } else {
+                setHealthStatus('failed');
+                setErrorMessage('Backend returned not ready.');
+              }
+            }
+          })
+          .catch(err => {
+            if (isMounted) {
+              setHealthStatus('failed');
+              setErrorMessage(err.message || 'Network failure');
+            }
+          });
+
+        // Stages 2-6: LOADING (progressive illumination)
+        for (let s = 2; s <= 6; s++) {
+          if (!isMounted) return;
+          setStage(s);
+          await new Promise(r => setTimeout(r, 400));
         }
 
+        // Stage 7: FINALIZING (Holding for backend)
+        if (isMounted) setStage(7);
+        
       } catch (error) {
-        if (!isMounted) return;
-        setLogs(prev => [...prev, 'CRITICAL FAILURE: ' + (error as Error).message]);
-        // Do not complete boot on failure
+        if (isMounted) {
+          setHealthStatus('failed');
+          setErrorMessage((error as Error).message);
+        }
       }
     };
 
     performBoot();
-
     return () => { isMounted = false; };
-  }, [onComplete]);
+  }, []);
+
+  // Poll for health status during stage 7
+  useEffect(() => {
+    if (stage === 7) {
+      if (healthStatus === 'ready') {
+        // Stage 8: CROWN ACTIVATING
+        setTimeout(() => setStage(8), 500);
+        // Stage 9: READY
+        setTimeout(() => {
+          setStage(9);
+          setTimeout(onComplete, 1500);
+        }, 1200);
+      }
+    }
+  }, [stage, healthStatus, onComplete]);
+
+  // Determine illumination based on stage
+  const getOpacity = (triggerStage: number) => {
+    if (stage >= triggerStage) return 1;
+    return 0;
+  };
+
+  const getTransitionClass = () => {
+    return prefersReducedMotion ? 'transition-opacity duration-300' : 'transition-all duration-700 ease-out';
+  };
 
   return (
-    <div className="fixed inset-0 bg-[#0B1121] text-white font-mono flex flex-col items-center justify-center z-50 p-6">
-      {/* Radar Glow Background */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-gradient-to-br from-[#2E1055]/10 to-[#120524]/10 rounded-full blur-[120px] pointer-events-none animate-pulse"></div>
+    <div className="fixed inset-0 bg-[var(--color-canvas)] text-[var(--color-text-primary)] flex flex-col items-center justify-center z-50 p-6 overflow-hidden">
+      
+      {/* Central Visual Area */}
+      <div className="relative w-full max-w-md flex flex-col items-center">
+        
+        {/* IAK SVG Container */}
+        <div className="relative w-64 h-64 mb-12">
+          {/* Dim outline / Base copy */}
+          <svg viewBox="0 0 200 200" className="absolute inset-0 w-full h-full opacity-20" aria-hidden="true">
+            <g fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M40 70 L60 70 L60 150 L40 150 Z" /> {/* I */}
+              <path d="M100 50 L120 150 L80 150 Z" /> {/* A */}
+              <path d="M140 70 L160 70 L160 150 L140 150 Z M160 110 L190 70 M160 110 L190 150" /> {/* K */}
+              <path d="M80 40 L100 20 L120 40 Z" /> {/* Crown */}
+              <path d="M50 110 L150 110" strokeDasharray="4 4" /> {/* Inner stroke */}
+            </g>
+          </svg>
 
-      <div className="w-full max-w-xl flex flex-col items-center relative z-10">
-        {/* Animated Sentinel Core Logo */}
-        <div className="mb-10 relative">
-          <div className="w-20 h-20 rounded-[24px] bg-gradient-to-br from-[#2E1055] to-[#120524] flex items-center justify-center text-white font-extrabold text-4xl shadow-[0_0_40px_rgba(79,70,229,0.5)] animate-bounce">
-            S
-          </div>
-          <div className="absolute -inset-2 border-2 border-[#2E1055]/30 rounded-[28px] animate-ping opacity-75"></div>
+          {/* Gold copy (Revealed progressively) */}
+          <svg viewBox="0 0 200 200" className="absolute inset-0 w-full h-full" aria-hidden="true">
+            <g fill="none" stroke="var(--color-brand-gold)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+              <path 
+                d="M40 70 L60 70 L60 150 L40 150 Z" 
+                className={getTransitionClass()}
+                style={{ opacity: getOpacity(2) }}
+              />
+              <path 
+                d="M50 110 L150 110" strokeDasharray="4 4"
+                className={getTransitionClass()}
+                style={{ opacity: getOpacity(3) }}
+              />
+              <path 
+                d="M100 50 L120 150 L80 150 Z" 
+                className={getTransitionClass()}
+                style={{ opacity: getOpacity(4) }}
+              />
+              <path 
+                d="M140 70 L160 70 L160 150 L140 150 Z M160 110 L190 70 M160 110 L190 150" 
+                className={getTransitionClass()}
+                style={{ opacity: getOpacity(5) }}
+              />
+              
+              {/* Crown Activates at Stage 8 */}
+              <path 
+                d="M80 40 L100 20 L120 40 Z" 
+                className={getTransitionClass()}
+                fill={stage >= 8 ? 'var(--color-brand-gold)' : 'none'}
+                style={{ 
+                  opacity: getOpacity(8), 
+                  transform: stage >= 8 && !prefersReducedMotion ? 'scale(1.1)' : 'scale(1)',
+                  transformOrigin: '100px 30px'
+                }}
+              />
+            </g>
+          </svg>
         </div>
 
-        <h2 className="text-xl font-bold tracking-[0.15em] uppercase text-slate-100 mb-2">SBN SENTINEL V1</h2>
-        <p className="text-[10px] text-slate-300 tracking-widest uppercase mb-8">System Boot Experience Sequence</p>
-
-        {/* Diagnostic Logs Panel */}
-        <div className="w-full bg-[#121B2E] border border-slate-800 rounded-[20px] p-6 shadow-2xl space-y-3 min-h-[220px]">
-          {logs.map((log, index) => {
-            const Icon = steps[index].icon;
-            return (
-              <div key={index} className="flex items-center gap-3 text-xs text-emerald-400 animate-in fade-in slide-in-from-bottom-2 duration-300">
-                <Icon className="w-4 h-4 text-emerald-400 shrink-0" />
-                <span className="text-slate-300 font-bold">{log}</span>
-                <span className="ml-auto text-[10px] bg-emerald-950 text-emerald-400 px-1.5 py-0.5 rounded font-extrabold">OK</span>
+        {/* Status Text Area */}
+        <div className="h-16 flex items-center justify-center w-full">
+          {healthStatus === 'failed' ? (
+            <div className="flex flex-col items-center text-[var(--color-semantic-critical)] animate-in fade-in zoom-in duration-300">
+              <div className="flex items-center gap-2 font-bold mb-2">
+                <ShieldAlert className="w-5 h-5" />
+                <span>Readiness Verification Failed</span>
               </div>
-            );
-          })}
-          {currentStep < steps.length && (
-            <div className="flex items-center gap-3 text-xs text-slate-500 animate-pulse">
-              <Activity className="w-4 h-4 text-[#A78BFA] shrink-0 animate-spin" />
-              <span>Checking {steps[currentStep].text.toLowerCase()}</span>
+              <span className="text-xs text-[var(--color-text-secondary)]">{errorMessage}</span>
+            </div>
+          ) : stage >= 9 ? (
+            <div className="flex items-center gap-2 text-[var(--color-brand-gold)] font-bold animate-in fade-in zoom-in duration-300">
+              <CheckCircle2 className="w-5 h-5" />
+              <span>Sentinel is ready.</span>
+            </div>
+          ) : (
+            <div className="flex items-center gap-3 text-sm font-medium text-[var(--color-text-secondary)]">
+              {stage < 9 && <Activity className="w-4 h-4 animate-spin text-[var(--color-brand-gold)] opacity-70" />}
+              <span>
+                {stage === 1 && 'INITIALIZING...'}
+                {stage >= 2 && stage <= 6 && 'LOADING SUBSYSTEMS...'}
+                {stage === 7 && 'FINALIZING...'}
+                {stage === 8 && 'CROWN ACTIVATING...'}
+              </span>
             </div>
           )}
         </div>
 
-        {/* Progress Bar */}
-        <div className="w-full bg-slate-800 h-1.5 rounded-full mt-6 overflow-hidden">
+        {/* Cosmetic Progress Line */}
+        <div className="w-full max-w-xs h-1 bg-[var(--color-surface-raised)] rounded-full mt-6 overflow-hidden">
           <div 
-            className="bg-gradient-to-r from-[#2E1055] to-[#120524] h-full transition-all duration-300"
-            style={{ width: `${(currentStep / steps.length) * 100}%` }}
-          ></div>
+            className="h-full bg-[var(--color-brand-gold)] transition-all ease-out"
+            style={{ 
+              width: healthStatus === 'failed' ? '0%' : `${(stage / 9) * 100}%`,
+              transitionDuration: prefersReducedMotion ? '0s' : '500ms'
+            }}
+          />
         </div>
-      </div>
 
-      {/* Signature Bottom Bar (Founded by Iftikhar Ali Khan) */}
-      <div className="absolute bottom-10 left-0 right-0 text-center">
-        <p className="text-[10px] tracking-[0.25em] text-slate-300 uppercase font-bold">
-          Founded by <span className="text-[#A78BFA] font-extrabold drop-shadow-[0_0_12px_rgba(167,139,250,0.5)]">Iftikhar Ali Khan</span>
-        </p>
-        <p className="text-[9px] text-slate-500 mt-1">SBN Sentinel Command Center V1.0</p>
       </div>
     </div>
   );

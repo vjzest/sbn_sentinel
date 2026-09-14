@@ -1,25 +1,37 @@
 @import "tailwindcss";
 
 @theme {
-  --color-brand-primary: #6D5DF6;
-  --color-brand-blue: #2563EB;
-  --color-brand-purple: #7C3AED;
-  --color-brand-green: #10B981;
-  --color-brand-orange: #F59E0B;
-  --color-brand-red: #EF4444;
-  --color-brand-bg: #F7F9FC;
-  --color-brand-surface: #FFFFFF;
-  --color-brand-border: #E8EDF5;
-  --color-brand-text: #111827;
-  --color-brand-text-sec: #6B7280;
+  /* SDS-D2 Surfaces */
+  --color-canvas: #0B0E14; /* near-black neutral */
+  --color-surface: #151A24; /* base work object */
+  --color-surface-raised: #1F2633; /* raised surface */
+  --color-overlay: rgba(11, 14, 20, 0.85); /* visual overlay */
+  
+  /* SDS-D2 Accents */
+  --color-accent: #3B82F6; /* restrained blue for focus/selection */
+  --color-brand-gold: #D4AF37; /* strictly for boot sequence */
+
+  /* SDS-D2 Semantic States (mapped from D1) */
+  --color-semantic-positive: #10B981;
+  --color-semantic-attention: #F59E0B;
+  --color-semantic-critical: #EF4444;
+  --color-semantic-information: #3B82F6;
+  --color-semantic-neutral: #6B7280;
+  --color-semantic-unknown: #4B5563;
+
+  /* Typography */
+  --color-text-primary: #F3F4F6;
+  --color-text-secondary: #9CA3AF;
+  --color-text-tertiary: #6B7280;
 }
 
 @layer base {
   html, body {
-    background-color: #F7F9FC;
-    color: #111827;
+    background-color: var(--color-canvas);
+    color: var(--color-text-primary);
     margin: 0;
     padding: 0;
+    font-family: system-ui, -apple-system, sans-serif;
   }
 }
 
