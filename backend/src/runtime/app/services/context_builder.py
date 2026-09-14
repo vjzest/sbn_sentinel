@@ -15,7 +15,7 @@ class ContextBuilder:
     def __init__(self, db_session):
         self.db = db_session
 
-    async def build(self, event_id: str, normalized_evidence: list) -> dict:
+    def build(self, event_id: str, normalized_evidence: list) -> dict:
         """
         Builds the foundational Decision Context Package without generating recommendations.
         """

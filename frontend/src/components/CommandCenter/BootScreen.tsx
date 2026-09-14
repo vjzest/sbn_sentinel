@@ -102,97 +102,87 @@ export const BootScreen: React.FC<BootScreenProps> = ({ onComplete }) => {
       {/* Central Visual Area */}
       <div className="relative w-full max-w-md flex flex-col items-center">
         
-        {/* IAK SVG Container */}
-        <div className="relative w-64 h-64 mb-12">
-          {/* Dim outline / Base copy */}
-          <svg viewBox="0 0 200 200" className="absolute inset-0 w-full h-full opacity-20" aria-hidden="true">
-            <g fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M40 70 L60 70 L60 150 L40 150 Z" /> {/* I */}
-              <path d="M100 50 L120 150 L80 150 Z" /> {/* A */}
-              <path d="M140 70 L160 70 L160 150 L140 150 Z M160 110 L190 70 M160 110 L190 150" /> {/* K */}
-              <path d="M80 40 L100 20 L120 40 Z" /> {/* Crown */}
-              <path d="M50 110 L150 110" strokeDasharray="4 4" /> {/* Inner stroke */}
-            </g>
-          </svg>
+        {/* Exact Logo Container */}
+        <div className="relative w-64 h-64 mb-12 flex items-center justify-center">
+          
+          {/* Dim Base Logo */}
+          <img 
+            src="/logo.png" 
+            alt="Sentinel Logo Base" 
+            className="absolute inset-0 w-full h-full object-contain opacity-20 filter grayscale" 
+            aria-hidden="true" 
+          />
 
-          {/* Gold copy (Revealed progressively) */}
-          <svg viewBox="0 0 200 200" className="absolute inset-0 w-full h-full" aria-hidden="true">
-            <g fill="none" stroke="var(--color-brand-gold)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-              <path 
-                d="M40 70 L60 70 L60 150 L40 150 Z" 
-                className={getTransitionClass()}
-                style={{ opacity: getOpacity(2) }}
-              />
-              <path 
-                d="M50 110 L150 110" strokeDasharray="4 4"
-                className={getTransitionClass()}
-                style={{ opacity: getOpacity(3) }}
-              />
-              <path 
-                d="M100 50 L120 150 L80 150 Z" 
-                className={getTransitionClass()}
-                style={{ opacity: getOpacity(4) }}
-              />
-              <path 
-                d="M140 70 L160 70 L160 150 L140 150 Z M160 110 L190 70 M160 110 L190 150" 
-                className={getTransitionClass()}
-                style={{ opacity: getOpacity(5) }}
-              />
-              
-              {/* Crown Activates at Stage 8 */}
-              <path 
-                d="M80 40 L100 20 L120 40 Z" 
-                className={getTransitionClass()}
-                fill={stage >= 8 ? 'var(--color-brand-gold)' : 'none'}
-                style={{ 
-                  opacity: getOpacity(8), 
-                  transform: stage >= 8 && !prefersReducedMotion ? 'scale(1.1)' : 'scale(1)',
-                  transformOrigin: '100px 30px'
-                }}
-              />
-            </g>
-          </svg>
+          {/* Golden Filled Logo (Revealed progressively from bottom to top) */}
+          <img 
+            src="/logo.png" 
+            alt="Sentinel Logo Gold" 
+            className={`absolute inset-0 w-full h-full object-contain ${getTransitionClass()} ${stage >= 8 ? 'filter drop-shadow-[0_0_25px_var(--color-brand-gold)]' : ''}`}
+            style={{ 
+              clipPath: `inset(${100 - (stage / 9) * 100}% 0 0 0)`,
+              transform: stage >= 8 && !prefersReducedMotion ? 'scale(1.05)' : 'scale(1)'
+            }}
+            aria-hidden="true" 
+          />
+
+          {/* Crown Sparkle (Activates at Stage 8) */}
+          {stage >= 8 && (
+            <div className="absolute top-[10%] left-1/2 -translate-x-1/2 w-4 h-4 bg-white rounded-full animate-ping shadow-[0_0_20px_#fff]" />
+          )}
         </div>
 
-        {/* Status Text Area */}
-        <div className="h-16 flex items-center justify-center w-full">
+        {/* Status Text Area (Top) */}
+        <div className="h-8 flex items-center justify-center w-full mb-3">
           {healthStatus === 'failed' ? (
-            <div className="flex flex-col items-center text-[var(--color-semantic-critical)] animate-in fade-in zoom-in duration-300">
-              <div className="flex items-center gap-2 font-bold mb-2">
-                <ShieldAlert className="w-5 h-5" />
-                <span>Readiness Verification Failed</span>
-              </div>
-              <span className="text-xs text-[var(--color-text-secondary)]">{errorMessage}</span>
-            </div>
-          ) : stage >= 9 ? (
-            <div className="flex items-center gap-2 text-[var(--color-brand-gold)] font-bold animate-in fade-in zoom-in duration-300">
-              <CheckCircle2 className="w-5 h-5" />
-              <span>Sentinel is ready.</span>
-            </div>
+            <span className="text-sm font-bold text-[var(--color-semantic-critical)] tracking-widest uppercase">
+              STARTUP FAILED
+            </span>
           ) : (
-            <div className="flex items-center gap-3 text-sm font-medium text-[var(--color-text-secondary)]">
-              {stage < 9 && <Activity className="w-4 h-4 animate-spin text-[var(--color-brand-gold)] opacity-70" />}
-              <span>
-                {stage === 1 && 'INITIALIZING...'}
-                {stage >= 2 && stage <= 6 && 'LOADING SUBSYSTEMS...'}
-                {stage === 7 && 'FINALIZING...'}
-                {stage === 8 && 'CROWN ACTIVATING...'}
-              </span>
-            </div>
+            <span className="text-sm font-bold text-[var(--color-text-secondary)] tracking-widest uppercase">
+              {stage === 1 && '1. INITIALIZING'}
+              {stage >= 2 && stage <= 6 && `${stage}. LOADING`}
+              {stage === 7 && '7. FINALIZING'}
+              {stage === 8 && '8. CROWN ACTIVATING'}
+              {stage === 9 && '9. READY'}
+            </span>
           )}
         </div>
 
         {/* Cosmetic Progress Line */}
-        <div className="w-full max-w-xs h-1 bg-[var(--color-surface-raised)] rounded-full mt-6 overflow-hidden">
+        <div className="w-full h-[2px] bg-white/10 relative overflow-hidden mb-3">
           <div 
-            className="h-full bg-[var(--color-brand-gold)] transition-all ease-out"
+            className="absolute top-0 left-0 h-full bg-[var(--color-brand-gold)] transition-all ease-out shadow-[0_0_8px_var(--color-brand-gold)]"
             style={{ 
               width: healthStatus === 'failed' ? '0%' : `${(stage / 9) * 100}%`,
               transitionDuration: prefersReducedMotion ? '0s' : '500ms'
             }}
           />
+          {/* Glowing tip */}
+          {stage > 0 && stage < 9 && healthStatus !== 'failed' && (
+            <div 
+              className="absolute top-1/2 -translate-y-1/2 w-1.5 h-1.5 bg-white rounded-full shadow-[0_0_10px_#fff] transition-all ease-out"
+              style={{ 
+                left: `calc(${(stage / 9) * 100}% - 3px)`,
+                transitionDuration: prefersReducedMotion ? '0s' : '500ms'
+              }}
+            />
+          )}
         </div>
 
+        {/* Status Subtext Area (Bottom) */}
+        <div className="h-6 flex items-center justify-center w-full">
+          {healthStatus === 'failed' ? (
+            <span className="text-xs text-[var(--color-semantic-critical)] opacity-80">{errorMessage}</span>
+          ) : (
+            <span className="text-xs text-[var(--color-brand-gold)] opacity-70">
+              {stage === 1 && 'Initializing Sentinel...'}
+              {stage === 7 && 'Almost there...'}
+              {stage === 9 && 'Sentinel is ready.'}
+            </span>
+          )}
+        </div>
+
+        {/* Cosmetic Progress Line Old code removed here since I placed it above */}
       </div>
     </div>
   );

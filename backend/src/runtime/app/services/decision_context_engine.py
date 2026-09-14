@@ -166,11 +166,9 @@ class DecisionContextEngine(BaseService):
         serializer = ContextSerializer()
 
         try:
-            # Create a simple event loop to run the async stubs if necessary,
-            # or just call them if we make them synchronous.
-            # Since we made them async, we use asyncio.run
-            new_package = asyncio.run(builder.build(event_type, evidence_items))
-            new_package = asyncio.run(validator.validate(new_package))
+            # We run this synchronously to avoid breaking the existing BaseService caller
+            new_package = builder.build(event_type, evidence_items)
+            new_package = validator.validate(new_package)
             serialized_package = serializer.serialize(new_package)
         except Exception:
             serialized_package = {"error": "Failed to build AIS-002 context"}
@@ -178,7 +176,8 @@ class DecisionContextEngine(BaseService):
         # Inject AIS-002 Package into the legacy response to avoid breaking downstream
         context["ais_002_decision_context_package"] = serialized_package
 
-        return context
+        from fastapi.encoders import jsonable_encoder
+        return jsonable_encoder(context)
 
 
 decision_context_engine = DecisionContextEngine()

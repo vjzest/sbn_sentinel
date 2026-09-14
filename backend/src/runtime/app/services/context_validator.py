@@ -13,7 +13,7 @@ class ContextValidator:
     def __init__(self, db_session):
         self.db = db_session
 
-    async def validate(self, context_package: dict) -> dict:
+    def validate(self, context_package: dict) -> dict:
         """
         Takes an assembled Decision Context Package and validates its quality.
         Modifies the package in-place and returns it.
