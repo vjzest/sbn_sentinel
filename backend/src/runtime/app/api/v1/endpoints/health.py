@@ -149,12 +149,7 @@ def readiness_gate(
         "processing": processing_ok
     }
 
-    # Only fail readiness if critical infrastructure is down (DB or Processing)
-    # or if the user is completely unauthenticated.
-    # Scope and PF might be false for newly registered users, but they must still log in.
-    critical_checks_passed = db_ok and config_ok and processing_ok
-
-    if not critical_checks_passed:
+    if not all(checks.values()):
         raise HTTPException(status_code=503, detail={"ready": False, "checks": checks})
 
     return {"ready": True, "checks": checks}
