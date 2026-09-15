@@ -34,18 +34,25 @@ export const BootScreen: React.FC<BootScreenProps> = ({ onComplete }) => {
         fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000'}/api/v1/health/ready`, {
           headers: token ? { Authorization: `Bearer ${token}` } : {}
         })
-          .then(res => res.json().catch(() => ({})))
+          .then(async res => {
+            if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+            return res.json().catch(() => ({}));
+          })
           .then(data => {
             if (isMounted) {
-              // Force ready state for smooth client demo animation
-              setHealthStatus('ready');
+              if (data.ready === true) {
+                setHealthStatus('ready');
+              } else {
+                setHealthStatus('failed');
+                setErrorMessage('Backend checks did not pass');
+              }
             }
           })
           .catch(err => {
             if (isMounted) {
-              console.warn("Backend check failed, but proceeding for demo:", err);
-              // Force ready state to complete the 9 steps
-              setHealthStatus('ready');
+              console.error("Backend check failed:", err);
+              setHealthStatus('failed');
+              setErrorMessage('Backend offline or unavailable');
             }
           });
 
@@ -74,7 +81,7 @@ export const BootScreen: React.FC<BootScreenProps> = ({ onComplete }) => {
   // Poll for health status during stage 7
   useEffect(() => {
     if (stage === 7) {
-      if (healthStatus === 'ready' || healthStatus === 'failed') {
+      if (healthStatus === 'ready') {
         // Stage 8: CROWN ACTIVATING
         setTimeout(() => setStage(8), 500);
         // Stage 9: READY
@@ -102,33 +109,59 @@ export const BootScreen: React.FC<BootScreenProps> = ({ onComplete }) => {
       {/* Central Visual Area */}
       <div className="relative w-full max-w-md flex flex-col items-center">
         
-        {/* Exact Logo Container */}
+        {/* Exact Segmented Logo Container */}
         <div className="relative w-64 h-64 mb-12 flex items-center justify-center">
-          
-          {/* Dim Base Logo */}
-          <img 
-            src="/logo.png" 
-            alt="Sentinel Logo Base" 
-            className="absolute inset-0 w-full h-full object-contain opacity-20 filter grayscale" 
-            aria-hidden="true" 
-          />
+          <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-[0_0_15px_rgba(255,215,0,0.2)]">
+            <defs>
+              <linearGradient id="gold" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#FDE68A" />
+                <stop offset="50%" stopColor="#D97706" />
+                <stop offset="100%" stopColor="#B45309" />
+              </linearGradient>
+            </defs>
 
-          {/* Golden Filled Logo (Revealed progressively from bottom to top) */}
-          <img 
-            src="/logo.png" 
-            alt="Sentinel Logo Gold" 
-            className={`absolute inset-0 w-full h-full object-contain ${getTransitionClass()} ${stage >= 8 ? 'filter drop-shadow-[0_0_25px_var(--color-brand-gold)]' : ''}`}
-            style={{ 
-              clipPath: `inset(${100 - (stage / 9) * 100}% 0 0 0)`,
-              transform: stage >= 8 && !prefersReducedMotion ? 'scale(1.05)' : 'scale(1)'
-            }}
-            aria-hidden="true" 
-          />
+            {/* Dim Base Logo */}
+            <g stroke="currentColor" fill="none" strokeWidth="4" className="text-white/10">
+              <path d="M 30,80 L 30,30" />
+              <path d="M 30,55 L 45,55" />
+              <path d="M 50,80 L 60,30 L 70,80 M 55,60 L 65,60" />
+              <path d="M 80,80 L 80,30 M 80,55 L 95,30 M 80,55 L 95,80" />
+              <path d="M 40,25 L 50,15 L 60,25 Z" />
+              <circle cx="50" cy="10" r="3" />
+            </g>
 
-          {/* Crown Sparkle (Activates at Stage 8) */}
-          {stage >= 8 && (
-            <div className="absolute top-[10%] left-1/2 -translate-x-1/2 w-4 h-4 bg-white rounded-full animate-ping shadow-[0_0_20px_#fff]" />
-          )}
+            {/* Animated Golden Logo */}
+            <g stroke="url(#gold)" fill="none" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" className={getTransitionClass()}>
+              {/* I / Body (Stages 1-2) */}
+              <path d="M 30,80 L 30,30" 
+                style={{ opacity: stage >= 1 ? 1 : 0, strokeDasharray: 50, strokeDashoffset: stage >= 2 ? 0 : 50, transition: 'stroke-dashoffset 0.8s ease-out' }} />
+              
+              {/* Connecting Stroke (Stage 3) */}
+              <path d="M 30,55 L 45,55" 
+                style={{ opacity: stage >= 3 ? 1 : 0, strokeDasharray: 15, strokeDashoffset: stage >= 3 ? 0 : 15, transition: 'stroke-dashoffset 0.4s ease-out' }} />
+              
+              {/* A (Stage 4) */}
+              <path d="M 50,80 L 60,30 L 70,80 M 55,60 L 65,60" 
+                style={{ opacity: stage >= 4 ? 1 : 0, strokeDasharray: 150, strokeDashoffset: stage >= 4 ? 0 : 150, transition: 'stroke-dashoffset 0.8s ease-out' }} />
+              
+              {/* K (Stage 5-6) */}
+              <path d="M 80,80 L 80,30 M 80,55 L 95,30 M 80,55 L 95,80" 
+                style={{ opacity: stage >= 5 ? 1 : 0, strokeDasharray: 150, strokeDashoffset: stage >= 6 ? 0 : 150, transition: 'stroke-dashoffset 0.8s ease-out' }} />
+            </g>
+
+            {/* Crown (Stages 7-9) */}
+            <g className={getTransitionClass()} style={{ opacity: stage >= 7 ? 1 : 0 }}>
+              <path d="M 40,25 L 50,15 L 60,25 Z" fill={stage >= 8 ? "url(#gold)" : "none"} stroke="url(#gold)" strokeWidth="2" className={`${stage >= 8 ? 'drop-shadow-[0_0_10px_#FDE68A]' : ''} ${getTransitionClass()}`} />
+              
+              {/* Big Blinking Dot */}
+              {stage >= 7 && (
+                <circle cx="50" cy="10" r={stage >= 8 ? "4" : "3"} fill="#FDE68A" className={`${stage >= 8 ? 'animate-ping drop-shadow-[0_0_15px_#FDE68A]' : ''} ${getTransitionClass()}`} />
+              )}
+              {stage >= 9 && (
+                <circle cx="50" cy="10" r="3.5" fill="#ffffff" className="drop-shadow-[0_0_20px_#ffffff] transition-all duration-1000" />
+              )}
+            </g>
+          </svg>
         </div>
 
         {/* Status Text Area (Top) */}
