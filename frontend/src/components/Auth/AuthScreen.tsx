@@ -171,10 +171,6 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onLogin }) => {
           {/* Floating Cards Container */}
           <div className="relative h-[320px]">
             
-            {/* Square Logo Box */}
-            <div className="absolute left-0 bottom-0 w-14 h-14 bg-black/20 border border-white/10 rounded-2xl flex items-center justify-center backdrop-blur-md shadow-2xl hover:bg-black/30 transition-colors cursor-pointer">
-              <div className="text-[#FFB020] font-extrabold text-xl">S</div>
-            </div>
 
             {/* Vertical Icon Pill */}
             <div className="absolute left-20 bottom-0 w-14 py-4 bg-white/[0.03] border border-white/10 rounded-[24px] flex flex-col items-center gap-6 backdrop-blur-xl shadow-2xl">

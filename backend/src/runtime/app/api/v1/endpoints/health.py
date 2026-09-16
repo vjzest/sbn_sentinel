@@ -120,7 +120,7 @@ def readiness_gate(
 
     # 5. Governance Registry Check
     from app.services.governance_registry import governance_registry
-    governance_ok = bool(governance_registry._policies or governance_registry._rules)
+    governance_ok = bool(governance_registry.get_policy_by_version("POL-001", "V1"))
 
     # 6. Configuration Check
     from app.core.config import settings

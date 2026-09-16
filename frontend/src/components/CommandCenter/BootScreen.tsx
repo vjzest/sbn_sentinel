@@ -32,9 +32,15 @@ export const BootScreen: React.FC<BootScreenProps> = ({ onComplete }) => {
         // Fire off readiness check concurrently while animation starts
         const token = localStorage.getItem('token');
         fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000'}/api/v1/health/ready`, {
-          headers: token ? { Authorization: `Bearer ${token}` } : {}
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+          cache: 'no-store'
         })
           .then(async res => {
+            if (res.status === 401 || res.status === 403) {
+              localStorage.removeItem('token');
+              window.location.href = '/';
+              throw new Error('Unauthorized');
+            }
             if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
             return res.json().catch(() => ({}));
           })
@@ -110,59 +116,30 @@ export const BootScreen: React.FC<BootScreenProps> = ({ onComplete }) => {
       <div className="relative w-full max-w-md flex flex-col items-center">
         
         {/* Exact Segmented Logo Container */}
-        <div className="relative w-64 h-64 mb-12 flex items-center justify-center">
-          <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-[0_0_15px_rgba(255,215,0,0.2)]">
-            <defs>
-              <linearGradient id="gold" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stopColor="#FDE68A" />
-                <stop offset="50%" stopColor="#D97706" />
-                <stop offset="100%" stopColor="#B45309" />
-              </linearGradient>
-            </defs>
-
-            {/* Dim Base Logo */}
-            <g stroke="currentColor" fill="none" strokeWidth="4" className="text-white/10">
-              <path d="M 30,80 L 30,30" />
-              <path d="M 30,55 L 45,55" />
-              <path d="M 50,80 L 60,30 L 70,80 M 55,60 L 65,60" />
-              <path d="M 80,80 L 80,30 M 80,55 L 95,30 M 80,55 L 95,80" />
-              <path d="M 40,25 L 50,15 L 60,25 Z" />
-              <circle cx="50" cy="10" r="3" />
-            </g>
-
-            {/* Animated Golden Logo */}
-            <g stroke="url(#gold)" fill="none" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" className={getTransitionClass()}>
-              {/* I / Body (Stages 1-2) */}
-              <path d="M 30,80 L 30,30" 
-                style={{ opacity: stage >= 1 ? 1 : 0, strokeDasharray: 50, strokeDashoffset: stage >= 2 ? 0 : 50, transition: 'stroke-dashoffset 0.8s ease-out' }} />
-              
-              {/* Connecting Stroke (Stage 3) */}
-              <path d="M 30,55 L 45,55" 
-                style={{ opacity: stage >= 3 ? 1 : 0, strokeDasharray: 15, strokeDashoffset: stage >= 3 ? 0 : 15, transition: 'stroke-dashoffset 0.4s ease-out' }} />
-              
-              {/* A (Stage 4) */}
-              <path d="M 50,80 L 60,30 L 70,80 M 55,60 L 65,60" 
-                style={{ opacity: stage >= 4 ? 1 : 0, strokeDasharray: 150, strokeDashoffset: stage >= 4 ? 0 : 150, transition: 'stroke-dashoffset 0.8s ease-out' }} />
-              
-              {/* K (Stage 5-6) */}
-              <path d="M 80,80 L 80,30 M 80,55 L 95,30 M 80,55 L 95,80" 
-                style={{ opacity: stage >= 5 ? 1 : 0, strokeDasharray: 150, strokeDashoffset: stage >= 6 ? 0 : 150, transition: 'stroke-dashoffset 0.8s ease-out' }} />
-            </g>
-
-            {/* Crown (Stages 7-9) */}
-            <g className={getTransitionClass()} style={{ opacity: stage >= 7 ? 1 : 0 }}>
-              <path d="M 40,25 L 50,15 L 60,25 Z" fill={stage >= 8 ? "url(#gold)" : "none"} stroke="url(#gold)" strokeWidth="2" className={`${stage >= 8 ? 'drop-shadow-[0_0_10px_#FDE68A]' : ''} ${getTransitionClass()}`} />
-              
-              {/* Big Blinking Dot */}
-              {stage >= 7 && (
-                <circle cx="50" cy="10" r={stage >= 8 ? "4" : "3"} fill="#FDE68A" className={`${stage >= 8 ? 'animate-ping drop-shadow-[0_0_15px_#FDE68A]' : ''} ${getTransitionClass()}`} />
-              )}
-              {stage >= 9 && (
-                <circle cx="50" cy="10" r="3.5" fill="#ffffff" className="drop-shadow-[0_0_20px_#ffffff] transition-all duration-1000" />
-              )}
-            </g>
-          </svg>
+        <div className="w-48 h-48 md:w-56 md:h-56 mb-8 relative flex items-center justify-center transition-all duration-700" style={{ opacity: stage >= 1 ? 1 : 0 }}>
+          <img 
+            src="/logo.svg" 
+            alt="IAK Logo" 
+            className="w-full h-full object-contain drop-shadow-2xl"
+            style={{ 
+              clipPath: stage < 8 ? `inset(${100 - (stage * 12.5)}% 0 0 0)` : 'inset(0 0 0 0)',
+              transition: 'clip-path 0.8s ease-out, opacity 0.5s ease-out',
+              filter: stage >= 8 ? 'drop-shadow(0 0 20px rgba(248, 181, 0, 0.4))' : 'none'
+            }}
+          />
+          {/* Big Blinking Dot */}
+          {stage >= 7 && (
+            <div 
+              className={`absolute top-[15%] left-[25%] w-2.5 h-2.5 rounded-full bg-[#FDE68A] transition-all duration-500 ${
+                stage >= 8 ? 'animate-ping drop-shadow-[0_0_20px_#FDE68A]' : 'opacity-80 scale-75'
+              }`}
+            />
+          )}
+          {stage >= 9 && (
+            <div className="absolute top-[15%] left-[25%] w-2.5 h-2.5 rounded-full bg-white shadow-[0_0_15px_2px_#ffffff] transition-all duration-1000" />
+          )}
         </div>
+
 
         {/* Status Text Area (Top) */}
         <div className="h-8 flex items-center justify-center w-full mb-3">

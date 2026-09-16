@@ -326,7 +326,7 @@ export default function Dashboard() {
             <div className="flex items-center gap-3 relative z-10 min-w-0 flex-1">
               {/* Logo */}
               <div className="w-10 h-10 rounded-[12px] overflow-hidden shrink-0 group-hover:scale-105 transition-transform duration-300 shadow-[0_4px_15px_rgba(139,61,255,0.3)]">
-                <img src="/logo.png" alt="SBN Sentinel" className="w-full h-full object-cover" />
+                <img src="/logo.svg" alt="IAK Logo" className="w-full h-full object-contain" />
               </div>
               <div className="min-w-0 flex-1">
                 <h1 className="text-sm font-black tracking-tight text-white leading-none">SBN Sentinel</h1>
