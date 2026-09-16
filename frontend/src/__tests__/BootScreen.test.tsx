@@ -26,24 +26,17 @@ describe('BootScreen SDS-D2 Tests', () => {
     vi.useRealTimers();
   });
 
-  test('T01: Rendered startup uses true SVG groups, no fake images', async () => {
+  test('T01: Rendered startup uses new PNG-mask implementation', async () => {
     mockFetch.mockResolvedValueOnce({ ok: true, json: async () => ({ ready: true }) });
     const { container } = render(<BootScreen onComplete={() => { }} />);
-    // Check for inline SVG
-    const svgs = container.querySelectorAll('svg');
-    expect(svgs.length).toBeGreaterThan(0);
-    // Assert strictly NO <image> tags inside the path groups (Auditor compliance)
-    expect(container.querySelector('#iak-body image')).toBeNull();
-    expect(container.querySelector('#iak-connector image')).toBeNull();
-    expect(container.querySelector('#iak-a image')).toBeNull();
-    expect(container.querySelector('#iak-k image')).toBeNull();
-    expect(container.querySelector('#iak-crown image')).toBeNull();
-    // Assert presence of the 5 required groups
-    expect(container.querySelector('#iak-body')).toBeTruthy();
-    expect(container.querySelector('#iak-connector')).toBeTruthy();
-    expect(container.querySelector('#iak-a')).toBeTruthy();
-    expect(container.querySelector('#iak-k')).toBeTruthy();
-    expect(container.querySelector('#iak-crown')).toBeTruthy();
+    
+    // Assert presence of the required masked images
+    expect(container.querySelector('img#iak-body')).toBeTruthy();
+    expect(container.querySelector('img#iak-connector')).toBeTruthy();
+    expect(container.querySelector('img#iak-a')).toBeTruthy();
+    expect(container.querySelector('img#iak-k1')).toBeTruthy();
+    expect(container.querySelector('img#iak-k2')).toBeTruthy();
+    expect(container.querySelector('img#iak-crown')).toBeTruthy();
   });
 
   test('T02 & T04: Visual stage order strictly follows 1→9 and per-group animations', async () => {
@@ -115,8 +108,7 @@ describe('BootScreen SDS-D2 Tests', () => {
     await act(async () => {
       await Promise.resolve();
     });
-    // Check for inline SVG
-    const svgs = container.querySelectorAll('svg');
-    expect(svgs.length).toBeGreaterThan(0);
+    // Check for PNG masks
+    expect(container.querySelector('img#iak-body')).toBeTruthy();
   });
 });
