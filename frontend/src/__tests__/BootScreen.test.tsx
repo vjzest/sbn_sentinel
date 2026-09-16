@@ -31,15 +31,18 @@ describe('BootScreen SDS-D2 Tests', () => {
     vi.useRealTimers();
   });
 
-  test('T01: Rendered startup uses image masks for animation', async () => {
+  test('T01: Rendered startup uses true SVG groups, no fake images', async () => {
     mockFetch.mockResolvedValueOnce({ ok: true, json: async () => ({ ready: true }) });
     const { container } = render(<BootScreen onComplete={() => {}} />);
     
-    // Check for img tags instead of true vectors, as requested by user
-    const imgs = container.querySelectorAll('img');
-    expect(imgs.length).toBeGreaterThan(0);
+    // Check for inline SVG
+    const svgs = container.querySelectorAll('svg');
+    expect(svgs.length).toBeGreaterThan(0);
     
-    // Assert presence of the 5 required masked groups
+    // Assert strictly NO <image> tags (fake vectors)
+    expect(container.querySelector('image')).toBeNull();
+    
+    // Assert presence of the 5 required groups
     expect(container.querySelector('#iak-body')).toBeTruthy();
     expect(container.querySelector('#iak-connector')).toBeTruthy();
     expect(container.querySelector('#iak-a')).toBeTruthy();
