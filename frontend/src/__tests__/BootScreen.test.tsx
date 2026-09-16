@@ -31,32 +31,59 @@ describe('BootScreen SDS-D2 Tests', () => {
     vi.useRealTimers();
   });
 
-  test('T01: Rendered startup uses exact IAK SVG artwork', async () => {
+  test('T01: Rendered startup uses true SVG groups, no fake images', async () => {
     mockFetch.mockResolvedValueOnce({ ok: true, json: async () => ({ ready: true }) });
     const { container } = render(<BootScreen onComplete={() => {}} />);
     
     // Check for inline SVG
     const svgs = container.querySelectorAll('svg');
     expect(svgs.length).toBeGreaterThan(0);
-    // Verify it has the segmented paths
-    const paths = container.querySelectorAll('path');
-    expect(paths.length).toBeGreaterThan(5);
+    
+    // Assert strictly NO <image> tags (fake vectors)
+    expect(container.querySelector('image')).toBeNull();
+    
+    // Assert presence of the 5 required groups
+    expect(container.querySelector('#iak-body')).toBeTruthy();
+    expect(container.querySelector('#iak-connector')).toBeTruthy();
+    expect(container.querySelector('#iak-a')).toBeTruthy();
+    expect(container.querySelector('#iak-k')).toBeTruthy();
+    expect(container.querySelector('#iak-crown')).toBeTruthy();
   });
 
-  test('T02 & T04: Visual stage order strictly follows 1→9', async () => {
+  test('T02 & T04: Visual stage order strictly follows 1→9 and per-group animations', async () => {
     mockFetch.mockResolvedValueOnce({ ok: true, json: async () => ({ ready: true }) });
     const onComplete = vi.fn();
-    render(<BootScreen onComplete={onComplete} />);
+    const { container } = render(<BootScreen onComplete={onComplete} />);
     
-    // Fast forward through all stages
+    // Fast forward through stages to stage 7
     await act(async () => {
-      await Promise.resolve();
-      await vi.runAllTimersAsync();
+      for(let i=0; i<8; i++){
+        vi.advanceTimersByTime(500); 
+        await Promise.resolve();
+      }
     });
     
-    // Run timers again to process the useEffect timeouts (Stage 8 and 9)
+    // At stage 7, crown should be inactive (opacity 0)
+    const crown = container.querySelector('#iak-crown') as HTMLElement;
+    expect(crown.style.opacity).toBe('0');
+    
+    // Advance to stage 8
     await act(async () => {
-      await vi.runAllTimersAsync();
+      for(let i=0; i<2; i++){
+        vi.advanceTimersByTime(500); 
+        await Promise.resolve();
+      }
+    });
+    
+    // At stage 8, crown should be active
+    expect(crown.style.opacity).toBe('1');
+    
+    // Run timers to end
+    await act(async () => {
+      for(let i=0; i<4; i++){
+        vi.advanceTimersByTime(500); 
+        await Promise.resolve();
+      }
     });
     
     expect(onComplete).toHaveBeenCalled();

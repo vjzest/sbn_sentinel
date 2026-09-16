@@ -1,6 +1,7 @@
 'use client';
 import React, { useEffect, useState } from 'react';
 import { Activity, CheckCircle2, ShieldAlert } from 'lucide-react';
+import { IAKLogo } from '../Brand/IAKLogo';
 
 interface BootScreenProps {
   onComplete: () => void;
@@ -116,28 +117,12 @@ export const BootScreen: React.FC<BootScreenProps> = ({ onComplete }) => {
       <div className="relative w-full max-w-md flex flex-col items-center">
         
         {/* Exact Segmented Logo Container */}
-        <div className="w-48 h-48 md:w-56 md:h-56 mb-8 relative flex items-center justify-center transition-all duration-700" style={{ opacity: stage >= 1 ? 1 : 0 }}>
-          <img 
-            src="/logo.svg" 
-            alt="IAK Logo" 
-            className="w-full h-full object-contain drop-shadow-2xl"
-            style={{ 
-              clipPath: stage < 8 ? `inset(${100 - (stage * 12.5)}% 0 0 0)` : 'inset(0 0 0 0)',
-              transition: 'clip-path 0.8s ease-out, opacity 0.5s ease-out',
-              filter: stage >= 8 ? 'drop-shadow(0 0 20px rgba(248, 181, 0, 0.4))' : 'none'
-            }}
+        <div className="w-48 h-48 md:w-56 md:h-56 mb-8 relative flex items-center justify-center">
+          <IAKLogo 
+            stage={stage} 
+            reducedMotion={prefersReducedMotion} 
+            className="w-full h-full object-contain drop-shadow-2xl" 
           />
-          {/* Big Blinking Dot */}
-          {stage >= 7 && (
-            <div 
-              className={`absolute top-[15%] left-[25%] w-2.5 h-2.5 rounded-full bg-[#FDE68A] transition-all duration-500 ${
-                stage >= 8 ? 'animate-ping drop-shadow-[0_0_20px_#FDE68A]' : 'opacity-80 scale-75'
-              }`}
-            />
-          )}
-          {stage >= 9 && (
-            <div className="absolute top-[15%] left-[25%] w-2.5 h-2.5 rounded-full bg-white shadow-[0_0_15px_2px_#ffffff] transition-all duration-1000" />
-          )}
         </div>
 
 
