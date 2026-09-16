@@ -32,20 +32,33 @@ export const BootScreen: React.FC<BootScreenProps> = ({ onComplete }) => {
         // Fire off readiness check concurrently while animation starts
         const token = localStorage.getItem('token');
         fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000'}/api/v1/health/ready`, {
-          headers: token ? { Authorization: `Bearer ${token}` } : {}
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+          cache: 'no-store'
         })
-          .then(res => res.json().catch(() => ({})))
+          .then(async res => {
+            if (res.status === 401 || res.status === 403) {
+              localStorage.removeItem('token');
+              window.location.href = '/';
+              throw new Error('Unauthorized');
+            }
+            if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+            return res.json().catch(() => ({}));
+          })
           .then(data => {
             if (isMounted) {
-              // Force ready state for smooth client demo animation
-              setHealthStatus('ready');
+              if (data.ready === true) {
+                setHealthStatus('ready');
+              } else {
+                setHealthStatus('failed');
+                setErrorMessage('Backend checks did not pass');
+              }
             }
           })
           .catch(err => {
             if (isMounted) {
-              console.warn("Backend check failed, but proceeding for demo:", err);
-              // Force ready state to complete the 9 steps
-              setHealthStatus('ready');
+              console.error("Backend check failed:", err);
+              setHealthStatus('failed');
+              setErrorMessage('Backend offline or unavailable');
             }
           });
 
@@ -74,7 +87,7 @@ export const BootScreen: React.FC<BootScreenProps> = ({ onComplete }) => {
   // Poll for health status during stage 7
   useEffect(() => {
     if (stage === 7) {
-      if (healthStatus === 'ready' || healthStatus === 'failed') {
+      if (healthStatus === 'ready') {
         // Stage 8: CROWN ACTIVATING
         setTimeout(() => setStage(8), 500);
         // Stage 9: READY
@@ -102,34 +115,31 @@ export const BootScreen: React.FC<BootScreenProps> = ({ onComplete }) => {
       {/* Central Visual Area */}
       <div className="relative w-full max-w-md flex flex-col items-center">
         
-        {/* Exact Logo Container */}
-        <div className="relative w-64 h-64 mb-12 flex items-center justify-center">
-          
-          {/* Dim Base Logo */}
+        {/* Exact Segmented Logo Container */}
+        <div className="w-48 h-48 md:w-56 md:h-56 mb-8 relative flex items-center justify-center transition-all duration-700" style={{ opacity: stage >= 1 ? 1 : 0 }}>
           <img 
-            src="/logo.png" 
-            alt="Sentinel Logo Base" 
-            className="absolute inset-0 w-full h-full object-contain opacity-20 filter grayscale" 
-            aria-hidden="true" 
-          />
-
-          {/* Golden Filled Logo (Revealed progressively from bottom to top) */}
-          <img 
-            src="/logo.png" 
-            alt="Sentinel Logo Gold" 
-            className={`absolute inset-0 w-full h-full object-contain ${getTransitionClass()} ${stage >= 8 ? 'filter drop-shadow-[0_0_25px_var(--color-brand-gold)]' : ''}`}
+            src="/logo.svg" 
+            alt="IAK Logo" 
+            className="w-full h-full object-contain drop-shadow-2xl"
             style={{ 
-              clipPath: `inset(${100 - (stage / 9) * 100}% 0 0 0)`,
-              transform: stage >= 8 && !prefersReducedMotion ? 'scale(1.05)' : 'scale(1)'
+              clipPath: stage < 8 ? `inset(${100 - (stage * 12.5)}% 0 0 0)` : 'inset(0 0 0 0)',
+              transition: 'clip-path 0.8s ease-out, opacity 0.5s ease-out',
+              filter: stage >= 8 ? 'drop-shadow(0 0 20px rgba(248, 181, 0, 0.4))' : 'none'
             }}
-            aria-hidden="true" 
           />
-
-          {/* Crown Sparkle (Activates at Stage 8) */}
-          {stage >= 8 && (
-            <div className="absolute top-[10%] left-1/2 -translate-x-1/2 w-4 h-4 bg-white rounded-full animate-ping shadow-[0_0_20px_#fff]" />
+          {/* Big Blinking Dot */}
+          {stage >= 7 && (
+            <div 
+              className={`absolute top-[15%] left-[25%] w-2.5 h-2.5 rounded-full bg-[#FDE68A] transition-all duration-500 ${
+                stage >= 8 ? 'animate-ping drop-shadow-[0_0_20px_#FDE68A]' : 'opacity-80 scale-75'
+              }`}
+            />
+          )}
+          {stage >= 9 && (
+            <div className="absolute top-[15%] left-[25%] w-2.5 h-2.5 rounded-full bg-white shadow-[0_0_15px_2px_#ffffff] transition-all duration-1000" />
           )}
         </div>
+
 
         {/* Status Text Area (Top) */}
         <div className="h-8 flex items-center justify-center w-full mb-3">
