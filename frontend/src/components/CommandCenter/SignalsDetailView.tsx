@@ -1,5 +1,9 @@
 import { fetchWithAuth } from '@/utils/fetchWithAuth';
 import React, { useState, useEffect } from 'react';
+import { createGovernedRef, createPrimaryContext, createNestedContext } from '@/utils/governedNavigation';
+import { GovernedWorkspace } from '@/components/GovernedUI/GovernedWorkspace';
+import { ContextPanel } from '@/components/GovernedUI/ContextPanel';
+import { ProgressiveSection } from '@/components/GovernedUI/ProgressiveSection';
 import { createPortal } from 'react-dom';
 import { Activity, Phone, Mail, Calendar, ChevronRight, X, Clock, Database, Sparkles, Check, Shield, Search, Filter, Cpu, CheckCircle2, ShieldCheck, RefreshCw, AlertTriangle, AlertCircle, ArrowUpRight, Copy } from 'lucide-react';
 import { useSelector, useDispatch } from 'react-redux';
@@ -9,7 +13,7 @@ import { executeGovernedRecommendation } from '@/utils/governance';
 import { GovernedStatus } from '@/components/GovernedUI/GovernedStatus';
 import { DataState } from '@/components/GovernedUI/DataState';
 import { CriticalStateBanner } from '@/components/GovernedUI/CriticalStateBanner';
-export const SignalsDetailView: React.FC = () => {
+export const SignalsDetailView: React.FC<{ initialSignalId?: string | null }> = ({ initialSignalId }) => {
   const dispatch = useDispatch();
   const reduxSignals = useSelector((state: RootState) => state.signals.events);
   const [dbSignals, setDbSignals] = useState<SignalEvent[]>([]);
@@ -84,6 +88,15 @@ export const SignalsDetailView: React.FC = () => {
   const signalsList = Array.from(allSignalsMap.values()).sort((a, b) =>
     new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
   );
+
+  useEffect(() => {
+    if (initialSignalId) {
+      const sig = allSignalsMap.get(initialSignalId);
+      if (sig) {
+        setSelectedSignal(sig);
+      }
+    }
+  }, [initialSignalId, dbSignals, reduxSignals]);
 
   const getIcon = (type: string) => {
     switch (type) {
@@ -304,6 +317,181 @@ export const SignalsDetailView: React.FC = () => {
     return result;
   };
 
+  if (selectedSignal) {
+    const signalRef = createGovernedRef('Signal', selectedSignal.id);
+    const primaryCtx = createPrimaryContext(signalRef, selectedSignal.status === 'acknowledged' ? 'historical' : 'current');
+    const nestedCtx = createNestedContext(signalRef, 2, signalRef, primaryCtx.mode);
+
+    const primaryContent = (
+      <div className="space-y-6">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3 w-full md:w-auto">
+            <div className={`p-2.5 ${getBgColor(selectedSignal.type)} rounded-[16px] flex-shrink-0`}>
+              {getIcon(selectedSignal.type)}
+            </div>
+            <div>
+              <h4 className="text-base font-extrabold text-white flex items-center gap-2">
+                Signal Diagnostic Report
+                {selectedSignal.correlation_id && (
+                  <span className="text-[10px] font-mono bg-blue-500/20 border border-blue-500/50 text-blue-400 px-2 py-0.5 rounded-[6px]">
+                    Journey ID: {selectedSignal.correlation_id}
+                  </span>
+                )}
+              </h4>
+              <p className="text-[10px] text-white/70 font-extrabold uppercase tracking-widest mt-0.5">Source: {selectedSignal.source} Integration Layer</p>
+            </div>
+        </div>
+
+        <div className="bg-white/5 border border-white/10 rounded-[18px] p-4">
+          <h5 className="text-[10px] font-extrabold text-white/50 uppercase tracking-widest mb-1.5">TELEMETRY MESSAGE</h5>
+          <p className="text-sm font-bold text-white">{selectedSignal.message}</p>
+          <div className="flex items-center gap-3 mt-3 text-[11px] text-white/70 font-semibold">
+            <span>Matched Patient: <strong className="text-white">{selectedSignal.metadata?.patient_name || 'None'}</strong></span>
+            <span>•</span>
+            <span>Received: <strong className="text-white">{new Date(selectedSignal.timestamp).toLocaleString()}</strong></span>
+          </div>
+        </div>
+
+        <div className="bg-white/5 border border-white/10 rounded-[18px] p-4 flex gap-3">
+          <div className="flex-1">
+            <h5 className="text-xs font-extrabold text-white uppercase tracking-wider mb-2">Deterministic Evaluation</h5>
+            <div className="space-y-2 mb-3">
+              <p className="text-xs text-white/90 font-semibold"><span className="text-white/50">Problem:</span> {selectedSignal.problem || 'None'}</p>
+              <p className="text-xs text-white/90 font-semibold"><span className="text-white/50">Reason:</span> {selectedSignal.reason || 'None'}</p>
+            </div>
+            {selectedSignal.recommended_action && (
+              <div className="mt-2.5 p-2 bg-emerald-500/10 border border-emerald-500/30 rounded-2xl inline-block text-[11px] text-emerald-400 font-bold w-full">
+                Action: {selectedSignal.recommended_action}
+                <div className="text-[10px] text-emerald-600 mt-1">Expected Outcome: {selectedSignal.expected_outcome || 'Issue resolved.'}</div>
+              </div>
+            )}
+            
+            <div className="mt-4 pt-3 border-t border-white/10">
+               <button
+                  onClick={triggerAction}
+                  disabled={isDispatching || isDispatched || outcomeState === 'BLOCKED'}
+                  className="w-full bg-[var(--color-accent)] hover:bg-[#8b3dff]/80 text-white font-bold text-sm px-6 py-3 rounded-[14px] transition-colors disabled:opacity-50 flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(139,61,255,0.4)]"
+                >
+                  {isDispatching ? (
+                    <><RefreshCw className="w-4 h-4 animate-spin" /> Authorizing Governance Action...</>
+                  ) : isDispatched ? (
+                    <><Check className="w-4 h-4" /> Action Dispatched Successfully</>
+                  ) : outcomeState === 'BLOCKED' ? (
+                    <><Shield className="w-4 h-4" /> Execution Blocked by Policy</>
+                  ) : (
+                    <><Cpu className="w-4 h-4" /> Execute Governed Action</>
+                  )}
+                </button>
+            </div>
+          </div>
+        </div>
+        
+        {isDispatched && (
+            <div className="bg-white/5 border border-white/10 rounded-[18px] p-4 flex gap-3 relative animate-in slide-in-from-top-2">
+                <div className="flex-1">
+                <h5 className="text-xs font-extrabold text-[var(--color-accent)] uppercase tracking-wider mb-2 flex items-center gap-1">
+                    <Database className="w-3.5 h-3.5" /> Operational Outcome (SESR-007)
+                </h5>
+                
+                {outcomeState === 'BLOCKED' && (
+                    <CriticalStateBanner state="BLOCKED" reason="Execution was blocked by backend governance rules." />
+                )}
+                
+                <div className="grid grid-cols-2 gap-4 mt-2">
+                    <div>
+                    <p className="text-[10px] text-white/50 uppercase tracking-widest font-bold mb-1">Confirmation State</p>
+                    <GovernedStatus state={outcomeState || 'PENDING'} />
+                    </div>
+                    <div>
+                    <p className="text-[10px] text-white/50 uppercase tracking-widest font-bold mb-1">Resolution State</p>
+                    <GovernedStatus state={resolutionState || 'UNRESOLVED'} />
+                    </div>
+                </div>
+                </div>
+            </div>
+        )}
+      </div>
+    );
+
+    const contextPanels = (
+      <>
+        <ContextPanel 
+          context={nestedCtx} 
+          title="Context & Intelligence" 
+          icon={<Sparkles className="w-4 h-4 text-emerald-400" />}
+        >
+          <div className="space-y-4">
+            <ProgressiveSection 
+              id="ctx-engine" 
+              title="Decision Context Engine" 
+              icon={<Activity className="w-4 h-4 text-[var(--color-accent)]" />}
+              defaultExpanded={true}
+            >
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-[10px] text-white/50 uppercase tracking-widest font-bold">Primary Context</p>
+                  <p className="text-xs font-bold text-white">{selectedSignal.primary_context || 'Unknown'}</p>
+                </div>
+                <div>
+                  <p className="text-[10px] text-white/50 uppercase tracking-widest font-bold">Secondary Context</p>
+                  <p className="text-xs font-bold text-white">{selectedSignal.secondary_context || 'Unknown'}</p>
+                </div>
+                <div className="col-span-2">
+                  <p className="text-[10px] text-white/50 uppercase tracking-widest font-bold">Reasoning</p>
+                  <p className="text-[11px] font-semibold text-white/70 leading-snug">{selectedSignal.context_reason || 'N/A'}</p>
+                </div>
+              </div>
+            </ProgressiveSection>
+
+            <ProgressiveSection 
+              id="rev-engine" 
+              title="Revenue Intelligence" 
+              icon={<Shield className="w-4 h-4 text-amber-400" />}
+            >
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-[10px] text-white/50 uppercase tracking-widest font-bold">Risk Category</p>
+                  <p className="text-xs font-bold text-white">{selectedSignal.revenue_risk_category || 'None'}</p>
+                </div>
+                <div>
+                  <p className="text-[10px] text-white/50 uppercase tracking-widest font-bold">Financial Exposure</p>
+                  <p className="text-sm font-black text-amber-400">{selectedSignal.estimated_financial_exposure || '$0.00'}</p>
+                </div>
+                <div className="col-span-2">
+                  <p className="text-[10px] text-white/50 uppercase tracking-widest font-bold">Operational Dependency</p>
+                  <p className="text-[11px] font-semibold text-white/70 leading-snug">{selectedSignal.operational_dependency || 'N/A'}</p>
+                </div>
+              </div>
+            </ProgressiveSection>
+
+            <ProgressiveSection 
+              id="raw-payload" 
+              title="Evidence Inspector & Raw Logs" 
+              icon={<Database className="w-4 h-4 text-blue-400" />}
+            >
+               <div className="bg-black/50 rounded-[12px] p-4 text-[10px] font-mono text-amber-400 overflow-x-auto max-h-48 custom-scrollbar border border-white/10">
+                  <pre>{JSON.stringify({
+                    decision_context_id: `ctx-${selectedSignal.id}`,
+                    evidence_snapshot: getSimulatedRawPayload(selectedSignal)
+                  }, null, 2)}</pre>
+               </div>
+            </ProgressiveSection>
+          </div>
+        </ContextPanel>
+      </>
+    );
+
+    return (
+      <div className="h-[85vh] min-h-[600px] flex flex-col p-2">
+        <GovernedWorkspace 
+          context={primaryCtx}
+          primaryContent={primaryContent}
+          contextPanels={contextPanels}
+          onClose={() => setSelectedSignal(null)}
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="animate-in fade-in duration-500 max-w-[1600px] mx-auto space-y-8">
       {/* Header */}
@@ -428,8 +616,7 @@ export const SignalsDetailView: React.FC = () => {
                           setOutcomeState(null);
                           setResolutionState(null);
                         }}
-                        className={`border-b border-white/10 hover:bg-white/5 transition-all last:border-0 cursor-pointer ${selectedSignal?.id === signal.id ? 'bg-white/10 border-l-4 border-l-[var(--color-accent)]' : ''
-                          }`}
+                        className="border-b border-white/10 hover:bg-white/5 transition-all last:border-0 cursor-pointer"
                       >
                         <td className="py-4 px-2 font-mono text-[11px] text-[#2563EB]">{signal.id}</td>
                         <td className="py-4 px-2">
@@ -487,15 +674,9 @@ export const SignalsDetailView: React.FC = () => {
               </div>
               <div className="flex justify-between items-center py-2 border-b border-white/10">
                 <span className="text-sm font-bold text-white/80">Practice Fusion (Write)</span>
-                {selectedSignal?.metadata?.pipeline_state === 'Degraded' || selectedSignal?.message?.toLowerCase().includes('timeout') ? (
-                  <span className="inline-flex items-center gap-1 text-[10px] bg-amber-500/20 text-amber-400 border border-amber-500/30 px-2 py-0.5 rounded-[8px] font-extrabold uppercase">
-                    <AlertTriangle className="w-3 h-3" /> Degraded
-                  </span>
-                ) : (
-                  <span className="inline-flex items-center gap-1 text-[10px] bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded-[8px] font-extrabold uppercase">
-                    <CheckCircle2 className="w-3 h-3" /> Available
-                  </span>
-                )}
+                <span className="inline-flex items-center gap-1 text-[10px] bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded-[8px] font-extrabold uppercase">
+                  <CheckCircle2 className="w-3 h-3" /> Available
+                </span>
               </div>
               <div className="flex justify-between items-center py-2 border-b border-white/10">
                 <span className="text-sm font-bold text-white/80">Policy Engine</span>
@@ -576,297 +757,6 @@ export const SignalsDetailView: React.FC = () => {
           </div>
         </div>
       </div>
-      {/* Detail Inspection Modal */}
-      {selectedSignal && createPortal(
-        <div className="fixed inset-0 z-[1000] bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in">
-          <div className="bg-white/5 border border-white/10 w-full max-w-2xl rounded-[28px] overflow-hidden premium-shadow animate-in zoom-in-95 duration-200 flex flex-col max-h-[90vh]">
-            {/* Header */}
-            <div className="px-6 py-4 bg-white/5 border-b border-white/10 flex items-center justify-between">
-              <div className="flex flex-wrap items-center gap-2 sm:gap-3 w-full md:w-auto">
-                <div className={`p-2.5 ${getBgColor(selectedSignal.type)} rounded-[16px] flex-shrink-0`}>
-                  {getIcon(selectedSignal.type)}
-                </div>
-                <div>
-                  <h4 className="text-base font-extrabold text-white flex items-center gap-2">
-                    Signal Diagnostic Report
-                    <span className="text-[10px] font-mono bg-[var(--color-surface-raised)]/20 border border-[var(--color-surface-raised)]/50 text-[var(--color-accent)] px-2 py-0.5 rounded-[6px]" title="SESR-008 Originating Signal ID">ID: {selectedSignal.id}</span>
-                    {/* SESR-008 Traceability */}
-                    {selectedSignal.correlation_id && (
-                      <span className="text-[10px] font-mono bg-blue-500/20 border border-blue-500/50 text-blue-400 px-2 py-0.5 rounded-[6px]" title="SESR-008 Journey Identity">
-                        Journey ID: {selectedSignal.correlation_id}
-                      </span>
-                    )}
-                  </h4>
-                  <p className="text-[10px] text-white/70 font-extrabold uppercase tracking-widest mt-0.5">Source: {selectedSignal.source} Integration Layer</p>
-                </div>
-              </div>
-              <button
-                onClick={() => setSelectedSignal(null)}
-                className="w-8 h-8 rounded-full hover:bg-white/10 flex items-center justify-center transition-colors cursor-pointer text-white/60 hover:text-white"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-
-            {/* Modal Body */}
-            <div className="p-6 space-y-6 overflow-y-auto custom-scrollbar flex-1">
-              {/* Event Description */}
-              <div className="bg-white/5 border border-white/10 rounded-[18px] p-4">
-                <h5 className="text-[10px] font-extrabold text-white/50 uppercase tracking-widest mb-1.5">TELEMETRY MESSAGE</h5>
-                <p className="text-sm font-bold text-white">{selectedSignal.message}</p>
-                <div className="flex items-center gap-3 mt-3 text-[11px] text-white/70 font-semibold">
-                  <span>Matched Patient: <strong className="text-white">{selectedSignal.metadata?.patient_name || 'None'}</strong></span>
-                  <span>•</span>
-                  <span>Received: <strong className="text-white">{new Date(selectedSignal.timestamp).toLocaleString()}</strong></span>
-                </div>
-              </div>
-
-              {/* Deterministic Evaluation */}
-              <div className="bg-white/5 border border-white/10 rounded-[18px] p-4 flex gap-3">
-                <div className="flex-1">
-                  <h5 className="text-xs font-extrabold text-white uppercase tracking-wider mb-2">Deterministic Evaluation</h5>
-                  <div className="space-y-2 mb-3">
-                    <p className="text-xs text-white/90 font-semibold"><span className="text-white/50">Problem:</span> {selectedSignal.problem || 'None'}</p>
-                    <p className="text-xs text-white/90 font-semibold"><span className="text-white/50">Reason:</span> {selectedSignal.reason || 'None'}</p>
-                  </div>
-
-                  {selectedSignal.recommended_action && (
-                    <div className="mt-2.5 p-2 bg-emerald-500/10 border border-emerald-500/30 rounded-2xl inline-block text-[11px] text-emerald-400 font-bold w-full">
-                      Action: {selectedSignal.recommended_action}
-                      <div className="text-[10px] text-emerald-600 mt-1">Expected Outcome: {selectedSignal.expected_outcome || 'Issue resolved.'}</div>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Decision Context Engine Block */}
-              <div className="bg-white/5 border border-white/10 rounded-[18px] p-4 flex gap-3 relative">
-                <div className="flex-1">
-                  <h5 className="text-xs font-extrabold text-[var(--color-accent)] uppercase tracking-wider mb-2 flex items-center gap-1">
-                    <Activity className="w-3.5 h-3.5" /> Decision Context Engine
-                  </h5>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <p className="text-[10px] text-white/50 uppercase tracking-widest font-bold">Primary Context</p>
-                      <p className="text-xs font-bold text-white">{selectedSignal.primary_context || 'Unknown'}</p>
-                    </div>
-                    <div>
-                      <p className="text-[10px] text-white/50 uppercase tracking-widest font-bold">Secondary Context</p>
-                      <p className="text-xs font-bold text-white">{selectedSignal.secondary_context || 'Unknown'}</p>
-                    </div>
-                    <div>
-                      <p className="text-[10px] text-white/50 uppercase tracking-widest font-bold">Reasoning</p>
-                      <p className="text-[11px] font-semibold text-white/70 leading-snug">{selectedSignal.context_reason || 'N/A'}</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Revenue Intelligence Engine Block */}
-              <div className="bg-amber-500/10 border border-amber-500/30 rounded-[18px] p-4 flex gap-3 relative">
-                <div className="flex-1">
-                  <h5 className="text-xs font-extrabold text-amber-400 uppercase tracking-wider mb-2 flex items-center gap-1">
-                    <Shield className="w-3.5 h-3.5" /> Revenue Intelligence Engine
-                  </h5>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <p className="text-[10px] text-amber-500/50 uppercase tracking-widest font-bold">Risk Category</p>
-                      <p className="text-xs font-bold text-amber-100">{selectedSignal.revenue_risk_category || 'None'}</p>
-                    </div>
-                    <div>
-                      <p className="text-[10px] text-amber-500/50 uppercase tracking-widest font-bold">Financial Exposure</p>
-                      <p className="text-lg font-black text-amber-400">{selectedSignal.estimated_financial_exposure || '$0.00'}</p>
-                    </div>
-                    <div>
-                      <p className="text-[10px] text-amber-500/50 uppercase tracking-widest font-bold">Operational Dependency</p>
-                      <p className="text-[11px] font-semibold text-amber-100/70 leading-snug">{selectedSignal.operational_dependency || 'N/A'}</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Outcome Status (SESR-007) */}
-              {isDispatched && (
-                <div className="bg-white/5 border border-white/10 rounded-[18px] p-4 flex gap-3 relative animate-in slide-in-from-top-2">
-                  <div className="flex-1">
-                    <h5 className="text-xs font-extrabold text-[var(--color-accent)] uppercase tracking-wider mb-2 flex items-center gap-1">
-                      <Database className="w-3.5 h-3.5" /> Operational Outcome (SESR-007)
-                    </h5>
-                    
-                    {outcomeState === 'BLOCKED' && (
-                      <CriticalStateBanner state="BLOCKED" reason="Execution was blocked by backend governance rules." />
-                    )}
-                    
-                    <div className="grid grid-cols-2 gap-4 mt-2">
-                      <div>
-                        <p className="text-[10px] text-white/50 uppercase tracking-widest font-bold mb-1">Confirmation State</p>
-                        <GovernedStatus state={outcomeState || 'PENDING'} />
-                      </div>
-                      <div>
-                        <p className="text-[10px] text-white/50 uppercase tracking-widest font-bold mb-1">Resolution State</p>
-                        <GovernedStatus state={resolutionState || 'UNRESOLVED'} />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Secure Data/Raw JSON Payload */}
-              <div>
-                <div className="flex justify-between items-center mb-3">
-                  <h5 className="text-[10px] font-extrabold text-white/50 uppercase tracking-widest">
-                    {viewMode === 'doctor' ? 'SYSTEM STATUS (CLINICAL VIEW)' : viewMode === 'inspector' ? 'EVIDENCE & LOGIC INSPECTOR (SESR-001/003)' : 'RAW SYSTEM LOGS (DEVELOPER VIEW)'}
-                  </h5>
-
-                  <div className="flex flex-wrap items-center gap-2 sm:gap-3 w-full md:w-auto">
-                    {/* View Mode Toggle */}
-                    <div className="bg-white/5 p-0.5 rounded-[8px] flex items-center border border-white/10">
-                      <button
-                        onClick={() => setViewMode('doctor')}
-                        className={`text-[9px] font-black px-2 py-1 rounded-[6px] transition-all cursor-pointer ${viewMode === 'doctor' ? 'bg-white/20 text-white shadow-sm' : 'text-white/50 hover:text-white'
-                          }`}
-                      >
-                        Clinical
-                      </button>
-
-                      {!isProd && (
-                        <>
-                          <button
-                            onClick={() => setViewMode('inspector')}
-                            className={`text-[9px] font-black px-2 py-1 rounded-[6px] transition-all cursor-pointer ${viewMode === 'inspector' ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30 shadow-sm' : 'text-white/50 hover:text-white'
-                              }`}
-                          >
-                            Evidence Inspector
-                          </button>
-                          <button
-                            onClick={() => setViewMode('developer')}
-                            className={`text-[9px] font-black px-2 py-1 rounded-[6px] transition-all cursor-pointer ${viewMode === 'developer' ? 'bg-white/20 text-white shadow-sm' : 'text-white/50 hover:text-white'
-                              }`}
-                          >
-                            JSON Payload
-                          </button>
-                        </>
-                      )}
-                    </div>
-
-                    <button
-                      onClick={() => handleCopyId(selectedSignal.id)}
-                      className="text-[10px] font-extrabold text-[var(--color-accent)] hover:underline flex items-center gap-1 cursor-pointer"
-                    >
-                      {copiedId === selectedSignal.id ? (
-                        <>
-                          <Check className="w-3.5 h-3.5" /> Copied
-                        </>
-                      ) : (
-                        <>
-                          <Copy className="w-3.5 h-3.5" /> Copy
-                        </>
-                      )}
-                    </button>
-                  </div>
-                </div>
-                {viewMode === 'doctor' ? (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-white/5 border border-white/10 rounded-[20px] p-5">
-                    <div className="space-y-1">
-                      <span className="text-[9px] text-[#9CA3AF] font-bold uppercase block">Target EHR System</span>
-                      <p className="text-xs font-bold text-white flex items-center gap-1.5">
-                        <Database className="w-3.5 h-3.5 text-[var(--color-semantic-attention)]" />
-                        {selectedSignal.source} (Secure Data R4 compliant)
-                      </p>
-                    </div>
-                    <div className="space-y-1">
-                      <span className="text-[9px] text-[#9CA3AF] font-bold uppercase block">Security Verification</span>
-                      <span className="inline-flex items-center gap-1.5 text-[9px] bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded-[6px] font-extrabold uppercase">
-                        <ShieldCheck className="w-3.5 h-3.5" /> ENCRYPTED SECURE TUNNEL
-                      </span>
-                    </div>
-                    <div className="space-y-1 col-span-2 pt-2 border-t border-white/10">
-                      <span className="text-[9px] text-[#9CA3AF] font-bold uppercase block">Action Scope</span>
-                      <p className="text-xs font-bold text-white/80">
-                        Authorized to read patient metadata & write appointment status updates.
-                      </p>
-                    </div>
-                    <div className="space-y-1 col-span-2 pt-2 border-t border-white/10">
-                      <span className="text-[9px] text-[#9CA3AF] font-bold uppercase block">Clinic Integration Credentials</span>
-                      <p className="text-[10px] font-mono text-white/60 font-semibold bg-white/5 border border-white/10 p-2 rounded-lg truncate">
-                        oauth_client_id: pf-oauth-client-88123-prod • scope: patient/*.read appointment/*.write
-                      </p>
-                    </div>
-                  </div>
-                ) : viewMode === 'inspector' ? (
-                  <div className="bg-[var(--color-surface)] rounded-[16px] p-4 text-[11px] font-mono text-amber-400 overflow-x-auto max-h-48 custom-scrollbar border border-amber-500/30">
-                    <pre>{JSON.stringify({
-                      decision_context_id: `ctx-${selectedSignal.id}`,
-                      evidence_snapshot: getSimulatedRawPayload(selectedSignal),
-                      rule_evaluation: {
-                        evaluated_at: selectedSignal.timestamp,
-                        policy_version: "v1.2.0-stable",
-                        rules: [
-                          { rule_id: "RULE-001", matched: true, action: "Require Approval" },
-                          { rule_id: "RULE-002", matched: false, action: "Auto-Discard" }
-                        ],
-                        final_decision: selectedSignal.recommended_action || "Pending"
-                      }
-                    }, null, 2)}</pre>
-                  </div>
-                ) : (
-                  <div className="bg-[#0F172A] rounded-[16px] p-4 text-[11px] font-mono text-[#38BDF8] overflow-x-auto max-h-48 custom-scrollbar border border-slate-800">
-                    <pre>{JSON.stringify(getSimulatedRawPayload(selectedSignal), null, 2)}</pre>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Modal Footer */}
-            <div className="px-6 py-4 bg-white/5 border-t border-white/10 flex items-center justify-between shrink-0">
-              <button
-                onClick={() => setSelectedSignal(null)}
-                className="bg-white/5 border border-white/10 hover:bg-white/5 text-white/80 font-bold text-xs px-4 py-2.5 rounded-[16px] premium-shadow cursor-pointer transition-colors"
-              >
-                Close Diagnostic
-              </button>
-
-              {selectedSignal.recommended_action && (
-                <button
-                  onClick={triggerAction}
-                  disabled={isDispatching || isDispatched || selectedSignal.status === 'expired' || selectedSignal.status === 'superseded'}
-                  className={`flex items-center gap-2 font-bold text-xs px-5 py-2.5 rounded-[16px] premium-shadow transition-all ${isDispatched
-                    ? 'bg-emerald-600 text-white cursor-default'
-                    : (selectedSignal.status === 'expired' || selectedSignal.status === 'superseded')
-                      ? 'bg-[var(--color-surface)] text-white/50 cursor-not-allowed border border-white/10'
-                      : isDispatching
-                        ? 'bg-[var(--color-surface)] text-white opacity-50 cursor-wait'
-                        : 'bg-emerald-600 hover:bg-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.4)] text-white cursor-pointer hover:scale-105 active:scale-95'
-                    }`}
-                >
-                  {isDispatched ? (
-                    <>
-                      <CheckCircle2 className="w-4 h-4" /> Action Dispatched
-                    </>
-                  ) : selectedSignal.status === 'expired' ? (
-                    <>
-                      <AlertCircle className="w-4 h-4" /> Recommendation Expired
-                    </>
-                  ) : selectedSignal.status === 'superseded' ? (
-                    <>
-                      <AlertCircle className="w-4 h-4" /> Recommendation Superseded
-                    </>
-                  ) : isDispatching ? (
-                    <>
-                      <RefreshCw className="w-4 h-4 animate-spin" /> Dispatching...
-                    </>
-                  ) : (
-                    <>
-                      <Sparkles className="w-4 h-4" /> Execute Action Recommendation
-                    </>
-                  )}
-                </button>
-              )}
-            </div>
-          </div>
-        </div>,
-        document.body
-      )}
     </div>
   );
 };

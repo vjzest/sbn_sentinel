@@ -57,6 +57,7 @@ export default function Dashboard() {
   const [isMsgOpen, setIsMsgOpen] = useState(false);
   const [reminderAdded, setReminderAdded] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [activeSignalId, setActiveSignalId] = useState<string | null>(null);
   
   // Dynamic Settings States synced globally
   const [practiceName, setPracticeName] = useState('Sentinel');
@@ -458,7 +459,7 @@ export default function Dashboard() {
                           <div className="p-6 text-center text-xs text-white/50">No backend signals detected.</div>
                         ) : (
                           signals.slice(0, 10).map((n: any, i: number) => (
-                            <div key={n.id || i} onClick={() => { setActiveTab('signals'); setIsNotifOpen(false); }} className="p-3 border-b border-white/10 hover:bg-white/10 cursor-pointer transition-colors flex gap-3">
+                            <div key={n.id || i} onClick={() => { setActiveSignalId(n.id); setActiveTab('signals-detail'); setIsNotifOpen(false); }} className="p-3 border-b border-white/10 hover:bg-white/10 cursor-pointer transition-colors flex gap-3">
                               <div className={`mt-1 w-2 h-2 rounded-full flex-shrink-0 ${n.risk_level === 'Critical' || n.risk_level === 'High' ? 'bg-[#EF4444]' : n.risk_level === 'Moderate' ? 'bg-[#F59E0B]' : 'bg-[#10B981]'}`}></div>
                               <div className="min-w-0 flex-1">
                                 <p className="text-xs font-bold text-white truncate">{n.source} • {n.type}</p>
@@ -711,7 +712,7 @@ export default function Dashboard() {
 
                 {/* Main Middle Row */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  <SignalFeed setActiveTab={setActiveTab} />
+                  <SignalFeed setActiveTab={setActiveTab} onSignalSelect={(id) => { setActiveSignalId(id); setActiveTab('signals-detail'); }} />
                   <RevenueImpact setActiveTab={setActiveTab} />
                 </div>
 
@@ -948,8 +949,8 @@ export default function Dashboard() {
               </div>
             )}
             {activeTab === 'intelligence' && (['practice_manager', 'staff', 'ops_manager'].includes(userRole) ? <AccessDeniedView onReturn={() => setActiveTab('dashboard')} /> : <IntelligenceView />)}
-            {activeTab === 'signals' && (['practice_manager', 'staff', 'ops_manager'].includes(userRole) ? <AccessDeniedView onReturn={() => setActiveTab('dashboard')} /> : <SignalFeed />)}
-            {activeTab === 'signals-detail' && (['practice_manager', 'staff', 'ops_manager'].includes(userRole) ? <AccessDeniedView onReturn={() => setActiveTab('dashboard')} /> : <SignalsDetailView />)}
+            {activeTab === 'signals' && (['practice_manager', 'staff', 'ops_manager'].includes(userRole) ? <AccessDeniedView onReturn={() => setActiveTab('dashboard')} /> : <SignalFeed setActiveTab={setActiveTab} onSignalSelect={(id) => { setActiveSignalId(id); setActiveTab('signals-detail'); }} />)}
+            {activeTab === 'signals-detail' && (['practice_manager', 'staff', 'ops_manager'].includes(userRole) ? <AccessDeniedView onReturn={() => setActiveTab('dashboard')} /> : <SignalsDetailView initialSignalId={activeSignalId} />)}
             {activeTab === 'connectors' && (['practice_manager', 'staff', 'ops_manager'].includes(userRole) ? <AccessDeniedView onReturn={() => setActiveTab('dashboard')} /> : <ConnectorsView />)}
             {activeTab === 'patient-flow' && <PatientFlowView />}
             {activeTab === 'schedule' && <ScheduleOptimizerView />}
