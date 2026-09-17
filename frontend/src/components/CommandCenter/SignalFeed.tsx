@@ -8,9 +8,10 @@ import { incrementActionsTaken, SignalEvent, acknowledgeSignal } from '@/store/s
 
 interface SignalFeedProps {
   setActiveTab?: (tab: string) => void;
+  onSignalSelect?: (id: string) => void;
 }
 
-export const SignalFeed: React.FC<SignalFeedProps> = ({ setActiveTab }) => {
+export const SignalFeed: React.FC<SignalFeedProps> = ({ setActiveTab, onSignalSelect }) => {
   const dispatch = useDispatch();
   const [selectedSignal, setSelectedSignal] = useState<SignalEvent | null>(null);
   const [isDispatched, setIsDispatched] = useState(false);
@@ -154,16 +155,20 @@ export const SignalFeed: React.FC<SignalFeedProps> = ({ setActiveTab }) => {
                   >
                     Acknowledge
                   </button>
-                  <button onClick={() => setSelectedSignal(signal)} className="text-[#2563EB] hover:text-white transition-colors cursor-pointer" title="View Details">
+                  <button onClick={() => { if (onSignalSelect) onSignalSelect(signal.id); else setSelectedSignal(signal); }} className="text-[#2563EB] hover:text-white transition-colors cursor-pointer" title="View Details">
                     <ArrowRight className="w-4 h-4" />
                   </button>
                 </div>
               </div>
               <div 
                 onClick={() => {
-                  setSelectedSignal(signal);
-                  setIsDispatched(false);
-                  setIsDispatching(false);
+                  if (onSignalSelect) {
+                    onSignalSelect(signal.id);
+                  } else {
+                    setSelectedSignal(signal);
+                    setIsDispatched(false);
+                    setIsDispatching(false);
+                  }
                 }}
                 className="flex items-start gap-4 flex-1"
               >
