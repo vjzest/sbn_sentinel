@@ -160,7 +160,8 @@ export const SignalFeed: React.FC<SignalFeedProps> = ({ setActiveTab, onSignalSe
                   </button>
                 </div>
               </div>
-              <div 
+              <button 
+                type="button"
                 onClick={() => {
                   if (onSignalSelect) {
                     onSignalSelect(signal.id);
@@ -170,7 +171,7 @@ export const SignalFeed: React.FC<SignalFeedProps> = ({ setActiveTab, onSignalSe
                     setIsDispatching(false);
                   }
                 }}
-                className="flex items-start gap-4 flex-1"
+                className="flex items-start gap-4 flex-1 text-left w-full focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] rounded-[12px] p-1 -m-1"
               >
                 <div className={`p-2.5 ${getBgColor(signal.type)} rounded-[16px] flex-shrink-0`}>
                   {getIcon(signal.type)}
@@ -186,7 +187,7 @@ export const SignalFeed: React.FC<SignalFeedProps> = ({ setActiveTab, onSignalSe
                     </div>
                   )}
                 </div>
-              </div>
+              </button>
             </div>
           );
         })}
