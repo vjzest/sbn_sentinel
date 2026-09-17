@@ -319,7 +319,7 @@ export const SignalsDetailView: React.FC<{ initialSignalId?: string | null }> = 
 
   if (selectedSignal) {
     const signalRef = createGovernedRef('Signal', selectedSignal.id);
-    const primaryCtx = createPrimaryContext(signalRef, selectedSignal.status === 'acknowledged' ? 'historical' : 'current');
+    const primaryCtx = createPrimaryContext(signalRef, selectedSignal.metadata?.is_historical ? 'historical' : 'current');
     const nestedCtx = createNestedContext(signalRef, 2, signalRef, primaryCtx.mode);
 
     const primaryContent = (

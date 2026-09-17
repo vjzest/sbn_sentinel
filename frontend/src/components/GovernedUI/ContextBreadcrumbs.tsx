@@ -18,8 +18,8 @@ export const ContextBreadcrumbs: React.FC<ContextBreadcrumbsProps> = ({
       <span className="text-[10px] uppercase font-bold tracking-wider text-white/50">
         {ref.objectType}
       </span>
-      <span 
-        className={`text-xs font-mono font-bold ${
+      <button 
+        className={`text-xs font-mono font-bold text-left focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] focus:ring-offset-1 focus:ring-offset-[var(--color-surface)] rounded-sm ${
           isClickable 
             ? 'text-[var(--color-accent)] cursor-pointer hover:underline' 
             : 'text-white'
@@ -29,9 +29,11 @@ export const ContextBreadcrumbs: React.FC<ContextBreadcrumbsProps> = ({
             onNavigateUp(ref);
           }
         }}
+        disabled={!isClickable}
+        aria-current={!isClickable ? 'page' : undefined}
       >
         {ref.objectId}
-      </span>
+      </button>
     </div>
   );
 
