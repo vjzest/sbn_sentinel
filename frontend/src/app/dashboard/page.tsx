@@ -452,21 +452,21 @@ export default function Dashboard() {
                     <div className="absolute right-0 mt-4 w-80 bg-[#120524] border border-white/10 rounded-[16px] premium-shadow z-50 animate-in fade-in slide-in-from-top-2">
                       <div className="p-3 border-b border-white/10 flex justify-between items-center">
                         <p className="text-sm font-bold text-white">Live Signals & Notifications ({signals.length})</p>
-                        <span onClick={() => setIsNotifOpen(false)} className="text-xs text-blue-400 font-bold cursor-pointer hover:underline">Close</span>
+                        <button type="button" onClick={() => setIsNotifOpen(false)} className="text-xs text-blue-400 font-bold hover:underline focus:outline-none focus:ring-2 focus:ring-blue-400 rounded-sm">Close</button>
                       </div>
                       <div className="max-h-80 overflow-y-auto custom-scrollbar">
                         {signals.length === 0 ? (
                           <div className="p-6 text-center text-xs text-white/50">No backend signals detected.</div>
                         ) : (
                           signals.slice(0, 10).map((n: any, i: number) => (
-                            <div key={n.id || i} onClick={() => { setActiveSignalId(n.id); setActiveTab('signals-detail'); setIsNotifOpen(false); }} className="p-3 border-b border-white/10 hover:bg-white/10 cursor-pointer transition-colors flex gap-3">
+                            <button type="button" key={n.id || i} onClick={() => { setActiveSignalId(n.id); setActiveTab('signals-detail'); setIsNotifOpen(false); }} className="w-full text-left p-3 border-b border-white/10 hover:bg-white/10 cursor-pointer transition-colors flex gap-3 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-400">
                               <div className={`mt-1 w-2 h-2 rounded-full flex-shrink-0 ${n.risk_level === 'Critical' || n.risk_level === 'High' ? 'bg-[#EF4444]' : n.risk_level === 'Moderate' ? 'bg-[#F59E0B]' : 'bg-[#10B981]'}`}></div>
                               <div className="min-w-0 flex-1">
                                 <p className="text-xs font-bold text-white truncate">{n.source} • {n.type}</p>
                                 <p className="text-xs text-white/70 font-medium mt-0.5 line-clamp-2">{n.message}</p>
                                 <p className="text-[10px] text-white/60 font-bold mt-1">{n.timestamp ? new Date(n.timestamp).toLocaleTimeString() : 'Live Stream'}</p>
                               </div>
-                            </div>
+                            </button>
                           ))
                         )}
                       </div>
@@ -494,14 +494,14 @@ export default function Dashboard() {
                     <div className="absolute right-0 mt-4 w-80 bg-[#120524] border border-white/10 rounded-[16px] premium-shadow z-50 animate-in fade-in slide-in-from-top-2">
                       <div className="p-3 border-b border-white/10 flex justify-between items-center">
                         <p className="text-sm font-bold text-white">Team Chat ({chatMessages.length})</p>
-                        <span onClick={() => setIsMsgOpen(false)} className="text-xs text-blue-400 font-bold cursor-pointer hover:underline">Close</span>
+                        <button type="button" onClick={() => setIsMsgOpen(false)} className="text-xs text-blue-400 font-bold hover:underline focus:outline-none focus:ring-2 focus:ring-blue-400 rounded-sm">Close</button>
                       </div>
                       <div className="max-h-80 overflow-y-auto custom-scrollbar">
                         {chatMessages.length === 0 ? (
                           <div className="p-6 text-center text-xs text-white/50">No messages in team inbox.</div>
                         ) : (
                           chatMessages.map((m: any, i: number) => (
-                            <div key={i} onClick={() => { setActiveChat(m.sender); setIsMsgOpen(false); }} className="p-3 border-b border-white/10 hover:bg-white/10 cursor-pointer transition-colors flex gap-3 items-center">
+                            <button type="button" key={i} onClick={() => { setActiveChat(m.sender); setIsMsgOpen(false); }} className="w-full text-left p-3 border-b border-white/10 hover:bg-white/10 cursor-pointer transition-colors flex gap-3 items-center focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-400">
                               <div className="w-8 h-8 rounded-full bg-blue-500/20 border border-blue-500/30 flex items-center justify-center text-blue-400 font-bold text-xs flex-shrink-0">
                                 {m.sender ? m.sender.charAt(0) : 'T'}
                               </div>
@@ -510,7 +510,7 @@ export default function Dashboard() {
                                 <p className="text-xs truncate mt-0.5 text-white/70">{m.text}</p>
                               </div>
                               <span className="text-[9px] text-white/60">{m.time}</span>
-                            </div>
+                            </button>
                           ))
                         )}
                       </div>
