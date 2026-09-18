@@ -388,6 +388,7 @@ class ProcessingOrchestrator:
                 target_service="RulesEngine",
                 payload={
                     "decision_context": {
+                        "id": event.decision_context.id,
                         "primary_context": event.decision_context.primary_context,
                         "secondary_context": event.decision_context.secondary_context,
                         "event_type": event.event_type
@@ -576,7 +577,7 @@ class ProcessingOrchestrator:
                 type=event.event_type,
                 message=payload.get("detail", ""),
                 timestamp=datetime.utcnow().isoformat(),
-                metadata={"pipeline_event_id": event.id, "priority": event.priority},
+                metadata={"pipeline_event_id": event.id, "priority": event.priority, "correlation_id": event.correlation_id},
                 risk_level=intel_result.get("risk_level") or (intel_model.priority if intel_model else "Information"),
                 problem=intel_result.get("problem", ""),
                 reason=intel_result.get("reason", ""),

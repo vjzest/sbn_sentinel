@@ -199,7 +199,7 @@ def get_decision_basis(
         raise HTTPException(status_code=404, detail=f"Signal '{signal_id}' not found.")
 
     metadata: dict = signal.metadata_data or {}
-    journey_id = metadata.get("pipeline_event_id") or signal.id
+    journey_id = metadata.get("correlation_id") or metadata.get("pipeline_event_id") or signal.id
 
     # Resolve from authoritative persisted RuleEvaluationModel
     evals = db.query(RuleEvaluationModel).filter(
@@ -207,7 +207,7 @@ def get_decision_basis(
     ).all()
 
     if not evals:
-        # No rules -> no authoritative context/policy
+        # No authoritative rules engine output -> not evaluated
         return {
             "object_ref": _build_object_ref(signal),
             "journey_id": journey_id,
@@ -216,22 +216,26 @@ def get_decision_basis(
             "policy": None,
             "rules": [],
             "provenance": None,
-            "technical_state": "ready",
+            "technical_state": "unavailable",
         }
 
-    # Use the most recent evaluation to drive context/policy
-    evals_sorted = sorted(evals, key=lambda r: r.evaluation_timestamp, reverse=True)
-    latest_eval = evals_sorted[0]
+    # Resolve exact bound relationships from the evaluations
+    exact_eval = evals[0]
     
-    context_id = latest_eval.decision_context_id
-    policy_id = latest_eval.policy_id
-    policy_version = latest_eval.policy_version
-    evaluated_at = latest_eval.evaluation_timestamp
+    context_id = exact_eval.decision_context_id
+    policy_id = exact_eval.policy_id
+    policy_version = exact_eval.policy_version
+    evaluated_at = exact_eval.evaluation_timestamp
 
     try:
         evidence = _build_evidence(context_id, db)
         policy = _build_policy(policy_id, policy_version, db)
         
+        if not policy:
+            technical_state = "unavailable"
+        else:
+            technical_state = "ready"
+            
         rules = [
             {
                 "evaluation_id": r.evaluation_id,
@@ -242,11 +246,10 @@ def get_decision_basis(
                 "result": r.result,
                 "evaluation_timestamp": r.evaluation_timestamp,
             }
-            for r in evals_sorted
+            for r in evals
         ]
         
         provenance = _build_provenance(context_id, db)
-        technical_state = "ready"
     except Exception:
         technical_state = "unavailable"
         evidence = {"used": [], "missing": [], "conflicts": [], "freshness": []}
