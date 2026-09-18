@@ -21,6 +21,7 @@ def setup_db():
     yield
 
 
+@pytest.mark.governance
 def test_decision_basis_d4_authoritative_path(setup_db):
     db = SessionLocal()
     
@@ -38,7 +39,7 @@ def test_decision_basis_d4_authoritative_path(setup_db):
     
     # 2. Create authoritative Governance Data
     context_id = str(uuid.uuid4())
-    policy_id = "pol-123"
+    policy_id = f"pol-{uuid.uuid4().hex[:6]}"
     policy_version = "1.0"
     
     ev_id = str(uuid.uuid4())

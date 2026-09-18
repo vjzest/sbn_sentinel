@@ -220,12 +220,26 @@ def get_decision_basis(
         }
 
     # Resolve exact bound relationships from the evaluations
-    exact_eval = evals[0]
-    
-    context_id = exact_eval.decision_context_id
-    policy_id = exact_eval.policy_id
-    policy_version = exact_eval.policy_version
-    evaluated_at = exact_eval.evaluation_timestamp
+    context_id = evals[0].decision_context_id
+    policy_id = evals[0].policy_id
+    policy_version = evals[0].policy_version
+    evaluated_at = evals[0].evaluation_timestamp
+
+    # Verify all evaluations for the journey agree on the exact basis
+    for r in evals:
+        if (r.decision_context_id != context_id or 
+            r.policy_id != policy_id or 
+            r.policy_version != policy_version):
+            return {
+                "object_ref": _build_object_ref(signal),
+                "journey_id": journey_id,
+                "decision_context": _build_decision_context(signal, None, None),
+                "evidence": {"used": [], "missing": [], "conflicts": [], "freshness": []},
+                "policy": None,
+                "rules": [],
+                "provenance": None,
+                "technical_state": "unavailable",
+            }
 
     try:
         evidence = _build_evidence(context_id, db)
