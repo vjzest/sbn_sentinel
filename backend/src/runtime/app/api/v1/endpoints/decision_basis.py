@@ -42,46 +42,33 @@ def _build_object_ref(signal: SignalModel) -> dict:
     }
 
 
-def _build_decision_context(signal: SignalModel) -> dict:
+def _build_decision_context(signal: SignalModel, context_id: Optional[str], evaluated_at: Optional[str]) -> dict:
     """
-    Derives the Decision Context identity from the signal's stored
-    authoritative fields. Mode is read from metadata.is_historical only;
-    never inferred from status fields.
+    Derives the Decision Context identity. Mode is read from metadata.is_historical.
+    Evaluated_at is strictly from authoritative RuleEvaluationModel.
     """
     metadata: dict = signal.metadata_data or {}
     is_historical: Optional[bool] = metadata.get("is_historical")
     mode = "historical" if is_historical is True else "current"
 
-    # context_id and evaluated_at come from stored metadata if backend embedded them.
-    context_id: Optional[str] = metadata.get("context_id") or metadata.get("decision_context_id")
-    evaluated_at: Optional[str] = metadata.get("context_evaluated_at")
-
     return {
         "context_id": context_id,
         "status": signal.primary_context,
-        "sufficiency_status": metadata.get("sufficiency_status"),
-        "evaluated_at": evaluated_at or (
-            signal.timestamp.isoformat() if signal.timestamp else None
-        ),
+        "sufficiency_status": None,  # Not reliably persisted in V1, returning None
+        "evaluated_at": evaluated_at,
         "mode": mode,
     }
 
 
-def _build_evidence(signal: SignalModel, db: Session) -> dict:
+def _build_evidence(context_id: Optional[str], db: Session) -> dict:
     """
-    Assembles evidence sections from persisted AIS-002 records
-    (ContextEvidenceModel, ContextMissingEvidenceModel, etc.).
-    Returns null-safe lists — never invents content.
+    Assembles evidence sections from persisted AIS-002 records.
+    Returns null-safe lists — never invents content, no fallback logic.
     """
-    metadata: dict = signal.metadata_data or {}
-    context_id: Optional[str] = (
-        metadata.get("context_id") or metadata.get("decision_context_id")
-    )
-
-    used: list = []
-    missing: list = []
-    conflicts: list = []
-    freshness: list = []
+    used = []
+    missing = []
+    conflicts = []
+    freshness = []
 
     if context_id:
         # Used evidence
@@ -134,19 +121,6 @@ def _build_evidence(signal: SignalModel, db: Session) -> dict:
                 "freshness_status": "STALE" if f.is_stale else "CURRENT",
             })
 
-    # Fallback: if no context_id records exist, surface what the signal knows.
-    # This is the V1 common case: records are in the signal row itself.
-    if not used and not context_id:
-        source_label = signal.source or "Unknown"
-        used.append({
-            "evidence_id": f"sig-ev-{signal.id}",
-            "type": signal.type or "Unknown",
-            "value": signal.primary_context or "Unknown",
-            "retrieved_at": signal.timestamp.isoformat() if signal.timestamp else None,
-            "retrieval_status": "RETRIEVED",
-            "source": source_label,
-        })
-
     return {
         "used": used,
         "missing": missing,
@@ -155,28 +129,17 @@ def _build_evidence(signal: SignalModel, db: Session) -> dict:
     }
 
 
-def _build_policy(signal: SignalModel, db: Session) -> Optional[dict]:
+def _build_policy(policy_id: Optional[str], policy_version: Optional[str], db: Session) -> Optional[dict]:
     """
-    Returns policy basis from the most recent ACTIVE GovernedPolicyVersionModel
-    associated with the journey (if available). Returns None — never falls back
-    to newest version silently; unavailability is explicit.
+    Returns policy basis from GovernedPolicyVersionModel using authoritative IDs.
     """
-    metadata: dict = signal.metadata_data or {}
-    policy_id: Optional[str] = metadata.get("policy_id")
-
-    if not policy_id:
+    if not policy_id or not policy_version:
         return None
 
-    policy_version: Optional[str] = metadata.get("policy_version")
-
-    if policy_version:
-        # Retrieve exact pinned version
-        row = db.query(GovernedPolicyVersionModel).filter(
-            GovernedPolicyVersionModel.policy_id == policy_id,
-            GovernedPolicyVersionModel.version == policy_version,
-        ).first()
-    else:
-        row = None
+    row = db.query(GovernedPolicyVersionModel).filter(
+        GovernedPolicyVersionModel.policy_id == policy_id,
+        GovernedPolicyVersionModel.version == policy_version,
+    ).first()
 
     if not row:
         return None
@@ -190,55 +153,19 @@ def _build_policy(signal: SignalModel, db: Session) -> Optional[dict]:
     }
 
 
-def _build_rules(signal: SignalModel, db: Session) -> list:
+def _build_provenance(context_id: Optional[str], db: Session) -> Optional[dict]:
     """
-    Retrieves RuleEvaluationRecords for this signal's journey from the DB.
-    Returns backend results as-is — never re-evaluates or infers.
+    Level-3 provenance based on exact authoritative context ID.
     """
-    metadata: dict = signal.metadata_data or {}
-    journey_id: Optional[str] = (
-        metadata.get("journey_id")
-        or metadata.get("correlation_id")
-        or getattr(signal, "correlation_id", None)
-    )
-
-    if not journey_id:
-        return []
-
-    rows = db.query(RuleEvaluationModel).filter(
-        RuleEvaluationModel.journey_id == journey_id
-    ).all()
-
-    return [
-        {
-            "evaluation_id": r.evaluation_id,
-            "rule_id": r.rule_id,
-            "rule_version": r.rule_version,
-            "policy_id": r.policy_id,
-            "policy_version": r.policy_version,
-            "result": r.result,
-            "evaluation_timestamp": r.evaluation_timestamp,
-        }
-        for r in rows
-    ]
-
-
-def _build_provenance(signal: SignalModel, db: Session) -> Optional[dict]:
-    """
-    Level-3 provenance: exact context ID, timestamps, source system refs.
-    Null-safe — returns None if no provenance records exist.
-    """
-    metadata: dict = signal.metadata_data or {}
-    context_id: Optional[str] = (
-        metadata.get("context_id") or metadata.get("decision_context_id")
-    )
-
     if not context_id:
         return None
 
     prov_rows = db.query(ContextProvenanceModel).filter(
         ContextProvenanceModel.context_id == context_id
     ).all()
+
+    if not prov_rows:
+        return None
 
     provenance_items = [
         {
@@ -265,27 +192,61 @@ def get_decision_basis(
 ):
     """
     D4 — Read-only Decision Basis projection for a governed Signal.
-
-    Returns authoritative evidence, context, policy and rule records
-    already persisted by the processing pipeline. No evaluation,
-    calculation, inference, or mutation is performed here.
+    Resolves data via authoritative persisted RuleEvaluationModels.
     """
     signal = db.query(SignalModel).filter(SignalModel.id == signal_id).first()
     if not signal:
         raise HTTPException(status_code=404, detail=f"Signal '{signal_id}' not found.")
 
     metadata: dict = signal.metadata_data or {}
+    journey_id = metadata.get("pipeline_event_id") or signal.id
 
-    # Determine technical_state
-    technical_state = "ready"
-    if not signal:
-        technical_state = "unavailable"
+    # Resolve from authoritative persisted RuleEvaluationModel
+    evals = db.query(RuleEvaluationModel).filter(
+        RuleEvaluationModel.journey_id == journey_id
+    ).all()
+
+    if not evals:
+        # No rules -> no authoritative context/policy
+        return {
+            "object_ref": _build_object_ref(signal),
+            "journey_id": journey_id,
+            "decision_context": _build_decision_context(signal, None, None),
+            "evidence": {"used": [], "missing": [], "conflicts": [], "freshness": []},
+            "policy": None,
+            "rules": [],
+            "provenance": None,
+            "technical_state": "ready",
+        }
+
+    # Use the most recent evaluation to drive context/policy
+    evals_sorted = sorted(evals, key=lambda r: r.evaluation_timestamp, reverse=True)
+    latest_eval = evals_sorted[0]
+    
+    context_id = latest_eval.decision_context_id
+    policy_id = latest_eval.policy_id
+    policy_version = latest_eval.policy_version
+    evaluated_at = latest_eval.evaluation_timestamp
 
     try:
-        evidence = _build_evidence(signal, db)
-        policy = _build_policy(signal, db)
-        rules = _build_rules(signal, db)
-        provenance = _build_provenance(signal, db)
+        evidence = _build_evidence(context_id, db)
+        policy = _build_policy(policy_id, policy_version, db)
+        
+        rules = [
+            {
+                "evaluation_id": r.evaluation_id,
+                "rule_id": r.rule_id,
+                "rule_version": r.rule_version,
+                "policy_id": r.policy_id,
+                "policy_version": r.policy_version,
+                "result": r.result,
+                "evaluation_timestamp": r.evaluation_timestamp,
+            }
+            for r in evals_sorted
+        ]
+        
+        provenance = _build_provenance(context_id, db)
+        technical_state = "ready"
     except Exception:
         technical_state = "unavailable"
         evidence = {"used": [], "missing": [], "conflicts": [], "freshness": []}
@@ -295,11 +256,8 @@ def get_decision_basis(
 
     return {
         "object_ref": _build_object_ref(signal),
-        "journey_id": (
-            metadata.get("journey_id")
-            or metadata.get("correlation_id")
-        ),
-        "decision_context": _build_decision_context(signal),
+        "journey_id": journey_id,
+        "decision_context": _build_decision_context(signal, context_id, evaluated_at),
         "evidence": evidence,
         "policy": policy,
         "rules": rules,
