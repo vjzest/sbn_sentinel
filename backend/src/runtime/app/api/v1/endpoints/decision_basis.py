@@ -9,9 +9,7 @@ recommendations, or changes state. READ-ONLY.
 from fastapi import APIRouter, HTTPException, Depends
 from sqlalchemy.orm import Session
 from typing import Any, Optional
-import json
-
-from app.api.deps import get_current_user, RoleChecker
+from app.api.deps import RoleChecker
 from app.db.database import get_db
 from app.models.signal import SignalModel
 from app.models.user import UserRole
@@ -164,7 +162,6 @@ def _build_policy(signal: SignalModel, db: Session) -> Optional[dict]:
     to newest version silently; unavailability is explicit.
     """
     metadata: dict = signal.metadata_data or {}
-    journey_id: Optional[str] = metadata.get("journey_id") or getattr(signal, "correlation_id", None)
     policy_id: Optional[str] = metadata.get("policy_id")
 
     if not policy_id:
