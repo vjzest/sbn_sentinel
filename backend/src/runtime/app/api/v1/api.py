@@ -1,7 +1,8 @@
 from app.api.v1.endpoints import outcomes
 from fastapi import APIRouter, Depends
 # Import subsystem routers here when created
-from app.api.v1.endpoints import reality_connectors, signals, auth, insurance, audit, settings, encounters, super_admin, billing, clinics, pasme, pipeline, health, decisions, actions
+from app.api.v1.endpoints import reality_connectors, signals, auth, insurance, audit, settings, encounters, super_admin, billing, clinics, pasme, pipeline, health, decisions, actions, decision_basis
+
 from app.models.user import UserRole
 from app.api.deps import get_current_user, RoleChecker
 api_router = APIRouter()
@@ -88,6 +89,14 @@ api_router.include_router(
     outcomes.router,
     prefix="/outcomes",
     tags=["013_SESR007_Outcomes"],
+    dependencies=protected)
+
+
+# D4 — Decision Basis Read-Only Projection
+api_router.include_router(
+    decision_basis.router,
+    prefix="/decision-basis",
+    tags=["014_D4_DecisionBasis"],
     dependencies=protected)
 
 

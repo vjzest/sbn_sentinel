@@ -1,11 +1,11 @@
 import { fetchWithAuth } from '@/utils/fetchWithAuth';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { createGovernedRef, createPrimaryContext, createNestedContext } from '@/utils/governedNavigation';
 import { GovernedWorkspace } from '@/components/GovernedUI/GovernedWorkspace';
 import { ContextPanel } from '@/components/GovernedUI/ContextPanel';
 import { ProgressiveSection } from '@/components/GovernedUI/ProgressiveSection';
 import { createPortal } from 'react-dom';
-import { Activity, Phone, Mail, Calendar, ChevronRight, X, Clock, Database, Sparkles, Check, Shield, Search, Filter, Cpu, CheckCircle2, ShieldCheck, RefreshCw, AlertTriangle, AlertCircle, ArrowUpRight, Copy } from 'lucide-react';
+import { Activity, Phone, Mail, Calendar, ChevronRight, X, Clock, Database, Sparkles, Check, Shield, Search, Filter, Cpu, CheckCircle2, ShieldCheck, RefreshCw, AlertTriangle, AlertCircle, ArrowUpRight, Copy, BookOpen } from 'lucide-react';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '@/store';
 import { incrementActionsTaken, SignalEvent } from '@/store/slices/signalSlice';
@@ -13,6 +13,14 @@ import { executeGovernedRecommendation } from '@/utils/governance';
 import { GovernedStatus } from '@/components/GovernedUI/GovernedStatus';
 import { DataState } from '@/components/GovernedUI/DataState';
 import { CriticalStateBanner } from '@/components/GovernedUI/CriticalStateBanner';
+// D4 — Decision Basis
+import { fetchDecisionBasis } from '@/utils/decisionBasis';
+import type { DecisionBasisDTO } from '@/types/decisionBasis';
+import { DecisionContextSummary } from '@/components/DecisionBasis/DecisionContextSummary';
+import { EvidenceSummary } from '@/components/DecisionBasis/EvidenceSummary';
+import { PolicySummary } from '@/components/DecisionBasis/PolicySummary';
+import { RuleResultList } from '@/components/DecisionBasis/RuleResultList';
+import { ProvenanceDetail } from '@/components/DecisionBasis/ProvenanceDetail';
 export const SignalsDetailView: React.FC<{ initialSignalId?: string | null }> = ({ initialSignalId }) => {
   const dispatch = useDispatch();
   const reduxSignals = useSelector((state: RootState) => state.signals.events);
@@ -29,6 +37,9 @@ export const SignalsDetailView: React.FC<{ initialSignalId?: string | null }> = 
   const [outcomeState, setOutcomeState] = useState<'PENDING' | 'CONFIRMED' | 'BLOCKED' | null>(null);
   const [resolutionState, setResolutionState] = useState<'UNRESOLVED' | 'RESOLVED' | 'BLOCKED' | null>(null);
   const [isProd, setIsProd] = useState(true);
+  // D4 — Decision Basis state
+  const [basisData, setBasisData] = useState<DecisionBasisDTO | null>(null);
+  const [basisLoading, setBasisLoading] = useState(false);
 
   // Combine redux state and db historical signals
   const fetchDbSignals = async () => {
@@ -97,6 +108,28 @@ export const SignalsDetailView: React.FC<{ initialSignalId?: string | null }> = 
       }
     }
   }, [initialSignalId, dbSignals, reduxSignals]);
+
+  // D4 — Fetch Decision Basis when a signal is selected
+  const loadDecisionBasis = useCallback(async (signalId: string) => {
+    setBasisData(null);
+    setBasisLoading(true);
+    try {
+      const data = await fetchDecisionBasis(signalId);
+      setBasisData(data);
+    } finally {
+      setBasisLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (selectedSignal) {
+      loadDecisionBasis(selectedSignal.id);
+    } else {
+      // Clear when no signal selected — no stale basis shown
+      setBasisData(null);
+      setBasisLoading(false);
+    }
+  }, [selectedSignal, loadDecisionBasis]);
 
   const getIcon = (type: string) => {
     switch (type) {
@@ -474,6 +507,69 @@ export const SignalsDetailView: React.FC<{ initialSignalId?: string | null }> = 
                     evidence_snapshot: getSimulatedRawPayload(selectedSignal)
                   }, null, 2)}</pre>
                </div>
+            </ProgressiveSection>
+
+            {/* D4 — Decision Basis (read-only projection) */}
+            <ProgressiveSection
+              id="decision-basis"
+              title="Decision Basis"
+              icon={<BookOpen className="w-4 h-4 text-violet-400" />}
+              defaultExpanded={false}
+              dataState={
+                basisLoading
+                  ? 'loading'
+                  : basisData === null
+                  ? 'unavailable'
+                  : basisData.technical_state === 'unauthorized'
+                  ? 'unauthorized'
+                  : basisData.technical_state === 'unavailable'
+                  ? 'unavailable'
+                  : 'ready'
+              }
+              dataStateMessage={
+                basisData?.technical_state === 'unauthorized'
+                  ? 'You do not have permission to view the Decision Basis for this signal.'
+                  : basisLoading
+                  ? undefined
+                  : 'Decision Basis detail is unavailable for this signal.'
+              }
+            >
+              {basisData && basisData.technical_state === 'ready' && (
+                <div className="space-y-6 pt-2">
+                  {/* Level 1 — Decision Context Summary */}
+                  <DecisionContextSummary context={basisData.decision_context} />
+
+                  <div className="border-t border-white/10" />
+
+                  {/* Level 2 — Evidence (Used / Missing / Conflicts / Freshness) */}
+                  <EvidenceSummary evidence={basisData.evidence} />
+
+                  <div className="border-t border-white/10" />
+
+                  {/* Policy Basis */}
+                  <PolicySummary policy={basisData.policy} />
+
+                  <div className="border-t border-white/10" />
+
+                  {/* Rule Evaluations */}
+                  <RuleResultList rules={basisData.rules} />
+
+                  {/* Level 3 — Provenance (collapsed by default) */}
+                  {basisData.provenance && (
+                    <>
+                      <div className="border-t border-white/10" />
+                      <ProvenanceDetail provenance={basisData.provenance} />
+                    </>
+                  )}
+
+                  {/* Journey ID for traceability */}
+                  {basisData.journey_id && (
+                    <p className="text-[10px] font-mono text-white/30 border-t border-white/10 pt-3">
+                      Journey: {basisData.journey_id}
+                    </p>
+                  )}
+                </div>
+              )}
             </ProgressiveSection>
           </div>
         </ContextPanel>
