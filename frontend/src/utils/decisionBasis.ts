@@ -16,7 +16,8 @@ export async function fetchDecisionBasis(
   if (!signalId) return null;
 
   try {
-    const res = await fetchWithAuth(`/api/v1/decision-basis/${encodeURIComponent(signalId)}`);
+    const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000';
+    const res = await fetchWithAuth(`${backendUrl}/api/v1/decision-basis/${encodeURIComponent(signalId)}`);
     if (!res.ok) {
       if (res.status === 401 || res.status === 403) {
         throw { status: res.status };

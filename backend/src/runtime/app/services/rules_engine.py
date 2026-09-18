@@ -81,10 +81,15 @@ class RulesEngine(BaseService):
                     # 4. PGC-015: Deterministic Rule Logic execution
                     result_state = self._execute_rule_logic(rule, input_values)
 
+                # PRO-014: Fail closed if context identity is missing (SESR-009)
+                decision_context_id = decision_context.get("id")
+                if not decision_context_id:
+                    raise ValueError("CRITICAL_FAULT: Decision Context ID is missing. Cannot persist Rule Evaluation.")
+
                 # 5. PRO-014: Rule Evaluation Record
                 eval_record = RuleEvaluationRecord(
                     evaluation_id=str(uuid.uuid4()),
-                    decision_context_id=decision_context.get("event_id", "UNKNOWN"),
+                    decision_context_id=decision_context_id,
                     policy_id=policy.policy_id,
                     policy_version=policy.version,
                     rule_id=rule.rule_id,
