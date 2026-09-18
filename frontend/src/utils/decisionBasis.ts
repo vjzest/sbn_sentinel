@@ -4,8 +4,7 @@
  * No inference, no fallback-construction, no evaluation.
  */
 import { DecisionBasisDTO } from '@/types/decisionBasis';
-
-const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL ?? '';
+import { fetchWithAuth } from '@/utils/fetchWithAuth';
 
 /**
  * Fetches the Decision Basis for a governed Signal.
@@ -17,25 +16,18 @@ export async function fetchDecisionBasis(
   if (!signalId) return null;
 
   try {
-    const token = typeof window !== 'undefined'
-      ? localStorage.getItem('access_token')
-      : null;
-
-    if (!token) return null;
-
-    const res = await fetch(
-      `${BACKEND_URL}/api/v1/decision-basis/${encodeURIComponent(signalId)}`,
-      {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        cache: 'no-store',
-      },
-    );
-
-    if (res.status === 401 || res.status === 403) {
+    const res = await fetchWithAuth(`/api/v1/decision-basis/${encodeURIComponent(signalId)}`);
+    if (!res.ok) {
+      if (res.status === 401 || res.status === 403) {
+        throw { status: res.status };
+      }
+      return null;
+    }
+    const data: DecisionBasisDTO = await res.json();
+    return data;
+  } catch (err) {
+    const error = err as { status?: number };
+    if (error?.status === 401 || error?.status === 403) {
       // Return a minimal DTO with technical_state = unauthorized
       return {
         object_ref: { object_type: 'Signal', object_id: signalId },
@@ -48,14 +40,6 @@ export async function fetchDecisionBasis(
         technical_state: 'unauthorized',
       };
     }
-
-    if (!res.ok) {
-      return null;
-    }
-
-    const data: DecisionBasisDTO = await res.json();
-    return data;
-  } catch {
     return null;
   }
 }
