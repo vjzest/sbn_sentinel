@@ -1,3 +1,4 @@
+
 # SBN Sentinel - Healthcare Intelligence Platform
 
 SBN Sentinel is a world-class, AI-powered Healthcare Revenue & Clinical Intelligence SaaS platform. It is designed to provide actionable insights, real-time patient flow monitoring, and clinical intelligence to hospital administrators and operations teams.
