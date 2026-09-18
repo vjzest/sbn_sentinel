@@ -15,26 +15,10 @@ from app.main import app  # noqa: E402
 from app.api.deps import get_current_user  # noqa: E402
 
 
-class MockUser:
-    def __init__(self):
-        self.id = "test_user"
-        self.role = "System Administrator"
-
-
-app.dependency_overrides[get_current_user] = lambda: MockUser()
-
-# Note: D4 endpoint uses RoleChecker(_ALLOWED_ROLES) directly in Depends, which is a callable class.
-# To override it properly for TestClient, we override the specific instance if needed.
-# But for simplicity, we can let RoleChecker pass if we mock get_current_user if RoleChecker depends on it.
-# Actually, RoleChecker depends on get_current_user internally.
-# Let's verify by just calling the client.
-
-
 @pytest.fixture(scope="module")
 def setup_db():
     Base.metadata.create_all(bind=engine)
     yield
-    Base.metadata.drop_all(bind=engine)
 
 
 def test_decision_basis_d4_authoritative_path(setup_db):
@@ -103,22 +87,25 @@ def test_decision_basis_d4_authoritative_path(setup_db):
     client = TestClient(app)
     
     # Override auth for the specific endpoint
-    # We will pass a valid token or override get_current_user
-    # If RoleChecker depends on get_current_user, our override above works.
-    
-    response = client.get(f"/api/v1/decision-basis/{signal_id}")
-    
-    # If 403 or 401, we might need to mock properly, but usually get_current_user mock is enough
-    if response.status_code in [401, 403]:
-        # forcefully override the exact dependency
-        from app.api.v1.endpoints.decision_basis import _ALLOWED_ROLES
-        from app.api.deps import RoleChecker
-        app.dependency_overrides[RoleChecker] = lambda: {"id": "test_user", "roles": _ALLOWED_ROLES}
-        # In FastAPI, you override the instance of the class if it was instantiated in Depends.
-        # It's instantiated like Depends(RoleChecker(...)). So the dependency is the instance.
-        # This can be complex. Let's just create a token for a test user if needed,
-        # or rely on get_current_user returning a user with the right roles.
-        pass
+    class MockUserLocal:
+        def __init__(self):
+            self.id = "test_user"
+            self.role = "System Administrator"
+            self.org_id = "ORG-MOCK"
+
+    app.dependency_overrides[get_current_user] = lambda: MockUserLocal()
+    try:
+        response = client.get(f"/api/v1/decision-basis/{signal_id}")
+        
+        # If 403 or 401, we might need to mock properly, but usually get_current_user mock is enough
+        if response.status_code in [401, 403]:
+            # forcefully override the exact dependency
+            from app.api.v1.endpoints.decision_basis import _ALLOWED_ROLES
+            from app.api.deps import RoleChecker
+            app.dependency_overrides[RoleChecker] = lambda: {"id": "test_user", "roles": _ALLOWED_ROLES}
+            response = client.get(f"/api/v1/decision-basis/{signal_id}")
+    finally:
+        app.dependency_overrides.clear()
 
     # Wait, the app uses get_current_user which returns a User object.
     # Let's adjust the test to just assert the data structure.
