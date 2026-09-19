@@ -137,3 +137,59 @@ def test_decision_basis_d4_authoritative_path(setup_db):
     assert data["rules"][0]["rule_id"] == "rule-1"
     
     db.close()
+
+
+@pytest.mark.governance
+def test_decision_basis_d4_conflicting_evaluations_unavailable(setup_db):
+    db = SessionLocal()
+    
+    signal_id = str(uuid.uuid4())
+    event_id = str(uuid.uuid4())
+    correlation_id = str(uuid.uuid4())
+    
+    sig = SignalModel(
+        id=signal_id,
+        type="test_signal",
+        metadata_data={"pipeline_event_id": event_id, "correlation_id": correlation_id}
+    )
+    db.add(sig)
+    
+    # Add two evaluations with DIFFERENT policy_id for the same journey
+    rule_eval_1 = RuleEvaluationModel(
+        evaluation_id=str(uuid.uuid4()),
+        decision_context_id="ctx-1",
+        policy_id="pol-1",
+        policy_version="1.0",
+        rule_id="rule-1",
+        rule_version="1.0",
+        result="PASS",
+        evaluation_timestamp=datetime.utcnow().isoformat(),
+        journey_id=correlation_id
+    )
+    
+    rule_eval_2 = RuleEvaluationModel(
+        evaluation_id=str(uuid.uuid4()),
+        decision_context_id="ctx-1",
+        policy_id="pol-2",  # conflict!
+        policy_version="1.0",
+        rule_id="rule-2",
+        rule_version="1.0",
+        result="FAIL",
+        evaluation_timestamp=datetime.utcnow().isoformat(),
+        journey_id=correlation_id
+    )
+    db.add(rule_eval_1)
+    db.add(rule_eval_2)
+    db.commit()
+    
+    from app.api.v1.endpoints.decision_basis import get_decision_basis
+    
+    class MockUser:
+        id = "test"
+        roles = ["System Administrator"]
+        
+    data = get_decision_basis(signal_id=signal_id, db=db, current_user=MockUser())
+    
+    assert data["technical_state"] == "unavailable"
+    
+    db.close()
