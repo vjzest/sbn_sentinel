@@ -440,7 +440,6 @@ export const SignalsDetailView: React.FC<{ initialSignalId?: string | null }> = 
         </ContextPanel>
       </>
     );
-
     return (
       <div className="h-[85vh] min-h-[600px] flex flex-col p-2">
         <GovernedWorkspace
@@ -452,7 +451,6 @@ export const SignalsDetailView: React.FC<{ initialSignalId?: string | null }> = 
       </div>
     );
   }
-
   return (
     <div className="animate-in fade-in duration-500 max-w-[1600px] mx-auto space-y-8">
       {/* Header */}
@@ -492,7 +490,6 @@ export const SignalsDetailView: React.FC<{ initialSignalId?: string | null }> = 
             <Database className="w-6 h-6" />
           </span>
         </div>
-
         <div className="bg-gradient-to-br from-[var(--color-surface-raised)] to-[var(--color-surface)] border border-white/10 p-6 rounded-[24px] shadow-[0_20px_50px_rgba(46,16,85,0.3)] flex items-center justify-between text-white">
           <div>
             <p className="text-xs font-bold text-white/70 uppercase tracking-widest mb-1">Communication Logs</p>
@@ -502,7 +499,6 @@ export const SignalsDetailView: React.FC<{ initialSignalId?: string | null }> = 
             <Mail className="w-6 h-6" />
           </span>
         </div>
-
         <div className="bg-gradient-to-br from-[var(--color-surface-raised)] to-[var(--color-surface)] border border-white/10 p-6 rounded-[24px] shadow-[0_20px_50px_rgba(46,16,85,0.3)] flex items-center justify-between text-white">
           <div>
             <p className="text-xs font-bold text-white/70 uppercase tracking-widest mb-1">Revenue Risk Triggers</p>
