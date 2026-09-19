@@ -42,9 +42,9 @@ export const RecommendationReview: React.FC<RecommendationReviewProps> = ({
         if (mounted) {
           setData(result);
         }
-      } catch (err: any) {
+      } catch (err: unknown) {
         if (mounted) {
-          setError(err.message || 'Failed to load recommendation');
+          setError(err instanceof Error ? err.message : 'Failed to load recommendation');
         }
       } finally {
         if (mounted) {
@@ -63,7 +63,7 @@ export const RecommendationReview: React.FC<RecommendationReviewProps> = ({
     setSubmitting(true);
     setSubmitError(null);
     try {
-      const result = await submitHumanDecision({
+      await submitHumanDecision({
         recommendationId: data.recommendation.recommendation_id,
         decisionType: selectedDecision,
         reason: reason
@@ -71,8 +71,8 @@ export const RecommendationReview: React.FC<RecommendationReviewProps> = ({
       // Re-fetch to get authoritative receipt
       const refreshed = await fetchRecommendationReview(signalId);
       setData(refreshed);
-    } catch (err: any) {
-      setSubmitError(err.message || 'Failed to submit decision');
+    } catch (err: unknown) {
+      setSubmitError(err instanceof Error ? err.message : 'Failed to submit decision');
     } finally {
       setSubmitting(false);
     }
@@ -117,7 +117,7 @@ export const RecommendationReview: React.FC<RecommendationReviewProps> = ({
     );
   }
 
-  const requiresReason = authority.reason_required_for.includes(selectedDecision);
+  const requiresReason = Boolean(selectedDecision && authority.reason_required_for?.includes(selectedDecision));
 
   return (
     <div className="flex flex-col gap-6">

@@ -16,9 +16,10 @@ import {
 
 interface RuleResultListProps {
   rules: RuleBasisDTO[];
+  highlightEvaluationId?: string;
 }
 
-export const RuleResultList: React.FC<RuleResultListProps> = ({ rules }) => {
+export const RuleResultList: React.FC<RuleResultListProps> = ({ rules, highlightEvaluationId }) => {
   if (rules.length === 0) {
     return (
       <section aria-labelledby="rule-result-title" className="space-y-2">
@@ -45,11 +46,18 @@ export const RuleResultList: React.FC<RuleResultListProps> = ({ rules }) => {
       </h3>
 
       <ul className="space-y-2">
-        {rules.map((rule) => (
-          <li
-            key={rule.evaluation_id}
-            className="p-3 bg-white/5 border border-white/10 rounded-[12px] space-y-2"
-          >
+        {rules.map((rule) => {
+          const isHighlighted = rule.evaluation_id === highlightEvaluationId;
+          return (
+            <li
+              key={rule.evaluation_id}
+              id={`rule-eval-${rule.evaluation_id}`}
+              className={`p-3 border rounded-[12px] space-y-2 transition-all duration-500 ${
+                isHighlighted
+                  ? 'bg-blue-500/20 border-blue-400 shadow-[0_0_15px_rgba(59,130,246,0.3)]'
+                  : 'bg-white/5 border-white/10'
+              }`}
+            >
             <div className="flex items-start justify-between gap-2 flex-wrap">
               <div className="min-w-0">
                 <p className="text-xs font-extrabold text-white">
@@ -80,7 +88,8 @@ export const RuleResultList: React.FC<RuleResultListProps> = ({ rules }) => {
               )}
             </div>
           </li>
-        ))}
+          );
+        })}
       </ul>
     </section>
   );

@@ -109,23 +109,7 @@ def test_d5_recommendation_review_endpoint_exact_match(setup_db, mock_admin):
     assert data["authority"]["state"] == "AUTHORIZED"
     assert data["current_decision"] is None
 
-    # 5. Add recommendation to registry so POST /decisions works
-    # (Since HDE relies on registry, we must sync it for the action)
-    governance_registry._recommendations.append(
-        RecommendationRecord(
-            recommendation_id=rec_id,
-            mapping_id="map-1",
-            mapping_version="1.0",
-            decision_context_id=context_id,
-            rule_evaluation_id=eval_id,
-            recommendation_content="Test Recommendation Content",
-            status=RecommendationStatus.ACTIVE,
-            authority_requirement=AuthorityRequirement.INFORMATIONAL,
-            priority="High",
-            journey_id=correlation_id
-        )
-    )
-
+    # 5. (Removed manual registry append; get_recommendation reads from DB now)
     # 6. Test POST Decision (Submit)
     post_resp = client.post("/api/v1/decisions/", json={
         "recommendation_id": rec_id,
@@ -211,5 +195,6 @@ def test_d5_recommendation_lifecycle_expired(setup_db, mock_admin):
 
     response = client.get(f"/api/v1/decisions/review/{signal_id}")
     data = response.json()
-    assert data["authority"]["state"] == "AUTHORITY_UNKNOWN"
+    assert data["authority"]["state"] == "AUTHORIZED"
+    assert data["authority"]["eligibility"] == "EXPIRED"
     assert len(data["authority"]["allowed_decisions"]) == 0
