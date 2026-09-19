@@ -243,7 +243,6 @@ export const SignalsDetailView: React.FC<{ initialSignalId?: string | null }> = 
       };
     }
   };
-
   const uuidSim = (len: number) => {
     let result = '';
     const chars = 'abcdef0123456789';
@@ -274,7 +273,6 @@ export const SignalsDetailView: React.FC<{ initialSignalId?: string | null }> = 
             <p className="text-[10px] text-white/70 font-extrabold uppercase tracking-widest mt-0.5">Source: {selectedSignal.source} Integration Layer</p>
           </div>
         </div>
-
         <div className="bg-white/5 border border-white/10 rounded-[18px] p-4">
           <h5 className="text-[10px] font-extrabold text-white/50 uppercase tracking-widest mb-1.5">TELEMETRY MESSAGE</h5>
           <p className="text-sm font-bold text-white">{selectedSignal.message}</p>
@@ -284,7 +282,6 @@ export const SignalsDetailView: React.FC<{ initialSignalId?: string | null }> = 
             <span>Received: <strong className="text-white">{new Date(selectedSignal.timestamp).toLocaleString()}</strong></span>
           </div>
         </div>
-
         <div className="bg-white/5 border border-white/10 rounded-[18px] p-4 flex gap-3">
           <div className="flex-1">
             <h5 className="text-xs font-extrabold text-white uppercase tracking-wider mb-2">Deterministic Evaluation</h5>
@@ -315,7 +312,6 @@ export const SignalsDetailView: React.FC<{ initialSignalId?: string | null }> = 
         </div>
       </div>
     );
-
     const contextPanels = (
       <>
         <ContextPanel
@@ -345,7 +341,6 @@ export const SignalsDetailView: React.FC<{ initialSignalId?: string | null }> = 
                 </div>
               </div>
             </ProgressiveSection>
-
             <ProgressiveSection
               id="rev-engine"
               title="Revenue Intelligence"
@@ -366,7 +361,6 @@ export const SignalsDetailView: React.FC<{ initialSignalId?: string | null }> = 
                 </div>
               </div>
             </ProgressiveSection>
-
             <ProgressiveSection
               id="raw-payload"
               title="Evidence Inspector & Raw Logs"
@@ -477,7 +471,6 @@ export const SignalsDetailView: React.FC<{ initialSignalId?: string | null }> = 
           </button>
         </div>
       </div>
-
       {/* Metrics Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <div className="bg-gradient-to-br from-[var(--color-surface-raised)] to-[var(--color-surface)] border border-white/10 p-6 rounded-[24px] shadow-[0_20px_50px_rgba(46,16,85,0.3)] flex items-center justify-between text-white">
@@ -551,7 +544,6 @@ export const SignalsDetailView: React.FC<{ initialSignalId?: string | null }> = 
               ))}
             </div>
           </div>
-
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
