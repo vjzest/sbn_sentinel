@@ -2,6 +2,7 @@ import { fetchWithAuth } from '@/utils/fetchWithAuth';
 import React, { useState, useEffect, useCallback } from 'react';
 import { createGovernedRef, createPrimaryContext, createNestedContext } from '@/utils/governedNavigation';
 import { GovernedWorkspace } from '@/components/GovernedUI/GovernedWorkspace';
+import { RecommendationReview } from '@/components/GovernedUI/RecommendationReview';
 import { ContextPanel } from '@/components/GovernedUI/ContextPanel';
 import { ProgressiveSection } from '@/components/GovernedUI/ProgressiveSection';
 import { createPortal } from 'react-dom';
@@ -398,7 +399,20 @@ export const SignalsDetailView: React.FC<{ initialSignalId?: string | null }> = 
               </div>
             )}
             
-            <div className="mt-4 pt-3 border-t border-white/10">
+            <div className="mt-8">
+              <RecommendationReview 
+                signalId={selectedSignal.id} 
+                onViewBasis={() => {
+                  const el = document.getElementById('decision-basis');
+                  if (el) {
+                    el.scrollIntoView({ behavior: 'smooth' });
+                    // To expand it, we'd ideally trigger its internal state, but scrolling to it is a good start.
+                  }
+                }}
+              />
+            </div>
+
+            <div className="mt-8 pt-6 border-t border-white/10">
                <button
                   onClick={triggerAction}
                   disabled={isDispatching || isDispatched || outcomeState === 'BLOCKED'}
