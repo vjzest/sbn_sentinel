@@ -74,9 +74,9 @@ async def get_recommendation_review(
     if not signal:
         return unavailable_resp
 
-    journey_id = signal.metadata_data.get("correlation_id") or signal.metadata_data.get("pipeline_event_id")
+    metadata = signal.metadata_data or {}
+    journey_id = metadata.get("correlation_id") or metadata.get("pipeline_event_id")
     unavailable_resp["journey_id"] = journey_id
-    
     # 1. Resolve exact governed recommendation via RuleEvaluationModel
     evals = db.query(RuleEvaluationModel).filter(RuleEvaluationModel.journey_id == journey_id).all()
     if not evals:
@@ -136,17 +136,21 @@ async def get_recommendation_review(
     if not auth_config:
         authority_state = "NOT_AUTHORIZED"
         allowed_decisions = []
-    elif not is_active:
-        authority_state = "AUTHORITY_UNKNOWN"
-        allowed_decisions = []
+        eligibility = "ELIGIBLE" if is_active else authoritative_rec.status
     else:
         authority_state = "AUTHORIZED"
-        allowed_decisions = [d.value for d in auth_config.allowed_decisions]
+        if not is_active:
+            allowed_decisions = []
+            eligibility = authoritative_rec.status
+        else:
+            allowed_decisions = [d.value for d in auth_config.allowed_decisions]
+            eligibility = "ELIGIBLE"
 
     authority = {
         "state": authority_state,
         "allowed_decisions": allowed_decisions,
-        "reason_required_for": [d.value for d in auth_config.requires_reason_for] if auth_config else []
+        "reason_required_for": [d.value for d in auth_config.requires_reason_for] if auth_config else [],
+        "eligibility": eligibility
     }
 
     # 3. Extract Current Human Decision (D5-04)

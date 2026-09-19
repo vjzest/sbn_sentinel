@@ -35,6 +35,7 @@ export const SignalsDetailView: React.FC<{ initialSignalId?: string | null }> = 
   // D4 — Decision Basis state
   const [basisData, setBasisData] = useState<DecisionBasisDTO | null>(null);
   const [basisLoading, setBasisLoading] = useState(false);
+  const [highlightedRuleId, setHighlightedRuleId] = useState<string | null>(null);
   // Combine redux state and db historical signals
   const fetchDbSignals = async () => {
     try {
@@ -299,11 +300,17 @@ export const SignalsDetailView: React.FC<{ initialSignalId?: string | null }> = 
             <div className="mt-8">
               <RecommendationReview
                 signalId={selectedSignal.id}
-                onViewBasis={() => {
+                onViewBasis={(evaluationId) => {
+                  setHighlightedRuleId(evaluationId);
                   const el = document.getElementById('decision-basis');
                   if (el) {
+                    const btn = el.querySelector('button[aria-expanded="false"]');
+                    if (btn) (btn as HTMLElement).click();
                     el.scrollIntoView({ behavior: 'smooth' });
-                    // To expand it, we'd ideally trigger its internal state, but scrolling to it is a good start.
+                    setTimeout(() => {
+                      const ruleEl = document.getElementById(`rule-eval-${evaluationId}`);
+                      if (ruleEl) ruleEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }, 300);
                   }
                 }}
               />
@@ -417,7 +424,7 @@ export const SignalsDetailView: React.FC<{ initialSignalId?: string | null }> = 
                   <div className="border-t border-white/10" />
 
                   {/* Rule Evaluations */}
-                  <RuleResultList rules={basisData.rules} />
+                  <RuleResultList rules={basisData.rules} highlightEvaluationId={highlightedRuleId || undefined} />
 
                   {/* Level 3 — Provenance (collapsed by default) */}
                   {basisData.provenance && (
