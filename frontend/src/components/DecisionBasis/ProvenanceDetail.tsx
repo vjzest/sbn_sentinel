@@ -1,18 +1,11 @@
-/**
- * D4 — ProvenanceDetail (Level 3)
- * Exact backend refs, context ID, and ingestion timestamps.
- * Collapsed behind ProgressiveSection — authorized/minimized by default.
- * Read-only. No interpretation or recalculation.
- */
+
 import React from 'react';
 import { Hash } from 'lucide-react';
 import type { ProvenanceDTO } from '@/types/decisionBasis';
 import { formatTimestamp } from '@/utils/decisionBasisPresentation';
-
 interface ProvenanceDetailProps {
   provenance: ProvenanceDTO | null | undefined;
 }
-
 export const ProvenanceDetail: React.FC<ProvenanceDetailProps> = ({
   provenance,
 }) => {
@@ -31,7 +24,6 @@ export const ProvenanceDetail: React.FC<ProvenanceDetailProps> = ({
       </section>
     );
   }
-
   return (
     <section aria-labelledby="provenance-title" className="space-y-3">
       <h3
