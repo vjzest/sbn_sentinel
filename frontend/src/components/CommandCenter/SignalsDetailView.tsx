@@ -10,11 +10,9 @@ import { Activity, Phone, Mail, Calendar, ChevronRight, X, Clock, Database, Spar
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '@/store';
 import { incrementActionsTaken, SignalEvent } from '@/store/slices/signalSlice';
-import { executeGovernedRecommendation } from '@/utils/governance';
 import { GovernedStatus } from '@/components/GovernedUI/GovernedStatus';
 import { DataState } from '@/components/GovernedUI/DataState';
 import { CriticalStateBanner } from '@/components/GovernedUI/CriticalStateBanner';
-// D4 — Decision Basis
 import { fetchDecisionBasis } from '@/utils/decisionBasis';
 import type { DecisionBasisDTO } from '@/types/decisionBasis';
 import { DecisionContextSummary } from '@/components/DecisionBasis/DecisionContextSummary';
@@ -29,14 +27,10 @@ export const SignalsDetailView: React.FC<{ initialSignalId?: string | null }> = 
   const [searchTerm, setSearchTerm] = useState('');
   const [activeFilter, setActiveFilter] = useState<'All' | 'EHR' | 'Phone' | 'Email'>('All');
   const [selectedSignal, setSelectedSignal] = useState<SignalEvent | null>(null);
-  const [isDispatched, setIsDispatched] = useState(false);
-  const [isDispatching, setIsDispatching] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [auditLogs, setAuditLogs] = useState<any[]>([]);
   const [viewMode, setViewMode] = useState<'doctor' | 'developer' | 'inspector'>('doctor');
-  const [outcomeState, setOutcomeState] = useState<'PENDING' | 'CONFIRMED' | 'BLOCKED' | null>(null);
-  const [resolutionState, setResolutionState] = useState<'UNRESOLVED' | 'RESOLVED' | 'BLOCKED' | null>(null);
   const [isProd, setIsProd] = useState(true);
   // D4 — Decision Basis state
   const [basisData, setBasisData] = useState<DecisionBasisDTO | null>(null);
@@ -84,7 +78,7 @@ export const SignalsDetailView: React.FC<{ initialSignalId?: string | null }> = 
           setIsProd(false);
         }
       })
-      .catch(() => { 
+      .catch(() => {
         // Fail open to safe (production) mode
         setIsProd(true);
       });
@@ -172,81 +166,7 @@ export const SignalsDetailView: React.FC<{ initialSignalId?: string | null }> = 
   const emailCount = signalsList.filter(s => s.type === 'Email').length;
   const lossRiskCount = signalsList.filter(s => s.risk_level === 'Critical' || s.risk_level === 'High').length;
 
-  const triggerAction = async () => {
-    if (!selectedSignal) return;
 
-    // Fail closed: must carry an authoritative recommendation_id
-    const recommendationId = selectedSignal.metadata?.recommendation_id;
-    if (!recommendationId) {
-      setOutcomeState('BLOCKED' as any);
-      setResolutionState('BLOCKED' as any);
-      return;
-    }
-
-    setIsDispatching(true);
-
-    try {
-      const allowedAction = selectedSignal.metadata?.allowed_action_type || 'SEND_NOTIFICATION';
-      const targetRef = selectedSignal.metadata?.target_reference || `SIGNAL-${selectedSignal.id}`;
-
-      const result = await executeGovernedRecommendation(
-        recommendationId,
-        allowedAction,
-        targetRef
-      );
-
-      await fetchAuditLogs();
-
-      setIsDispatching(false);
-
-      if (result.status === 'executed') {
-        setIsDispatched(true);
-        setOutcomeState('PENDING');
-        setResolutionState('UNRESOLVED');
-        dispatch(incrementActionsTaken());
-
-        // Add to Clinical Reminders in localStorage only on approved execution
-        if (selectedSignal.recommended_action) {
-          const saved = localStorage.getItem('clinicalReminders');
-          let currentReminders = [];
-          if (saved) {
-            try {
-              currentReminders = JSON.parse(saved);
-            } catch (e) {
-              console.error(e);
-            }
-          }
-          const exists = currentReminders.some((r: any) => r.text === selectedSignal.recommended_action);
-          if (!exists) {
-            const newReminder = {
-              id: `signal-${selectedSignal.id}`,
-              text: selectedSignal.recommended_action,
-              source: selectedSignal.source || 'Deterministic Policy Engine',
-              timestamp: new Date().toISOString(),
-              completed: false
-            };
-            currentReminders.unshift(newReminder);
-            localStorage.setItem('clinicalReminders', JSON.stringify(currentReminders));
-            window.dispatchEvent(new Event('clinicalRemindersUpdated'));
-          }
-        }
-      } else if (result.status === 'blocked') {
-        setIsDispatched(false);
-        setOutcomeState('BLOCKED' as any);
-        setResolutionState('BLOCKED' as any);
-      } else {
-        setIsDispatched(false);
-        setOutcomeState(null);
-        setResolutionState(null);
-      }
-    } catch (e) {
-      console.error("Failed to approve decision:", e);
-      setIsDispatching(false);
-      setIsDispatched(false);
-      setOutcomeState(null);
-      setResolutionState(null);
-    }
-  };
 
   // Generate simulated Practice Fusion / twilio raw payload details for audit
   const getSimulatedRawPayload = (signal: SignalEvent) => {
@@ -350,7 +270,6 @@ export const SignalsDetailView: React.FC<{ initialSignalId?: string | null }> = 
     }
     return result;
   };
-
   if (selectedSignal) {
     const signalRef = createGovernedRef('Signal', selectedSignal.id);
     const primaryCtx = createPrimaryContext(signalRef, selectedSignal.metadata?.is_historical ? 'historical' : 'current');
@@ -359,20 +278,20 @@ export const SignalsDetailView: React.FC<{ initialSignalId?: string | null }> = 
     const primaryContent = (
       <div className="space-y-6">
         <div className="flex flex-wrap items-center gap-2 sm:gap-3 w-full md:w-auto">
-            <div className={`p-2.5 ${getBgColor(selectedSignal.type)} rounded-[16px] flex-shrink-0`}>
-              {getIcon(selectedSignal.type)}
-            </div>
-            <div>
-              <h4 className="text-base font-extrabold text-white flex items-center gap-2">
-                Signal Diagnostic Report
-                {selectedSignal.correlation_id && (
-                  <span className="text-[10px] font-mono bg-blue-500/20 border border-blue-500/50 text-blue-400 px-2 py-0.5 rounded-[6px]">
-                    Journey ID: {selectedSignal.correlation_id}
-                  </span>
-                )}
-              </h4>
-              <p className="text-[10px] text-white/70 font-extrabold uppercase tracking-widest mt-0.5">Source: {selectedSignal.source} Integration Layer</p>
-            </div>
+          <div className={`p-2.5 ${getBgColor(selectedSignal.type)} rounded-[16px] flex-shrink-0`}>
+            {getIcon(selectedSignal.type)}
+          </div>
+          <div>
+            <h4 className="text-base font-extrabold text-white flex items-center gap-2">
+              Signal Diagnostic Report
+              {selectedSignal.correlation_id && (
+                <span className="text-[10px] font-mono bg-blue-500/20 border border-blue-500/50 text-blue-400 px-2 py-0.5 rounded-[6px]">
+                  Journey ID: {selectedSignal.correlation_id}
+                </span>
+              )}
+            </h4>
+            <p className="text-[10px] text-white/70 font-extrabold uppercase tracking-widest mt-0.5">Source: {selectedSignal.source} Integration Layer</p>
+          </div>
         </div>
 
         <div className="bg-white/5 border border-white/10 rounded-[18px] p-4">
@@ -398,10 +317,10 @@ export const SignalsDetailView: React.FC<{ initialSignalId?: string | null }> = 
                 <div className="text-[10px] text-emerald-600 mt-1">Expected Outcome: {selectedSignal.expected_outcome || 'Issue resolved.'}</div>
               </div>
             )}
-            
+
             <div className="mt-8">
-              <RecommendationReview 
-                signalId={selectedSignal.id} 
+              <RecommendationReview
+                signalId={selectedSignal.id}
                 onViewBasis={() => {
                   const el = document.getElementById('decision-basis');
                   if (el) {
@@ -411,65 +330,22 @@ export const SignalsDetailView: React.FC<{ initialSignalId?: string | null }> = 
                 }}
               />
             </div>
-
-            <div className="mt-8 pt-6 border-t border-white/10">
-               <button
-                  onClick={triggerAction}
-                  disabled={isDispatching || isDispatched || outcomeState === 'BLOCKED'}
-                  className="w-full bg-[var(--color-accent)] hover:bg-[#8b3dff]/80 text-white font-bold text-sm px-6 py-3 rounded-[14px] transition-colors disabled:opacity-50 flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(139,61,255,0.4)]"
-                >
-                  {isDispatching ? (
-                    <><RefreshCw className="w-4 h-4 animate-spin" /> Authorizing Governance Action...</>
-                  ) : isDispatched ? (
-                    <><Check className="w-4 h-4" /> Action Dispatched Successfully</>
-                  ) : outcomeState === 'BLOCKED' ? (
-                    <><Shield className="w-4 h-4" /> Execution Blocked by Policy</>
-                  ) : (
-                    <><Cpu className="w-4 h-4" /> Execute Governed Action</>
-                  )}
-                </button>
-            </div>
           </div>
         </div>
-        
-        {isDispatched && (
-            <div className="bg-white/5 border border-white/10 rounded-[18px] p-4 flex gap-3 relative animate-in slide-in-from-top-2">
-                <div className="flex-1">
-                <h5 className="text-xs font-extrabold text-[var(--color-accent)] uppercase tracking-wider mb-2 flex items-center gap-1">
-                    <Database className="w-3.5 h-3.5" /> Operational Outcome (SESR-007)
-                </h5>
-                
-                {outcomeState === 'BLOCKED' && (
-                    <CriticalStateBanner state="BLOCKED" reason="Execution was blocked by backend governance rules." />
-                )}
-                
-                <div className="grid grid-cols-2 gap-4 mt-2">
-                    <div>
-                    <p className="text-[10px] text-white/50 uppercase tracking-widest font-bold mb-1">Confirmation State</p>
-                    <GovernedStatus state={outcomeState || 'PENDING'} />
-                    </div>
-                    <div>
-                    <p className="text-[10px] text-white/50 uppercase tracking-widest font-bold mb-1">Resolution State</p>
-                    <GovernedStatus state={resolutionState || 'UNRESOLVED'} />
-                    </div>
-                </div>
-                </div>
-            </div>
-        )}
       </div>
     );
 
     const contextPanels = (
       <>
-        <ContextPanel 
-          context={nestedCtx} 
-          title="Context & Intelligence" 
+        <ContextPanel
+          context={nestedCtx}
+          title="Context & Intelligence"
           icon={<Sparkles className="w-4 h-4 text-emerald-400" />}
         >
           <div className="space-y-4">
-            <ProgressiveSection 
-              id="ctx-engine" 
-              title="Decision Context Engine" 
+            <ProgressiveSection
+              id="ctx-engine"
+              title="Decision Context Engine"
               icon={<Activity className="w-4 h-4 text-[var(--color-accent)]" />}
               defaultExpanded={true}
             >
@@ -489,9 +365,9 @@ export const SignalsDetailView: React.FC<{ initialSignalId?: string | null }> = 
               </div>
             </ProgressiveSection>
 
-            <ProgressiveSection 
-              id="rev-engine" 
-              title="Revenue Intelligence" 
+            <ProgressiveSection
+              id="rev-engine"
+              title="Revenue Intelligence"
               icon={<Shield className="w-4 h-4 text-amber-400" />}
             >
               <div className="grid grid-cols-2 gap-4">
@@ -510,17 +386,17 @@ export const SignalsDetailView: React.FC<{ initialSignalId?: string | null }> = 
               </div>
             </ProgressiveSection>
 
-            <ProgressiveSection 
-              id="raw-payload" 
-              title="Evidence Inspector & Raw Logs" 
+            <ProgressiveSection
+              id="raw-payload"
+              title="Evidence Inspector & Raw Logs"
               icon={<Database className="w-4 h-4 text-blue-400" />}
             >
-               <div className="bg-black/50 rounded-[12px] p-4 text-[10px] font-mono text-amber-400 overflow-x-auto max-h-48 custom-scrollbar border border-white/10">
-                  <pre>{JSON.stringify({
-                    decision_context_id: `ctx-${selectedSignal.id}`,
-                    evidence_snapshot: getSimulatedRawPayload(selectedSignal)
-                  }, null, 2)}</pre>
-               </div>
+              <div className="bg-black/50 rounded-[12px] p-4 text-[10px] font-mono text-amber-400 overflow-x-auto max-h-48 custom-scrollbar border border-white/10">
+                <pre>{JSON.stringify({
+                  decision_context_id: `ctx-${selectedSignal.id}`,
+                  evidence_snapshot: getSimulatedRawPayload(selectedSignal)
+                }, null, 2)}</pre>
+              </div>
             </ProgressiveSection>
 
             {/* D4 — Decision Basis (read-only projection) */}
@@ -533,19 +409,19 @@ export const SignalsDetailView: React.FC<{ initialSignalId?: string | null }> = 
                 basisLoading
                   ? 'loading'
                   : basisData === null
-                  ? 'unavailable'
-                  : basisData.technical_state === 'unauthorized'
-                  ? 'unauthorized'
-                  : basisData.technical_state === 'unavailable'
-                  ? 'unavailable'
-                  : 'ready'
+                    ? 'unavailable'
+                    : basisData.technical_state === 'unauthorized'
+                      ? 'unauthorized'
+                      : basisData.technical_state === 'unavailable'
+                        ? 'unavailable'
+                        : 'ready'
               }
               dataStateMessage={
                 basisData?.technical_state === 'unauthorized'
                   ? 'You do not have permission to view the Decision Basis for this signal.'
                   : basisLoading
-                  ? undefined
-                  : 'Decision Basis detail is unavailable for this signal.'
+                    ? undefined
+                    : 'Decision Basis detail is unavailable for this signal.'
               }
             >
               {basisData && basisData.technical_state === 'ready' && (
@@ -592,7 +468,7 @@ export const SignalsDetailView: React.FC<{ initialSignalId?: string | null }> = 
 
     return (
       <div className="h-[85vh] min-h-[600px] flex flex-col p-2">
-        <GovernedWorkspace 
+        <GovernedWorkspace
           context={primaryCtx}
           primaryContent={primaryContent}
           contextPanels={contextPanels}
@@ -721,10 +597,6 @@ export const SignalsDetailView: React.FC<{ initialSignalId?: string | null }> = 
                         key={signal.id}
                         onClick={() => {
                           setSelectedSignal(signal);
-                          setIsDispatched(false);
-                          setIsDispatching(false);
-                          setOutcomeState(null);
-                          setResolutionState(null);
                         }}
                         className="border-b border-white/10 hover:bg-white/5 transition-all last:border-0 cursor-pointer"
                       >
