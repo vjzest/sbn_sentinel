@@ -7,7 +7,7 @@ from app.services.governance_registry import governance_registry, DecisionStatus
 from app.api.deps import get_current_user, get_db
 from app.models.signal import SignalModel
 from app.models.decision_record import DecisionRecordModel
-from app.models.governance_storage import RuleEvaluationModel
+from app.models.governance_storage import RuleEvaluationModel, RecommendationModel, HumanDecisionModel
 
 router = APIRouter()
 
@@ -78,17 +78,16 @@ async def get_recommendation_review(
     journey_id = signal.metadata_data.get("correlation_id") or signal.metadata_data.get("pipeline_event_id")
     unavailable_resp["journey_id"] = journey_id
     
-    # 1. Resolve exact governed recommendation via DecisionRecordModel OR RuleEvaluationModel
-    # D4 logic uses RuleEvaluationModel directly; we should mirror the exact same authoritative check.
+    # 1. Resolve exact governed recommendation via RuleEvaluationModel
     evals = db.query(RuleEvaluationModel).filter(RuleEvaluationModel.journey_id == journey_id).all()
     if not evals:
         return unavailable_resp
 
-    # Check for ambiguity (same as D4)
     context_id = evals[0].decision_context_id
     policy_id = evals[0].policy_id
     policy_version = evals[0].policy_version
     
+    # Check for D4 ambiguity
     for r in evals:
         if (
             r.decision_context_id != context_id or
@@ -98,79 +97,79 @@ async def get_recommendation_review(
             unavailable_resp["technical_state"] = "ambiguous"
             return unavailable_resp
 
-    # Recommendation identity is often bound via rule evaluations, but let's see if 
-    # the governance_registry has a formal recommendation linked to this journey.
-    # We find all recommendations for this journey in the registry
-    recs = [r for r in governance_registry._recommendations if getattr(r, "journey_id", None) == journey_id]
-    
+    # Fetch persisted RecommendationModel
+    recs = db.query(RecommendationModel).filter(RecommendationModel.journey_id == journey_id).all()
     if not recs:
-        # Fallback to DecisionRecordModel if not in registry
-        decision_record = db.query(DecisionRecordModel).filter(
-            DecisionRecordModel.event_id == signal.metadata_data.get("pipeline_event_id")
-        ).first()
+        return unavailable_resp
+    
+    if len(recs) > 1:
+        unavailable_resp["technical_state"] = "ambiguous"
+        return unavailable_resp
         
-        if not decision_record or not decision_record.recommendation:
-            return unavailable_resp
-            
-        # Parse recommendation payload
-        rec_data = decision_record.recommendation
-        if isinstance(rec_data, dict):
-            rec_id = rec_data.get("id") or rec_data.get("recommendation_id")
-            rec_content = rec_data.get("description") or rec_data.get("content", "")
-            rec_status = rec_data.get("status", "ACTIVE")
-            rec_priority = rec_data.get("priority", "Medium")
-        else:
-            return unavailable_resp
-            
-        recommendation_obj = {
-            "recommendation_id": str(rec_id),
-            "decision_context_id": context_id,
-            "rule_evaluation_id": evals[0].evaluation_id,
-            "mapping_id": "map-default",
-            "mapping_version": "1.0",
-            "content": rec_content,
-            "status": rec_status,
-            "priority": rec_priority,
-            "generated_at": decision_record.created_at.isoformat()
-        }
-    else:
-        # Exact authoritative recommendation from registry
-        authoritative_rec = recs[0]
-        recommendation_obj = {
-            "recommendation_id": authoritative_rec.recommendation_id,
-            "decision_context_id": authoritative_rec.decision_context_id,
-            "rule_evaluation_id": authoritative_rec.rule_evaluation_id,
-            "mapping_id": authoritative_rec.mapping_id,
-            "mapping_version": authoritative_rec.mapping_version,
-            "content": authoritative_rec.recommendation_content,
-            "status": authoritative_rec.status.value,
-            "priority": authoritative_rec.priority,
-            "generated_at": authoritative_rec.generated_at.isoformat()
-        }
+    authoritative_rec = recs[0]
+    
+    # D5-09: Exact matching
+    if authoritative_rec.decision_context_id != context_id:
+        unavailable_resp["technical_state"] = "ambiguous"
+        return unavailable_resp
+        
+    # Check if rule_evaluation_id is actually in the current evals list
+    if not any(e.evaluation_id == authoritative_rec.rule_evaluation_id for e in evals):
+        unavailable_resp["technical_state"] = "ambiguous"
+        return unavailable_resp
 
-    # 2. Extract Authority
+    recommendation_obj = {
+        "recommendation_id": authoritative_rec.recommendation_id,
+        "decision_context_id": authoritative_rec.decision_context_id,
+        "rule_evaluation_id": authoritative_rec.rule_evaluation_id,
+        "mapping_id": authoritative_rec.mapping_id,
+        "mapping_version": authoritative_rec.mapping_version,
+        "content": authoritative_rec.content,
+        "status": authoritative_rec.status,
+        "priority": authoritative_rec.priority,
+        "generated_at": authoritative_rec.generated_at
+    }
+
+    # 2. Extract Authority (D5-06, D5-07)
     auth_config = governance_registry.get_authority_config(current_user.role)
+    is_active = authoritative_rec.status == "ACTIVE"
+    
+    if not auth_config:
+        authority_state = "NOT_AUTHORIZED"
+        allowed_decisions = []
+    elif not is_active:
+        authority_state = "AUTHORITY_UNKNOWN"
+        allowed_decisions = []
+    else:
+        authority_state = "AUTHORIZED"
+        allowed_decisions = [d.value for d in auth_config.allowed_decisions]
+
     authority = {
-        "state": "AUTHORIZED" if auth_config else "NOT_AUTHORIZED",
-        "allowed_decisions": [d.value for d in auth_config.allowed_decisions] if auth_config else [],
+        "state": authority_state,
+        "allowed_decisions": allowed_decisions,
         "reason_required_for": [d.value for d in auth_config.requires_reason_for] if auth_config else []
     }
 
-    # 3. Extract Current Human Decision
+    # 3. Extract Current Human Decision (D5-04)
     current_decision_obj = None
-    existing_decisions = [
-        d for d in governance_registry._human_decisions 
-        if d.recommendation_id == recommendation_obj["recommendation_id"] and d.status == DecisionStatus.RECORDED
-    ]
+    existing_decisions = db.query(HumanDecisionModel).filter(
+        HumanDecisionModel.recommendation_id == authoritative_rec.recommendation_id,
+        HumanDecisionModel.status == "RECORDED"
+    ).all()
+    
+    if len(existing_decisions) > 1:
+        unavailable_resp["technical_state"] = "ambiguous"
+        return unavailable_resp
+        
     if existing_decisions:
         d = existing_decisions[0]
         current_decision_obj = {
             "decision_id": d.decision_id,
             "recommendation_id": d.recommendation_id,
-            "decision_type": d.decision_type.value,
-            "status": d.status.value,
+            "decision_type": d.decision_type,
+            "status": d.status,
             "actor_id": d.actor_id,
-            "decision_timestamp": d.decision_timestamp.isoformat() if d.decision_timestamp else None
+            "decision_timestamp": d.decision_timestamp
         }
 
     return {
