@@ -227,9 +227,11 @@ def get_decision_basis(
 
     # Verify all evaluations for the journey agree on the exact basis
     for r in evals:
-        if (r.decision_context_id != context_id or 
-            r.policy_id != policy_id or 
-            r.policy_version != policy_version):
+        if (
+            r.decision_context_id != context_id or
+            r.policy_id != policy_id or
+            r.policy_version != policy_version
+        ):
             return {
                 "object_ref": _build_object_ref(signal),
                 "journey_id": journey_id,
