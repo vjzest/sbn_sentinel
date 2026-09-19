@@ -10,6 +10,7 @@ from app.services.governance_registry import governance_registry, AuthorityConfi
 
 client = TestClient(app)
 
+
 @pytest.fixture(scope="function")
 def setup_db():
     Base.metadata.create_all(bind=SessionLocal().get_bind())
@@ -25,24 +26,25 @@ def setup_db():
     governance_registry._recommendations.clear()
     governance_registry._human_decisions.clear()
 
+
 @pytest.fixture(scope="function")
 def mock_admin():
     from app.api.deps import get_current_user
-    
+
     class MockAdmin:
         id = "admin123"
         role = "System Administrator"
         is_active = True
-        
+
     app.dependency_overrides[get_current_user] = lambda: MockAdmin()
-    
+
     governance_registry.register_authority_config(AuthorityConfiguration(
         role="System Administrator",
         allowed_decisions=[DecisionType.APPROVED, DecisionType.REJECTED],
         can_override=True,
         requires_reason_for=[DecisionType.REJECTED]
     ))
-    
+
     yield
     app.dependency_overrides.clear()
 
@@ -53,7 +55,7 @@ def test_d5_recommendation_review_endpoint_exact_match(setup_db, mock_admin):
     signal_id = str(uuid.uuid4())
     event_id = str(uuid.uuid4())
     correlation_id = str(uuid.uuid4())
-    
+
     # 1. Setup Signal
     sig = SignalModel(
         id=signal_id,
@@ -61,11 +63,11 @@ def test_d5_recommendation_review_endpoint_exact_match(setup_db, mock_admin):
         metadata_data={"pipeline_event_id": event_id, "correlation_id": correlation_id}
     )
     db.add(sig)
-    
+
     rec_id = str(uuid.uuid4())
     eval_id = str(uuid.uuid4())
     context_id = "ctx-test"
-    
+
     # 2. Setup RuleEvaluation
     rule_eval = RuleEvaluationModel(
         evaluation_id=eval_id,
@@ -79,7 +81,7 @@ def test_d5_recommendation_review_endpoint_exact_match(setup_db, mock_admin):
         journey_id=correlation_id
     )
     db.add(rule_eval)
-    
+
     # 3. Setup Persisted Recommendation
     rec = RecommendationModel(
         recommendation_id=rec_id,
@@ -100,14 +102,14 @@ def test_d5_recommendation_review_endpoint_exact_match(setup_db, mock_admin):
     response = client.get(f"/api/v1/decisions/review/{signal_id}")
     assert response.status_code == 200, response.text
     data = response.json()
-    
+
     assert data["technical_state"] == "ready"
     assert data["recommendation"]["recommendation_id"] == rec_id
     assert data["recommendation"]["content"] == "Test Recommendation Content"
     assert data["authority"]["state"] == "AUTHORIZED"
     assert data["current_decision"] is None
 
-    # 5. Add recommendation to registry so POST /decisions works 
+    # 5. Add recommendation to registry so POST /decisions works
     # (Since HDE relies on registry, we must sync it for the action)
     governance_registry._recommendations.append(
         RecommendationRecord(
@@ -130,13 +132,13 @@ def test_d5_recommendation_review_endpoint_exact_match(setup_db, mock_admin):
         "decision_type": "APPROVED",
         "reason": "Looking good"
     })
-    
+
     assert post_resp.status_code == 200, post_resp.text
-    
+
     # 7. Clear session/registry to prove we read from DB
     db.close()
     governance_registry._human_decisions.clear()
-    
+
     # 8. Verify GET endpoint shows the current decision exactly from DB
     get_again = client.get(f"/api/v1/decisions/review/{signal_id}")
     data_again = get_again.json()
@@ -144,15 +146,16 @@ def test_d5_recommendation_review_endpoint_exact_match(setup_db, mock_admin):
     assert data_again["current_decision"]["decision_type"] == "APPROVED"
     assert data_again["current_decision"]["status"] == "RECORDED"
 
+
 @pytest.mark.governance
 def test_d5_recommendation_ambiguity(setup_db, mock_admin):
     db = SessionLocal()
     signal_id = str(uuid.uuid4())
     correlation_id = str(uuid.uuid4())
-    
+
     sig = SignalModel(id=signal_id, type="test_signal", metadata_data={"correlation_id": correlation_id})
     db.add(sig)
-    
+
     # Add two rule evaluations and two recommendations for the same journey
     for i in range(2):
         eval_id = str(uuid.uuid4())
@@ -172,20 +175,21 @@ def test_d5_recommendation_ambiguity(setup_db, mock_admin):
             status="ACTIVE", priority="High", generated_at=datetime.datetime.utcnow().isoformat()
         ))
     db.commit()
-    
+
     # Ambiguity check
     response = client.get(f"/api/v1/decisions/review/{signal_id}")
     assert response.status_code == 200
     assert response.json()["technical_state"] == "ambiguous"
+
 
 @pytest.mark.governance
 def test_d5_recommendation_lifecycle_expired(setup_db, mock_admin):
     db = SessionLocal()
     signal_id = str(uuid.uuid4())
     correlation_id = str(uuid.uuid4())
-    
+
     db.add(SignalModel(id=signal_id, type="test_signal", metadata_data={"correlation_id": correlation_id}))
-    
+
     eval_id = str(uuid.uuid4())
     db.add(RuleEvaluationModel(
         evaluation_id=eval_id, decision_context_id="ctx-test",
@@ -193,7 +197,7 @@ def test_d5_recommendation_lifecycle_expired(setup_db, mock_admin):
         result="PASS", evaluation_timestamp=datetime.datetime.utcnow().isoformat(),
         journey_id=correlation_id
     ))
-    
+
     # Add EXPIRED recommendation
     db.add(RecommendationModel(
         recommendation_id=str(uuid.uuid4()),
@@ -204,9 +208,8 @@ def test_d5_recommendation_lifecycle_expired(setup_db, mock_admin):
         status="EXPIRED", priority="High", generated_at=datetime.datetime.utcnow().isoformat()
     ))
     db.commit()
-    
+
     response = client.get(f"/api/v1/decisions/review/{signal_id}")
     data = response.json()
     assert data["authority"]["state"] == "AUTHORITY_UNKNOWN"
     assert len(data["authority"]["allowed_decisions"]) == 0
-

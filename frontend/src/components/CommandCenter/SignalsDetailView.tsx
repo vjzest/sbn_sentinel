@@ -35,7 +35,6 @@ export const SignalsDetailView: React.FC<{ initialSignalId?: string | null }> = 
   // D4 — Decision Basis state
   const [basisData, setBasisData] = useState<DecisionBasisDTO | null>(null);
   const [basisLoading, setBasisLoading] = useState(false);
-
   // Combine redux state and db historical signals
   const fetchDbSignals = async () => {
     try {
@@ -51,7 +50,6 @@ export const SignalsDetailView: React.FC<{ initialSignalId?: string | null }> = 
       setIsRefreshing(false);
     }
   };
-
   const fetchAuditLogs = async () => {
     try {
       const response = await fetchWithAuth(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/audit/`);
@@ -64,11 +62,9 @@ export const SignalsDetailView: React.FC<{ initialSignalId?: string | null }> = 
       console.error("Failed to load dispatched actions log:", err);
     }
   };
-
   useEffect(() => {
     fetchDbSignals();
     fetchAuditLogs();
-
     // Audit 3 Item 8 / Audit 4 Item 6: Demo State gating
     fetchWithAuth(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/settings`)
       .then(res => res.json())
@@ -83,18 +79,12 @@ export const SignalsDetailView: React.FC<{ initialSignalId?: string | null }> = 
         setIsProd(true);
       });
   }, [reduxSignals]);
-
-  // Merge lists to guarantee uniqueness by ID, preferring newest
   const allSignalsMap = new Map<string, SignalEvent>();
-  // 1. Add DB signals
   dbSignals.forEach(s => allSignalsMap.set(s.id, s));
-  // 2. Add Redux real-time signals (override db if duplicates)
   reduxSignals.forEach(s => allSignalsMap.set(s.id, s));
-
   const signalsList = Array.from(allSignalsMap.values()).sort((a, b) =>
     new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
   );
-
   useEffect(() => {
     if (initialSignalId) {
       const sig = allSignalsMap.get(initialSignalId);
@@ -103,8 +93,6 @@ export const SignalsDetailView: React.FC<{ initialSignalId?: string | null }> = 
       }
     }
   }, [initialSignalId, dbSignals, reduxSignals]);
-
-  // D4 — Fetch Decision Basis when a signal is selected
   const loadDecisionBasis = useCallback(async (signalId: string) => {
     setBasisData(null);
     setBasisLoading(true);
@@ -115,17 +103,14 @@ export const SignalsDetailView: React.FC<{ initialSignalId?: string | null }> = 
       setBasisLoading(false);
     }
   }, []);
-
   useEffect(() => {
     if (selectedSignal) {
       loadDecisionBasis(selectedSignal.id);
     } else {
-      // Clear when no signal selected — no stale basis shown
       setBasisData(null);
       setBasisLoading(false);
     }
   }, [selectedSignal, loadDecisionBasis]);
-
   const getIcon = (type: string) => {
     switch (type) {
       case 'EHR': return <Database className="w-4 h-4 text-[var(--color-semantic-attention)]" />;
@@ -134,7 +119,6 @@ export const SignalsDetailView: React.FC<{ initialSignalId?: string | null }> = 
       default: return <Activity className="w-4 h-4 text-[var(--color-semantic-positive)]" />;
     }
   };
-
   const getBgColor = (type: string) => {
     switch (type) {
       case 'EHR': return 'bg-[var(--color-semantic-attention)]/20 text-[var(--color-semantic-attention)] border border-[#FDE68A]';
@@ -143,7 +127,6 @@ export const SignalsDetailView: React.FC<{ initialSignalId?: string | null }> = 
       default: return 'bg-[#D1FAE5] text-[var(--color-semantic-positive)] border border-[#A7F3D0]';
     }
   };
-
   const handleCopyId = (id: string) => {
     navigator.clipboard.writeText(id);
     setCopiedId(id);
@@ -172,7 +155,6 @@ export const SignalsDetailView: React.FC<{ initialSignalId?: string | null }> = 
   const getSimulatedRawPayload = (signal: SignalEvent) => {
     // Issue #5: Only simulate in demo environments.
     if (isProd) return signal;
-
     const patientName = signal.metadata?.patient_name || "Unknown Patient";
     const cleanPatient = patientName.replace(/\s+/g, '').toLowerCase();
 
@@ -261,7 +243,6 @@ export const SignalsDetailView: React.FC<{ initialSignalId?: string | null }> = 
       };
     }
   };
-
   const uuidSim = (len: number) => {
     let result = '';
     const chars = 'abcdef0123456789';
@@ -274,7 +255,6 @@ export const SignalsDetailView: React.FC<{ initialSignalId?: string | null }> = 
     const signalRef = createGovernedRef('Signal', selectedSignal.id);
     const primaryCtx = createPrimaryContext(signalRef, selectedSignal.metadata?.is_historical ? 'historical' : 'current');
     const nestedCtx = createNestedContext(signalRef, 2, signalRef, primaryCtx.mode);
-
     const primaryContent = (
       <div className="space-y-6">
         <div className="flex flex-wrap items-center gap-2 sm:gap-3 w-full md:w-auto">
@@ -293,7 +273,6 @@ export const SignalsDetailView: React.FC<{ initialSignalId?: string | null }> = 
             <p className="text-[10px] text-white/70 font-extrabold uppercase tracking-widest mt-0.5">Source: {selectedSignal.source} Integration Layer</p>
           </div>
         </div>
-
         <div className="bg-white/5 border border-white/10 rounded-[18px] p-4">
           <h5 className="text-[10px] font-extrabold text-white/50 uppercase tracking-widest mb-1.5">TELEMETRY MESSAGE</h5>
           <p className="text-sm font-bold text-white">{selectedSignal.message}</p>
@@ -303,7 +282,6 @@ export const SignalsDetailView: React.FC<{ initialSignalId?: string | null }> = 
             <span>Received: <strong className="text-white">{new Date(selectedSignal.timestamp).toLocaleString()}</strong></span>
           </div>
         </div>
-
         <div className="bg-white/5 border border-white/10 rounded-[18px] p-4 flex gap-3">
           <div className="flex-1">
             <h5 className="text-xs font-extrabold text-white uppercase tracking-wider mb-2">Deterministic Evaluation</h5>
@@ -334,7 +312,6 @@ export const SignalsDetailView: React.FC<{ initialSignalId?: string | null }> = 
         </div>
       </div>
     );
-
     const contextPanels = (
       <>
         <ContextPanel
@@ -364,7 +341,6 @@ export const SignalsDetailView: React.FC<{ initialSignalId?: string | null }> = 
                 </div>
               </div>
             </ProgressiveSection>
-
             <ProgressiveSection
               id="rev-engine"
               title="Revenue Intelligence"
@@ -385,7 +361,6 @@ export const SignalsDetailView: React.FC<{ initialSignalId?: string | null }> = 
                 </div>
               </div>
             </ProgressiveSection>
-
             <ProgressiveSection
               id="raw-payload"
               title="Evidence Inspector & Raw Logs"
@@ -465,7 +440,6 @@ export const SignalsDetailView: React.FC<{ initialSignalId?: string | null }> = 
         </ContextPanel>
       </>
     );
-
     return (
       <div className="h-[85vh] min-h-[600px] flex flex-col p-2">
         <GovernedWorkspace
@@ -477,7 +451,6 @@ export const SignalsDetailView: React.FC<{ initialSignalId?: string | null }> = 
       </div>
     );
   }
-
   return (
     <div className="animate-in fade-in duration-500 max-w-[1600px] mx-auto space-y-8">
       {/* Header */}
@@ -496,7 +469,6 @@ export const SignalsDetailView: React.FC<{ initialSignalId?: string | null }> = 
           </button>
         </div>
       </div>
-
       {/* Metrics Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <div className="bg-gradient-to-br from-[var(--color-surface-raised)] to-[var(--color-surface)] border border-white/10 p-6 rounded-[24px] shadow-[0_20px_50px_rgba(46,16,85,0.3)] flex items-center justify-between text-white">
@@ -518,7 +490,6 @@ export const SignalsDetailView: React.FC<{ initialSignalId?: string | null }> = 
             <Database className="w-6 h-6" />
           </span>
         </div>
-
         <div className="bg-gradient-to-br from-[var(--color-surface-raised)] to-[var(--color-surface)] border border-white/10 p-6 rounded-[24px] shadow-[0_20px_50px_rgba(46,16,85,0.3)] flex items-center justify-between text-white">
           <div>
             <p className="text-xs font-bold text-white/70 uppercase tracking-widest mb-1">Communication Logs</p>
@@ -528,7 +499,6 @@ export const SignalsDetailView: React.FC<{ initialSignalId?: string | null }> = 
             <Mail className="w-6 h-6" />
           </span>
         </div>
-
         <div className="bg-gradient-to-br from-[var(--color-surface-raised)] to-[var(--color-surface)] border border-white/10 p-6 rounded-[24px] shadow-[0_20px_50px_rgba(46,16,85,0.3)] flex items-center justify-between text-white">
           <div>
             <p className="text-xs font-bold text-white/70 uppercase tracking-widest mb-1">Revenue Risk Triggers</p>
@@ -570,7 +540,6 @@ export const SignalsDetailView: React.FC<{ initialSignalId?: string | null }> = 
               ))}
             </div>
           </div>
-
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
