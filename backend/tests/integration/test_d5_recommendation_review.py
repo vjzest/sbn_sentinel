@@ -6,7 +6,7 @@ from app.main import app
 from app.db.database import SessionLocal, Base
 from app.models.signal import SignalModel
 from app.models.governance_storage import RuleEvaluationModel, RecommendationModel, HumanDecisionModel
-from app.services.governance_registry import governance_registry, AuthorityConfiguration, DecisionType, RecommendationRecord, RecommendationStatus, AuthorityRequirement
+from app.services.governance_registry import governance_registry, AuthorityConfiguration, DecisionType
 
 client = TestClient(app)
 
