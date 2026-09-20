@@ -3,7 +3,6 @@ from datetime import datetime, timedelta
 from app.services.governance_registry import (
     governance_registry, PolicyVersion, RuleVersion, RuleInputDefinition, LifecycleState
 )
-from app.services.policy_engine import policy_engine
 from app.services.rules_engine import rules_engine
 
 

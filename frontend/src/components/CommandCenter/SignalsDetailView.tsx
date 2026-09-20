@@ -290,12 +290,6 @@ export const SignalsDetailView: React.FC<{ initialSignalId?: string | null }> = 
               <p className="text-xs text-white/90 font-semibold"><span className="text-white/50">Problem:</span> {selectedSignal.problem || 'None'}</p>
               <p className="text-xs text-white/90 font-semibold"><span className="text-white/50">Reason:</span> {selectedSignal.reason || 'None'}</p>
             </div>
-            {selectedSignal.recommended_action && (
-              <div className="mt-2.5 p-2 bg-emerald-500/10 border border-emerald-500/30 rounded-2xl inline-block text-[11px] text-emerald-400 font-bold w-full">
-                Action: {selectedSignal.recommended_action}
-                <div className="text-[10px] text-emerald-600 mt-1">Expected Outcome: {selectedSignal.expected_outcome || 'Issue resolved.'}</div>
-              </div>
-            )}
 
             <div className="mt-8">
               <RecommendationReview

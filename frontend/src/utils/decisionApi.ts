@@ -20,6 +20,7 @@ export type RecommendationReviewDTO = {
     state: AuthorityState;
     allowed_decisions: string[];
     reason_required_for: string[];
+    eligibility?: string;
   };
   current_decision: {
     decision_id: string;

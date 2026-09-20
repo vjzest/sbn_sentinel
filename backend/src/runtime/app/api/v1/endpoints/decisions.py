@@ -1,3 +1,4 @@
+import logging
 from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel
 from typing import Optional, Any
@@ -8,6 +9,7 @@ from app.api.deps import get_current_user, get_db
 from app.models.signal import SignalModel
 from app.models.governance_storage import RuleEvaluationModel, RecommendationModel, HumanDecisionModel
 
+logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
@@ -130,21 +132,38 @@ async def get_recommendation_review(
     }
 
     # 2. Extract Authority (D5-06, D5-07)
-    auth_config = governance_registry.get_authority_config(current_user.role)
     is_active = authoritative_rec.status == "ACTIVE"
-    
-    if not auth_config:
-        authority_state = "NOT_AUTHORIZED"
+    role = getattr(current_user, "role", None)
+    auth_config = None
+
+    if not role or role in ("UNKNOWN", "Unknown", ""):
+        authority_state = "AUTHORITY_UNKNOWN"
+        allowed_decisions = []
+        eligibility = "ELIGIBLE" if is_active else authoritative_rec.status
+    elif role == "FORCE_CHECK_FAILURE":
+        authority_state = "AUTHORITY_CHECK_FAILED"
         allowed_decisions = []
         eligibility = "ELIGIBLE" if is_active else authoritative_rec.status
     else:
-        authority_state = "AUTHORIZED"
-        if not is_active:
+        try:
+            auth_config = governance_registry.get_authority_config(role)
+            if not auth_config:
+                authority_state = "NOT_AUTHORIZED"
+                allowed_decisions = []
+                eligibility = "ELIGIBLE" if is_active else authoritative_rec.status
+            else:
+                authority_state = "AUTHORIZED"
+                if not is_active:
+                    allowed_decisions = []
+                    eligibility = authoritative_rec.status
+                else:
+                    allowed_decisions = [d.value for d in auth_config.allowed_decisions]
+                    eligibility = "ELIGIBLE"
+        except Exception as e:
+            logger.error(f"Authority check failed for role {role}: {e}")
+            authority_state = "AUTHORITY_CHECK_FAILED"
             allowed_decisions = []
-            eligibility = authoritative_rec.status
-        else:
-            allowed_decisions = [d.value for d in auth_config.allowed_decisions]
-            eligibility = "ELIGIBLE"
+            eligibility = "ELIGIBLE" if is_active else authoritative_rec.status
 
     authority = {
         "state": authority_state,

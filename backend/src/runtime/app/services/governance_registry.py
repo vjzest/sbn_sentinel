@@ -1203,158 +1203,166 @@ governance_registry = GovernanceRegistry()
 
 def initialize_registry_seeds():
     # 1. Evidence Availability Policy
-    if governance_registry.get_policy_by_version("POL-001", "V1"):
-        return
-    governance_registry.register_policy(PolicyVersion(
-        policy_id="POL-001",
-        version="V1",
-        content="Recommendations require operational evidence.",
-        lifecycle_state=LifecycleState.ACTIVE,
-        effective_from=datetime.utcnow() - timedelta(days=30),
-        approval_state="APPROVED",
-        approved_by="System Administrator"
-    ))
+    if not governance_registry.get_policy_by_version("POL-001", "V1"):
+        governance_registry.register_policy(PolicyVersion(
+            policy_id="POL-001",
+            version="V1",
+            content="Recommendations require operational evidence.",
+            lifecycle_state=LifecycleState.ACTIVE,
+            effective_from=datetime.utcnow() - timedelta(days=30),
+            approval_state="APPROVED",
+            approved_by="System Administrator"
+        ))
 
     # 2. Event Type Authority Policy
-    governance_registry.register_policy(PolicyVersion(
-        policy_id="POL-002",
-        version="V1",
-        content="Only EHR, Phone, Email, Manual events are authorized.",
-        lifecycle_state=LifecycleState.ACTIVE,
-        effective_from=datetime.utcnow() - timedelta(days=30),
-        approval_state="APPROVED",
-        approved_by="System Administrator"
-    ))
+    if not governance_registry.get_policy_by_version("POL-002", "V1"):
+        governance_registry.register_policy(PolicyVersion(
+            policy_id="POL-002",
+            version="V1",
+            content="Only EHR, Phone, Email, Manual events are authorized.",
+            lifecycle_state=LifecycleState.ACTIVE,
+            effective_from=datetime.utcnow() - timedelta(days=30),
+            approval_state="APPROVED",
+            approved_by="System Administrator"
+        ))
 
     # 3. Production Source Authority Policy (Item 18)
-    governance_registry.register_policy(PolicyVersion(
-        policy_id="POL-003",
-        version="V1",
-        content="Production execution is restricted to Practice Fusion sources.",
-        lifecycle_state=LifecycleState.ACTIVE,
-        effective_from=datetime.utcnow() - timedelta(days=30),
-        approval_state="APPROVED",
-        approved_by="System Administrator"
-    ))
+    if not governance_registry.get_policy_by_version("POL-003", "V1"):
+        governance_registry.register_policy(PolicyVersion(
+            policy_id="POL-003",
+            version="V1",
+            content="Production execution is restricted to Practice Fusion sources.",
+            lifecycle_state=LifecycleState.ACTIVE,
+            effective_from=datetime.utcnow() - timedelta(days=30),
+            approval_state="APPROVED",
+            approved_by="System Administrator"
+        ))
 
     # 3. Clinic No-Show Rule
-    governance_registry.register_rule(RuleVersion(
-        rule_id="RULE-SCH-001",
-        version="V1",
-        logic_description="Flag patient no-show gaps in schedule.",
-        lifecycle_state=LifecycleState.ACTIVE,
-        governing_policy_id="POL-001",
-        governing_policy_version="V1",
-        inputs=[
-            RuleInputDefinition("primary_context", "str", True, "DecisionContext"),
-            RuleInputDefinition("secondary_context", "str", True, "DecisionContext"),
-            RuleInputDefinition("event_type", "str", True, "DecisionContext")
-        ],
-        allowed_outputs=["CONDITION_MET", "CONDITION_NOT_MET", "NOT_EVALUABLE"],
-        effective_from=datetime.utcnow() - timedelta(days=30),
-        approval_state="APPROVED",
-        approved_by="System Administrator"
-    ))
+    if not governance_registry.get_rule_by_version("RULE-SCH-001", "V1"):
+        governance_registry.register_rule(RuleVersion(
+            rule_id="RULE-SCH-001",
+            version="V1",
+            logic_description="Flag patient no-show gaps in schedule.",
+            lifecycle_state=LifecycleState.ACTIVE,
+            governing_policy_id="POL-001",
+            governing_policy_version="V1",
+            inputs=[
+                RuleInputDefinition("primary_context", "str", True, "DecisionContext"),
+                RuleInputDefinition("secondary_context", "str", True, "DecisionContext"),
+                RuleInputDefinition("event_type", "str", True, "DecisionContext")
+            ],
+            allowed_outputs=["CONDITION_MET", "CONDITION_NOT_MET", "NOT_EVALUABLE"],
+            effective_from=datetime.utcnow() - timedelta(days=30),
+            approval_state="APPROVED",
+            approved_by="System Administrator"
+        ))
 
     # 4. Clinic Wait Time Rule
-    governance_registry.register_rule(RuleVersion(
-        rule_id="RULE-SCH-002",
-        version="V1",
-        logic_description="Flag wait times exceeding threshold.",
-        lifecycle_state=LifecycleState.ACTIVE,
-        governing_policy_id="POL-001",
-        governing_policy_version="V1",
-        inputs=[
-            RuleInputDefinition("primary_context", "str", True, "DecisionContext"),
-            RuleInputDefinition("secondary_context", "str", True, "DecisionContext")
-        ],
-        allowed_outputs=["CONDITION_MET", "CONDITION_NOT_MET", "NOT_EVALUABLE"],
-        effective_from=datetime.utcnow() - timedelta(days=30),
-        approval_state="APPROVED",
-        approved_by="System Administrator"
-    ))
+    if not governance_registry.get_rule_by_version("RULE-SCH-002", "V1"):
+        governance_registry.register_rule(RuleVersion(
+            rule_id="RULE-SCH-002",
+            version="V1",
+            logic_description="Flag wait times exceeding threshold.",
+            lifecycle_state=LifecycleState.ACTIVE,
+            governing_policy_id="POL-001",
+            governing_policy_version="V1",
+            inputs=[
+                RuleInputDefinition("primary_context", "str", True, "DecisionContext"),
+                RuleInputDefinition("secondary_context", "str", True, "DecisionContext")
+            ],
+            allowed_outputs=["CONDITION_MET", "CONDITION_NOT_MET", "NOT_EVALUABLE"],
+            effective_from=datetime.utcnow() - timedelta(days=30),
+            approval_state="APPROVED",
+            approved_by="System Administrator"
+        ))
 
     # 5. System Blocked Rule (PF-Only)
-    governance_registry.register_rule(RuleVersion(
-        rule_id="RULE-SYS-BLOCKED",
-        version="V1",
-        logic_description="Blocks action if source is not Practice Fusion in Production.",
-        lifecycle_state=LifecycleState.ACTIVE,
-        governing_policy_id="POL-003",
-        governing_policy_version="V1",
-        inputs=[
-            RuleInputDefinition("source_connector", "str", True, "DecisionContext")
-        ],
-        allowed_outputs=["NOT_EVALUABLE", "BLOCKED"],
-        effective_from=datetime.utcnow() - timedelta(days=30),
-        approval_state="APPROVED",
-        approved_by="System Administrator"
-    ))
+    if not governance_registry.get_rule_by_version("RULE-SYS-BLOCKED", "V1"):
+        governance_registry.register_rule(RuleVersion(
+            rule_id="RULE-SYS-BLOCKED",
+            version="V1",
+            logic_description="Blocks action if source is not Practice Fusion in Production.",
+            lifecycle_state=LifecycleState.ACTIVE,
+            governing_policy_id="POL-003",
+            governing_policy_version="V1",
+            inputs=[
+                RuleInputDefinition("source_connector", "str", True, "DecisionContext")
+            ],
+            allowed_outputs=["NOT_EVALUABLE", "BLOCKED"],
+            effective_from=datetime.utcnow() - timedelta(days=30),
+            approval_state="APPROVED",
+            approved_by="System Administrator"
+        ))
 
     # 6. Recommendation Mappings (SESR-004)
-    governance_registry.register_recommendation_mapping(
-        RecommendationMapping(
-            mapping_id="REC-MAP-001",
+    if not governance_registry.get_recommendation_mapping_by_version("REC-MAP-001", "V1"):
+        governance_registry.register_recommendation_mapping(
+            RecommendationMapping(
+                mapping_id="REC-MAP-001",
+                version="V1",
+                applicable_rule_id="RULE-SCH-001",
+                eligible_result="CONDITION_MET",
+                recommendation_template="Consider sending an SMS reschedule link and dispatching a $25 fee claim.",
+                authority_requirement=AuthorityRequirement.APPROVAL_REQUIRED,
+                priority="Moderate",
+                business_impact_template="-$150.00 estimated revenue loss.",
+                expected_outcome_template="Recovery of $25 fee and rescheduled visit.",
+                problem_template="Patient No-Show",
+                lifecycle_state=LifecycleState.ACTIVE,
+                effective_from=datetime.utcnow() -
+                timedelta(
+                    days=30)))
+
+    if not governance_registry.get_recommendation_mapping_by_version("REC-MAP-002", "V1"):
+        governance_registry.register_recommendation_mapping(
+            RecommendationMapping(
+                mapping_id="REC-MAP-002",
+                version="V1",
+                applicable_rule_id="RULE-SCH-002",
+                eligible_result="CONDITION_MET",
+                recommendation_template="Suggest re-routing to next available Room and notifying the Clinic Administrator.",
+                authority_requirement=AuthorityRequirement.REVIEW_REQUIRED,
+                priority="High",
+                business_impact_template="High risk of patient satisfaction drop and negative reviews.",
+                expected_outcome_template="Wait time mitigated, patient informed.",
+                problem_template="Extended Patient Wait Time",
+                lifecycle_state=LifecycleState.ACTIVE,
+                effective_from=datetime.utcnow() -
+                timedelta(
+                    days=30)))
+
+    if not governance_registry.get_recommendation_mapping_by_version("REC-MAP-003", "V1"):
+        governance_registry.register_recommendation_mapping(RecommendationMapping(
+            mapping_id="REC-MAP-003",
+            version="V1",
+            applicable_rule_id="RULE-SYS-BLOCKED",
+            eligible_result="NOT_EVALUABLE",
+            recommendation_template="Review policy rules.",
+            authority_requirement=AuthorityRequirement.INFORMATIONAL,
+            priority="Information",
+            business_impact_template="Ensured compliance and security.",
+            expected_outcome_template="Maintained system integrity.",
+            problem_template="Action Blocked by Governance",
+            lifecycle_state=LifecycleState.ACTIVE,
+            effective_from=datetime.utcnow() - timedelta(days=30)
+        ))
+
+    if not governance_registry.get_recommendation_mapping_by_version("REC-MAP-004", "V1"):
+        governance_registry.register_recommendation_mapping(RecommendationMapping(
+            mapping_id="REC-MAP-004",
             version="V1",
             applicable_rule_id="RULE-SCH-001",
-            eligible_result="CONDITION_MET",
-            recommendation_template="Consider sending an SMS reschedule link and dispatching a $25 fee claim.",
-            authority_requirement=AuthorityRequirement.APPROVAL_REQUIRED,
-            priority="Moderate",
-            business_impact_template="-$150.00 estimated revenue loss.",
-            expected_outcome_template="Recovery of $25 fee and rescheduled visit.",
-            problem_template="Patient No-Show",
-            lifecycle_state=LifecycleState.ACTIVE,
-            effective_from=datetime.utcnow() -
-            timedelta(
-                days=30)))
-
-    governance_registry.register_recommendation_mapping(
-        RecommendationMapping(
-            mapping_id="REC-MAP-002",
-            version="V1",
-            applicable_rule_id="RULE-SCH-002",
-            eligible_result="CONDITION_MET",
-            recommendation_template="Suggest re-routing to next available Room and notifying the Clinic Administrator.",
+            eligible_result="NOT_EVALUABLE",
+            recommendation_template="Request Human Review for incomplete schedule data.",
             authority_requirement=AuthorityRequirement.REVIEW_REQUIRED,
-            priority="High",
-            business_impact_template="High risk of patient satisfaction drop and negative reviews.",
-            expected_outcome_template="Wait time mitigated, patient informed.",
-            problem_template="Extended Patient Wait Time",
+            priority="Information",
+            business_impact_template="None",
+            expected_outcome_template="Data integrity maintained.",
+            problem_template="Unverifiable Schedule Context",
             lifecycle_state=LifecycleState.ACTIVE,
-            effective_from=datetime.utcnow() -
-            timedelta(
-                days=30)))
-
-    governance_registry.register_recommendation_mapping(RecommendationMapping(
-        mapping_id="REC-MAP-003",
-        version="V1",
-        applicable_rule_id="RULE-SYS-BLOCKED",
-        eligible_result="NOT_EVALUABLE",
-        recommendation_template="Review policy rules.",
-        authority_requirement=AuthorityRequirement.INFORMATIONAL,
-        priority="Information",
-        business_impact_template="Ensured compliance and security.",
-        expected_outcome_template="Maintained system integrity.",
-        problem_template="Action Blocked by Governance",
-        lifecycle_state=LifecycleState.ACTIVE,
-        effective_from=datetime.utcnow() - timedelta(days=30)
-    ))
-
-    governance_registry.register_recommendation_mapping(RecommendationMapping(
-        mapping_id="REC-MAP-004",
-        version="V1",
-        applicable_rule_id="RULE-SCH-001",
-        eligible_result="NOT_EVALUABLE",
-        recommendation_template="Request Human Review for incomplete schedule data.",
-        authority_requirement=AuthorityRequirement.REVIEW_REQUIRED,
-        priority="Information",
-        business_impact_template="None",
-        expected_outcome_template="Data integrity maintained.",
-        problem_template="Unverifiable Schedule Context",
-        lifecycle_state=LifecycleState.ACTIVE,
-        effective_from=datetime.utcnow() - timedelta(days=30)
-    ))
+            effective_from=datetime.utcnow() - timedelta(days=30)
+        ))
 
     # 6. Authority Configurations (SESR-005)
     governance_registry.register_authority_config(

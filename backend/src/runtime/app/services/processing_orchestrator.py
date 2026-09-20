@@ -146,6 +146,12 @@ class ProcessingOrchestrator:
         Each layer updates event state and records observability data.
         """
         try:
+            if event not in db:
+                attached = db.query(OperationalEventModel).filter(
+                    OperationalEventModel.id == event.id).first()
+                if attached:
+                    event = attached
+
             # ── Layer 2: Connector Normalization ──────────────────────
             event = self._layer2_normalize(event, db)
             if event.state != "Processing":
@@ -315,15 +321,27 @@ class ProcessingOrchestrator:
                 return self._fail_event(event, db, layer="L4-Context", error=error_msg)
 
             import json
+            import uuid
+            pkg = response.result_payload.get("ais_002_decision_context_package", {})
+            pkg_gov = pkg.get("governance", {}) if isinstance(pkg, dict) else {}
+            suff_status = pkg_gov.get("sufficiency_status") or "SUFFICIENT"
+            ctx_id = str(uuid.uuid4())
+
             event.decision_context = DecisionContextModel(
+                id=ctx_id,
                 primary_context=response.result_payload.get("primary_context", "Unknown"),
                 secondary_context=response.result_payload.get("secondary_context"),
                 evidence_state=json.dumps(getattr(event, "evidence_package", {}), default=str),
-                reason=response.result_payload.get("reason")
+                reason=response.result_payload.get("reason"),
+                sufficiency_status=suff_status
             )
             event.layer4_duration_ms = (time.time() - t_start) * 1000
 
             db.commit()
+
+            # Persist D4 Context Evidence Records
+            self._persist_context_evidence_records(event, pkg, db)
+
             self.logger.debug(
                 f"[L4] DCE resolved context for event {event.id}: {event.decision_context.primary_context}")
             return event
@@ -798,6 +816,107 @@ class ProcessingOrchestrator:
             return [e.to_dict() for e in events]
         finally:
             db.close()
+
+    def _persist_context_evidence_records(self, event: OperationalEventModel, pkg: dict, db) -> None:
+        """
+        D4 Authoritative Persistence: Persists context evidence, provenance, freshness,
+        missing, and conflict records bound directly to the event's decision context ID.
+        """
+        try:
+            from app.models.decision_context_models import (
+                ContextEvidenceModel,
+                ContextMissingEvidenceModel,
+                ContextConflictsModel,
+                ContextFreshnessModel,
+                ContextProvenanceModel,
+            )
+            from datetime import datetime
+            import uuid
+
+            context_id = getattr(event.decision_context, "id", None) if event.decision_context else None
+            if not context_id:
+                context_id = str(uuid.uuid4())
+                if event.decision_context:
+                    event.decision_context.id = context_id
+            evidence_data = pkg.get("evidence", {}) if isinstance(pkg, dict) else {}
+            used_items = list(evidence_data.get("used", [])) if isinstance(evidence_data, dict) else []
+
+            # If used_items is empty, extract from event.evidence_package facts/statuses
+            if not used_items and getattr(event, "evidence_package", None):
+                ep = event.evidence_package
+                facts = ep.get("facts", {}) if isinstance(ep, dict) else {}
+                for k, v in facts.items():
+                    used_items.append({
+                        "evidence_id": str(uuid.uuid4()),
+                        "canonical_entity": "OperationalFact",
+                        "fact_key": k,
+                        "fact_value": v,
+                        "source_connector": event.source or "System"
+                    })
+
+            for ev in used_items:
+                if isinstance(ev, dict):
+                    ev_id = str(ev.get("evidence_id") or uuid.uuid4())
+                    ev_type = (ev.get("evidence_type") or ev.get("canonical_entity") or "Operational Fact")
+                    ev_val = (f"{ev.get('fact_key')}: {ev.get('fact_value')}" if ev.get('fact_key') else str(ev.get('fact_value', '')))
+                    source = ev.get("source_connector") or event.source or "System"
+                else:
+                    ev_id = str(getattr(ev, "evidence_id", uuid.uuid4()))
+                    ev_type = getattr(ev, "evidence_type", None) or getattr(ev, "canonical_entity", None) or "Operational Fact"
+                    ev_val = (f"{getattr(ev, 'fact_key', '')}: {getattr(ev, 'fact_value', '')}" if getattr(ev, 'fact_key', None) else str(getattr(ev, 'fact_value', '')))
+                    source = getattr(ev, "source_connector", event.source or "System")
+
+                db.add(ContextEvidenceModel(
+                    id=str(uuid.uuid4()),
+                    context_id=context_id,
+                    evidence_type=str(ev_type),
+                    evidence_value=str(ev_val),
+                    added_at=datetime.utcnow()
+                ))
+
+                db.add(ContextProvenanceModel(
+                    id=str(uuid.uuid4()),
+                    context_id=context_id,
+                    evidence_id=ev_id,
+                    source_system=str(source),
+                    ingestion_timestamp=datetime.utcnow()
+                ))
+
+                db.add(ContextFreshnessModel(
+                    id=str(uuid.uuid4()),
+                    context_id=context_id,
+                    evidence_id=ev_id,
+                    age_seconds="0",
+                    is_stale=bool(evidence_data.get("freshness", {}).get("is_stale", False)) if isinstance(evidence_data, dict) else False
+                ))
+
+            missing_items = evidence_data.get("missing", []) if isinstance(evidence_data, dict) else []
+            for m in missing_items:
+                db.add(ContextMissingEvidenceModel(
+                    id=str(uuid.uuid4()),
+                    context_id=context_id,
+                    expected_evidence_type=str(m),
+                    impact_level="Medium"
+                ))
+
+            conflict_items = evidence_data.get("conflicts", []) if isinstance(evidence_data, dict) else []
+            for c in conflict_items:
+                db.add(ContextConflictsModel(
+                    id=str(uuid.uuid4()),
+                    context_id=context_id,
+                    evidence_a_id=str(uuid.uuid4()),
+                    evidence_b_id=str(uuid.uuid4()),
+                    conflict_description=str(c),
+                    resolution_status="Unresolved"
+                ))
+
+            db.commit()
+        except Exception as e:
+            try:
+                db.rollback()
+            except Exception:
+                pass
+            self.logger.warning(f"Could not persist D4 context evidence records: {e}")
 
 
 # Singleton instance

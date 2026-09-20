@@ -40,6 +40,7 @@ class DecisionContextModel(Base):
     secondary_context = Column(String, nullable=True)
     evidence_state = Column(String, nullable=True)  # JSON serialized evidence
     reason = Column(String, nullable=True)
+    sufficiency_status = Column(String, nullable=True, default="SUFFICIENT")
     generated_timestamp = Column(DateTime, default=datetime.utcnow)
 
     event = relationship("OperationalEventModel", back_populates="decision_context")

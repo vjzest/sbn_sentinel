@@ -42,19 +42,34 @@ def _build_object_ref(signal: SignalModel) -> dict:
     }
 
 
-def _build_decision_context(signal: SignalModel, context_id: Optional[str], evaluated_at: Optional[str]) -> dict:
+def _build_decision_context(
+    signal: SignalModel,
+    context_id: Optional[str],
+    evaluated_at: Optional[str],
+    db: Optional[Session] = None,
+) -> dict:
     """
     Derives the Decision Context identity. Mode is read from metadata.is_historical.
     Evaluated_at is strictly from authoritative RuleEvaluationModel.
+    Sufficiency_status is read from authoritative DecisionContextModel.
     """
     metadata: dict = signal.metadata_data or {}
     is_historical: Optional[bool] = metadata.get("is_historical")
     mode = "historical" if is_historical is True else "current"
 
+    sufficiency_status = None
+    if context_id and db:
+        from app.models.intelligence import DecisionContextModel
+        ctx_row = db.query(DecisionContextModel).filter(
+            DecisionContextModel.id == context_id
+        ).first()
+        if ctx_row and getattr(ctx_row, "sufficiency_status", None):
+            sufficiency_status = ctx_row.sufficiency_status
+
     return {
         "context_id": context_id,
         "status": signal.primary_context,
-        "sufficiency_status": None,  # Not reliably persisted in V1, returning None
+        "sufficiency_status": sufficiency_status,
         "evaluated_at": evaluated_at,
         "mode": mode,
     }
@@ -187,6 +202,7 @@ def _build_provenance(context_id: Optional[str], db: Session) -> Optional[dict]:
 @router.get("/{signal_id}")
 def get_decision_basis(
     signal_id: str,
+    rule_evaluation_id: Optional[str] = None,
     db: Session = Depends(get_db),
     current_user: Any = Depends(RoleChecker(_ALLOWED_ROLES)),
 ):
@@ -211,7 +227,7 @@ def get_decision_basis(
         return {
             "object_ref": _build_object_ref(signal),
             "journey_id": journey_id,
-            "decision_context": _build_decision_context(signal, None, None),
+            "decision_context": _build_decision_context(signal, None, None, db),
             "evidence": {"used": [], "missing": [], "conflicts": [], "freshness": []},
             "policy": None,
             "rules": [],
@@ -219,29 +235,52 @@ def get_decision_basis(
             "technical_state": "unavailable",
         }
 
-    # Resolve exact bound relationships from the evaluations
-    context_id = evals[0].decision_context_id
-    policy_id = evals[0].policy_id
-    policy_version = evals[0].policy_version
-    evaluated_at = evals[0].evaluation_timestamp
-
-    # Verify all evaluations for the journey agree on the exact basis
-    for r in evals:
-        if (
-            r.decision_context_id != context_id or
-            r.policy_id != policy_id or
-            r.policy_version != policy_version
-        ):
+    if rule_evaluation_id:
+        target_eval = next((r for r in evals if r.evaluation_id == rule_evaluation_id), None)
+        if not target_eval:
             return {
                 "object_ref": _build_object_ref(signal),
                 "journey_id": journey_id,
-                "decision_context": _build_decision_context(signal, None, None),
+                "decision_context": _build_decision_context(signal, None, None, db),
                 "evidence": {"used": [], "missing": [], "conflicts": [], "freshness": []},
                 "policy": None,
                 "rules": [],
                 "provenance": None,
                 "technical_state": "unavailable",
             }
+        context_id = target_eval.decision_context_id
+        policy_id = target_eval.policy_id
+        policy_version = target_eval.policy_version
+        evaluated_at = target_eval.evaluation_timestamp
+        evals = [
+            r for r in evals
+            if r.decision_context_id == context_id and
+            r.policy_id == policy_id and
+            r.policy_version == policy_version
+        ]
+    else:
+        context_id = evals[0].decision_context_id
+        policy_id = evals[0].policy_id
+        policy_version = evals[0].policy_version
+        evaluated_at = evals[0].evaluation_timestamp
+
+        # Verify all evaluations for the journey agree on the exact basis
+        for r in evals:
+            if (
+                r.decision_context_id != context_id or
+                r.policy_id != policy_id or
+                r.policy_version != policy_version
+            ):
+                return {
+                    "object_ref": _build_object_ref(signal),
+                    "journey_id": journey_id,
+                    "decision_context": _build_decision_context(signal, None, None, db),
+                    "evidence": {"used": [], "missing": [], "conflicts": [], "freshness": []},
+                    "policy": None,
+                    "rules": [],
+                    "provenance": None,
+                    "technical_state": "unavailable",
+                }
 
     try:
         evidence = _build_evidence(context_id, db)
@@ -276,7 +315,7 @@ def get_decision_basis(
     return {
         "object_ref": _build_object_ref(signal),
         "journey_id": journey_id,
-        "decision_context": _build_decision_context(signal, context_id, evaluated_at),
+        "decision_context": _build_decision_context(signal, context_id, evaluated_at, db),
         "evidence": evidence,
         "policy": policy,
         "rules": rules,
