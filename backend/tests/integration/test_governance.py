@@ -689,22 +689,29 @@ def test_a021b_reconstruction_missing_dependency():
     created_recs = []
 
     uid_base = uuid.uuid4().hex[:6]
-    shared_policy_id = f"POL-MISS-{uid_base}"
-    shared_rule_id = f"RULE-MISS-{uid_base}"
-    shared_map_id = f"MAP-MISS-{uid_base}"
+    pol_a = f"POL-MISS-A-{uid_base}"
+    rule_a_id = f"RULE-MISS-A-{uid_base}"
+    map_a_id = f"MAP-MISS-A-{uid_base}"
+
+    pol_b = f"POL-MISS-B-{uid_base}"
+    rule_b_id = f"RULE-MISS-B-{uid_base}"
+    map_b_id = f"MAP-MISS-B-{uid_base}"
+
+    pol_c = f"POL-MISS-C-{uid_base}"
+    rule_c_id = f"RULE-MISS-C-{uid_base}"
+    map_c_id = f"MAP-MISS-C-{uid_base}"
 
     try:
         # ---- Case A: Policy version NOT in registry, rule/mapping present ----
-        # Register rule and mapping but NOT the policy
         rule_a = RuleVersion(
-            rule_id=shared_rule_id, version="V-A",
+            rule_id=rule_a_id, version="V-A",
             logic_description="", lifecycle_state=LifecycleState.ACTIVE,
             inputs=[], allowed_outputs=[],
-            governing_policy_id=shared_policy_id, governing_policy_version="V-ABSENT"
+            governing_policy_id=pol_a, governing_policy_version="V-ABSENT"
         )
         mapping_a = RecommendationMapping(
-            mapping_id=shared_map_id, version="V-A",
-            applicable_rule_id=shared_rule_id,
+            mapping_id=map_a_id, version="V-A",
+            applicable_rule_id=rule_a_id,
             eligible_result="CONDITION_MET",
             recommendation_template="Case A Action",
             authority_requirement=AuthorityRequirement.INFORMATIONAL,
@@ -717,9 +724,9 @@ def test_a021b_reconstruction_missing_dependency():
 
         jny_a, eval_a, rec_a = _make_journey(
             db, "A",
-            shared_policy_id, "V-ABSENT",
-            shared_rule_id, "V-A",
-            shared_map_id, "V-A"
+            pol_a, "V-ABSENT",
+            rule_a_id, "V-A",
+            map_a_id, "V-A"
         )
         created_evals.append(eval_a)
         created_recs.append(rec_a)
@@ -733,12 +740,12 @@ def test_a021b_reconstruction_missing_dependency():
 
         # ---- Case B: Rule version NOT in registry, policy/mapping present ----
         policy_b = PolicyVersion(
-            policy_id=shared_policy_id, version="V-B",
+            policy_id=pol_b, version="V-B",
             content="Case B Policy", lifecycle_state=LifecycleState.ACTIVE
         )
         mapping_b = RecommendationMapping(
-            mapping_id=shared_map_id, version="V-B",
-            applicable_rule_id=shared_rule_id,
+            mapping_id=map_b_id, version="V-B",
+            applicable_rule_id=rule_b_id,
             eligible_result="CONDITION_MET",
             recommendation_template="Case B Action",
             authority_requirement=AuthorityRequirement.INFORMATIONAL,
@@ -751,9 +758,9 @@ def test_a021b_reconstruction_missing_dependency():
 
         jny_b, eval_b, rec_b = _make_journey(
             db, "B",
-            shared_policy_id, "V-B",
-            shared_rule_id, "V-ABSENT-RULE",
-            shared_map_id, "V-B"
+            pol_b, "V-B",
+            rule_b_id, "V-ABSENT-RULE",
+            map_b_id, "V-B"
         )
         created_evals.append(eval_b)
         created_recs.append(rec_b)
@@ -766,14 +773,14 @@ def test_a021b_reconstruction_missing_dependency():
 
         # ---- Case C: Mapping version NOT in registry, policy/rule present ----
         policy_c = PolicyVersion(
-            policy_id=shared_policy_id, version="V-C",
+            policy_id=pol_c, version="V-C",
             content="Case C Policy", lifecycle_state=LifecycleState.ACTIVE
         )
         rule_c = RuleVersion(
-            rule_id=shared_rule_id, version="V-C",
+            rule_id=rule_c_id, version="V-C",
             logic_description="", lifecycle_state=LifecycleState.ACTIVE,
             inputs=[], allowed_outputs=[],
-            governing_policy_id=shared_policy_id, governing_policy_version="V-C"
+            governing_policy_id=pol_c, governing_policy_version="V-C"
         )
         governance_registry.register_policy(policy_c)
         governance_registry.register_rule(rule_c)
@@ -781,9 +788,9 @@ def test_a021b_reconstruction_missing_dependency():
 
         jny_c, eval_c, rec_c = _make_journey(
             db, "C",
-            shared_policy_id, "V-C",
-            shared_rule_id, "V-C",
-            shared_map_id, "V-ABSENT-MAP"
+            pol_c, "V-C",
+            rule_c_id, "V-C",
+            map_c_id, "V-ABSENT-MAP"
         )
         created_evals.append(eval_c)
         created_recs.append(rec_c)
@@ -795,6 +802,11 @@ def test_a021b_reconstruction_missing_dependency():
         )
 
     finally:
+        from app.models.governance_storage import GovernedPolicyVersionModel
+        governance_registry._policies = [p for p in governance_registry._policies if not p.policy_id.startswith("POL-MISS")]
+        governance_registry._rules = [r for r in governance_registry._rules if not r.rule_id.startswith("RULE-MISS")]
+        governance_registry._recommendation_mappings = [m for m in governance_registry._recommendation_mappings if not m.mapping_id.startswith("MAP-MISS")]
+        db.query(GovernedPolicyVersionModel).filter(GovernedPolicyVersionModel.policy_id.like("POL-MISS%")).delete(synchronize_session=False)
         for eid in created_evals:
             db.query(RuleEvaluationModel).filter(RuleEvaluationModel.evaluation_id == eid).delete()
         for rid in created_recs:

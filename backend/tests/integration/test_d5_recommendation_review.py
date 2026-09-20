@@ -277,7 +277,7 @@ def test_d5_restart_safe_duplicate_decision_prevention(setup_db, mock_admin):
 
 
 @pytest.mark.governance
-def test_d5_authority_states_separation(setup_db):
+def test_d5_authority_states_separation(setup_db, monkeypatch):
     from app.api.deps import get_current_user
 
     db = SessionLocal()
@@ -340,13 +340,17 @@ def test_d5_authority_states_separation(setup_db):
     assert resp_unauth.status_code == 200
     assert resp_unauth.json()["authority"]["state"] == "NOT_AUTHORIZED"
 
-    # Case C: AUTHORITY_CHECK_FAILED when check failure occurs
-    class ErrorUser:
-        id = "err1"
-        role = "FORCE_CHECK_FAILURE"
+    # Case C: AUTHORITY_CHECK_FAILED when check failure occurs (exception in authority lookup)
+    class AdminUser:
+        id = "admin1"
+        role = "System Administrator"
         is_active = True
 
-    app.dependency_overrides[get_current_user] = lambda: ErrorUser()
+    def fail_lookup(role):
+        raise RuntimeError("DB connection timeout during authority lookup")
+
+    monkeypatch.setattr(governance_registry, "get_authority_config", fail_lookup)
+    app.dependency_overrides[get_current_user] = lambda: AdminUser()
     resp_fail = client.get(f"/api/v1/decisions/review/{signal_id}")
     assert resp_fail.status_code == 200
     assert resp_fail.json()["authority"]["state"] == "AUTHORITY_CHECK_FAILED"

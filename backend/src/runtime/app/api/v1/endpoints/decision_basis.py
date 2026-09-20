@@ -16,6 +16,7 @@ from app.models.user import UserRole
 from app.models.governance_storage import (
     RuleEvaluationModel,
     GovernedPolicyVersionModel,
+    RecommendationModel,
 )
 from app.models.decision_context_models import (
     ContextMissingEvidenceModel,
@@ -252,25 +253,37 @@ def get_decision_basis(
         policy_id = target_eval.policy_id
         policy_version = target_eval.policy_version
         evaluated_at = target_eval.evaluation_timestamp
-        evals = [
+        evals_to_show = [
             r for r in evals
-            if r.decision_context_id == context_id and
-            r.policy_id == policy_id and
-            r.policy_version == policy_version
+            if r.evaluation_id == rule_evaluation_id or (
+                r.decision_context_id == context_id and
+                r.policy_id == policy_id and
+                r.policy_version == policy_version
+            )
         ]
     else:
-        context_id = evals[0].decision_context_id
-        policy_id = evals[0].policy_id
-        policy_version = evals[0].policy_version
-        evaluated_at = evals[0].evaluation_timestamp
+        # Check if journey has an authoritative Recommendation resolving the primary basis
+        rec = db.query(RecommendationModel).filter(RecommendationModel.journey_id == journey_id).first()
+        target_eval = None
+        if rec and rec.rule_evaluation_id:
+            target_eval = next((r for r in evals if r.evaluation_id == rec.rule_evaluation_id), None)
 
-        # Verify all evaluations for the journey agree on the exact basis
+        if target_eval:
+            context_id = target_eval.decision_context_id
+            policy_id = target_eval.policy_id
+            policy_version = target_eval.policy_version
+            evaluated_at = target_eval.evaluation_timestamp
+        else:
+            context_id = evals[0].decision_context_id
+            policy_id = evals[0].policy_id
+            policy_version = evals[0].policy_version
+            evaluated_at = evals[0].evaluation_timestamp
+
+        # Detect contradictory evaluations for the exact same rule
+        rule_results = {}
         for r in evals:
-            if (
-                r.decision_context_id != context_id or
-                r.policy_id != policy_id or
-                r.policy_version != policy_version
-            ):
+            k = (r.rule_id, r.rule_version, r.decision_context_id)
+            if k in rule_results and rule_results[k] != r.result:
                 return {
                     "object_ref": _build_object_ref(signal),
                     "journey_id": journey_id,
@@ -281,6 +294,9 @@ def get_decision_basis(
                     "provenance": None,
                     "technical_state": "unavailable",
                 }
+            rule_results[k] = r.result
+
+        evals_to_show = evals
 
     try:
         evidence = _build_evidence(context_id, db)
@@ -301,7 +317,7 @@ def get_decision_basis(
                 "result": r.result,
                 "evaluation_timestamp": r.evaluation_timestamp,
             }
-            for r in evals
+            for r in evals_to_show
         ]
         
         provenance = _build_provenance(context_id, db)
