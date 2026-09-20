@@ -50,7 +50,6 @@ describe('GovernedWorkspace & Hand-off Integration', () => {
     );
     const header = screen.getByRole('button');
     expect(header.getAttribute('aria-expanded')).toBe('false');
-
     fireEvent.click(header);
     expect(header.getAttribute('aria-expanded')).toBe('true');
     expect(screen.getByTestId('section-content')).toBeDefined();
