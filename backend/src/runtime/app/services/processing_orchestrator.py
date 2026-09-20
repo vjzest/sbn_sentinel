@@ -324,7 +324,7 @@ class ProcessingOrchestrator:
             import uuid
             pkg = response.result_payload.get("ais_002_decision_context_package", {})
             pkg_gov = pkg.get("governance", {}) if isinstance(pkg, dict) else {}
-            suff_status = pkg_gov.get("sufficiency_status") or "SUFFICIENT"
+            suff_status = pkg_gov.get("sufficiency_status") if isinstance(pkg_gov, dict) else None
             ctx_id = str(uuid.uuid4())
 
             event.decision_context = DecisionContextModel(
@@ -847,7 +847,7 @@ class ProcessingOrchestrator:
                 facts = ep.get("facts", {}) if isinstance(ep, dict) else {}
                 for k, v in facts.items():
                     used_items.append({
-                        "evidence_id": str(uuid.uuid4()),
+                        "evidence_id": f"ev-{event.id}-{k}",
                         "canonical_entity": "OperationalFact",
                         "fact_key": k,
                         "fact_value": v,
@@ -867,7 +867,7 @@ class ProcessingOrchestrator:
                     source = getattr(ev, "source_connector", event.source or "System")
 
                 db.add(ContextEvidenceModel(
-                    id=str(uuid.uuid4()),
+                    id=ev_id,
                     context_id=context_id,
                     evidence_type=str(ev_type),
                     evidence_value=str(ev_val),
@@ -892,22 +892,47 @@ class ProcessingOrchestrator:
 
             missing_items = evidence_data.get("missing", []) if isinstance(evidence_data, dict) else []
             for m in missing_items:
+                m_id = m.get("evidence_id") if isinstance(m, dict) else getattr(m, "evidence_id", None)
+                m_type = m.get("expected_evidence_type") or m.get("type") if isinstance(m, dict) else getattr(m, "expected_evidence_type", str(m))
+                m_impact = m.get("impact_level") if isinstance(m, dict) else getattr(m, "impact_level", "Medium")
                 db.add(ContextMissingEvidenceModel(
-                    id=str(uuid.uuid4()),
+                    id=str(m_id or uuid.uuid4()),
                     context_id=context_id,
-                    expected_evidence_type=str(m),
-                    impact_level="Medium"
+                    expected_evidence_type=str(m_type),
+                    impact_level=str(m_impact or "Medium")
                 ))
 
             conflict_items = evidence_data.get("conflicts", []) if isinstance(evidence_data, dict) else []
             for c in conflict_items:
+                if isinstance(c, dict):
+                    c_id = c.get("conflict_id") or c.get("id") or str(uuid.uuid4())
+                    ev_a = c.get("evidence_a_id") or c.get("evidence_a")
+                    ev_b = c.get("evidence_b_id") or c.get("evidence_b")
+                    c_desc = c.get("conflict_description") or c.get("description") or str(c)
+                    c_res = c.get("resolution_status") or "Unresolved"
+                else:
+                    c_id = getattr(c, "conflict_id", None) or getattr(c, "id", None) or str(uuid.uuid4())
+                    ev_a = getattr(c, "evidence_a_id", None)
+                    ev_b = getattr(c, "evidence_b_id", None)
+                    c_desc = getattr(c, "conflict_description", str(c))
+                    c_res = getattr(c, "resolution_status", "Unresolved")
+
+                if not ev_a and used_items:
+                    first_ev = used_items[0]
+                    ev_a = first_ev.get("evidence_id") if isinstance(first_ev, dict) else getattr(first_ev, "evidence_id", None)
+                if not ev_b and len(used_items) > 1:
+                    second_ev = used_items[1]
+                    ev_b = second_ev.get("evidence_id") if isinstance(second_ev, dict) else getattr(second_ev, "evidence_id", None)
+                elif not ev_b:
+                    ev_b = ev_a
+
                 db.add(ContextConflictsModel(
-                    id=str(uuid.uuid4()),
+                    id=str(c_id),
                     context_id=context_id,
-                    evidence_a_id=str(uuid.uuid4()),
-                    evidence_b_id=str(uuid.uuid4()),
-                    conflict_description=str(c),
-                    resolution_status="Unresolved"
+                    evidence_a_id=str(ev_a),
+                    evidence_b_id=str(ev_b),
+                    conflict_description=str(c_desc),
+                    resolution_status=str(c_res)
                 ))
 
             db.commit()

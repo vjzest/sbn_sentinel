@@ -79,45 +79,29 @@ async def get_recommendation_review(
     metadata = signal.metadata_data or {}
     journey_id = metadata.get("correlation_id") or metadata.get("pipeline_event_id")
     unavailable_resp["journey_id"] = journey_id
-    # 1. Resolve exact governed recommendation via RuleEvaluationModel
-    evals = db.query(RuleEvaluationModel).filter(RuleEvaluationModel.journey_id == journey_id).all()
-    if not evals:
-        return unavailable_resp
-
-    context_id = evals[0].decision_context_id
-    policy_id = evals[0].policy_id
-    policy_version = evals[0].policy_version
-    
-    # Check for D4 ambiguity
-    for r in evals:
-        if (
-            r.decision_context_id != context_id or
-            r.policy_id != policy_id or
-            r.policy_version != policy_version
-        ):
-            unavailable_resp["technical_state"] = "ambiguous"
-            return unavailable_resp
-
     # Fetch persisted RecommendationModel
     recs = db.query(RecommendationModel).filter(RecommendationModel.journey_id == journey_id).all()
     if not recs:
         return unavailable_resp
-    
+
     if len(recs) > 1:
         unavailable_resp["technical_state"] = "ambiguous"
         return unavailable_resp
-        
+
     authoritative_rec = recs[0]
-    
-    # D5-09: Exact matching
-    if authoritative_rec.decision_context_id != context_id:
-        unavailable_resp["technical_state"] = "ambiguous"
+
+    # 1. Resolve D5 basis from Recommendation.rule_evaluation_id
+    evals = db.query(RuleEvaluationModel).filter(RuleEvaluationModel.journey_id == journey_id).all()
+    target_eval = next((e for e in evals if e.evaluation_id == authoritative_rec.rule_evaluation_id), None)
+    if not target_eval:
+        unavailable_resp["technical_state"] = "unavailable"
         return unavailable_resp
-        
-    # Check if rule_evaluation_id is actually in the current evals list
-    if not any(e.evaluation_id == authoritative_rec.rule_evaluation_id for e in evals):
-        unavailable_resp["technical_state"] = "ambiguous"
-        return unavailable_resp
+
+    # D5-09: Exact context matching
+    if authoritative_rec.decision_context_id and target_eval.decision_context_id:
+        if authoritative_rec.decision_context_id != target_eval.decision_context_id:
+            unavailable_resp["technical_state"] = "ambiguous"
+            return unavailable_resp
 
     recommendation_obj = {
         "recommendation_id": authoritative_rec.recommendation_id,
@@ -138,10 +122,6 @@ async def get_recommendation_review(
 
     if not role or role in ("UNKNOWN", "Unknown", ""):
         authority_state = "AUTHORITY_UNKNOWN"
-        allowed_decisions = []
-        eligibility = "ELIGIBLE" if is_active else authoritative_rec.status
-    elif role == "FORCE_CHECK_FAILURE":
-        authority_state = "AUTHORITY_CHECK_FAILED"
         allowed_decisions = []
         eligibility = "ELIGIBLE" if is_active else authoritative_rec.status
     else:

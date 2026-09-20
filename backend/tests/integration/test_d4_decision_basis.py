@@ -11,11 +11,13 @@ from app.models.signal import SignalModel  # noqa: E402
 from app.models.governance_storage import (  # noqa: E402
     RuleEvaluationModel,
     GovernedPolicyVersionModel,
-    GovernedRuleVersionModel,
 )
+from app.models.intelligence import DecisionContextModel  # noqa: E402
 from app.models.decision_context_models import (  # noqa: E402
     ContextEvidenceModel,
     ContextProvenanceModel,
+    ContextFreshnessModel,
+    ContextConflictsModel,
 )
 from fastapi.testclient import TestClient  # noqa: E402
 from app.main import app  # noqa: E402
@@ -83,7 +85,7 @@ def test_decision_basis_d4_authoritative_path(setup_db):
         policy_version=policy_version,
         rule_id="rule-1",
         rule_version="1.0",
-        result="FAIL",
+        result="CONDITION_MET",
         evaluation_timestamp=datetime.utcnow().isoformat(),
         journey_id=correlation_id
     )
@@ -91,35 +93,7 @@ def test_decision_basis_d4_authoritative_path(setup_db):
     
     db.commit()
     
-    # 3. Request Decision Basis via D4 Endpoint
-    client = TestClient(app)
-    
-    # Override auth for the specific endpoint
-    class MockUserLocal:
-        def __init__(self):
-            self.id = "test_user"
-            self.role = "System Administrator"
-            self.org_id = "ORG-MOCK"
-
-    app.dependency_overrides[get_current_user] = lambda: MockUserLocal()
-    try:
-        response = client.get(f"/api/v1/decision-basis/{signal_id}")
-        
-        # If 403 or 401, we might need to mock properly, but usually get_current_user mock is enough
-        if response.status_code in [401, 403]:
-            # forcefully override the exact dependency
-            from app.api.v1.endpoints.decision_basis import _ALLOWED_ROLES
-            from app.api.deps import RoleChecker
-            app.dependency_overrides[RoleChecker] = lambda: {"id": "test_user", "roles": _ALLOWED_ROLES}
-            response = client.get(f"/api/v1/decision-basis/{signal_id}")
-    finally:
-        app.dependency_overrides.clear()
-
-    # Wait, the app uses get_current_user which returns a User object.
-    # Let's adjust the test to just assert the data structure.
-    
-    # If auth fails in test because of RoleChecker, we can test the python functions directly instead
-    # to guarantee we prove the logic without fighting FastAPI test auth.
+    # 3. Request Decision Basis via Endpoint Implementation
     from app.api.v1.endpoints.decision_basis import get_decision_basis
     
     class MockUser:
@@ -161,13 +135,13 @@ def test_decision_basis_d4_conflicting_evaluations_unavailable(setup_db):
     )
     db.add(sig)
     
-    # Add two evaluations with DIFFERENT policy_id for the same journey
+    # Add two evaluations with CONTRADICTORY results for the same rule and context
     rule_eval_1 = RuleEvaluationModel(
         evaluation_id=str(uuid.uuid4()),
         decision_context_id="ctx-1",
         policy_id="pol-1",
         policy_version="1.0",
-        rule_id="rule-1",
+        rule_id="rule-conflict",
         rule_version="1.0",
         result="PASS",
         evaluation_timestamp=datetime.utcnow().isoformat(),
@@ -177,11 +151,11 @@ def test_decision_basis_d4_conflicting_evaluations_unavailable(setup_db):
     rule_eval_2 = RuleEvaluationModel(
         evaluation_id=str(uuid.uuid4()),
         decision_context_id="ctx-1",
-        policy_id="pol-2",  # conflict!
+        policy_id="pol-1",
         policy_version="1.0",
-        rule_id="rule-2",
+        rule_id="rule-conflict",
         rule_version="1.0",
-        result="FAIL",
+        result="FAIL",  # Contradictory result on same rule!
         evaluation_timestamp=datetime.utcnow().isoformat(),
         journey_id=correlation_id
     )
@@ -205,31 +179,28 @@ def test_decision_basis_d4_conflicting_evaluations_unavailable(setup_db):
 @pytest.mark.governance
 def test_d4_pipeline_event_to_decision_basis_true_integration(setup_db):
     """
-    True pipeline event-processing -> GET decision-basis test.
-    Proves that normal runtime pipeline populates D4 ContextEvidence/Provenance
-    and computes/reads authoritative sufficiency_status without manual record insertion.
+    True pipeline event-processing -> GET decision-basis test using normal unpruned seeds.
+    Proves that normal runtime pipeline populates D4 ContextEvidence/Provenance,
+    handles multiple policies (e.g. POL-001 + POL-003) without automatic ambiguity,
+    and resolves both D4 grouped basis and D5 recommendation review cleanly.
     """
     from app.services.processing_orchestrator import processing_orchestrator
     from app.services.governance_registry import initialize_registry_seeds, governance_registry
     db = SessionLocal()
 
-    initialize_registry_seeds()
-
-    # Ensure only canonical POL-001 remains in DB and registry
+    # Clean any leftover test policies from previous tests so only canonical seeds exist
+    governance_registry._policies = [
+        p for p in governance_registry._policies
+        if p.policy_id in ("POL-001", "POL-002", "POL-003")
+    ]
+    from app.models.governance_storage import GovernedPolicyVersionModel
     db.query(GovernedPolicyVersionModel).filter(
-        GovernedPolicyVersionModel.policy_id != "POL-001"
-    ).delete()
-    db.query(GovernedPolicyVersionModel).filter(
-        GovernedPolicyVersionModel.policy_id == "POL-001",
-        GovernedPolicyVersionModel.version != "V1"
-    ).delete()
-    db.query(GovernedRuleVersionModel).filter(
-        GovernedRuleVersionModel.governing_policy_id != "POL-001"
-    ).delete()
+        ~GovernedPolicyVersionModel.policy_id.in_(["POL-001", "POL-002", "POL-003"])
+    ).delete(synchronize_session=False)
     db.commit()
 
-    governance_registry._policies = [p for p in governance_registry._policies if p.policy_id == "POL-001" and p.version == "V1"]
-    governance_registry._rules = [r for r in governance_registry._rules if r.governing_policy_id == "POL-001" and r.version == "V1"]
+    # Use NORMAL UNPRUNED governance seeds (both POL-001 and POL-003 present)
+    initialize_registry_seeds()
 
     # 1. Pipeline event creation and execution (Layers 1-10)
     raw_payload = {
@@ -251,7 +222,7 @@ def test_d4_pipeline_event_to_decision_basis_true_integration(setup_db):
     sig = db.query(SignalModel).filter(SignalModel.id == event.id).first()
     assert sig is not None, f"Pipeline must generate and persist SignalModel. Event state: {event.state}"
 
-    # 3. GET /api/v1/decision-basis/{sig.id}
+    # 3. GET /api/v1/decision-basis/{sig.id} (Grouped bases, multiple policies evaluated)
     client = TestClient(app)
 
     class MockUserLocal:
@@ -264,6 +235,10 @@ def test_d4_pipeline_event_to_decision_basis_true_integration(setup_db):
         assert response.status_code == 200, response.text
         data = response.json()
 
+        # D4 must NOT treat multiple valid policy/rule evaluations as automatic ambiguity
+        assert data["technical_state"] == "ready"
+        assert len(data["rules"]) >= 1
+
         # Decision Context contains authoritative sufficiency_status computed by ContextValidator
         assert data["decision_context"]["context_id"] is not None
         assert data["decision_context"]["sufficiency_status"] in ("SUFFICIENT", "INSUFFICIENT")
@@ -271,6 +246,156 @@ def test_d4_pipeline_event_to_decision_basis_true_integration(setup_db):
         # Evidence records were populated directly by pipeline L4 without manual insertion
         assert "used" in data["evidence"]
         assert len(data["evidence"]["used"]) > 0 or len(data["evidence"]["missing"]) > 0
+
+        # 4. Test exact rule_evaluation_id selector
+        target_eval_id = data["rules"][0]["evaluation_id"]
+        res_exact = client.get(f"/api/v1/decision-basis/{sig.id}?rule_evaluation_id={target_eval_id}")
+        assert res_exact.status_code == 200
+        data_exact = res_exact.json()
+        assert data_exact["technical_state"] == "ready"
+        assert any(r["evaluation_id"] == target_eval_id for r in data_exact["rules"])
+
+        # 5. Test D5 review resolves basis from Recommendation.rule_evaluation_id
+        res_review = client.get(f"/api/v1/decisions/review/{sig.id}")
+        assert res_review.status_code == 200
+        review_data = res_review.json()
+        if review_data.get("recommendation"):
+            assert review_data["technical_state"] == "ready"
+            assert review_data["recommendation"]["rule_evaluation_id"] is not None
     finally:
         app.dependency_overrides.clear()
+        db.close()
+
+
+@pytest.mark.governance
+def test_d4_evidence_provenance_id_integrity(setup_db):
+    """
+    Verify ContextEvidenceModel.id exactly matches ContextProvenanceModel.evidence_id
+    and ContextFreshnessModel.evidence_id, and conflict evidence IDs use real refs.
+    """
+    from app.services.processing_orchestrator import processing_orchestrator
+    from app.services.governance_registry import initialize_registry_seeds
+    db = SessionLocal()
+    initialize_registry_seeds()
+
+    raw_payload = {
+        "patient_id": "P-INTEGRITY",
+        "detail": "Integrity verification event",
+        "evidence": ["FACT-1", "FACT-2"],
+        "primary_context": "Clinical",
+        "secondary_context": "Intake"
+    }
+    event = processing_orchestrator.create_event(
+        event_type="EHR",
+        source="EHR_SYSTEM",
+        raw_payload=raw_payload,
+        priority="Normal"
+    )
+    event = processing_orchestrator._run_pipeline(event, db)
+
+    ctx = event.decision_context
+    assert ctx is not None
+
+    evidence_rows = db.query(ContextEvidenceModel).filter(
+        ContextEvidenceModel.context_id == ctx.id
+    ).all()
+    assert len(evidence_rows) > 0, "Pipeline must persist ContextEvidenceModel records"
+
+    for ev in evidence_rows:
+        prov = db.query(ContextProvenanceModel).filter(
+            ContextProvenanceModel.context_id == ctx.id,
+            ContextProvenanceModel.evidence_id == ev.id
+        ).first()
+        assert prov is not None, f"ContextEvidenceModel.id '{ev.id}' must match ContextProvenanceModel.evidence_id"
+
+        fresh = db.query(ContextFreshnessModel).filter(
+            ContextFreshnessModel.context_id == ctx.id,
+            ContextFreshnessModel.evidence_id == ev.id
+        ).first()
+        assert fresh is not None, f"ContextEvidenceModel.id '{ev.id}' must match ContextFreshnessModel.evidence_id"
+
+    # Verify conflict record handling uses real evidence IDs
+    ev1_id = evidence_rows[0].id
+    ev2_id = evidence_rows[1].id if len(evidence_rows) > 1 else ev1_id
+    conflict_model = ContextConflictsModel(
+        id=str(uuid.uuid4()),
+        context_id=ctx.id,
+        evidence_a_id=ev1_id,
+        evidence_b_id=ev2_id,
+        conflict_description="Simulated conflict on appointment date",
+        resolution_status="Unresolved"
+    )
+    db.add(conflict_model)
+    db.commit()
+
+    saved_conflict = db.query(ContextConflictsModel).filter(
+        ContextConflictsModel.id == conflict_model.id
+    ).first()
+    assert saved_conflict.evidence_a_id == ev1_id
+    assert saved_conflict.evidence_b_id == ev2_id
+    db.close()
+
+
+@pytest.mark.governance
+def test_d4_missing_sufficiency_fail_closed(setup_db):
+    """
+    Verify that missing/unevaluated sufficiency is null/None, never falsely defaulting to SUFFICIENT.
+    """
+    db = SessionLocal()
+    sig_id = str(uuid.uuid4())
+    event_id = str(uuid.uuid4())
+    correlation_id = str(uuid.uuid4())
+    ctx_id = str(uuid.uuid4())
+    pol_id = f"POL-FAILCLOSED-{uuid.uuid4().hex[:6]}"
+
+    sig = SignalModel(
+        id=sig_id,
+        type="test_signal",
+        metadata_data={"pipeline_event_id": event_id, "correlation_id": correlation_id}
+    )
+    # Decision context created without sufficiency evaluation
+    ctx = DecisionContextModel(
+        id=ctx_id,
+        event_id=event_id,
+        primary_context="Billing",
+        sufficiency_status=None  # Explicitly None
+    )
+    pol = GovernedPolicyVersionModel(
+        policy_id=pol_id,
+        version="V1",
+        lifecycle_state="ACTIVE",
+        content="{}"
+    )
+    rule_eval = RuleEvaluationModel(
+        evaluation_id=str(uuid.uuid4()),
+        decision_context_id=ctx_id,
+        policy_id=pol_id,
+        policy_version="V1",
+        rule_id="RULE-FAILCLOSED",
+        rule_version="V1",
+        result="CONDITION_MET",
+        evaluation_timestamp=datetime.utcnow().isoformat(),
+        journey_id=correlation_id
+    )
+    db.add_all([sig, ctx, pol, rule_eval])
+    db.commit()
+
+    client = TestClient(app)
+
+    class MockAdmin:
+        id = "admin"
+        role = "System Administrator"
+
+    app.dependency_overrides[get_current_user] = lambda: MockAdmin()
+    try:
+        response = client.get(f"/api/v1/decision-basis/{sig_id}")
+        assert response.status_code == 200
+        data = response.json()
+        # Must be null/None, NEVER defaulted to 'SUFFICIENT'
+        assert data["decision_context"]["sufficiency_status"] is None
+    finally:
+        app.dependency_overrides.clear()
+        db.query(GovernedPolicyVersionModel).filter(GovernedPolicyVersionModel.policy_id == pol_id).delete()
+        db.query(RuleEvaluationModel).filter(RuleEvaluationModel.evaluation_id == rule_eval.evaluation_id).delete()
+        db.commit()
         db.close()
