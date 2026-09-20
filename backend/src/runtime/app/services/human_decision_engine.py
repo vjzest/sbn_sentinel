@@ -83,11 +83,37 @@ class HumanDecisionEngine(BaseService):
                 "message": f"A reason is required for decision: {decision_type.value}"}
 
         # 5. Idempotency / Concurrency Check (HDA-025, HDA-026)
-        # Check if the recommendation already has an active CURRENT decision.
+        # Query durable HumanDecisionModel first so restart/retry cannot create a second current Decision
+        from app.db.database import SessionLocal
+        from app.models.governance_storage import HumanDecisionModel
+
+        db = SessionLocal()
+        try:
+            durable_decisions = db.query(HumanDecisionModel).filter(
+                HumanDecisionModel.recommendation_id == recommendation_id,
+                HumanDecisionModel.status == "RECORDED"
+            ).all()
+        finally:
+            db.close()
+
+        if durable_decisions:
+            for d in durable_decisions:
+                if d.actor_id == actor_id and d.decision_type == decision_type.value:
+                    logger.info("[HumanDecisionEngine] Idempotent retry detected from durable storage.")
+                    return {
+                        "status": "SUCCESS",
+                        "decision_id": d.decision_id,
+                        "message": "Decision already recorded."
+                    }
+            return {
+                "status": "ERROR",
+                "message": "A current decision already exists for this recommendation."
+            }
+
+        # Fallback check in-memory if not committed yet
         existing_decisions = [d for d in governance_registry._human_decisions if d.recommendation_id ==
                               recommendation_id and d.status == DecisionStatus.RECORDED]
         if existing_decisions:
-            # If there's already a decision, and it's identical, it's a retry/duplicate
             for d in existing_decisions:
                 if d.actor_id == actor_id and d.decision_type == decision_type:
                     logger.info("[HumanDecisionEngine] Idempotent retry detected.")
@@ -96,8 +122,6 @@ class HumanDecisionEngine(BaseService):
                         "decision_id": d.decision_id,
                         "message": "Decision already recorded."}
 
-            # If not identical, it's a contradictory / replacement attempt which V1
-            # restricts for simplicity
             return {
                 "status": "ERROR",
                 "message": "A current decision already exists for this recommendation."}

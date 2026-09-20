@@ -204,9 +204,31 @@ export const RecommendationReview: React.FC<RecommendationReviewProps> = ({
             <div className="flex items-start gap-3 p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-[12px]">
               <ShieldAlert className="w-5 h-5 text-yellow-500 shrink-0 mt-0.5" />
               <div>
-                <p className="text-white font-medium text-sm">Not Authorized</p>
+                <p className="text-white font-medium text-sm">
+                  {authority.state === 'AUTHORITY_CHECK_FAILED'
+                    ? 'Authority Check Failed'
+                    : authority.state === 'AUTHORITY_UNKNOWN'
+                    ? 'Authority Unknown'
+                    : 'Not Authorized'}
+                </p>
                 <p className="text-yellow-200/70 text-sm mt-1">
-                  You do not have the required authority to record a decision for this recommendation.
+                  {authority.state === 'AUTHORITY_CHECK_FAILED'
+                    ? 'Failed to verify user decision authority due to a system check failure.'
+                    : authority.state === 'AUTHORITY_UNKNOWN'
+                    ? 'Your authority cannot be determined for this recommendation context.'
+                    : 'You do not have the required authority to record a decision for this recommendation.'}
+                </p>
+              </div>
+            </div>
+          ) : authority.eligibility && authority.eligibility !== 'ELIGIBLE' ? (
+            <div className="flex items-start gap-3 p-4 bg-orange-500/10 border border-orange-500/20 rounded-[12px]">
+              <ShieldAlert className="w-5 h-5 text-orange-400 shrink-0 mt-0.5" />
+              <div>
+                <p className="text-white font-medium text-sm">
+                  Recommendation Ineligible ({authority.eligibility})
+                </p>
+                <p className="text-orange-200/70 text-sm mt-1">
+                  This recommendation is {authority.eligibility.toLowerCase()} and no longer eligible for human decision recording.
                 </p>
               </div>
             </div>

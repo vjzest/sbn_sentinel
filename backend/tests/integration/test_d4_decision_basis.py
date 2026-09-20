@@ -8,14 +8,21 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../.
 
 from app.db.database import Base, engine, SessionLocal  # noqa: E402
 from app.models.signal import SignalModel  # noqa: E402
-from app.models.governance_storage import RuleEvaluationModel, GovernedPolicyVersionModel  # noqa: E402
-from app.models.decision_context_models import ContextEvidenceModel, ContextProvenanceModel  # noqa: E402
+from app.models.governance_storage import (  # noqa: E402
+    RuleEvaluationModel,
+    GovernedPolicyVersionModel,
+    GovernedRuleVersionModel,
+)
+from app.models.decision_context_models import (  # noqa: E402
+    ContextEvidenceModel,
+    ContextProvenanceModel,
+)
 from fastapi.testclient import TestClient  # noqa: E402
 from app.main import app  # noqa: E402
 from app.api.deps import get_current_user  # noqa: E402
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture(scope="function")
 def setup_db():
     Base.metadata.create_all(bind=engine)
     yield
@@ -193,3 +200,77 @@ def test_decision_basis_d4_conflicting_evaluations_unavailable(setup_db):
     assert data["technical_state"] == "unavailable"
     
     db.close()
+
+
+@pytest.mark.governance
+def test_d4_pipeline_event_to_decision_basis_true_integration(setup_db):
+    """
+    True pipeline event-processing -> GET decision-basis test.
+    Proves that normal runtime pipeline populates D4 ContextEvidence/Provenance
+    and computes/reads authoritative sufficiency_status without manual record insertion.
+    """
+    from app.services.processing_orchestrator import processing_orchestrator
+    from app.services.governance_registry import initialize_registry_seeds, governance_registry
+    db = SessionLocal()
+
+    initialize_registry_seeds()
+
+    # Ensure only canonical POL-001 remains in DB and registry
+    db.query(GovernedPolicyVersionModel).filter(
+        GovernedPolicyVersionModel.policy_id != "POL-001"
+    ).delete()
+    db.query(GovernedPolicyVersionModel).filter(
+        GovernedPolicyVersionModel.policy_id == "POL-001",
+        GovernedPolicyVersionModel.version != "V1"
+    ).delete()
+    db.query(GovernedRuleVersionModel).filter(
+        GovernedRuleVersionModel.governing_policy_id != "POL-001"
+    ).delete()
+    db.commit()
+
+    governance_registry._policies = [p for p in governance_registry._policies if p.policy_id == "POL-001" and p.version == "V1"]
+    governance_registry._rules = [r for r in governance_registry._rules if r.governing_policy_id == "POL-001" and r.version == "V1"]
+
+    # 1. Pipeline event creation and execution (Layers 1-10)
+    raw_payload = {
+        "patient_id": "P123",
+        "detail": "Patient booked test appointment",
+        "evidence": ["E01", "E02"],
+        "primary_context": "Operational",
+        "secondary_context": "Appointment Confirmation"
+    }
+    event = processing_orchestrator.create_event(
+        event_type="EHR",
+        source="EHR_SYSTEM",
+        raw_payload=raw_payload,
+        priority="Normal"
+    )
+    event = processing_orchestrator._run_pipeline(event, db)
+
+    # 2. Pipeline generated SignalModel
+    sig = db.query(SignalModel).filter(SignalModel.id == event.id).first()
+    assert sig is not None, f"Pipeline must generate and persist SignalModel. Event state: {event.state}"
+
+    # 3. GET /api/v1/decision-basis/{sig.id}
+    client = TestClient(app)
+
+    class MockUserLocal:
+        id = "test_admin"
+        role = "System Administrator"
+
+    app.dependency_overrides[get_current_user] = lambda: MockUserLocal()
+    try:
+        response = client.get(f"/api/v1/decision-basis/{sig.id}")
+        assert response.status_code == 200, response.text
+        data = response.json()
+
+        # Decision Context contains authoritative sufficiency_status computed by ContextValidator
+        assert data["decision_context"]["context_id"] is not None
+        assert data["decision_context"]["sufficiency_status"] in ("SUFFICIENT", "INSUFFICIENT")
+
+        # Evidence records were populated directly by pipeline L4 without manual insertion
+        assert "used" in data["evidence"]
+        assert len(data["evidence"]["used"]) > 0 or len(data["evidence"]["missing"]) > 0
+    finally:
+        app.dependency_overrides.clear()
+        db.close()
