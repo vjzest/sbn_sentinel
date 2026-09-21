@@ -2,7 +2,6 @@ import pytest
 from fastapi.testclient import TestClient
 import uuid
 import datetime
-import json
 from app.main import app
 from app.db.database import SessionLocal, Base
 from app.models.governance_storage import (
@@ -15,6 +14,7 @@ from app.models.organization import OrganizationClinicModel
 from app.services.governance_registry import governance_registry, DecisionType, DecisionStatus
 
 client = TestClient(app)
+
 
 @pytest.fixture(scope="function")
 def setup_db():
@@ -33,9 +33,11 @@ def setup_db():
     governance_registry._execution_attempts.clear()
     governance_registry._operational_outcomes.clear()
 
+
 @pytest.fixture(scope="function")
 def mock_admin():
     from app.api.deps import get_current_user
+
     class MockAdmin:
         id = "admin123"
         role = "System Administrator"
@@ -43,6 +45,7 @@ def mock_admin():
     app.dependency_overrides[get_current_user] = lambda: MockAdmin()
     yield
     app.dependency_overrides.clear()
+
 
 def test_action_lifecycle_empty_decision(setup_db, mock_admin):
     decision_id = f"dec_{uuid.uuid4().hex[:8]}"
@@ -53,6 +56,7 @@ def test_action_lifecycle_empty_decision(setup_db, mock_admin):
     data = response.json()
     assert data["technical_state"] == "unavailable"
     assert data["can_create"] is False
+
 
 def test_action_lifecycle_with_decision(setup_db, mock_admin):
     decision_id = f"dec_{uuid.uuid4().hex[:8]}"
@@ -82,6 +86,7 @@ def test_action_lifecycle_with_decision(setup_db, mock_admin):
     assert data["can_create"] is True
     assert data["creation"]["state"] == "ELIGIBLE"
     assert len(data["actions"]) == 0
+
 
 def test_idempotency_create_action(setup_db, mock_admin):
     decision_id = f"dec_{uuid.uuid4().hex[:8]}"
