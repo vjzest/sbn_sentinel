@@ -55,6 +55,13 @@ jobs:
       run: |
         pytest tests/integration/test_d4_decision_basis.py tests/integration/test_d5_recommendation_review.py -v
 
+    - name: SDS-D6 Verification
+      env:
+        SECRET_KEY: "test-secret-key-for-ci"
+        PYTHONPATH: "src/runtime"
+      run: |
+        pytest tests/integration/test_d6_action_lifecycle.py -v
+
   frontend-quality:
     name: Frontend Quality Assurance
     runs-on: ubuntu-latest

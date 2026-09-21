@@ -234,49 +234,37 @@ async def get_action_lifecycle(
     # - no action exists yet that is non-terminal for a given type
     existing_terminal = {a.action_type for a in action_rows if _safe_action_status(a.status) in ("COMPLETED",)}
     
-    # D6 Correction: Dynamic allowed_action_types
+    # D6 Correction: Dynamic allowed_action_types and Permitted Targets
     allowed_types = []
+    permitted_targets = []
     try:
         import json
+        from app.models.governance_storage import GovernedRecommendationMappingModel
         rec_row = db.query(RecommendationModel).filter(RecommendationModel.recommendation_id == decision_row.recommendation_id).first()
         if rec_row:
-            eval_row = db.query(RuleEvaluationModel).filter(RuleEvaluationModel.evaluation_id == rec_row.rule_evaluation_id).first()
-            if eval_row:
-                rule_version_row = db.query(GovernedRuleVersionModel).filter(
-                    GovernedRuleVersionModel.rule_id == eval_row.rule_id,
-                    GovernedRuleVersionModel.version == eval_row.rule_version
+            # Resolve allowed actions from the mapping
+            if rec_row.mapping_id and rec_row.mapping_version:
+                mapping_row = db.query(GovernedRecommendationMappingModel).filter(
+                    GovernedRecommendationMappingModel.mapping_id == rec_row.mapping_id,
+                    GovernedRecommendationMappingModel.version == rec_row.mapping_version
                 ).first()
-                if rule_version_row and rule_version_row.allowed_outputs_json:
-                    allowed_types = json.loads(rule_version_row.allowed_outputs_json)
-    except Exception:
-        pass
+                if mapping_row and mapping_row.allowed_action_types_json:
+                    allowed_types = json.loads(mapping_row.allowed_action_types_json)
+            
+            # Resolve target from deterministic relationship
+            if rec_row.intended_target_reference:
+                permitted_targets.append({
+                    "target_id": rec_row.intended_target_reference,
+                    "label": f"Target: {rec_row.intended_target_reference}",
+                    "type": "EXPLICIT_TARGET"
+                })
+    except Exception as e:
+        import logging
+        logging.error(f"Error resolving capabilities/targets: {e}")
 
     available_to_create = [t for t in allowed_types if t not in existing_terminal]
 
-    can_create = is_approved and len(available_to_create) > 0
-
-    # D6 Correction: Resolve Permitted Targets
-    permitted_targets = []
-    try:
-        # Assuming journey_id corresponds to an encounter_id or similar context
-        # Check if journey_id matches an encounter
-        encounter_row = db.query(EncounterModel).filter(EncounterModel.id == decision_row.journey_id).first()
-        if encounter_row:
-            permitted_targets.append({
-                "target_id": encounter_row.id,
-                "label": f"Encounter: {encounter_row.id}",
-                "type": "ENCOUNTER"
-            })
-            if encounter_row.clinic_id:
-                clinic_row = db.query(OrganizationClinicModel).filter(OrganizationClinicModel.id == encounter_row.clinic_id).first()
-                if clinic_row:
-                    permitted_targets.append({
-                        "target_id": clinic_row.id,
-                        "label": f"Clinic: {clinic_row.name or clinic_row.id}",
-                        "type": "CLINIC"
-                    })
-    except Exception:
-        pass
+    can_create = is_approved and len(available_to_create) > 0 and len(permitted_targets) > 0
 
     creation = {
         "state": "ELIGIBLE" if can_create else ("NOT_APPROVED" if not is_approved else "EXHAUSTED"),

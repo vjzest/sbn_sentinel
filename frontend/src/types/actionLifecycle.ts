@@ -68,6 +68,7 @@ export interface ActionItemDTO {
 export interface ActionCreationStateDTO {
   state: 'ELIGIBLE' | 'NOT_APPROVED' | 'EXHAUSTED' | 'UNKNOWN' | string;
   allowed_action_types: string[];
+  permitted_targets: { target_id: string; label: string; type: string }[];
 }
 
 // ---------------------------------------------------------------------------

@@ -19,7 +19,7 @@ export async function fetchActionLifecycle(decisionId: string): Promise<ActionLi
     object_ref: { object_type: 'HumanDecision', object_id: decisionId },
     journey_id: null,
     decision: null,
-    creation: { state: 'UNKNOWN', allowed_action_types: [] },
+    creation: { state: 'UNKNOWN', allowed_action_types: [], permitted_targets: [] },
     actions: [],
     can_create: false,
     technical_state: 'unavailable',

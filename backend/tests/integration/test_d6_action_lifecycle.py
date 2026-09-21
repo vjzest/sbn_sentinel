@@ -12,7 +12,8 @@ from app.models.governance_storage import (
     OperationalOutcomeModel,
     RecommendationModel,
     RuleEvaluationModel,
-    GovernedRuleVersionModel
+    GovernedRuleVersionModel,
+    GovernedRecommendationMappingModel
 )
 from app.models.organization import OrganizationClinicModel
 from app.models.encounter import EncounterModel
@@ -20,10 +21,9 @@ from app.services.governance_registry import governance_registry, DecisionType, 
 from app.api.deps import get_current_user
 
 client = TestClient(app)
-
-
 @pytest.fixture(scope="function")
 def setup_db():
+    Base.metadata.drop_all(bind=SessionLocal().get_bind())
     Base.metadata.create_all(bind=SessionLocal().get_bind())
     yield
     db = SessionLocal()
@@ -36,6 +36,7 @@ def setup_db():
     db.query(RecommendationModel).delete()
     db.query(RuleEvaluationModel).delete()
     db.query(GovernedRuleVersionModel).delete()
+    db.query(GovernedRecommendationMappingModel).delete()
     db.commit()
     db.close()
     governance_registry._human_decisions.clear()
@@ -75,13 +76,25 @@ def setup_d6_context(db, decision_id, journey_id, allowed_outputs=["RESCHEDULE_A
         evaluation_timestamp=datetime.datetime.utcnow().isoformat(),
         journey_id=journey_id
     ))
+    db.add(GovernedRecommendationMappingModel(
+        mapping_id="map_1",
+        version="1.0",
+        applicable_rule_id="rule_1",
+        eligible_result="ELIGIBLE",
+        recommendation_template="{}",
+        authority_requirement="SYSTEM_ADMIN",
+        priority="NORMAL",
+        lifecycle_state="ACTIVE",
+        allowed_action_types_json=json.dumps(allowed_outputs)
+    ))
     db.add(RecommendationModel(
         recommendation_id="rec_123",
         decision_context_id="ctx_1",
         rule_evaluation_id="eval_1",
         journey_id=journey_id,
         mapping_id="map_1",
-        mapping_version="1.0"
+        mapping_version="1.0",
+        intended_target_reference="target_123"
     ))
     db.add(HumanDecisionModel(
         decision_id=decision_id,
@@ -247,3 +260,138 @@ def test_outcome_persistence(setup_db, mock_admin):
     assert restored.source_reference == "sysA"
     assert restored.closure_reason == "done"
     assert restored.confirmed_at is not None
+
+def test_governance_target_and_type_rejection(setup_db, mock_admin):
+    decision_id = f"dec_{uuid.uuid4().hex[:8]}"
+    journey_id = f"journey_{uuid.uuid4().hex[:8]}"
+    db = SessionLocal()
+    setup_d6_context(db, decision_id, journey_id)
+    db.close()
+
+    # Test invalid action type
+    payload_invalid_type = {
+        "decision_id": decision_id,
+        "action_type": "INVALID_TYPE",
+        "target_reference": "target_123",
+        "parameters": {}
+    }
+    response = client.post("/api/v1/actions/", json=payload_invalid_type)
+    assert response.status_code == 403
+    assert "not permitted by governance mapping" in response.json()["detail"]
+
+    # Test invalid target
+    payload_invalid_target = {
+        "decision_id": decision_id,
+        "action_type": "SEND_NOTIFICATION",
+        "target_reference": "target_INVALID",
+        "parameters": {}
+    }
+    response2 = client.post("/api/v1/actions/", json=payload_invalid_target)
+    assert response2.status_code == 403
+    assert "match intended target" in response2.json()["detail"]
+
+def test_failed_retry_limits(setup_db, mock_admin):
+    decision_id = f"dec_{uuid.uuid4().hex[:8]}"
+    journey_id = f"journey_{uuid.uuid4().hex[:8]}"
+    db = SessionLocal()
+    setup_d6_context(db, decision_id, journey_id)
+
+    action_id = f"act_{uuid.uuid4().hex[:8]}"
+    db.add(OperationalActionModel(
+        action_id=action_id,
+        authorization_reference=decision_id,
+        journey_id=journey_id,
+        action_type="SEND_NOTIFICATION",
+        target_reference="target_123",
+        status="EXECUTING",
+        current_result="FAILED",
+        created_at=datetime.datetime.utcnow().isoformat()
+    ))
+    # N = max_retries = 3
+    for i in range(1, 4):
+        db.add(ExecutionAttemptModel(
+            attempt_id=f"att_{uuid.uuid4().hex[:8]}",
+            action_id=action_id,
+            journey_id=journey_id,
+            result="FAILED",
+            attempt_number=str(i),
+            connector="MOCK_PRACTICE_FUSION_CONNECTOR",
+            attempt_timestamp=datetime.datetime.utcnow().isoformat()
+        ))
+    db.commit()
+    db.close()
+
+    # Attempt execute
+    response = client.post("/api/v1/actions/execute", json={"action_id": action_id})
+    # Since attempts = 3, it should exceed limit or return error
+    assert response.status_code in (400, 409)
+    assert "MAX_RETRIES" in response.json()["detail"] or "limit" in response.json()["detail"].lower()
+
+def test_production_fail_closed_executor(setup_db, mock_admin, monkeypatch):
+    from app.core.config import settings
+    monkeypatch.setattr(settings, "SYNTHETIC_TEST_ENABLED", False)
+
+    decision_id = f"dec_{uuid.uuid4().hex[:8]}"
+    journey_id = f"journey_{uuid.uuid4().hex[:8]}"
+    db = SessionLocal()
+    setup_d6_context(db, decision_id, journey_id)
+
+    action_id = f"act_{uuid.uuid4().hex[:8]}"
+    db.add(OperationalActionModel(
+        action_id=action_id,
+        authorization_reference=decision_id,
+        journey_id=journey_id,
+        action_type="SEND_NOTIFICATION",
+        target_reference="target_123",
+        status="READY",
+        current_result="NOT_ATTEMPTED",
+        created_at=datetime.datetime.utcnow().isoformat()
+    ))
+    db.commit()
+    db.close()
+
+    response = client.post("/api/v1/actions/execute", json={"action_id": action_id})
+    # Production should block it, actions.py translates BLOCKED to 409
+    assert response.status_code == 409
+    assert "not implemented" in response.json()["detail"].lower()
+
+def test_outcome_mismatch_behavior(setup_db, mock_admin):
+    decision_id = f"dec_{uuid.uuid4().hex[:8]}"
+    journey_id = f"journey_{uuid.uuid4().hex[:8]}"
+    db = SessionLocal()
+    setup_d6_context(db, decision_id, journey_id)
+
+    action_id = f"act_{uuid.uuid4().hex[:8]}"
+    db.add(OperationalActionModel(
+        action_id=action_id,
+        authorization_reference=decision_id,
+        journey_id=journey_id,
+        action_type="SEND_NOTIFICATION",
+        target_reference="target_123",
+        status="COMPLETED",
+        current_result="SUCCESS",
+        created_at=datetime.datetime.utcnow().isoformat()
+    ))
+    db.commit()
+    db.close()
+
+    from app.services.governance_registry import OperationalOutcomeRecord, OutcomeConfirmationState, OutcomeResolutionState
+    outcome = OperationalOutcomeRecord(
+        outcome_id=f"out_{uuid.uuid4().hex[:8]}",
+        action_id=action_id,
+        journey_id=journey_id,
+        expected_outcome={"status": "ok"},
+        observed_outcome={"status": "fail"},
+        confirmation_state=OutcomeConfirmationState.MISMATCH,
+        resolution_state=OutcomeResolutionState.UNRESOLVED,
+        source_reference="sysB",
+        closure_reason=None,
+        confirmed_at=datetime.datetime.utcnow()
+    )
+    governance_registry.record_operational_outcome(outcome)
+
+    response = client.get(f"/api/v1/actions/lifecycle/{decision_id}")
+    data = response.json()
+    action_data = data["actions"][0]
+    assert action_data["outcome"]["confirmation_state"] == "MISMATCH"
+    assert action_data["outcome"]["resolution_state"] == "UNRESOLVED"

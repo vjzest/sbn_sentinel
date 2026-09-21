@@ -33,7 +33,7 @@ class OperationalExecutionEngine(BaseService):
         return None
 
     def create_action(self, decision_id: str, action_type_str: str, target_reference: str,
-                      parameters: Dict[str, Any], initiator_scope: Dict[str, Any] = None) -> Dict[str, Any]:
+                      parameters: Dict[str, Any], initiator_scope: Dict[str, Any] = None, intent_hash: str = None) -> Dict[str, Any]:
         """Creates an operational action based on an approved decision."""
         # Validate decision exists and is RECORDED
         decision = governance_registry.get_human_decision(decision_id)
@@ -142,7 +142,8 @@ class OperationalExecutionEngine(BaseService):
             status=ActionStatus.READY,
             current_result=ExecutionResult.NOT_ATTEMPTED,
             # SESR-008: Propagate journey identity
-            journey_id=journey_id
+            journey_id=journey_id,
+            intent_hash=intent_hash
         )
 
         governance_registry.record_operational_action(action)
@@ -161,6 +162,7 @@ class OperationalExecutionEngine(BaseService):
             status_str not in terminal_statuses
             and result_str in ("FAILED", "PARTIAL")  # UNKNOWN explicitly removed
             and attempt_count > 0
+            and attempt_count < 3  # Enforce max 3 retries
         )
 
         blocked_reason = None
@@ -170,6 +172,8 @@ class OperationalExecutionEngine(BaseService):
             blocked_reason = "Action has expired — a new action must be authorized via a new Human Decision."
         elif status_str == "CANCELLED":
             blocked_reason = "Action was cancelled and cannot be executed."
+        elif attempt_count >= 3:
+            blocked_reason = "MAX_RETRIES exceeded. Action is permanently blocked."
 
         return {
             "can_execute": can_execute,

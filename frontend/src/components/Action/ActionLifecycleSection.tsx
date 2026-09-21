@@ -10,7 +10,6 @@
  * INVARIANT: decision_id comes from current_decision.decision_id only.
  * Never uses signal_id as a decision_id proxy.
  */
-
 import React, { useState, useEffect, useCallback } from 'react';
 import { Loader, Zap, RotateCcw } from 'lucide-react';
 import type { ActionLifecycleDTO } from '@/types/actionLifecycle';
@@ -20,12 +19,10 @@ import { ExecutionAttemptHistory } from '@/components/Action/ExecutionAttemptHis
 import { CreateActionControls, ExecuteActionControls } from '@/components/Action/ActionControls';
 import { OutcomeSummary } from '@/components/Outcome/OutcomeSummary';
 import { ContinuityNotice } from '@/components/Outcome/ContinuityNotice';
-
 interface Props {
   /** Human Decision ID — must come from current_decision.decision_id */
   decisionId: string | null | undefined;
 }
-
 export const ActionLifecycleSection: React.FC<Props> = ({ decisionId }) => {
   const [lifecycle, setLifecycle] = useState<ActionLifecycleDTO | null>(null);
   const [loading, setLoading] = useState(false);
@@ -63,7 +60,6 @@ export const ActionLifecycleSection: React.FC<Props> = ({ decisionId }) => {
       </div>
     );
   }
-
   // --- Unavailable or continuity broken ---
   if (!lifecycle || lifecycle.technical_state !== 'ready') {
     return (
@@ -79,9 +75,7 @@ export const ActionLifecycleSection: React.FC<Props> = ({ decisionId }) => {
       />
     );
   }
-
   const hasActions = lifecycle.actions.length > 0;
-
   return (
     <div className="space-y-5">
       {/* Section header */}

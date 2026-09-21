@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, Text
+from sqlalchemy import Column, String, Text, UniqueConstraint
 from app.db.database import Base
 
 
@@ -35,6 +35,7 @@ class RecommendationModel(Base):
     status = Column(String)
     priority = Column(String)
     generated_at = Column(String)
+    intended_target_reference = Column(String, nullable=True)
 
 
 class HumanDecisionModel(Base):
@@ -60,6 +61,11 @@ class OperationalActionModel(Base):
     parameters_json = Column(Text)
     created_at = Column(String)
     execute_by = Column(String, nullable=True)  # D6.3: durable expiry timestamp
+    intent_hash = Column(String, unique=True, nullable=True)
+    
+    __table_args__ = (
+        UniqueConstraint('authorization_reference', 'action_type', 'target_reference', 'intent_hash', name='uq_action_intent'),
+    )
 
 
 class ExecutionAttemptModel(Base):
@@ -145,3 +151,4 @@ class GovernedRecommendationMappingModel(Base):
     problem_template = Column(Text, nullable=True)
     effective_from = Column(String, nullable=True)
     created_at = Column(String, nullable=True)
+    allowed_action_types_json = Column(Text, nullable=True)
