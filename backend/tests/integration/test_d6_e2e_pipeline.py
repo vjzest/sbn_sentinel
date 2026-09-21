@@ -1,8 +1,6 @@
 import pytest
 from fastapi.testclient import TestClient
 import uuid
-import datetime
-import json
 from app.main import app
 from app.db.database import SessionLocal, Base
 from app.models.governance_storage import (
@@ -11,18 +9,16 @@ from app.models.governance_storage import (
     ExecutionAttemptModel,
     OperationalOutcomeModel,
     RecommendationModel,
-    RuleEvaluationModel,
-    GovernedRuleVersionModel,
-    GovernedRecommendationMappingModel,
-    GovernedPolicyVersionModel
+    RuleEvaluationModel
 )
 from app.models.organization import OrganizationClinicModel
 from app.models.encounter import EncounterModel
-from app.services.governance_registry import governance_registry, DecisionType, DecisionStatus, AuthorityConfiguration
+from app.services.governance_registry import governance_registry, DecisionType, AuthorityConfiguration
 from app.services.intelligence_engine import intelligence_engine
 from app.api.deps import get_current_user
 
 client = TestClient(app)
+
 
 @pytest.fixture(scope="function")
 def setup_db():
@@ -39,6 +35,7 @@ def setup_db():
     db.query(EncounterModel).delete()
     db.commit()
     db.close()
+
 
 @pytest.fixture(scope="function")
 def mock_admin():
@@ -57,6 +54,7 @@ def mock_admin():
 
     yield
     app.dependency_overrides.clear()
+
 
 def test_d6_e2e_pipeline(setup_db, mock_admin):
     db = SessionLocal()
