@@ -21,6 +21,8 @@ from app.services.governance_registry import governance_registry, DecisionType, 
 from app.api.deps import get_current_user
 
 client = TestClient(app)
+
+
 @pytest.fixture(scope="function")
 def setup_db():
     Base.metadata.drop_all(bind=SessionLocal().get_bind())
@@ -261,6 +263,7 @@ def test_outcome_persistence(setup_db, mock_admin):
     assert restored.closure_reason == "done"
     assert restored.confirmed_at is not None
 
+
 def test_governance_target_and_type_rejection(setup_db, mock_admin):
     decision_id = f"dec_{uuid.uuid4().hex[:8]}"
     journey_id = f"journey_{uuid.uuid4().hex[:8]}"
@@ -289,6 +292,7 @@ def test_governance_target_and_type_rejection(setup_db, mock_admin):
     response2 = client.post("/api/v1/actions/", json=payload_invalid_target)
     assert response2.status_code == 403
     assert "match intended target" in response2.json()["detail"]
+
 
 def test_failed_retry_limits(setup_db, mock_admin):
     decision_id = f"dec_{uuid.uuid4().hex[:8]}"
@@ -327,6 +331,7 @@ def test_failed_retry_limits(setup_db, mock_admin):
     assert response.status_code in (400, 409)
     assert "MAX_RETRIES" in response.json()["detail"] or "limit" in response.json()["detail"].lower()
 
+
 def test_production_fail_closed_executor(setup_db, mock_admin, monkeypatch):
     from app.core.config import settings
     monkeypatch.setattr(settings, "SYNTHETIC_TEST_ENABLED", False)
@@ -354,6 +359,7 @@ def test_production_fail_closed_executor(setup_db, mock_admin, monkeypatch):
     # Production should block it, actions.py translates BLOCKED to 409
     assert response.status_code == 409
     assert "not implemented" in response.json()["detail"].lower()
+
 
 def test_outcome_mismatch_behavior(setup_db, mock_admin):
     decision_id = f"dec_{uuid.uuid4().hex[:8]}"

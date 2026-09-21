@@ -23,12 +23,8 @@ from app.models.governance_storage import (
     OperationalActionModel,
     ExecutionAttemptModel,
     OperationalOutcomeModel,
-    RecommendationModel,
-    RuleEvaluationModel,
-    GovernedRuleVersionModel
+    RecommendationModel
 )
-from app.models.encounter import EncounterModel
-from app.models.organization import OrganizationClinicModel
 from app.services.governance_registry import (
     ActionStatus,
     ExecutionResult,
