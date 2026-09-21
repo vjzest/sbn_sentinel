@@ -7,7 +7,8 @@ on:
     branches: [ "main", "develop", "master" ]
 
 jobs:
-  quality-assurance:
+  backend-quality:
+    name: Backend Quality Assurance
     runs-on: ubuntu-latest
     
     defaults:
@@ -15,10 +16,10 @@ jobs:
         working-directory: ./backend
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
 
     - name: Set up Python 3.11
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v5
       with:
         python-version: "3.11"
         cache: 'pip'
@@ -46,3 +47,40 @@ jobs:
         PYTHONPATH: "src/runtime"
       run: |
         pytest tests/ -v -k "governance"
+
+    - name: SDS-D4 and SDS-D5 Verification
+      env:
+        SECRET_KEY: "test-secret-key-for-ci"
+        PYTHONPATH: "src/runtime"
+      run: |
+        pytest tests/integration/test_d4_decision_basis.py tests/integration/test_d5_recommendation_review.py -v
+
+  frontend-quality:
+    name: Frontend Quality Assurance
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: ./frontend
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Node.js 22
+      uses: actions/setup-node@v4
+      with:
+        node-version: "22"
+        cache: 'npm'
+        cache-dependency-path: frontend/package-lock.json
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Run Tests
+      run: npm run test
+
+    - name: Run Linter
+      run: npm run lint
+
+    - name: Build Application
+      run: npm run build
