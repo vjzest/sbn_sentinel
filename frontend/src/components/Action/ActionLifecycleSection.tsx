@@ -47,8 +47,6 @@ export const ActionLifecycleSection: React.FC<Props> = ({ decisionId }) => {
   useEffect(() => {
     load();
   }, [load]);
-
-  // --- No decision_id provided ---
   if (!decisionId) {
     return (
       <div className="text-[11px] text-white/30 text-center py-4 border border-dashed border-white/10 rounded-[10px]">
@@ -56,7 +54,6 @@ export const ActionLifecycleSection: React.FC<Props> = ({ decisionId }) => {
       </div>
     );
   }
-
   // --- Loading ---
   if (loading) {
     return (
