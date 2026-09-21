@@ -16,10 +16,11 @@ from app.models.governance_storage import (
 )
 from app.models.organization import OrganizationClinicModel
 from app.models.encounter import EncounterModel
-from app.services.governance_registry import governance_registry, DecisionType, DecisionStatus, ActionType, ActionStatus, ExecutionResult
+from app.services.governance_registry import governance_registry, DecisionType, DecisionStatus
 from app.api.deps import get_current_user
 
 client = TestClient(app)
+
 
 @pytest.fixture(scope="function")
 def setup_db():
@@ -42,6 +43,7 @@ def setup_db():
     governance_registry._execution_attempts.clear()
     governance_registry._operational_outcomes.clear()
 
+
 @pytest.fixture(scope="function")
 def mock_admin():
     class MockAdmin:
@@ -51,6 +53,7 @@ def mock_admin():
     app.dependency_overrides[get_current_user] = lambda: MockAdmin()
     yield
     app.dependency_overrides.clear()
+
 
 def setup_d6_context(db, decision_id, journey_id, allowed_outputs=["RESCHEDULE_APPOINTMENT", "SEND_NOTIFICATION"]):
     db.add(GovernedRuleVersionModel(
@@ -106,11 +109,13 @@ def setup_d6_context(db, decision_id, journey_id, allowed_outputs=["RESCHEDULE_A
     ))
     db.commit()
 
+
 def test_action_lifecycle_empty_decision(setup_db, mock_admin):
     decision_id = f"dec_{uuid.uuid4().hex[:8]}"
     response = client.get(f"/api/v1/actions/lifecycle/{decision_id}")
     assert response.status_code == 200
     assert response.json()["technical_state"] == "unavailable"
+
 
 def test_action_lifecycle_with_decision(setup_db, mock_admin):
     decision_id = f"dec_{uuid.uuid4().hex[:8]}"
@@ -118,7 +123,7 @@ def test_action_lifecycle_with_decision(setup_db, mock_admin):
     db = SessionLocal()
     setup_d6_context(db, decision_id, journey_id)
     db.close()
-    
+
     response = client.get(f"/api/v1/actions/lifecycle/{decision_id}")
     assert response.status_code == 200
     data = response.json()
@@ -126,41 +131,43 @@ def test_action_lifecycle_with_decision(setup_db, mock_admin):
     assert "RESCHEDULE_APPOINTMENT" in data["creation"]["allowed_action_types"]
     assert len(data["creation"]["permitted_targets"]) > 0
 
+
 def test_idempotency_create_action(setup_db, mock_admin):
     decision_id = f"dec_{uuid.uuid4().hex[:8]}"
     journey_id = f"journey_{uuid.uuid4().hex[:8]}"
     db = SessionLocal()
     setup_d6_context(db, decision_id, journey_id)
     db.close()
-    
+
     payload = {
         "decision_id": decision_id,
         "action_type": "SEND_NOTIFICATION",
         "target_reference": "target_123",
         "parameters": {"k": "v"}
     }
-    
+
     response = client.post("/api/v1/actions/", json=payload)
     assert response.status_code == 200
-    action_id = response.json()["action_id"]
-    
+    assert response.json()["action_id"] is not None
+
     # Idempotency success
     response2 = client.post("/api/v1/actions/", json=payload)
     assert response2.status_code == 200
     assert response2.json()["status"] == "IDEMPOTENT"
-    
+
     # Idempotency conflict (material intent)
     payload_conflict = dict(payload)
     payload_conflict["parameters"] = {"k": "different"}
     response3 = client.post("/api/v1/actions/", json=payload_conflict)
     assert response3.status_code == 409
-    
+
+
 def test_unknown_blocks_retry(setup_db, mock_admin):
     decision_id = f"dec_{uuid.uuid4().hex[:8]}"
     journey_id = f"journey_{uuid.uuid4().hex[:8]}"
     db = SessionLocal()
     setup_d6_context(db, decision_id, journey_id)
-    
+
     action_id = f"act_{uuid.uuid4().hex[:8]}"
     db.add(OperationalActionModel(
         action_id=action_id,
@@ -183,18 +190,19 @@ def test_unknown_blocks_retry(setup_db, mock_admin):
     ))
     db.commit()
     db.close()
-    
+
     response = client.get(f"/api/v1/actions/lifecycle/{decision_id}")
     data = response.json()
     action_data = data["actions"][0]
     assert action_data["can_retry"] is False
+
 
 def test_outcome_persistence(setup_db, mock_admin):
     decision_id = f"dec_{uuid.uuid4().hex[:8]}"
     journey_id = f"journey_{uuid.uuid4().hex[:8]}"
     db = SessionLocal()
     setup_d6_context(db, decision_id, journey_id)
-    
+
     action_id = f"act_{uuid.uuid4().hex[:8]}"
     db.add(OperationalActionModel(
         action_id=action_id,
@@ -208,9 +216,9 @@ def test_outcome_persistence(setup_db, mock_admin):
     ))
     db.commit()
     db.close()
-    
+
     from app.services.governance_registry import OperationalOutcomeRecord, OutcomeConfirmationState, OutcomeResolutionState
-    
+
     outcome_id = f"out_{uuid.uuid4().hex[:8]}"
     outcome = OperationalOutcomeRecord(
         outcome_id=outcome_id,
@@ -225,7 +233,7 @@ def test_outcome_persistence(setup_db, mock_admin):
         confirmed_at=datetime.datetime.utcnow()
     )
     governance_registry.record_operational_outcome(outcome)
-    
+
     # Retrieve from DB to check persistence
     db = SessionLocal()
     saved_outcome = db.query(OperationalOutcomeModel).filter_by(outcome_id=outcome_id).first()
@@ -233,7 +241,7 @@ def test_outcome_persistence(setup_db, mock_admin):
     assert saved_outcome.closure_reason == "done"
     assert saved_outcome.confirmed_at is not None
     db.close()
-    
+
     # Retrieve from registry to check restoration
     restored = governance_registry.get_operational_outcome(outcome_id)
     assert restored.source_reference == "sysA"
