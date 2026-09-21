@@ -66,15 +66,30 @@ class ContextValidator:
 
     def _detect_conflicts(self, evidence: list) -> list:
         # P0-01: Detect if two evidence records assert conflicting facts for the same key.
+        # Emits actual conflicting Evidence IDs (evidence_a_id, evidence_b_id).
         facts = {}
         conflicts = []
+        import uuid
         for ev in evidence:
             key = ev["fact_key"] if isinstance(ev, dict) else getattr(ev, "fact_key", None)
             val = ev["fact_value"] if isinstance(ev, dict) else getattr(ev, "fact_value", None)
+            ev_id = (
+                ev.get("evidence_id") or ev.get("id")
+                if isinstance(ev, dict)
+                else getattr(ev, "evidence_id", getattr(ev, "id", None))
+            )
             if key and val:
-                if key in facts and facts[key] != val:
-                    conflicts.append(f"Conflict on {key}: {facts[key]} vs {val}")
-                facts[key] = val
+                if key in facts and facts[key]["val"] != val:
+                    ev_a = facts[key]["evidence_id"]
+                    ev_b = ev_id
+                    conflicts.append({
+                        "conflict_id": str(uuid.uuid4()),
+                        "evidence_a_id": str(ev_a) if ev_a else None,
+                        "evidence_b_id": str(ev_b) if ev_b else None,
+                        "conflict_description": f"Conflict on {key}: {facts[key]['val']} vs {val}",
+                        "resolution_status": "Unresolved"
+                    })
+                facts[key] = {"val": val, "evidence_id": ev_id}
         return conflicts
 
     def _evaluate_freshness(self, evidence: list) -> dict:

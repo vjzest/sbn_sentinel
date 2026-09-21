@@ -38,8 +38,8 @@ class ContextConflictsModel(Base):
 
     id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
     context_id = Column(String, nullable=False, index=True)
-    evidence_a_id = Column(String, nullable=False)
-    evidence_b_id = Column(String, nullable=False)
+    evidence_a_id = Column(String, nullable=True)
+    evidence_b_id = Column(String, nullable=True)
     conflict_description = Column(String, nullable=False)
     resolution_status = Column(String, default="Unresolved")
 

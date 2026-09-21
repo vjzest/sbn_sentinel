@@ -36,6 +36,8 @@ class DefaultEHRAdapter(BaseEHRAdapter):
                 "message", raw_payload.get(
                     "content", "")))
         canonical_metadata["detail"] = detail
+        if "facts" in raw_payload:
+            canonical_metadata["facts"] = raw_payload["facts"]
 
         appointment = None
         patient = None
