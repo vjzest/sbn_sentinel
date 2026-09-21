@@ -813,7 +813,13 @@ class GovernanceRegistry:
                 resolution_state=outcome.resolution_state.value,
                 expected_outcome_json=expected_json,
                 observed_outcome_json=observed_json,
-                created_at=outcome.created_at.isoformat()
+                created_at=outcome.created_at.isoformat(),
+                # D6 Correction: Persist new outcome fields
+                source_reference=outcome.source_reference,
+                closure_reason=outcome.closure_reason,
+                confirmed_at=outcome.confirmed_at.isoformat() if outcome.confirmed_at else None,
+                closed_at=outcome.closed_at.isoformat() if outcome.closed_at else None,
+                reopened_at=outcome.reopened_at.isoformat() if outcome.reopened_at else None
             ))
             db.commit()
             self._operational_outcomes.append(outcome)
@@ -848,7 +854,13 @@ class GovernanceRegistry:
                     observed_outcome=observed,
                     confirmation_state=OutcomeConfirmationState(db_record.confirmation_state),
                     resolution_state=OutcomeResolutionState(db_record.resolution_state),
-                    journey_id=db_record.journey_id
+                    journey_id=db_record.journey_id,
+                    # D6 Correction: Restore new outcome fields
+                    source_reference=db_record.source_reference,
+                    closure_reason=db_record.closure_reason,
+                    confirmed_at=datetime.fromisoformat(db_record.confirmed_at) if db_record.confirmed_at else None,
+                    closed_at=datetime.fromisoformat(db_record.closed_at) if db_record.closed_at else None,
+                    reopened_at=datetime.fromisoformat(db_record.reopened_at) if db_record.reopened_at else None
                 )
             for o in self._operational_outcomes:
                 if o.outcome_id == outcome_id:
@@ -880,7 +892,13 @@ class GovernanceRegistry:
                     observed_outcome=observed,
                     confirmation_state=OutcomeConfirmationState(db_record.confirmation_state),
                     resolution_state=OutcomeResolutionState(db_record.resolution_state),
-                    journey_id=db_record.journey_id
+                    journey_id=db_record.journey_id,
+                    # D6 Correction: Restore new outcome fields
+                    source_reference=db_record.source_reference,
+                    closure_reason=db_record.closure_reason,
+                    confirmed_at=datetime.fromisoformat(db_record.confirmed_at) if db_record.confirmed_at else None,
+                    closed_at=datetime.fromisoformat(db_record.closed_at) if db_record.closed_at else None,
+                    reopened_at=datetime.fromisoformat(db_record.reopened_at) if db_record.reopened_at else None
                 )
             for o in self._operational_outcomes:
                 if o.action_id == action_id:
