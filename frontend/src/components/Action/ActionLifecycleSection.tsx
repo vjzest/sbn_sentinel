@@ -15,7 +15,7 @@ import { Loader, Zap, RotateCcw } from 'lucide-react';
 import type { ActionLifecycleDTO } from '@/types/actionLifecycle';
 import { fetchActionLifecycle } from '@/utils/actionLifecycle';
 import { ActionSummary } from '@/components/Action/ActionSummary';
-import { ExecutionAttemptHistory } from '@/components/Action/ExecutionAttemptHistory
+import { ExecutionAttemptHistory } from '@/components/Action/ExecutionAttemptHistory';
 import { CreateActionControls, ExecuteActionControls } from '@/components/Action/ActionControls';
 import { OutcomeSummary } from '@/components/Outcome/OutcomeSummary';
 import { ContinuityNotice } from '@/components/Outcome/ContinuityNotice';
