@@ -59,6 +59,7 @@ class OperationalActionModel(Base):
     current_result = Column(String)
     parameters_json = Column(Text)
     created_at = Column(String)
+    execute_by = Column(String, nullable=True)  # D6.3: durable expiry timestamp
 
 
 class ExecutionAttemptModel(Base):
@@ -68,6 +69,12 @@ class ExecutionAttemptModel(Base):
     journey_id = Column(String, nullable=False, index=True)
     result = Column(String)
     attempt_timestamp = Column(String)
+    # D6.3: durable fields — nullable so legacy rows render Unknown/Unavailable
+    attempt_number = Column(String, nullable=True)  # stored as string to avoid migration issues
+    connector = Column(String, nullable=True)
+    request_reference = Column(String, nullable=True)
+    response_reference = Column(String, nullable=True)
+    error_message = Column(Text, nullable=True)
 
 
 class OperationalOutcomeModel(Base):
@@ -80,6 +87,12 @@ class OperationalOutcomeModel(Base):
     expected_outcome_json = Column(Text, nullable=True)
     observed_outcome_json = Column(Text, nullable=True)
     created_at = Column(String)
+    # D6.3: durable outcome lifecycle fields — nullable for legacy row safety
+    source_reference = Column(String, nullable=True)
+    closure_reason = Column(Text, nullable=True)
+    confirmed_at = Column(String, nullable=True)
+    closed_at = Column(String, nullable=True)
+    reopened_at = Column(String, nullable=True)
 
 
 class GovernedPolicyVersionModel(Base):
