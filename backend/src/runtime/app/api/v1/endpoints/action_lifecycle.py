@@ -23,7 +23,12 @@ from app.models.governance_storage import (
     OperationalActionModel,
     ExecutionAttemptModel,
     OperationalOutcomeModel,
+    RecommendationModel,
+    RuleEvaluationModel,
+    GovernedRuleVersionModel
 )
+from app.models.encounter import EncounterModel
+from app.models.organization import OrganizationClinicModel
 from app.services.governance_registry import (
     ActionStatus,
     ExecutionResult,
@@ -118,42 +123,6 @@ def _build_outcome_dto(o: Optional[OperationalOutcomeModel]) -> Optional[dict]:
     }
 
 
-def _compute_capabilities(action: OperationalActionModel, attempts: list) -> dict:
-    """
-    Computes current capability signals from authoritative DB state.
-    These are READ signals — they tell the frontend what is currently possible.
-    They do NOT create, execute, or mutate anything.
-    """
-    status = _safe_action_status(action.status)
-    result = _safe_execution_result(action.current_result)
-
-    # can_execute: action must be in READY or CREATED state
-    can_execute = status in ("READY", "CREATED")
-
-    # can_retry: last attempt failed, action is not CANCELLED/COMPLETED/EXPIRED
-    terminal_statuses = {"COMPLETED", "CANCELLED", "EXPIRED", "BLOCKED"}
-    can_retry = (
-        status not in terminal_statuses
-        and result in ("FAILED", "PARTIAL", "UNKNOWN")
-        and len(attempts) > 0
-    )
-
-    # blocked_reason: explicit block state from DB, never inferred
-    blocked_reason: Optional[str] = None
-    if status == "BLOCKED":
-        blocked_reason = "Action is in BLOCKED state — review governance constraints before retrying."
-    elif status == "EXPIRED":
-        blocked_reason = "Action has expired — a new action must be authorized via a new Human Decision."
-    elif status == "CANCELLED":
-        blocked_reason = "Action was cancelled and cannot be executed."
-
-    return {
-        "can_execute": can_execute,
-        "can_retry": can_retry,
-        "blocked_reason": blocked_reason,
-    }
-
-
 def _build_action_dto(
     action: OperationalActionModel,
     db: Session
@@ -177,7 +146,12 @@ def _build_action_dto(
     )
     outcome = _build_outcome_dto(outcome_row)
 
-    capabilities = _compute_capabilities(action, attempts)
+    from app.services.operational_execution_engine import operational_execution_engine
+    capabilities = operational_execution_engine.evaluate_action_capabilities(
+        status_str=_safe_action_status(action.status),
+        result_str=_safe_execution_result(action.current_result),
+        attempt_count=len(attempts)
+    )
 
     try:
         params = json.loads(action.parameters_json) if getattr(action, "parameters_json", None) else {}
@@ -258,16 +232,56 @@ async def get_action_lifecycle(
     # can_create is ONLY true if:
     # - decision is APPROVED+RECORDED
     # - no action exists yet that is non-terminal for a given type
-    # (simplified: if no COMPLETED action exists of same type, can_create)
     existing_terminal = {a.action_type for a in action_rows if _safe_action_status(a.status) in ("COMPLETED",)}
-    allowed_types = ["RESCHEDULE_APPOINTMENT", "SEND_NOTIFICATION", "UPDATE_OPERATIONAL_STATUS", "CREATE_FOLLOWUP_TASK"]
+    
+    # D6 Correction: Dynamic allowed_action_types
+    allowed_types = []
+    try:
+        import json
+        rec_row = db.query(RecommendationModel).filter(RecommendationModel.recommendation_id == decision_row.recommendation_id).first()
+        if rec_row:
+            eval_row = db.query(RuleEvaluationModel).filter(RuleEvaluationModel.evaluation_id == rec_row.rule_evaluation_id).first()
+            if eval_row:
+                rule_version_row = db.query(GovernedRuleVersionModel).filter(
+                    GovernedRuleVersionModel.rule_id == eval_row.rule_id,
+                    GovernedRuleVersionModel.version == eval_row.rule_version
+                ).first()
+                if rule_version_row and rule_version_row.allowed_outputs_json:
+                    allowed_types = json.loads(rule_version_row.allowed_outputs_json)
+    except Exception:
+        pass
+
     available_to_create = [t for t in allowed_types if t not in existing_terminal]
 
     can_create = is_approved and len(available_to_create) > 0
 
+    # D6 Correction: Resolve Permitted Targets
+    permitted_targets = []
+    try:
+        # Assuming journey_id corresponds to an encounter_id or similar context
+        # Check if journey_id matches an encounter
+        encounter_row = db.query(EncounterModel).filter(EncounterModel.id == decision_row.journey_id).first()
+        if encounter_row:
+            permitted_targets.append({
+                "target_id": encounter_row.id,
+                "label": f"Encounter: {encounter_row.id}",
+                "type": "ENCOUNTER"
+            })
+            if encounter_row.clinic_id:
+                clinic_row = db.query(OrganizationClinicModel).filter(OrganizationClinicModel.id == encounter_row.clinic_id).first()
+                if clinic_row:
+                    permitted_targets.append({
+                        "target_id": clinic_row.id,
+                        "label": f"Clinic: {clinic_row.name or clinic_row.id}",
+                        "type": "CLINIC"
+                    })
+    except Exception:
+        pass
+
     creation = {
         "state": "ELIGIBLE" if can_create else ("NOT_APPROVED" if not is_approved else "EXHAUSTED"),
         "allowed_action_types": available_to_create if can_create else [],
+        "permitted_targets": permitted_targets,
     }
 
     return {

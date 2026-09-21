@@ -148,17 +148,48 @@ class OperationalExecutionEngine(BaseService):
         governance_registry.record_operational_action(action)
         return {"status": "SUCCESS", "action_id": action_id}
 
-    def _pre_execution_validation(self, action: OperationalActionRecord) -> Dict[str, Any]:
-        """EXV-001 to EXV-039: Execution Eligibility Controls"""
+    def evaluate_action_capabilities(self, status_str: str, result_str: str, attempt_count: int) -> Dict[str, Any]:
+        """
+        Computes current capability signals from state.
+        These are READ signals — they tell the frontend what is currently possible.
+        """
+        can_execute = status_str in ("READY", "CREATED")
 
-        # EXV-003: Validate current state
-        if action.status not in [ActionStatus.CREATED, ActionStatus.READY, ActionStatus.FAILED]:
+        # D6 Correction: UNKNOWN must not expose retry to prevent duplicate external side effects
+        terminal_statuses = {"COMPLETED", "CANCELLED", "EXPIRED", "BLOCKED"}
+        can_retry = (
+            status_str not in terminal_statuses
+            and result_str in ("FAILED", "PARTIAL")  # UNKNOWN explicitly removed
+            and attempt_count > 0
+        )
+
+        blocked_reason = None
+        if status_str == "BLOCKED":
+            blocked_reason = "Action is in BLOCKED state — review governance constraints before retrying."
+        elif status_str == "EXPIRED":
+            blocked_reason = "Action has expired — a new action must be authorized via a new Human Decision."
+        elif status_str == "CANCELLED":
+            blocked_reason = "Action was cancelled and cannot be executed."
+
+        return {
+            "can_execute": can_execute,
+            "can_retry": can_retry,
+            "blocked_reason": blocked_reason,
+        }
+
+    def _pre_execution_validation(self, action: OperationalActionRecord, attempts_count: int) -> Dict[str, Any]:
+        """EXV-001 to EXV-039: Execution Eligibility Controls"""
+        caps = self.evaluate_action_capabilities(
+            status_str=action.status.value,
+            result_str=action.current_result.value,
+            attempt_count=attempts_count
+        )
+
+        if not caps["can_execute"] and not caps["can_retry"]:
             return {
                 "eligible": False,
-                "reason": f"ACTION_NOT_READY (Current status: {action.status.value})"}
-
-        if action.current_result in [ExecutionResult.SUCCESS, ExecutionResult.UNKNOWN]:
-            return {"eligible": False, "reason": f"PREVIOUS_RESULT_{action.current_result.value}"}
+                "reason": caps["blocked_reason"] or f"NOT_ELIGIBLE (Status: {action.status.value}, Result: {action.current_result.value})"
+            }
 
         # EXV-004: Validate required authorization
         decision = governance_registry.get_human_decision(action.authorization_reference)
@@ -186,7 +217,10 @@ class OperationalExecutionEngine(BaseService):
             return {"status": "ERROR", "message": f"Action {action_id} not found."}
 
         # 1. Pre-execution Validation
-        eligibility = self._pre_execution_validation(action)
+        attempts = governance_registry.get_execution_attempts(action_id)
+        attempt_number = len(attempts) + 1
+
+        eligibility = self._pre_execution_validation(action, attempts_count=len(attempts))
         if not eligibility["eligible"]:
             governance_registry.update_operational_action(
                 action_id, ActionStatus.BLOCKED, ExecutionResult.NOT_ATTEMPTED)
@@ -197,8 +231,6 @@ class OperationalExecutionEngine(BaseService):
             action_id, ActionStatus.EXECUTING, action.current_result)
 
         # 2. Execution Attempt
-        attempts = governance_registry.get_execution_attempts(action_id)
-        attempt_number = len(attempts) + 1
         attempt_id = f"ATT-{uuid.uuid4().hex[:6].upper()}"
 
         logger.info(
@@ -216,12 +248,15 @@ class OperationalExecutionEngine(BaseService):
                 "error": "NOT_IMPLEMENTED",
                 "message": "Real connector not implemented for V1 production."}
 
+        # D6 Correction: Do not persist MOCK_PRACTICE_FUSION_CONNECTOR outside synthetic mode
+        actual_connector = "MOCK_PRACTICE_FUSION_CONNECTOR" if getattr(settings, "SYNTHETIC_TEST_ENABLED", False) else "UNAVAILABLE"
+
         # Record Attempt
         attempt = ExecutionAttemptRecord(
             attempt_id=attempt_id,
             action_id=action_id,
             attempt_number=attempt_number,
-            connector="MOCK_PRACTICE_FUSION_CONNECTOR",
+            connector=actual_connector,
             result=mock_result["result"],
             error_message=mock_result.get("error"),
             # SESR-008: Propagate journey identity from action

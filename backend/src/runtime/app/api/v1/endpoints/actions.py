@@ -39,6 +39,9 @@ async def create_operational_action(
 
     db = SessionLocal()
     try:
+        # D6 Correction: Canonical material intent
+        canonical_req = json.dumps(request.parameters, sort_keys=True) if request.parameters else "{}"
+
         existing = (
             db.query(OperationalActionModel)
             .filter(
@@ -47,13 +50,20 @@ async def create_operational_action(
                 OperationalActionModel.target_reference == request.target_reference,
             )
             .filter(OperationalActionModel.status.notin_(["CANCELLED", "EXPIRED"]))
+            .with_for_update()  # D6 Correction: Durable concurrency protection
             .first()
         )
         if existing:
             try:
                 params = json.loads(existing.parameters_json) if getattr(existing, "parameters_json", None) else {}
+                canonical_exist = json.dumps(params, sort_keys=True)
             except Exception:
                 params = {}
+                canonical_exist = "{}"
+
+            if canonical_exist != canonical_req:
+                raise HTTPException(status_code=409, detail="CONFLICT: Action exists with different material intent parameters.")
+
             return {
                 "status": "IDEMPOTENT",
                 "action_id": existing.action_id,
