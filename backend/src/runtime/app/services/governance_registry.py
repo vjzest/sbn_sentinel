@@ -140,6 +140,7 @@ class RecommendationMapping:
     problem_template: str = ""
     effective_from: Optional[datetime] = None
     created_at: datetime = field(default_factory=datetime.utcnow)
+    allowed_action_types: List[str] = field(default_factory=list)
 
     def is_applicable(self, eval_time: datetime) -> bool:
         if self.lifecycle_state != LifecycleState.ACTIVE:
@@ -167,6 +168,7 @@ class RecommendationRecord:
     generated_at: datetime = field(default_factory=datetime.utcnow)
     # SESR-008: Journey identity
     journey_id: Optional[str] = None
+    intended_target_reference: Optional[str] = None
 
 
 # ======================================================
@@ -505,6 +507,7 @@ class GovernanceRegistry:
             db.close()
 
     def register_recommendation_mapping(self, mapping: RecommendationMapping):
+        import json
         from app.db.database import SessionLocal
         from app.models.governance_storage import GovernedRecommendationMappingModel
         db = SessionLocal()
@@ -530,7 +533,8 @@ class GovernanceRegistry:
                     expected_outcome_template=mapping.expected_outcome_template,
                     problem_template=mapping.problem_template,
                     effective_from=eff_from,
-                    created_at=cr_at
+                    created_at=cr_at,
+                    allowed_action_types_json=json.dumps(mapping.allowed_action_types)
                 ))
                 db.commit()
             if not any(m.mapping_id == mapping.mapping_id and m.version == mapping.version for m in self._recommendation_mappings):
@@ -556,7 +560,8 @@ class GovernanceRegistry:
                 content=record.recommendation_content,
                 status=record.status.value,
                 priority=record.priority,
-                generated_at=record.generated_at.isoformat()
+                generated_at=record.generated_at.isoformat(),
+                intended_target_reference=record.intended_target_reference
             ))
             db.commit()
             self._recommendations.append(record)
@@ -588,7 +593,8 @@ class GovernanceRegistry:
                     authority_requirement=AuthorityRequirement.INFORMATIONAL,  # Migrated later
                     priority=db_record.priority,
                     generated_at=parse(db_record.generated_at),
-                    journey_id=db_record.journey_id
+                    journey_id=db_record.journey_id,
+                    intended_target_reference=db_record.intended_target_reference
                 )
             for r in self._recommendations:
                 if r.recommendation_id == recommendation_id:
@@ -1204,6 +1210,7 @@ class GovernanceRegistry:
         from app.db.database import SessionLocal
         from app.models.governance_storage import GovernedRecommendationMappingModel
         from dateutil.parser import parse
+        import json
         db = SessionLocal()
         try:
             row = db.query(GovernedRecommendationMappingModel).filter_by(
@@ -1227,7 +1234,8 @@ class GovernanceRegistry:
                     expected_outcome_template=row.expected_outcome_template or "",
                     problem_template=row.problem_template or "",
                     effective_from=eff_from,
-                    created_at=cr_at
+                    created_at=cr_at,
+                    allowed_action_types=json.loads(row.allowed_action_types_json) if getattr(row, "allowed_action_types_json", None) else []
                 )
             for m in self._recommendation_mappings:
                 if m.mapping_id == mapping_id and m.version == version:
@@ -1355,7 +1363,9 @@ def initialize_registry_seeds():
                 lifecycle_state=LifecycleState.ACTIVE,
                 effective_from=datetime.utcnow() -
                 timedelta(
-                    days=30)))
+                    days=30),
+                allowed_action_types=["RESCHEDULE_APPOINTMENT", "SEND_NOTIFICATION"]
+            ))
 
     if not governance_registry.get_recommendation_mapping_by_version("REC-MAP-002", "V1"):
         governance_registry.register_recommendation_mapping(
@@ -1373,7 +1383,9 @@ def initialize_registry_seeds():
                 lifecycle_state=LifecycleState.ACTIVE,
                 effective_from=datetime.utcnow() -
                 timedelta(
-                    days=30)))
+                    days=30),
+                allowed_action_types=["UPDATE_OPERATIONAL_STATUS", "SEND_NOTIFICATION"]
+            ))
 
     if not governance_registry.get_recommendation_mapping_by_version("REC-MAP-003", "V1"):
         governance_registry.register_recommendation_mapping(RecommendationMapping(
@@ -1388,7 +1400,8 @@ def initialize_registry_seeds():
             expected_outcome_template="Maintained system integrity.",
             problem_template="Action Blocked by Governance",
             lifecycle_state=LifecycleState.ACTIVE,
-            effective_from=datetime.utcnow() - timedelta(days=30)
+            effective_from=datetime.utcnow() - timedelta(days=30),
+            allowed_action_types=["CREATE_FOLLOWUP_TASK"]
         ))
 
     if not governance_registry.get_recommendation_mapping_by_version("REC-MAP-004", "V1"):
@@ -1404,7 +1417,8 @@ def initialize_registry_seeds():
             expected_outcome_template="Data integrity maintained.",
             problem_template="Unverifiable Schedule Context",
             lifecycle_state=LifecycleState.ACTIVE,
-            effective_from=datetime.utcnow() - timedelta(days=30)
+            effective_from=datetime.utcnow() - timedelta(days=30),
+            allowed_action_types=["CREATE_FOLLOWUP_TASK"]
         ))
 
     # 6. Authority Configurations (SESR-005)
