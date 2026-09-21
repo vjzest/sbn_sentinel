@@ -6,7 +6,7 @@ import { RecommendationReview } from '@/components/GovernedUI/RecommendationRevi
 import { ContextPanel } from '@/components/GovernedUI/ContextPanel';
 import { ProgressiveSection } from '@/components/GovernedUI/ProgressiveSection';
 import { createPortal } from 'react-dom';
-import { Activity, Phone, Mail, Calendar, ChevronRight, X, Clock, Database, Sparkles, Check, Shield, Search, Filter, Cpu, CheckCircle2, ShieldCheck, RefreshCw, AlertTriangle, AlertCircle, ArrowUpRight, Copy, BookOpen } from 'lucide-react';
+import { Activity, Phone, Mail, Calendar, ChevronRight, X, Clock, Database, Sparkles, Check, Shield, Search, Filter, Cpu, CheckCircle2, ShieldCheck, RefreshCw, AlertTriangle, AlertCircle, ArrowUpRight, Copy, BookOpen, Zap } from 'lucide-react';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '@/store';
 import { incrementActionsTaken, SignalEvent } from '@/store/slices/signalSlice';
@@ -20,6 +20,8 @@ import { EvidenceSummary } from '@/components/DecisionBasis/EvidenceSummary';
 import { PolicySummary } from '@/components/DecisionBasis/PolicySummary';
 import { RuleResultList } from '@/components/DecisionBasis/RuleResultList';
 import { ProvenanceDetail } from '@/components/DecisionBasis/ProvenanceDetail';
+// D6.10: Action Lifecycle
+import { ActionLifecycleSection } from '@/components/Action/ActionLifecycleSection';
 export const SignalsDetailView: React.FC<{ initialSignalId?: string | null }> = ({ initialSignalId }) => {
   const dispatch = useDispatch();
   const reduxSignals = useSelector((state: RootState) => state.signals.events);
@@ -36,6 +38,8 @@ export const SignalsDetailView: React.FC<{ initialSignalId?: string | null }> = 
   const [basisData, setBasisData] = useState<DecisionBasisDTO | null>(null);
   const [basisLoading, setBasisLoading] = useState(false);
   const [highlightedRuleId, setHighlightedRuleId] = useState<string | null>(null);
+  // D6.10 — Current decision_id for Action Lifecycle, propagated from RecommendationReview
+  const [currentDecisionId, setCurrentDecisionId] = useState<string | null>(null);
   // Combine redux state and db historical signals
   const fetchDbSignals = async () => {
     try {
@@ -294,6 +298,7 @@ export const SignalsDetailView: React.FC<{ initialSignalId?: string | null }> = 
             <div className="mt-8">
               <RecommendationReview
                 signalId={selectedSignal.id}
+                onDecisionChange={setCurrentDecisionId}
                 onViewBasis={(evaluationId) => {
                   setHighlightedRuleId(evaluationId);
                   const el = document.getElementById('decision-basis');

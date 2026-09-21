@@ -20,11 +20,54 @@ class ExecuteActionRequest(BaseModel):
 
 
 @router.post("/")
-async def create_operational_action(request: CreateActionRequest, current_user: Any = Depends(RoleChecker(
-        [UserRole.SYSTEM_ADMINISTRATOR.value, UserRole.CLINIC_MANAGER.value, UserRole.FRONT_DESK.value]))):
+async def create_operational_action(
+    request: CreateActionRequest,
+    current_user: Any = Depends(RoleChecker(
+        [UserRole.SYSTEM_ADMINISTRATOR.value, UserRole.CLINIC_MANAGER.value, UserRole.FRONT_DESK.value]
+    ))
+):
     """
     SESR-006: Create a Governed Operational Action based on a Human Decision.
+    D6.5: Idempotency — if a non-cancelled action already exists with the same
+    (decision_id, action_type, target_reference), return the existing record
+    instead of creating a duplicate.
     """
+    # D6.5: Idempotency gate — check for an existing non-cancelled action
+    from app.db.database import SessionLocal
+    from app.models.governance_storage import OperationalActionModel
+    import json
+
+    db = SessionLocal()
+    try:
+        existing = (
+            db.query(OperationalActionModel)
+            .filter(
+                OperationalActionModel.authorization_reference == request.decision_id,
+                OperationalActionModel.action_type == request.action_type,
+                OperationalActionModel.target_reference == request.target_reference,
+            )
+            .filter(OperationalActionModel.status.notin_(["CANCELLED", "EXPIRED"]))
+            .first()
+        )
+        if existing:
+            try:
+                params = json.loads(existing.parameters_json) if getattr(existing, "parameters_json", None) else {}
+            except Exception:
+                params = {}
+            return {
+                "status": "IDEMPOTENT",
+                "action_id": existing.action_id,
+                "action_type": existing.action_type,
+                "target_reference": existing.target_reference,
+                "current_status": existing.status,
+                "current_result": existing.current_result,
+                "journey_id": existing.journey_id,
+                "parameters": params,
+                "message": "Action already exists for this decision. Returning existing record.",
+            }
+    finally:
+        db.close()
+
     result = operational_execution_engine.create_action(
         decision_id=request.decision_id,
         action_type_str=request.action_type,
@@ -43,8 +86,12 @@ async def create_operational_action(request: CreateActionRequest, current_user: 
 
 
 @router.post("/execute")
-async def execute_operational_action(request: ExecuteActionRequest, current_user: Any = Depends(
-        RoleChecker([UserRole.SYSTEM_ADMINISTRATOR.value, UserRole.CLINIC_MANAGER.value]))):
+async def execute_operational_action(
+    request: ExecuteActionRequest,
+    current_user: Any = Depends(
+        RoleChecker([UserRole.SYSTEM_ADMINISTRATOR.value, UserRole.CLINIC_MANAGER.value])
+    )
+):
     """
     SESR-006: Validate execution eligibility and attempt action.
     """

@@ -17,11 +17,14 @@ import {
 interface RecommendationReviewProps {
   signalId: string;
   onViewBasis?: (evaluationId: string) => void;
+  /** D6.10: Called with the current decision_id (or null) whenever it changes */
+  onDecisionChange?: (decisionId: string | null) => void;
 }
 
 export const RecommendationReview: React.FC<RecommendationReviewProps> = ({ 
   signalId, 
-  onViewBasis 
+  onViewBasis,
+  onDecisionChange,
 }) => {
   const [data, setData] = useState<RecommendationReviewDTO | null>(null);
   const [loading, setLoading] = useState(true);
@@ -41,6 +44,10 @@ export const RecommendationReview: React.FC<RecommendationReviewProps> = ({
         const result = await fetchRecommendationReview(signalId);
         if (mounted) {
           setData(result);
+          // D6.10: Propagate current decision_id to parent
+          if (onDecisionChange) {
+            onDecisionChange(result?.current_decision?.decision_id ?? null);
+          }
         }
       } catch (err: unknown) {
         if (mounted) {
@@ -71,6 +78,10 @@ export const RecommendationReview: React.FC<RecommendationReviewProps> = ({
       // Re-fetch to get authoritative receipt
       const refreshed = await fetchRecommendationReview(signalId);
       setData(refreshed);
+      // D6.10: Propagate updated decision_id to parent after submit
+      if (onDecisionChange) {
+        onDecisionChange(refreshed?.current_decision?.decision_id ?? null);
+      }
     } catch (err: unknown) {
       setSubmitError(err instanceof Error ? err.message : 'Failed to submit decision');
     } finally {

@@ -742,7 +742,13 @@ class GovernanceRegistry:
                 action_id=attempt.action_id,
                 journey_id=attempt.journey_id,  # Issue #3: Removed "UNKNOWN" fallback
                 result=attempt.result.value,
-                attempt_timestamp=attempt.attempt_timestamp.isoformat()
+                attempt_timestamp=attempt.attempt_timestamp.isoformat(),
+                # D6.3: persist durable fields so attempt_number/connector survive restart
+                attempt_number=str(attempt.attempt_number),
+                connector=attempt.connector,
+                request_reference=attempt.request_reference,
+                response_reference=attempt.response_reference,
+                error_message=attempt.error_message,
             ))
             db.commit()
             self._execution_attempts.append(attempt)
@@ -761,16 +767,32 @@ class GovernanceRegistry:
         from app.models.governance_storage import ExecutionAttemptModel
         db = SessionLocal()
         try:
-            db_records = db.query(ExecutionAttemptModel).filter(ExecutionAttemptModel.action_id == action_id).all()
+            db_records = db.query(ExecutionAttemptModel).filter(
+                ExecutionAttemptModel.action_id == action_id
+            ).order_by(ExecutionAttemptModel.attempt_timestamp).all()
             if db_records:
-                return [ExecutionAttemptRecord(
-                    attempt_id=r.attempt_id,
-                    action_id=r.action_id,
-                    attempt_number=1,
-                    connector="DB_LOADED",
-                    result=ExecutionResult(r.result),
-                    journey_id=r.journey_id
-                ) for r in db_records]
+                # D6.3: Restore exact durable fields; legacy rows with NULL attempt_number
+                # fall back to positional order; never fabricate connector labels
+                result_list = []
+                for idx, r in enumerate(db_records):
+                    raw_num = getattr(r, "attempt_number", None)
+                    try:
+                        num = int(raw_num) if raw_num is not None else (idx + 1)
+                    except (ValueError, TypeError):
+                        num = idx + 1
+                    connector_val = getattr(r, "connector", None) or "UNKNOWN"
+                    result_list.append(ExecutionAttemptRecord(
+                        attempt_id=r.attempt_id,
+                        action_id=r.action_id,
+                        attempt_number=num,
+                        connector=connector_val,
+                        result=ExecutionResult(r.result),
+                        request_reference=getattr(r, "request_reference", None),
+                        response_reference=getattr(r, "response_reference", None),
+                        error_message=getattr(r, "error_message", None),
+                        journey_id=r.journey_id
+                    ))
+                return result_list
             return [a for a in self._execution_attempts if a.action_id == action_id]
         finally:
             db.close()

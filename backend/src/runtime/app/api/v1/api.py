@@ -1,7 +1,7 @@
 from app.api.v1.endpoints import outcomes
 from fastapi import APIRouter, Depends
 # Import subsystem routers here when created
-from app.api.v1.endpoints import reality_connectors, signals, auth, insurance, audit, settings, encounters, super_admin, billing, clinics, pasme, pipeline, health, decisions, actions, decision_basis
+from app.api.v1.endpoints import reality_connectors, signals, auth, insurance, audit, settings, encounters, super_admin, billing, clinics, pasme, pipeline, health, decisions, actions, decision_basis, action_lifecycle
 
 from app.models.user import UserRole
 from app.api.deps import get_current_user, RoleChecker
@@ -82,6 +82,13 @@ api_router.include_router(
     actions.router,
     prefix="/actions",
     tags=["012_SESR006_Actions"],
+    dependencies=protected)
+
+# D6.4: Action Lifecycle Read Contract (additional routes under /actions)
+api_router.include_router(
+    action_lifecycle.router,
+    prefix="/actions",
+    tags=["015_D6_ActionLifecycle"],
     dependencies=protected)
 
 # SESR-007: Governed Operational Outcomes
