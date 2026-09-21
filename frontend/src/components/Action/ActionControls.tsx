@@ -26,11 +26,12 @@ interface CreateControlsProps {
 
 export const CreateActionControls: React.FC<CreateControlsProps> = ({ decisionId, creation, onSuccess }) => {
   const [selectedType, setSelectedType] = useState(creation.allowed_action_types[0] ?? '');
-  const [targetRef, setTargetRef] = useState('');
+  const defaultTarget = creation.permitted_targets && creation.permitted_targets.length > 0 ? creation.permitted_targets[0].target_id : '';
+  const [targetRef, setTargetRef] = useState(defaultTarget);
   const [inflight, setInflight] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  if (creation.state !== 'ELIGIBLE' || creation.allowed_action_types.length === 0) {
+  if (creation.state !== 'ELIGIBLE' || creation.allowed_action_types.length === 0 || !creation.permitted_targets || creation.permitted_targets.length === 0) {
     return null;
   }
 
@@ -66,14 +67,16 @@ export const CreateActionControls: React.FC<CreateControlsProps> = ({ decisionId
           <option key={t} value={t}>{actionTypeLabel(t)}</option>
         ))}
       </select>
-      <input
-        type="text"
-        placeholder="Target reference (e.g. patient-id, record-id)"
+      <select
         value={targetRef}
         onChange={e => setTargetRef(e.target.value)}
         disabled={inflight}
-        className="w-full bg-black/40 border border-white/10 rounded-[8px] text-xs text-white px-3 py-1.5 outline-none focus:border-violet-500/50 placeholder:text-white/30 disabled:opacity-50"
-      />
+        className="w-full bg-black/40 border border-white/10 rounded-[8px] text-xs text-white px-3 py-1.5 outline-none focus:border-violet-500/50 disabled:opacity-50"
+      >
+        {creation.permitted_targets.map(t => (
+          <option key={t.target_id} value={t.target_id}>{t.label}</option>
+        ))}
+      </select>
       {error && (
         <div className="flex items-center gap-1.5 text-[11px] text-red-400">
           <AlertTriangle className="w-3.5 h-3.5" />

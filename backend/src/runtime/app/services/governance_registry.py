@@ -258,6 +258,7 @@ class OperationalActionRecord:
     created_at: datetime = field(default_factory=datetime.utcnow)
     # SESR-008: Journey identity
     journey_id: Optional[str] = None
+    intent_hash: Optional[str] = None
 
 
 @dataclass(frozen=True)
@@ -664,7 +665,8 @@ class GovernanceRegistry:
                 status=action.status.value,
                 current_result=action.current_result.value,
                 parameters_json=json.dumps(action.parameters),
-                created_at=action.created_at.isoformat()
+                created_at=action.created_at.isoformat(),
+                intent_hash=action.intent_hash
             ))
             db.commit()
             self._operational_actions.append(action)
@@ -694,7 +696,8 @@ class GovernanceRegistry:
                     parameters=json.loads(db_record.parameters_json) if getattr(db_record, "parameters_json", None) else {},
                     status=ActionStatus(db_record.status),
                     current_result=ExecutionResult(db_record.current_result) if getattr(db_record, "current_result", None) else ExecutionResult.NOT_ATTEMPTED,
-                    journey_id=db_record.journey_id
+                    journey_id=db_record.journey_id,
+                    intent_hash=getattr(db_record, "intent_hash", None)
                 )
             for a in self._operational_actions:
                 if a.action_id == action_id:
