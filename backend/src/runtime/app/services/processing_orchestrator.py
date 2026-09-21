@@ -917,22 +917,19 @@ class ProcessingOrchestrator:
                     c_desc = getattr(c, "conflict_description", str(c))
                     c_res = getattr(c, "resolution_status", "Unresolved")
 
-                if not ev_a and used_items:
-                    first_ev = used_items[0]
-                    ev_a = first_ev.get("evidence_id") if isinstance(first_ev, dict) else getattr(first_ev, "evidence_id", None)
-                if not ev_b and len(used_items) > 1:
-                    second_ev = used_items[1]
-                    ev_b = second_ev.get("evidence_id") if isinstance(second_ev, dict) else getattr(second_ev, "evidence_id", None)
-                elif not ev_b:
-                    ev_b = ev_a
+                # Strictly do NOT assign fallback evidence_a/b from used_items.
+                # If exact refs cannot be established, leave the relationship incomplete/unavailable.
+                resolved_ev_a = str(ev_a) if ev_a else None
+                resolved_ev_b = str(ev_b) if ev_b else None
+                resolution_status = str(c_res) if (resolved_ev_a and resolved_ev_b) else "Incomplete"
 
                 db.add(ContextConflictsModel(
                     id=str(c_id),
                     context_id=context_id,
-                    evidence_a_id=str(ev_a),
-                    evidence_b_id=str(ev_b),
+                    evidence_a_id=resolved_ev_a,
+                    evidence_b_id=resolved_ev_b,
                     conflict_description=str(c_desc),
-                    resolution_status=str(c_res)
+                    resolution_status=resolution_status
                 ))
 
             db.commit()

@@ -297,7 +297,34 @@ class EvidenceEngine(BaseService):
                 "source",
                 source,
                 source,
-                now))
+                now
+            )
+        )
+        # Check for explicit facts or custom evidence points
+        extra_facts = metadata.get("facts", [])
+        if isinstance(extra_facts, list):
+            for f in extra_facts:
+                if isinstance(f, dict):
+                    evidence_items.append(
+                        self._create_eos_001(
+                            f.get("entity", "Appointment"),
+                            f.get("key", "status"),
+                            f.get("value"),
+                            f.get("source", source),
+                            now
+                        )
+                    )
+        elif isinstance(extra_facts, dict):
+            for k, v in extra_facts.items():
+                evidence_items.append(
+                    self._create_eos_001(
+                        "Appointment",
+                        k,
+                        v,
+                        source,
+                        now
+                    )
+                )
 
         return evidence_items
 

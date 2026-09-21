@@ -399,3 +399,125 @@ def test_d4_missing_sufficiency_fail_closed(setup_db):
         db.query(RuleEvaluationModel).filter(RuleEvaluationModel.evaluation_id == rule_eval.evaluation_id).delete()
         db.commit()
         db.close()
+
+
+@pytest.mark.governance
+def test_d4_pipeline_real_evidence_conflict_exact_refs(setup_db):
+    """
+    Real pipeline test creating an actual Evidence conflict and proving
+    the persisted conflict A/B IDs point to the exact conflicting Evidence rows.
+    Also verifies unreferenced conflicts leave IDs incomplete (None) rather than guessing.
+    """
+    from app.services.processing_orchestrator import processing_orchestrator
+    from app.services.governance_registry import initialize_registry_seeds, governance_registry
+    db = SessionLocal()
+
+    # Clean any leftover non-canonical policies
+    governance_registry._policies = [
+        p for p in governance_registry._policies
+        if p.policy_id in ("POL-001", "POL-002", "POL-003")
+    ]
+    from app.models.governance_storage import GovernedPolicyVersionModel
+    db.query(GovernedPolicyVersionModel).filter(
+        ~GovernedPolicyVersionModel.policy_id.in_(["POL-001", "POL-002", "POL-003"])
+    ).delete(synchronize_session=False)
+    db.commit()
+
+    initialize_registry_seeds()
+
+    raw_payload = {
+        "patient_id": "P-REAL-CONFLICT",
+        "detail": "Patient scheduling validation event",
+        "facts": [
+            {"entity": "Appointment", "key": "status", "value": "NO_SHOW"},
+            {"entity": "Appointment", "key": "status", "value": "BOOKED"}
+        ]
+    }
+    event = processing_orchestrator.create_event(
+        event_type="EHR",
+        source="EHR_SYSTEM",
+        raw_payload=raw_payload,
+        priority="Normal"
+    )
+    event = processing_orchestrator._run_pipeline(event, db)
+
+    ctx = event.decision_context
+    assert ctx is not None
+    # Real conflict triggers INSUFFICIENT sufficiency status
+    assert ctx.sufficiency_status == "INSUFFICIENT"
+
+    conf_rows = db.query(ContextConflictsModel).filter(
+        ContextConflictsModel.context_id == ctx.id
+    ).all()
+    assert len(conf_rows) >= 1, "Pipeline ContextValidator must detect and persist the conflict"
+
+    conf = conf_rows[0]
+    assert conf.evidence_a_id is not None
+    assert conf.evidence_b_id is not None
+    assert conf.evidence_a_id != conf.evidence_b_id
+    assert "Conflict on status" in conf.conflict_description
+
+    # Prove that persisted conflict A/B IDs point to the EXACT conflicting Evidence rows
+    row_a = db.query(ContextEvidenceModel).filter(
+        ContextEvidenceModel.id == conf.evidence_a_id,
+        ContextEvidenceModel.context_id == ctx.id
+    ).first()
+    row_b = db.query(ContextEvidenceModel).filter(
+        ContextEvidenceModel.id == conf.evidence_b_id,
+        ContextEvidenceModel.context_id == ctx.id
+    ).first()
+
+    assert row_a is not None, f"Conflict evidence_a_id '{conf.evidence_a_id}' must point to an exact ContextEvidenceModel row"
+    assert row_b is not None, f"Conflict evidence_b_id '{conf.evidence_b_id}' must point to an exact ContextEvidenceModel row"
+    assert row_a.id != row_b.id
+
+    vals = {row_a.evidence_value, row_b.evidence_value}
+    assert any("NO_SHOW" in v for v in vals)
+    assert any("BOOKED" in v for v in vals)
+
+    # Prove D4 GET /api/v1/decision-basis/{sig.id} reflects the exact conflict IDs
+    client = TestClient(app)
+
+    class MockUser:
+        id = "test_user"
+        role = "System Administrator"
+
+    app.dependency_overrides[get_current_user] = lambda: MockUser()
+    try:
+        resp = client.get(f"/api/v1/decision-basis/{event.id}")
+        assert resp.status_code == 200
+        data = resp.json()
+        assert len(data["evidence"]["conflicts"]) >= 1
+        d4_conf = data["evidence"]["conflicts"][0]
+        assert d4_conf["evidence_a_id"] == conf.evidence_a_id
+        assert d4_conf["evidence_b_id"] == conf.evidence_b_id
+    finally:
+        app.dependency_overrides.clear()
+
+    # Verify incomplete/unreferenced conflicts do NOT fabricate refs by guessing used_items
+    dummy_id1 = f"ev-dummy-{uuid.uuid4().hex[:8]}"
+    dummy_id2 = f"ev-dummy-{uuid.uuid4().hex[:8]}"
+    conf_unref_id = f"conf-unref-{uuid.uuid4().hex[:8]}"
+
+    unref_pkg = {
+        "evidence": {
+            "used": [
+                {"evidence_id": dummy_id1, "fact_key": "k1", "fact_value": "v1"},
+                {"evidence_id": dummy_id2, "fact_key": "k2", "fact_value": "v2"}
+            ],
+            "conflicts": [
+                {"conflict_id": conf_unref_id, "conflict_description": "Unreferenced dispute"}
+            ]
+        }
+    }
+    processing_orchestrator._persist_context_evidence_records(event, unref_pkg, db)
+    saved_unref = db.query(ContextConflictsModel).filter(ContextConflictsModel.id == conf_unref_id).first()
+    assert saved_unref is not None
+    assert saved_unref.evidence_a_id is None, "Must not guess used_items[0] when exact refs are missing"
+    assert saved_unref.evidence_b_id is None, "Must not guess used_items[1] when exact refs are missing"
+    assert saved_unref.resolution_status == "Incomplete"
+
+    db.query(ContextConflictsModel).filter(ContextConflictsModel.id == conf_unref_id).delete()
+    db.query(ContextEvidenceModel).filter(ContextEvidenceModel.id.in_([dummy_id1, dummy_id2])).delete(synchronize_session=False)
+    db.commit()
+    db.close()
