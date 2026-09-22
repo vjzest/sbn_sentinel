@@ -1,15 +1,15 @@
+import datetime
+from app.core.security import get_password_hash
+from app.models.user import User
+from app.models.audit import AuditLogModel
+from app.models.encounter import EncounterModel
+from app.db.database import SessionLocal, engine, Base
 import sys
 import os
 
 # Add parent directory to path so imports work
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from app.db.database import SessionLocal, engine, Base
-from app.models.encounter import EncounterModel
-from app.models.audit import AuditLogModel
-from app.models.user import User
-from app.core.security import get_password_hash
-import datetime
 
 def seed_data():
     print("Starting rich database seeding for SBN Sentinel...")
@@ -199,6 +199,7 @@ def seed_data():
         print(f"Error seeding database: {e}")
     finally:
         db.close()
+
 
 if __name__ == "__main__":
     seed_data()

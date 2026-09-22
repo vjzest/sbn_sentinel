@@ -229,7 +229,7 @@ async def get_action_lifecycle(
     # - decision is APPROVED+RECORDED
     # - no action exists yet that is non-terminal for a given type
     existing_terminal = {a.action_type for a in action_rows if _safe_action_status(a.status) in ("COMPLETED",)}
-    
+
     # D6 Correction: Dynamic allowed_action_types and Permitted Targets
     allowed_types = []
     permitted_targets = []
@@ -246,7 +246,7 @@ async def get_action_lifecycle(
                 ).first()
                 if mapping_row and mapping_row.allowed_action_types_json:
                     allowed_types = json.loads(mapping_row.allowed_action_types_json)
-            
+
             # Resolve target from deterministic relationship
             if rec_row.intended_target_reference:
                 permitted_targets.append({

@@ -61,7 +61,7 @@ async def chat_assistant(request: ChatRequest):
             for turn in request.history or []:
                 messages.append({"role": turn.get("role", "user"),
                                 "content": turn.get("content", "")})
-            
+
             messages.append({"role": "user", "content": request.message})
 
             completion = client.chat.completions.create(

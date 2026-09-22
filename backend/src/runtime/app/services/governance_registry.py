@@ -693,7 +693,7 @@ class GovernanceRegistry:
             db_record = db.query(OperationalActionModel).filter(OperationalActionModel.action_id == action_id).first()
             if db_record:
                 import json
-            
+
                 return OperationalActionRecord(
                     action_id=db_record.action_id,
                     action_type=ActionType(db_record.action_type),
@@ -998,7 +998,7 @@ class GovernanceRegistry:
         from app.core.exceptions import PersistenceError
         if kwargs.pop("simulate_persistence_error", False):
             raise PersistenceError("Database connection failed during Operational Outcome commit.")
-            
+
         from app.db.database import SessionLocal
         from app.models.governance_storage import OperationalOutcomeModel
         db = SessionLocal()
@@ -1010,14 +1010,14 @@ class GovernanceRegistry:
                 if "resolution_state" in kwargs:
                     db_record.resolution_state = kwargs["resolution_state"].value
                 db.commit()
-                
+
             for i, o in enumerate(self._operational_outcomes):
                 if o.outcome_id == outcome_id:
                     import dataclasses
                     updated = dataclasses.replace(o, **kwargs)
                     self._operational_outcomes[i] = updated
                     return updated
-                    
+
             if db_record:
                 return self.get_operational_outcome(outcome_id)
             return None

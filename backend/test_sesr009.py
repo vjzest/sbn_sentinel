@@ -1,3 +1,8 @@
+from app.core.exceptions import PersistenceError
+from app.models.event import OperationalEventModel
+from app.db.database import SessionLocal
+from app.services.governance_registry import governance_registry, OperationalOutcomeRecord
+from app.services.processing_orchestrator import processing_orchestrator
 import os
 import sys
 from datetime import datetime
@@ -5,24 +10,19 @@ from datetime import datetime
 # Configure path for tests
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), 'src', 'runtime')))
 
-from app.services.processing_orchestrator import processing_orchestrator
-from app.services.governance_registry import governance_registry, OperationalOutcomeRecord
-from app.db.database import SessionLocal
-from app.models.event import OperationalEventModel
-from app.core.exceptions import PersistenceError
 
 def run_tests():
     print("=" * 60)
     print("SESR-009: Governed Failure Isolation & Degraded Operation Tests")
     print("=" * 60)
-    
+
     db = SessionLocal()
-    
+
     try:
         # Test 1: InputValidationError (Invalid Payload)
         print("\n--- Test 1: Input Validation Failure Isolation ---")
         event1 = processing_orchestrator.create_event(
-            event_type="", # Missing event type triggers InputValidationError in EHR Adapter
+            event_type="",  # Missing event type triggers InputValidationError in EHR Adapter
             source="EHR",
             raw_payload={"detail": "Missing type test"}
         )
@@ -32,7 +32,7 @@ def run_tests():
         assert event1.state == "Failed", "Expected event1 to be Failed due to InputValidationError"
         assert "InputValidationError" in event1.last_error or "event_type is required" in event1.last_error, "Error message should reflect input validation."
         print("PASS: InputValidationError properly failed the event without crashing orchestrator.")
-        
+
         # Test 2: TimeoutError (Connector Timeout)
         print("\n--- Test 2: Connector Timeout Degradation ---")
         event2 = processing_orchestrator.create_event(
@@ -46,7 +46,7 @@ def run_tests():
         # Expected state might be Degraded or Retrying depending on max_retries
         assert event2.state in ["Degraded", "Failed", "Retrying"], "Event 2 did not handle timeout gracefully."
         print("PASS: TimeoutError was caught and contained.")
-        
+
         # Test 3: InvalidResponseError
         print("\n--- Test 3: Invalid Response Failure ---")
         event3 = processing_orchestrator.create_event(
@@ -70,18 +70,19 @@ def run_tests():
         governance_registry.record_operational_outcome(outcome)
         try:
             governance_registry.update_operational_outcome(
-                "test-outcome", 
+                "test-outcome",
                 simulate_persistence_error=True
             )
             assert False, "Expected PersistenceError to be raised."
         except PersistenceError as e:
             print("PASS: PersistenceError correctly raised during simulated write failure.")
-        
+
     finally:
         db.close()
         print("\n" + "=" * 60)
         print("ALL SESR-009 TESTS PASSED DETERMINISTICALLY.")
         print("=" * 60)
+
 
 if __name__ == "__main__":
     run_tests()

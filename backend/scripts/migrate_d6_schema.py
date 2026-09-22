@@ -1,3 +1,4 @@
+from app.db.database import engine
 import json
 from sqlalchemy import inspect, text
 import os
@@ -5,7 +6,6 @@ import sys
 
 # Add src/runtime to path so imports work
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../src/runtime')))
-from app.db.database import engine
 
 D6_COLUMNS = {
     "governed_recommendation_mappings": [
@@ -38,8 +38,10 @@ D6_COLUMNS = {
     ]
 }
 
+
 def existing_columns(conn, table):
     return {c["name"] for c in inspect(conn).get_columns(table)}
+
 
 def migrate():
     print("Starting D6 idempotent schema migration...")
@@ -89,6 +91,7 @@ def migrate():
                 "actions": json.dumps(actions),
             })
     print("D6 schema migration complete.")
+
 
 if __name__ == "__main__":
     migrate()

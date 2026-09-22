@@ -9,6 +9,7 @@ logger = logging.getLogger(__name__)
 
 class ConnectorException(Exception):
     """Exception raised for specific connector errors with a machine-readable code."""
+
     def __init__(self, message: str, failure_code: str = "UNKNOWN"):
         super().__init__(message)
         self.failure_code = failure_code

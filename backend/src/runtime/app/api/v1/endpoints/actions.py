@@ -45,23 +45,23 @@ async def create_operational_action(
         decision_row = db.query(HumanDecisionModel).filter(HumanDecisionModel.decision_id == request.decision_id).first()
         if not decision_row:
             raise HTTPException(status_code=400, detail="Decision not found.")
-        
+
         rec_row = db.query(RecommendationModel).filter(RecommendationModel.recommendation_id == decision_row.recommendation_id).first()
         if not rec_row:
             raise HTTPException(status_code=400, detail="Recommendation not found.")
-            
+
         mapping_row = db.query(GovernedRecommendationMappingModel).filter(
             GovernedRecommendationMappingModel.mapping_id == rec_row.mapping_id,
             GovernedRecommendationMappingModel.version == rec_row.mapping_version
         ).first()
-        
+
         allowed_types = []
         if mapping_row and mapping_row.allowed_action_types_json:
             allowed_types = json.loads(mapping_row.allowed_action_types_json)
-            
+
         if request.action_type not in allowed_types:
             raise HTTPException(status_code=403, detail="Action type not permitted by governance mapping.")
-            
+
         if rec_row.intended_target_reference and request.target_reference != rec_row.intended_target_reference:
             raise HTTPException(status_code=403, detail="Target reference does not match intended target.")
 
@@ -82,11 +82,11 @@ async def create_operational_action(
             .with_for_update()
             .first()
         )
-        
+
         if existing:
             if existing.intent_hash != intent_hash:
                 raise HTTPException(status_code=409, detail="CONFLICT: Action exists with different material intent parameters.")
-                
+
             try:
                 params = json.loads(existing.parameters_json) if getattr(existing, "parameters_json", None) else {}
             except Exception:

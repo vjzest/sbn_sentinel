@@ -13,7 +13,7 @@ class ConnectorModel(Base):
 
     # Configured, Authenticated, Connected, Synchronizing, Healthy, Warning, Retrying, Disconnected, Recovered
     status = Column(String, default="Configured")
-    
+
     # D7: Explicit failure classification from the connector/service owner
     failure_code = Column(String, nullable=True)
 

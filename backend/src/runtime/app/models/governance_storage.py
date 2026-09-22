@@ -62,7 +62,7 @@ class OperationalActionModel(Base):
     created_at = Column(String)
     execute_by = Column(String, nullable=True)  # D6.3: durable expiry timestamp
     intent_hash = Column(String, unique=True, nullable=True)
-    
+
     __table_args__ = (
         UniqueConstraint('authorization_reference', 'action_type', 'target_reference', 'intent_hash', name='uq_action_intent'),
     )

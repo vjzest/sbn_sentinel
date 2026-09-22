@@ -78,10 +78,10 @@ def mock_admin():
 @pytest.fixture(scope="function", autouse=True)
 def mock_upstream_engines():
     with patch("app.services.processing_orchestrator.evidence_engine.invoke") as mock_ev, \
-         patch("app.services.processing_orchestrator.decision_context_engine.invoke") as mock_ctx, \
-         patch("app.services.processing_orchestrator.policy_engine.invoke") as mock_pol, \
-         patch("app.services.processing_orchestrator.rules_engine.invoke") as mock_rule, \
-         patch("app.services.processing_orchestrator.revenue_intelligence_engine.invoke") as mock_rev:
+            patch("app.services.processing_orchestrator.decision_context_engine.invoke") as mock_ctx, \
+            patch("app.services.processing_orchestrator.policy_engine.invoke") as mock_pol, \
+            patch("app.services.processing_orchestrator.rules_engine.invoke") as mock_rule, \
+            patch("app.services.processing_orchestrator.revenue_intelligence_engine.invoke") as mock_rev:
 
         mock_ev.return_value = ServiceResponse(status=ServiceStatus.SUCCESS, result_payload={"eos_003_package": {}}, correlation_id="mock", processing_time_ms=10)
         mock_ctx.return_value = ServiceResponse(status=ServiceStatus.SUCCESS, result_payload={"primary_context": "NoShow"}, correlation_id="mock", processing_time_ms=10)
@@ -100,7 +100,7 @@ def test_d6_real_pipeline_target_propagation_positive(setup_db, mock_admin):
     db = SessionLocal()
     journey_id = f"J-{uuid.uuid4().hex[:6]}"
     clinic_id = "ORG-CLINIC-E2E"
-    
+
     db.add(OrganizationClinicModel(
         id=clinic_id,
         organization_id="org_123",
@@ -121,7 +121,7 @@ def test_d6_real_pipeline_target_propagation_positive(setup_db, mock_admin):
     db.commit()
 
     orchestrator = ProcessingOrchestrator()
-    
+
     event = orchestrator.create_event(
         event_type="EHR",
         source="Practice Fusion",
@@ -133,10 +133,10 @@ def test_d6_real_pipeline_target_propagation_positive(setup_db, mock_admin):
         priority="Normal",
         correlation_id=journey_id,
     )
-    
+
     # Run pipeline in background executor logic
     orchestrator.process_event_background(event.id)
-    
+
     event = db.query(OperationalEventModel).filter_by(id=event.id).first()
     assert event.state == "Completed"
 
@@ -159,7 +159,7 @@ def test_d6_real_pipeline_target_propagation_positive(setup_db, mock_admin):
     lifecycle_resp = client.get(f"/api/v1/actions/lifecycle/{decision_id}")
     assert lifecycle_resp.status_code == 200
     lifecycle = lifecycle_resp.json()
-    
+
     assert lifecycle["can_create"] is True
     permitted_targets = lifecycle["creation"]["permitted_targets"]
     assert any(t["target_id"] == clinic_id for t in permitted_targets)
@@ -168,9 +168,9 @@ def test_d6_real_pipeline_target_propagation_positive(setup_db, mock_admin):
 def test_d6_real_pipeline_target_propagation_negative(setup_db, mock_admin):
     db = SessionLocal()
     journey_id = f"J-{uuid.uuid4().hex[:6]}"
-    
+
     orchestrator = ProcessingOrchestrator()
-    
+
     db.add(GovernedRecommendationMappingModel(
         mapping_id="REC-MAP-001",
         version="V1",
@@ -194,9 +194,9 @@ def test_d6_real_pipeline_target_propagation_negative(setup_db, mock_admin):
         priority="Normal",
         correlation_id=journey_id,
     )
-    
+
     orchestrator.process_event_background(event.id)
-    
+
     event = db.query(OperationalEventModel).filter_by(id=event.id).first()
     assert event.state == "Completed"
 
@@ -219,7 +219,7 @@ def test_d6_real_pipeline_target_propagation_negative(setup_db, mock_admin):
     lifecycle_resp = client.get(f"/api/v1/actions/lifecycle/{decision_id}")
     assert lifecycle_resp.status_code == 200
     lifecycle = lifecycle_resp.json()
-    
+
     # Since there is no explicit target -> intended_target_reference is null -> can_create is false
     assert lifecycle["can_create"] is False
     assert len(lifecycle["creation"]["permitted_targets"]) == 0

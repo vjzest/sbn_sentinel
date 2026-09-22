@@ -16,18 +16,17 @@ Usage:
   or
   pytest test_sesr011.py -v
 """
+from app.services.validation_registry import (
+    ValidationRegistry, ConformanceStatus, FindingCategory
+)
+from app.services.conformance_engine import conformance_engine
+from app.db.database import Base, engine, SessionLocal
 import pytest
 import sys
 import os
 
 # Add backend/src/runtime to path so app imports resolve correctly
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "src/runtime")))
-
-from app.db.database import Base, engine, SessionLocal
-from app.services.conformance_engine import conformance_engine
-from app.services.validation_registry import (
-    ValidationRegistry, ConformanceStatus, FindingCategory
-)
 
 
 # ─────────────────────────────────────────────────────────────────
