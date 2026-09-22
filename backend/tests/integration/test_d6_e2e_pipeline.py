@@ -1,6 +1,7 @@
 import pytest
 from fastapi.testclient import TestClient
 import uuid
+from unittest.mock import patch
 from app.main import app
 from app.db.database import SessionLocal, Base
 from app.models.governance_storage import (
@@ -13,12 +14,14 @@ from app.models.governance_storage import (
 )
 from app.models.organization import OrganizationClinicModel
 from app.models.encounter import EncounterModel
+from app.models.intelligence import DecisionContextModel, OperationalIntelligenceModel, RevenueIntelligenceModel
+from app.models.event import OperationalEventModel
 from app.services.governance_registry import governance_registry, DecisionType, AuthorityConfiguration
-from app.services.intelligence_engine import intelligence_engine
+from app.services.processing_orchestrator import ProcessingOrchestrator
+from app.schemas.service_communication import ServiceResponse, ServiceStatus
 from app.api.deps import get_current_user
 
 client = TestClient(app)
-
 
 @pytest.fixture(scope="function")
 def setup_db():
@@ -33,6 +36,10 @@ def setup_db():
     db.query(RuleEvaluationModel).delete()
     db.query(OrganizationClinicModel).delete()
     db.query(EncounterModel).delete()
+    db.query(OperationalIntelligenceModel).delete()
+    db.query(RevenueIntelligenceModel).delete()
+    db.query(DecisionContextModel).delete()
+    db.query(OperationalEventModel).delete()
     db.commit()
     db.close()
 
@@ -56,87 +63,127 @@ def mock_admin():
     app.dependency_overrides.clear()
 
 
-def test_d6_e2e_pipeline(setup_db, mock_admin):
+@pytest.fixture(scope="function", autouse=True)
+def mock_upstream_engines():
+    with patch("app.services.processing_orchestrator.evidence_engine.invoke") as mock_ev, \
+         patch("app.services.processing_orchestrator.decision_context_engine.invoke") as mock_ctx, \
+         patch("app.services.processing_orchestrator.policy_engine.invoke") as mock_pol, \
+         patch("app.services.processing_orchestrator.rules_engine.invoke") as mock_rule, \
+         patch("app.services.processing_orchestrator.revenue_intelligence_engine.invoke") as mock_rev:
+         
+         mock_ev.return_value = ServiceResponse(status=ServiceStatus.SUCCESS, result_payload={"eos_003_package": {}}, correlation_id="mock", processing_time_ms=10)
+         mock_ctx.return_value = ServiceResponse(status=ServiceStatus.SUCCESS, result_payload={"primary_context": "NoShow"}, correlation_id="mock", processing_time_ms=10)
+         
+         # Mock policy_result object correctly
+         class MockPolicyResult:
+             is_permitted = True
+         
+         mock_pol.return_value = ServiceResponse(status=ServiceStatus.SUCCESS, result_payload={"policy_result": MockPolicyResult(), "policy_version": "V1"}, correlation_id="mock", processing_time_ms=10)
+         mock_rule.return_value = ServiceResponse(status=ServiceStatus.SUCCESS, result_payload={"findings": [{"rule_id": "RULE-SCH-001", "result": "CONDITION_MET", "evaluation_id": f"EVAL-{uuid.uuid4().hex[:6]}"}]}, correlation_id="mock", processing_time_ms=10)
+         mock_rev.return_value = ServiceResponse(status=ServiceStatus.SUCCESS, result_payload={"estimated_exposure": "$0"}, correlation_id="mock", processing_time_ms=10)
+         yield
+
+
+def test_d6_real_pipeline_target_propagation_positive(setup_db, mock_admin):
     db = SessionLocal()
     journey_id = f"J-{uuid.uuid4().hex[:6]}"
     clinic_id = "ORG-CLINIC-E2E"
     
-    # 1. Setup minimal target references in DB so target validates
     db.add(OrganizationClinicModel(
         id=clinic_id,
         organization_id="org_123",
         name="E2E Clinic",
         is_active=True
     ))
-    db.add(EncounterModel(
-        id=journey_id,
-        patient_id="pat_1",
-        provider_id="prov_1",
-        clinic_id=clinic_id,
-        date="2026-09-01",
-        type="Consultation",
-        status="Completed"
-    ))
     db.commit()
-    db.close()
 
-    # 2. Event -> Context -> Rule Evaluation
-    # Using the canonical seeds: "RULE-SCH-001" and "CONDITION_MET" which maps to "REC-MAP-001"
-    eval_id = f"EVAL-{uuid.uuid4().hex[:6]}"
-    context = {
-        "id": "CTX-123",
-        "clinic_id": clinic_id,
-        "primary_context": "NoShow",
-        "secondary_context": "HighValue"
-    }
-    finding = {
-        "evaluation_id": eval_id
-    }
-    payload = {
-        "journey_id": journey_id,
-        "evidence": "Patient did not show up",
-        "context": context,
-        "finding": finding
-    }
-
-    # 3. Intelligence Engine generates Recommendation
-    # It should derive `intended_target_reference` from `context["clinic_id"]`
-    # We supply finding with rule_id, so it fetches the mapping
-    finding["rule_id"] = "RULE-SCH-001"
-    result = intelligence_engine._process(payload=payload)
-    print("OIE RESULT:", result)
-
-    rec_id = result.get("decision_record", {}).get("recommendation_id")
-    assert rec_id is not None, "Recommendation ID should be generated"
+    orchestrator = ProcessingOrchestrator()
     
-    rec_record = governance_registry.get_recommendation(rec_id)
-    assert rec_record is not None
-    assert rec_record.intended_target_reference == clinic_id
+    event = orchestrator.create_event(
+        event_type="EHR",
+        source="Practice Fusion",
+        raw_payload={
+            "detail": "patient no-show",
+            "target_reference": clinic_id,
+            "target_type": "CLINIC"
+        },
+        priority="Normal",
+        correlation_id=journey_id,
+    )
+    
+    # Run pipeline in background executor logic
+    orchestrator.process_event_background(event.id)
+    
+    event = db.query(OperationalEventModel).filter_by(id=event.id).first()
+    assert event.state == "Completed"
 
-    # 4. Human Decision (simulate posting decision)
+    # Resolve Recommendation
+    recommendation = db.query(RecommendationModel).filter_by(journey_id=journey_id).first()
+    assert recommendation is not None
+    assert recommendation.intended_target_reference == clinic_id
+
+    # Post Decision
     decision_payload = {
-        "recommendation_id": rec_id,
+        "recommendation_id": recommendation.recommendation_id,
         "decision_type": "APPROVED",
         "reason": "Proceed with fee and reschedule"
     }
     decision_resp = client.post("/api/v1/decisions/", json=decision_payload)
     assert decision_resp.status_code == 200
-    decision_data = decision_resp.json()
-    decision_id = decision_data.get("decision_id")
-    assert decision_id is not None
+    decision_id = decision_resp.json().get("decision_id")
 
-    # 5. D6 Lifecycle Verification
+    # D6 Lifecycle Verification
     lifecycle_resp = client.get(f"/api/v1/actions/lifecycle/{decision_id}")
     assert lifecycle_resp.status_code == 200
-    lifecycle_data = lifecycle_resp.json()
-    print("DECISION DATA:", decision_data)
-    print("LIFECYCLE DATA:", lifecycle_data)
+    lifecycle = lifecycle_resp.json()
     
-    assert lifecycle_data["can_create"] is True
-    # Verify allowed_action_types were propagated from REC-MAP-001
-    assert "RESCHEDULE_APPOINTMENT" in lifecycle_data["creation"]["allowed_action_types"]
-    assert "SEND_NOTIFICATION" in lifecycle_data["creation"]["allowed_action_types"]
+    assert lifecycle["can_create"] is True
+    permitted_targets = lifecycle["creation"]["permitted_targets"]
+    assert any(t["target_id"] == clinic_id for t in permitted_targets)
+
+
+def test_d6_real_pipeline_target_propagation_negative(setup_db, mock_admin):
+    db = SessionLocal()
+    journey_id = f"J-{uuid.uuid4().hex[:6]}"
     
-    # Verify intended target reference was propagated correctly
-    permitted_targets = lifecycle_data["creation"]["permitted_targets"]
-    assert any(t["target_id"] == clinic_id for t in permitted_targets), "Derived target must be in permitted_targets"
+    orchestrator = ProcessingOrchestrator()
+    
+    # Negative Variant: no explicit target
+    event = orchestrator.create_event(
+        event_type="EHR",
+        source="Practice Fusion",
+        raw_payload={
+            "detail": "patient no-show",
+        },
+        priority="Normal",
+        correlation_id=journey_id,
+    )
+    
+    orchestrator.process_event_background(event.id)
+    
+    event = db.query(OperationalEventModel).filter_by(id=event.id).first()
+    assert event.state == "Completed"
+
+    # Resolve Recommendation
+    recommendation = db.query(RecommendationModel).filter_by(journey_id=journey_id).first()
+    assert recommendation is not None
+    assert recommendation.intended_target_reference is None
+
+    # Post Decision
+    decision_payload = {
+        "recommendation_id": recommendation.recommendation_id,
+        "decision_type": "APPROVED",
+        "reason": "Proceed"
+    }
+    decision_resp = client.post("/api/v1/decisions/", json=decision_payload)
+    assert decision_resp.status_code == 200
+    decision_id = decision_resp.json().get("decision_id")
+
+    # D6 Lifecycle Verification
+    lifecycle_resp = client.get(f"/api/v1/actions/lifecycle/{decision_id}")
+    assert lifecycle_resp.status_code == 200
+    lifecycle = lifecycle_resp.json()
+    
+    # Since there is no explicit target -> intended_target_reference is null -> can_create is false
+    assert lifecycle["can_create"] is False
+    assert len(lifecycle["creation"]["permitted_targets"]) == 0

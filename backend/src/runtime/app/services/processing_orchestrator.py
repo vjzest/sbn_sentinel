@@ -327,13 +327,25 @@ class ProcessingOrchestrator:
             suff_status = pkg_gov.get("sufficiency_status") if isinstance(pkg_gov, dict) else None
             ctx_id = str(uuid.uuid4())
 
+            def resolve_operational_target(evt) -> tuple[str | None, str | None]:
+                payload = evt.raw_payload or {}
+                ref = payload.get("target_reference")
+                t_type = payload.get("target_type")
+                if not ref:
+                    return None, None
+                return str(ref), str(t_type or "UNKNOWN")
+
+            target_ref, target_type = resolve_operational_target(event)
+
             event.decision_context = DecisionContextModel(
                 id=ctx_id,
                 primary_context=response.result_payload.get("primary_context", "Unknown"),
                 secondary_context=response.result_payload.get("secondary_context"),
                 evidence_state=json.dumps(getattr(event, "evidence_package", {}), default=str),
                 reason=response.result_payload.get("reason"),
-                sufficiency_status=suff_status
+                sufficiency_status=suff_status,
+                operational_target_reference=target_ref,
+                operational_target_type=target_type
             )
             event.layer4_duration_ms = (time.time() - t_start) * 1000
 
@@ -409,6 +421,8 @@ class ProcessingOrchestrator:
                         "id": event.decision_context.id,
                         "primary_context": event.decision_context.primary_context,
                         "secondary_context": event.decision_context.secondary_context,
+                        "target_reference": event.decision_context.operational_target_reference,
+                        "target_type": event.decision_context.operational_target_type,
                         "event_type": event.event_type
                     } if event.decision_context else {},
                     "policy_result": getattr(event, "policy_result", {}),
@@ -472,7 +486,10 @@ class ProcessingOrchestrator:
                     "context": {
                         "id": event.decision_context.id,
                         "primary_context": event.decision_context.primary_context,
-                        "secondary_context": event.decision_context.secondary_context} if event.decision_context else {},
+                        "secondary_context": event.decision_context.secondary_context,
+                        "target_reference": event.decision_context.operational_target_reference,
+                        "target_type": event.decision_context.operational_target_type
+                    } if event.decision_context else {},
                     "evidence": getattr(
                         event,
                         "evidence_package",
