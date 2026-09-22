@@ -692,52 +692,43 @@ export const SignalsDetailView: React.FC<{ initialSignalId?: string | null }> = 
 
           <div className="bg-gradient-to-br from-[var(--color-surface-raised)] to-[var(--color-surface)] border border-white/10 rounded-[24px] p-8 shadow-[0_20px_50px_rgba(46,16,85,0.3)] text-white">
             <h3 className="text-base font-extrabold text-white mb-6 flex items-center gap-2">
-              <Shield className="w-5 h-5 text-[var(--color-accent)]" /> Live Stream Status
+              <Shield className="w-5 h-5 text-[var(--color-accent)]" /> Connectors Status
             </h3>
             <div className="space-y-4">
-              <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-[16px] p-4 flex items-start gap-3">
-                <ShieldCheck className="w-5 h-5 text-[var(--color-semantic-positive)] flex-shrink-0 mt-0.5" />
-                <div>
-                  <h4 className="text-sm font-bold text-emerald-400">Secure Compliant Tunnel</h4>
-                  <p className="text-xs text-emerald-300 leading-relaxed mt-1 font-semibold">All socket connections utilize TLS 1.3 encryption with OAuth2 API authentication verification tokens.</p>
-                </div>
-              </div>
-
-              <div className="space-y-3 pt-2 text-xs font-bold text-white/80">
-                <div className="flex justify-between py-2 border-b border-white/10">
-                  <span className="text-white/70">Socket Connection</span>
-                  <span className={`${runtimeStatus?.overall.state === 'READY' ? 'text-emerald-600' : 'text-amber-500'} flex items-center gap-1`}>
-                    <span className={`w-2 h-2 ${runtimeStatus?.overall.state === 'READY' ? 'bg-emerald-500 animate-ping' : 'bg-amber-500'} rounded-full`}></span> 
-                    {runtimeStatus?.overall.state === 'READY' ? 'Live Connected' : 'Degraded / Blocked'}
-                  </span>
-                </div>
-                <div className="flex justify-between py-2 border-b border-white/10">
-                  <span className="text-white/70">Active Tunnels</span>
-                  <span className="text-white">
-                    {runtimeStatus?.connectors
-                      .filter(c => c.state === 'connected' || c.state === 'healthy' || c.state === 'ready')
-                      .map(c => c.name)
-                      .join(', ') || 'None'}
-                  </span>
-                </div>
-                <div className="flex justify-between py-2 border-b border-white/10">
-                  <span className="text-white/70">Response Latency</span>
-                  <span className="text-emerald-600">
-                    {(() => {
-                      const latencies = runtimeStatus?.connectors
-                        .map(c => c.latency_ms)
-                        .filter(l => l != null) as number[];
-                      if (!latencies || latencies.length === 0) return 'N/A';
-                      const avg = latencies.reduce((a, b) => a + b, 0) / latencies.length;
-                      return `~${Math.round(avg)}ms`;
-                    })()}
-                  </span>
-                </div>
-                <div className="flex justify-between py-2 border-b border-white/10">
-                  <span className="text-white/70">Total Monitored Nodes</span>
-                  <span className="text-white">{runtimeStatus?.connectors.length || 0}</span>
-                </div>
-              </div>
+              {!runtimeStatus && (
+                <div className="text-sm text-white/50 text-center py-2">Loading connectors...</div>
+              )}
+              {runtimeStatus?.connectors.map(conn => {
+                const isError = conn.state === 'error' || conn.state === 'disconnected';
+                return (
+                  <div key={conn.connector_id} className="border-b border-white/10 pb-4 last:border-0">
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="text-sm font-bold text-white/90">{conn.name}</span>
+                      <span className={`inline-flex items-center gap-1 text-[10px] border px-2 py-0.5 rounded-[8px] font-extrabold uppercase ${
+                        isError ? 'bg-red-500/20 text-red-400 border-red-500/30' :
+                        conn.state === 'warning' ? 'bg-amber-500/20 text-amber-400 border-amber-500/30' :
+                        'bg-emerald-500/20 text-emerald-400 border-emerald-500/30'
+                      }`}>
+                        {isError ? <AlertCircle className="w-3 h-3" /> :
+                         conn.state === 'warning' ? <AlertTriangle className="w-3 h-3" /> :
+                         <CheckCircle2 className="w-3 h-3" />}
+                        {conn.state}
+                      </span>
+                    </div>
+                    
+                    {isError && conn.failure_code && (
+                      <div className="mt-2 p-2 bg-red-500/10 border border-red-500/20 rounded-md">
+                        <p className="text-[10px] text-red-400 font-bold uppercase tracking-wider">Failure Code: {conn.failure_code}</p>
+                      </div>
+                    )}
+                    
+                    <div className="flex justify-between text-[10px] text-white/50 font-medium mt-2">
+                      <span>Latency: {conn.latency_ms != null ? `${conn.latency_ms}ms` : 'N/A'}</span>
+                      {conn.last_sync && <span>Last Sync: {new Date(conn.last_sync).toLocaleTimeString()}</span>}
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </div>
 

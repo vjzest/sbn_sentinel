@@ -39,7 +39,7 @@ def get_runtime_status(
             "affected_scope": "System Wide",
             "can_continue": False,
             "retry_supported": False,
-            "last_confirmed_at": datetime.utcnow().isoformat() + "Z"
+            "last_confirmed_at": None
         })
     elif pf_connector.status not in ["Healthy", "Ready"] or not pf_connector.access_token:
         # T02, T03: PF unhealthy or missing token -> DEGRADED/UNAVAILABLE
@@ -50,8 +50,8 @@ def get_runtime_status(
             "state": state,
             "affected_scope": "Practice Fusion Sync",
             "can_continue": False,
-            "retry_supported": True,
-            "last_confirmed_at": (pf_connector.last_sync or datetime.utcnow()).isoformat() + "Z",
+            "retry_supported": bool(pf_connector.access_token),
+            "last_confirmed_at": pf_connector.last_sync.isoformat() + "Z" if pf_connector.last_sync else None,
             "diagnostic_ref": f"CONN-{pf_connector.id[:8]}"
         })
     else:
@@ -61,18 +61,11 @@ def get_runtime_status(
             "state": "READY",
             "can_continue": True,
             "retry_supported": False,
-            "last_confirmed_at": (pf_connector.last_sync or datetime.utcnow()).isoformat() + "Z"
+            "last_confirmed_at": pf_connector.last_sync.isoformat() + "Z" if pf_connector.last_sync else None
         })
 
     for c in connectors:
-        # For D7, if it's a mock connector that fails sync with UNAVAILABLE code
-        # we can pass that up.
-        code = None
-        if c.status == "Warning":
-            code = "UNAVAILABLE"
-        elif c.status == "Error":
-            code = "TIMEOUT"
-            
+        # D7: Do not infer TIMEOUT from generic status. Persist/return the actual failure_code.
         connector_dtos.append({
             "connector_id": c.id,
             "name": c.name,
@@ -80,12 +73,12 @@ def get_runtime_status(
             "supported_in_v1": "Practice Fusion" in c.name,
             "latency_ms": c.latency_ms,
             "last_sync": c.last_sync.isoformat() + "Z" if c.last_sync else None,
-            "failure_code": code
+            "failure_code": getattr(c, "failure_code", None)
         })
 
     # Overall state
     overall_state = "READY"
-    if any(c["state"] == "UNAVAILABLE" for c in capabilities):
+    if any(c["state"] in ("UNAVAILABLE", "DEGRADED") for c in capabilities):
         overall_state = "DEGRADED"  # Or BLOCKED if it's full system block
         
     return {
