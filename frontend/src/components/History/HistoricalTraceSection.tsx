@@ -61,13 +61,13 @@ export const HistoricalTraceSection: React.FC<HistoricalTraceSectionProps> = ({ 
         <ProgressiveSection
             id="historical-trace"
             title="D8 Historical Trace & Reproducibility"
-            icon={<History className="w-4 h-4 text-pink-400" />}
+            icon={<History className="w-5 h-5 text-indigo-400 drop-shadow-[0_0_8px_rgba(99,102,241,0.6)]" />}
             defaultExpanded={false}
             dataState={dataState}
             dataStateMessage={error || 'No historical trace available'}
         >
             {context && (
-                <div className="space-y-4 pt-2">
+                <div className="space-y-6 pt-4 pb-2">
                     <HistorySummary context={context} />
                     
                     {context.technical_state !== 'ambiguous' && (
@@ -78,11 +78,14 @@ export const HistoricalTraceSection: React.FC<HistoricalTraceSectionProps> = ({ 
                     )}
 
                     {reproducing && (
-                        <div className="text-xs text-white/50 animate-pulse mt-4">Running deterministic reproduction...</div>
+                        <div className="flex items-center gap-3 mt-6 p-4 bg-indigo-500/10 border border-indigo-500/20 rounded-xl">
+                            <div className="w-4 h-4 rounded-full border-2 border-indigo-500 border-t-transparent animate-spin" />
+                            <div className="text-sm text-indigo-200 font-medium tracking-wide">Running deterministic reproduction...</div>
+                        </div>
                     )}
 
                     {reproductionResult && (
-                        <>
+                        <div className="space-y-4 mt-6">
                             <ReproductionStatus result={reproductionResult} />
                             
                             {reproductionResult.status === 'DIVERGENT' && reproductionResult.differences && (
@@ -95,7 +98,7 @@ export const HistoricalTraceSection: React.FC<HistoricalTraceSectionProps> = ({ 
                                     <MissingDependencyNotice diagnostic={reproductionResult.diagnostic} />
                                 </>
                             )}
-                        </>
+                        </div>
                     )}
                 </div>
             )}

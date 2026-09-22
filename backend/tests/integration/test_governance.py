@@ -275,12 +275,13 @@ def test_a021_historical_reconstruction():
         db.commit()
 
         # Invoke Reconstruction Engine: must strictly resolve and match V1
-        result = reconstruction_engine.reproduce_decision(journey_id)
-        assert result.status == "MATCH", f"Reconstruction failed: {result.diff}"
-        assert result.reproduced_recommendation["action"] == "Test Action V1"
+        result = reconstruction_engine.reproduce_decision(rec_id)
+        print("REPRODUCTION RESULT:", result)
+        assert result.status == "MATCH", f"Reconstruction failed: {result.differences}"
+        assert result.reproduced["action"] == "Test Action V1"
 
         # Query unknown journey: must return NOT_REPRODUCIBLE
-        unrec = reconstruction_engine.reproduce_decision("NONEXISTENT-JOURNEY-XYZ")
+        unrec = reconstruction_engine.reproduce_decision("NONEXISTENT-REC-XYZ")
         assert unrec.status == "NOT_REPRODUCIBLE"
     finally:
         db.query(RecommendationModel).filter(RecommendationModel.recommendation_id == rec_id).delete()
@@ -731,12 +732,12 @@ def test_a021b_reconstruction_missing_dependency():
         created_evals.append(eval_a)
         created_recs.append(rec_a)
 
-        res_a = reconstruction_engine.reproduce_decision(jny_a)
+        res_a = reconstruction_engine.reproduce_decision(rec_a)
         assert res_a.status == "NOT_REPRODUCIBLE", (
             f"Case A: expected NOT_REPRODUCIBLE when policy version absent, got {res_a.status}. "
-            f"Diff: {res_a.diff}"
+            f"Diff: {res_a.differences}"
         )
-        assert "policy" in res_a.diff.lower() or "NOT_REPRODUCIBLE" in res_a.status
+        assert "policy" in str(res_a.differences).lower() or "NOT_REPRODUCIBLE" in res_a.status
 
         # ---- Case B: Rule version NOT in registry, policy/mapping present ----
         policy_b = PolicyVersion(
@@ -765,10 +766,10 @@ def test_a021b_reconstruction_missing_dependency():
         created_evals.append(eval_b)
         created_recs.append(rec_b)
 
-        res_b = reconstruction_engine.reproduce_decision(jny_b)
+        res_b = reconstruction_engine.reproduce_decision(rec_b)
         assert res_b.status == "NOT_REPRODUCIBLE", (
             f"Case B: expected NOT_REPRODUCIBLE when rule version absent, got {res_b.status}. "
-            f"Diff: {res_b.diff}"
+            f"Diff: {res_b.differences}"
         )
 
         # ---- Case C: Mapping version NOT in registry, policy/rule present ----
@@ -795,10 +796,10 @@ def test_a021b_reconstruction_missing_dependency():
         created_evals.append(eval_c)
         created_recs.append(rec_c)
 
-        res_c = reconstruction_engine.reproduce_decision(jny_c)
+        res_c = reconstruction_engine.reproduce_decision(rec_c)
         assert res_c.status == "NOT_REPRODUCIBLE", (
             f"Case C: expected NOT_REPRODUCIBLE when mapping version absent, got {res_c.status}. "
-            f"Diff: {res_c.diff}"
+            f"Diff: {res_c.differences}"
         )
 
     finally:
