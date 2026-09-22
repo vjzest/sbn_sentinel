@@ -104,7 +104,7 @@ class IntelligenceEngine(BaseService):
                 "Recommendation creation failed: context_id, evaluation_id, and journey_id are mandatory.")
 
         # D6: Derive authoritative intended target reference
-        intended_target_reference = context.get("clinic_id") or payload.get("target_reference")
+        intended_target_reference = context.get("target_reference")
 
         # RCO-001: Create and persist Recommendation Record
         record = RecommendationRecord(

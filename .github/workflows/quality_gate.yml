@@ -60,7 +60,10 @@ jobs:
         SECRET_KEY: "test-secret-key-for-ci"
         PYTHONPATH: "src/runtime"
       run: |
-        pytest tests/integration/test_d6_action_lifecycle.py -v
+        pytest \
+          tests/integration/test_d6_action_lifecycle.py \
+          tests/integration/test_d6_e2e_pipeline.py \
+          -v
 
   frontend-quality:
     name: Frontend Quality Assurance
