@@ -1,5 +1,5 @@
 from sqlalchemy import create_engine, text
-engine = create_engine("sqlite:///sbn_sentinel.db") 
+engine = create_engine("sqlite:///sbn_sentinel.db")
 try:
     with engine.connect() as conn:
         result = conn.execute(text("SELECT count(*) FROM encounters"))

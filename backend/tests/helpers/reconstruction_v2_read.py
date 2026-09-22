@@ -13,7 +13,7 @@ def main():
         print("Usage: reconstruction_v2_read.py <jny_id> <rec_id> <eval_id>")
         sys.exit(1)
 
-    jny_id = sys.argv[1]
+    _ = sys.argv[1]
     rec_id = sys.argv[2]
     eval_id = sys.argv[3]
 

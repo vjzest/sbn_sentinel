@@ -23,13 +23,13 @@ def get_runtime_status(
     degraded runtime and system unavailability remain distinct.
     """
     connectors = db.query(ConnectorModel).all()
-    
+
     capabilities = []
     connector_dtos = []
-    
+
     # Analyze Practice Fusion (EHR Capability)
     pf_connector = next((c for c in connectors if "Practice Fusion" in c.name), None)
-    
+
     if not pf_connector:
         # T01: PF absent -> UNAVAILABLE
         capabilities.append({
@@ -80,7 +80,7 @@ def get_runtime_status(
     overall_state = "READY"
     if any(c["state"] in ("UNAVAILABLE", "DEGRADED") for c in capabilities):
         overall_state = "DEGRADED"  # Or BLOCKED if it's full system block
-        
+
     return {
         "overall": {
             "scope": "system",

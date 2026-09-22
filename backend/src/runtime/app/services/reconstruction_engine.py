@@ -1,3 +1,5 @@
+from typing import Literal, Dict, Any, List, Optional
+from dataclasses import dataclass
 import logging
 from typing import Dict, Any
 
@@ -6,9 +8,6 @@ from app.models.governance_storage import RecommendationModel, RuleEvaluationMod
 from app.services.governance_registry import governance_registry
 
 logger = logging.getLogger(__name__)
-
-from dataclasses import dataclass
-from typing import Literal, Dict, Any, List, Optional
 
 
 @dataclass(frozen=True)
@@ -130,7 +129,6 @@ class ReconstructionEngine:
             # 3. Deterministic Reconstruction
 
             # 3a. Reproduce Rule Logic (isolated context)
-
 
             import json
             inputs = json.loads(eval_record.input_values_json) if eval_record.input_values_json else {}

@@ -517,14 +517,14 @@ def test_a026_readiness_gate_positive_and_negative():
         role=UserRole.UNASSIGNED.value,
         is_active=True
     )
-    
+
     from app.models.connector import ConnectorModel
     from datetime import datetime
     pf = ConnectorModel(
         id=f"CONN-PF-{uuid.uuid4().hex[:6]}", name="Practice Fusion EHR", type="EHR",
         status="Healthy", latency_ms=45, last_sync=datetime.utcnow(), access_token="mock_token"
     )
-    
+
     db.add_all([u_active, u_unassigned, pf])
     db.commit()
 
@@ -586,7 +586,7 @@ def test_a025b_real_two_process_restart():
     from datetime import datetime
     import warnings
     from sqlalchemy.exc import SAWarning
-    
+
     raised = False
     try:
         with warnings.catch_warnings():

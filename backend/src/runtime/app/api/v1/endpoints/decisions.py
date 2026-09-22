@@ -59,7 +59,7 @@ async def get_recommendation_review(
     Returns authoritative Recommendation + current Human Decision based on exact Signal relationship.
     """
     signal = db.query(SignalModel).filter(SignalModel.id == signal_id).first()
-    
+
     unavailable_resp = {
         "object_ref": {"object_type": "Signal", "object_id": signal_id},
         "journey_id": None,
@@ -158,11 +158,11 @@ async def get_recommendation_review(
         HumanDecisionModel.recommendation_id == authoritative_rec.recommendation_id,
         HumanDecisionModel.status == "RECORDED"
     ).all()
-    
+
     if len(existing_decisions) > 1:
         unavailable_resp["technical_state"] = "ambiguous"
         return unavailable_resp
-        
+
     if existing_decisions:
         d = existing_decisions[0]
         current_decision_obj = {

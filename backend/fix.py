@@ -1,1 +1,2 @@
-c = open('tests/integration/test_d6_e2e_pipeline.py').read().replace('recommendation_template=\"{}\"', 'recommendation_template=\"Test\"'); open('tests/integration/test_d6_e2e_pipeline.py', 'w').write(c)
+c = open('tests/integration/test_d6_e2e_pipeline.py').read().replace('recommendation_template=\"{}\"', 'recommendation_template=\"Test\"')
+open('tests/integration/test_d6_e2e_pipeline.py', 'w').write(c)

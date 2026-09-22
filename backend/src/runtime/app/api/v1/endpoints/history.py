@@ -1,6 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from typing import Dict, Any, List
 
 from app.db.database import get_db
 
@@ -19,6 +18,7 @@ from app.services.reconstruction_engine import reconstruction_engine
 
 router = APIRouter()
 
+
 @router.get("/recommendations/{recommendation_id}")
 def get_historical_recommendation(
     recommendation_id: str,
@@ -33,6 +33,7 @@ def get_historical_recommendation(
         raise HTTPException(status_code=404, detail="Recommendation not found")
 
     return _build_historical_lifecycle(rec, db)
+
 
 @router.get("/journeys/{journey_id}")
 def get_historical_journey(
@@ -63,6 +64,7 @@ def get_historical_journey(
 
     return _build_historical_lifecycle(recs[0], db)
 
+
 @router.get("/recommendations/{recommendation_id}/reproduction")
 def get_reproduction(
     recommendation_id: str,
@@ -74,7 +76,7 @@ def get_reproduction(
     """
     # Call reconstruction engine
     result = reconstruction_engine.reproduce_decision(recommendation_id)
-    
+
     # Return as dict
     return {
         "status": result.status,
@@ -89,6 +91,7 @@ def get_reproduction(
         } if result.diagnostic_code else None
     }
 
+
 def _empty_bindings():
     return {
         "evidence_refs": [],
@@ -100,10 +103,11 @@ def _empty_bindings():
         "actions": []
     }
 
+
 def _build_historical_lifecycle(rec: RecommendationModel, db: Session) -> Dict[str, Any]:
     # Event / Evidence
     event = db.query(OperationalEventModel).filter(OperationalEventModel.id == rec.journey_id).first()
-    
+
     # Policy / Rule evaluations
     evals = []
     policy = None
@@ -157,7 +161,7 @@ def _build_historical_lifecycle(rec: RecommendationModel, db: Session) -> Dict[s
                     "attempt_number": att.attempt_number,
                     "result": att.result
                 })
-            
+
             outcome_out = None
             outcome = db.query(OperationalOutcomeModel).filter(OperationalOutcomeModel.action_id == a.id).first()
             if outcome:
@@ -166,7 +170,7 @@ def _build_historical_lifecycle(rec: RecommendationModel, db: Session) -> Dict[s
                     "confirmation_state": outcome.confirmation_state,
                     "resolution_state": outcome.resolution_state
                 }
-            
+
             actions_out.append({
                 "action_id": a.id,
                 "attempts": attempts_out,

@@ -23,10 +23,10 @@ class ContextSerializer:
         # Deep copy or format transformations can happen here.
         # Since our builder already creates a dictionary, we just validate structure.
         from fastapi.encoders import jsonable_encoder
-        
+
         # Ensure deep conversion of datetimes and models to primitives
         safe_package = jsonable_encoder(context_package)
-        
+
         return {
             "identity": safe_package.get("identity", {}),
             "evidence": safe_package.get("evidence", {}),

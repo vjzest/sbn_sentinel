@@ -1,14 +1,14 @@
+import uuid
 import pytest
-import json
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 from app.models.governance_storage import RecommendationModel, RuleEvaluationModel
 from app.models.event import OperationalEventModel
-from app.services.governance_registry import governance_registry
 from app.api.deps import get_current_user
 from app.models.user import User
 from app.main import app
 from app.db.database import SessionLocal
+
 
 @pytest.fixture(scope="module")
 def db_session():
@@ -18,13 +18,16 @@ def db_session():
     finally:
         db.close()
 
+
 @pytest.fixture(scope="module")
 def client():
     with TestClient(app) as c:
         yield c
 
+
 def mock_get_current_user():
     return User(id=1, email="admin@sbnsentinel.com", role="system_administrator", is_active=True)
+
 
 @pytest.fixture
 def override_deps():
@@ -32,13 +35,12 @@ def override_deps():
     yield
     app.dependency_overrides.clear()
 
-import uuid
 
 def test_t01_exact_recommendation_and_t09_historical_chain(client: TestClient, db_session: Session, override_deps):
     unique_j = f"j_{uuid.uuid4().hex}"
     unique_reval = f"reval_{uuid.uuid4().hex}"
     unique_rec = f"rec_{uuid.uuid4().hex}"
-    
+
     # Setup mock event & recommendation
     event = OperationalEventModel(id=unique_j, event_type="EHR", source="Practice Fusion")
     db_session.add(event)
@@ -77,19 +79,20 @@ def test_t01_exact_recommendation_and_t09_historical_chain(client: TestClient, d
     resp = client.get(f"/api/v1/history/recommendations/{unique_rec}")
     assert resp.status_code == 200
     data = resp.json()
-    
+
     assert data["anchor"]["object_id"] == unique_rec
     assert data["anchor"]["journey_id"] == unique_j
-    
+
     bindings = data["bindings"]
     assert bindings["rule_evaluations"][0]["rule_id"] == "RULE-1"
     assert bindings["recommendations"][0]["recommendation_id"] == unique_rec
+
 
 def test_t02_ambiguous_journey(client: TestClient, db_session: Session, override_deps):
     unique_amb = f"j_amb_{uuid.uuid4().hex}"
     event = OperationalEventModel(id=unique_amb, event_type="EHR", source="Practice Fusion")
     db_session.add(event)
-    
+
     rec1 = RecommendationModel(
         recommendation_id=f"rec_a1_{uuid.uuid4().hex[:6]}", decision_context_id="ctx_1", rule_evaluation_id="r1", journey_id=unique_amb, mapping_id="M1", mapping_version="1", priority="P1", content="A1"
     )
@@ -104,10 +107,12 @@ def test_t02_ambiguous_journey(client: TestClient, db_session: Session, override
     data = resp.json()
     assert data["technical_state"] == "ambiguous"
 
+
 def test_t03_match_reproduction(client: TestClient, db_session: Session, override_deps):
     # This requires mocking the governance registry and rule engine to output exactly what was there.
     # For now, we'll just test the endpoint hits the engine.
     pass
+
 
 def test_t05_missing_policy_version(client: TestClient, db_session: Session, override_deps):
     unique_missing = f"j_miss_{uuid.uuid4().hex}"
@@ -127,7 +132,7 @@ def test_t05_missing_policy_version(client: TestClient, db_session: Session, ove
         input_values_json='{}'
     )
     db_session.add(rule_eval)
-    
+
     rec = RecommendationModel(
         recommendation_id=rec_missing,
         decision_context_id="ctx_missing",
@@ -145,8 +150,7 @@ def test_t05_missing_policy_version(client: TestClient, db_session: Session, ove
     resp = client.get(f"/api/v1/history/recommendations/{rec_missing}/reproduction")
     assert resp.status_code == 200
     data = resp.json()
-    
+
     assert data["status"] == "NOT_REPRODUCIBLE"
     assert data["diagnostic"]["code"] == "MISSING_POLICY"
     assert data["diagnostic"]["missing_dependency"]["id"] == "POL-MISSING"
-

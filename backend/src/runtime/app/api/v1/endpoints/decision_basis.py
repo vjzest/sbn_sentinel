@@ -301,12 +301,12 @@ def get_decision_basis(
     try:
         evidence = _build_evidence(context_id, db)
         policy = _build_policy(policy_id, policy_version, db)
-        
+
         if not policy:
             technical_state = "unavailable"
         else:
             technical_state = "ready"
-            
+
         rules = [
             {
                 "evaluation_id": r.evaluation_id,
@@ -319,7 +319,7 @@ def get_decision_basis(
             }
             for r in evals_to_show
         ]
-        
+
         provenance = _build_provenance(context_id, db)
     except Exception:
         technical_state = "unavailable"
