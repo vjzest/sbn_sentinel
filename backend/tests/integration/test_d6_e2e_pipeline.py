@@ -16,6 +16,7 @@ from app.models.organization import OrganizationClinicModel
 from app.models.encounter import EncounterModel
 from app.models.intelligence import DecisionContextModel, OperationalIntelligenceModel, RevenueIntelligenceModel
 from app.models.event import OperationalEventModel
+from app.models.governance_storage import GovernedRecommendationMappingModel
 from app.services.governance_registry import governance_registry, DecisionType, AuthorityConfiguration
 from app.services.processing_orchestrator import ProcessingOrchestrator
 from app.schemas.service_communication import ServiceResponse, ServiceStatus
@@ -26,7 +27,17 @@ client = TestClient(app)
 
 @pytest.fixture(scope="function")
 def setup_db():
+    Base.metadata.drop_all(bind=SessionLocal().get_bind())
     Base.metadata.create_all(bind=SessionLocal().get_bind())
+    governance_registry._policies.clear()
+    governance_registry._rules.clear()
+    governance_registry._evaluations.clear()
+    governance_registry._recommendation_mappings.clear()
+    governance_registry._recommendations.clear()
+    governance_registry._human_decisions.clear()
+    governance_registry._operational_actions.clear()
+    governance_registry._execution_attempts.clear()
+    governance_registry._operational_outcomes.clear()
     yield
     db = SessionLocal()
     db.query(OperationalOutcomeModel).delete()
@@ -96,6 +107,17 @@ def test_d6_real_pipeline_target_propagation_positive(setup_db, mock_admin):
         name="E2E Clinic",
         is_active=True
     ))
+    db.add(GovernedRecommendationMappingModel(
+        mapping_id="REC-MAP-001",
+        version="V1",
+        applicable_rule_id="RULE-SCH-001",
+        eligible_result="CONDITION_MET",
+        recommendation_template="Test",
+        authority_requirement="SYSTEM_ADMIN",
+        priority="NORMAL",
+        lifecycle_state="ACTIVE",
+        allowed_action_types_json='["RESCHEDULE_APPOINTMENT", "SEND_NOTIFICATION"]'
+    ))
     db.commit()
 
     orchestrator = ProcessingOrchestrator()
@@ -149,6 +171,19 @@ def test_d6_real_pipeline_target_propagation_negative(setup_db, mock_admin):
     
     orchestrator = ProcessingOrchestrator()
     
+    db.add(GovernedRecommendationMappingModel(
+        mapping_id="REC-MAP-001",
+        version="V1",
+        applicable_rule_id="RULE-SCH-001",
+        eligible_result="CONDITION_MET",
+        recommendation_template="Test",
+        authority_requirement="SYSTEM_ADMIN",
+        priority="NORMAL",
+        lifecycle_state="ACTIVE",
+        allowed_action_types_json='["RESCHEDULE_APPOINTMENT", "SEND_NOTIFICATION"]'
+    ))
+    db.commit()
+
     # Negative Variant: no explicit target
     event = orchestrator.create_event(
         event_type="EHR",
