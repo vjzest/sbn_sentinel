@@ -1,6 +1,6 @@
 from sqlalchemy import Column, Integer, String, DateTime  # type: ignore
 from sqlalchemy.types import JSON  # type: ignore
-from datetime import datetime
+
 from app.db.database import Base
 
 

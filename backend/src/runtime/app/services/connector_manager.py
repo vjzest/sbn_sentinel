@@ -44,6 +44,7 @@ class ConnectorManager:
             if not connector_class:
                 # D7: Do not simulate success for unsupported connectors.
                 sste.execute_transition(db_connector, "Connector", "Warning")
+                db_connector.failure_code = "unsupported"
                 db.commit()
                 return {"status": "Failed", "error": f"Connector type {db_connector.name} is not fully supported in V1", "code": "UNAVAILABLE"}
 
@@ -67,11 +68,22 @@ class ConnectorManager:
                 sste.execute_transition(db_connector, "Connector", "Healthy")
                 db_connector.last_sync = datetime.utcnow()
                 db_connector.latency_ms = int(result.get("duration_ms", 50))
+                db_connector.failure_code = None
             else:
-                sste.execute_transition(
-                    db_connector,
-                    "Connector",
-                    "Warning")  # Transient failure state
+                sste.execute_transition(db_connector, "Connector", "Warning")  # Transient failure state
+                error_msg = result.get("error", "").lower()
+                if "auth" in error_msg or "token" in error_msg:
+                    db_connector.failure_code = "authentication failure"
+                elif "timeout" in error_msg:
+                    db_connector.failure_code = "timeout"
+                elif "network" in error_msg or "connection" in error_msg:
+                    db_connector.failure_code = "network unavailable"
+                elif "invalid" in error_msg or "parse" in error_msg:
+                    db_connector.failure_code = "invalid response"
+                elif "partial" in error_msg:
+                    db_connector.failure_code = "partial"
+                else:
+                    db_connector.failure_code = result.get("failure_code", "unknown")
 
             db.commit()
             return result
@@ -80,6 +92,7 @@ class ConnectorManager:
             self.logger.error(f"Sync failed for connector {connector_id}: {e}")
             if 'db_connector' in locals() and db_connector:
                 sste.execute_transition(db_connector, "Connector", "Warning")
+                db_connector.failure_code = "unknown"
                 db.commit()
             return {"status": "Failed", "error": str(e)}
         finally:

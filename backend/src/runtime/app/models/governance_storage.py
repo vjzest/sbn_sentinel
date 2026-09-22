@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, Text, UniqueConstraint
+from sqlalchemy import Column, String, Text, UniqueConstraint, Integer
 from app.db.database import Base
 
 
@@ -76,7 +76,7 @@ class ExecutionAttemptModel(Base):
     result = Column(String)
     attempt_timestamp = Column(String)
     # D6.3: durable fields — nullable so legacy rows render Unknown/Unavailable
-    attempt_number = Column(String, nullable=True)  # stored as string to avoid migration issues
+    attempt_number = Column(Integer, nullable=True)  # stored as integer to match migration
     connector = Column(String, nullable=True)
     request_reference = Column(String, nullable=True)
     response_reference = Column(String, nullable=True)
