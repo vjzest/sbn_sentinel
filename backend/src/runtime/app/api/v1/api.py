@@ -1,6 +1,7 @@
 from app.api.v1.endpoints import outcomes
 from fastapi import APIRouter, Depends
 # Import subsystem routers here when created
+from app.api.v1.endpoints import runtime
 from app.api.v1.endpoints import reality_connectors, signals, auth, insurance, audit, settings, encounters, super_admin, billing, clinics, pasme, pipeline, health, decisions, actions, decision_basis, action_lifecycle
 
 from app.models.user import UserRole
@@ -33,12 +34,19 @@ api_router.include_router(
     prefix="/audit",
     tags=["003_Audit_Trails"],
     dependencies=protected)
-api_router.include_router(health.router, prefix="/health", tags=["Health & Diagnostics"])
 api_router.include_router(
     settings.router,
     prefix="/settings",
-    tags=["004_Settings"],
-    dependencies=protected)
+    tags=["Settings"])
+api_router.include_router(
+    health.router,
+    prefix="/health",
+    tags=["Health & Diagnostics"])
+api_router.include_router(
+    runtime.router,
+    prefix="/health/runtime",
+    tags=["Runtime Status"])
+
 api_router.include_router(
     encounters.router,
     prefix="/encounters",

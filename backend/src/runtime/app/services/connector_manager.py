@@ -42,11 +42,10 @@ class ConnectorManager:
                 (cls for name, cls in self._connector_registry.items() if name in db_connector.name), None)
 
             if not connector_class:
-                # Mock fallback for V1 non-implemented connectors (Twilio, Zoom, etc.)
-                db_connector.status = "Healthy"
-                db_connector.last_sync = datetime.utcnow()
+                # D7: Do not simulate success for unsupported connectors.
+                sste.execute_transition(db_connector, "Connector", "Warning")
                 db.commit()
-                return {"status": "Success", "message": f"Simulated sync for {db_connector.name}"}
+                return {"status": "Failed", "error": f"Connector type {db_connector.name} is not fully supported in V1", "code": "UNAVAILABLE"}
 
             # State Transition: Synchronizing
             sste.execute_transition(db_connector, "Connector", "Synchronizing")
