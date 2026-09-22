@@ -7,19 +7,20 @@ from app.services.governance_registry import governance_registry
 
 logger = logging.getLogger(__name__)
 
+from dataclasses import dataclass
+from typing import Literal, Dict, Any, List, Optional
 
+
+@dataclass(frozen=True)
 class ReproductionResult:
-    def __init__(self,
-                 status: str,
-                 original_recommendation: Dict[str,
-                                               Any],
-                 reproduced_recommendation: Dict[str,
-                                                 Any],
-                 diff: str):
-        self.status = status  # MATCH, MISMATCH, NOT_REPRODUCIBLE
-        self.original_recommendation = original_recommendation
-        self.reproduced_recommendation = reproduced_recommendation
-        self.diff = diff
+    status: Literal["MATCH", "MISMATCH", "NOT_REPRODUCIBLE"]
+    recommendation_id: str
+    original: Dict[str, Any]
+    reproduced: Optional[Dict[str, Any]]
+    differences: List[Dict[str, Any]]
+    diagnostic_stage: Optional[str] = None
+    diagnostic_code: Optional[str] = None
+    missing_dependency: Optional[Dict[str, Any]] = None
 
 
 class ReconstructionEngine:
@@ -31,7 +32,7 @@ class ReconstructionEngine:
     def __init__(self):
         self.registry = governance_registry
 
-    def reproduce_decision(self, event_id: str) -> ReproductionResult:
+    def reproduce_decision(self, recommendation_id: str) -> ReproductionResult:
         """
         Attempts to reproduce a governed decision strictly from its historical binding contexts.
         Does not query active/current versions. Does not cause side effects.
@@ -40,52 +41,96 @@ class ReconstructionEngine:
         try:
             # 1. Fetch Historical Context Binding from new governed storage
             record = db.query(RecommendationModel).filter(
-                RecommendationModel.journey_id == event_id).first()
+                RecommendationModel.recommendation_id == recommendation_id).first()
             if not record:
                 return ReproductionResult(
-                    "NOT_REPRODUCIBLE", {}, {}, "No RecommendationModel found for journey.")
+                    status="NOT_REPRODUCIBLE",
+                    recommendation_id=recommendation_id,
+                    original={},
+                    reproduced=None,
+                    differences=[],
+                    diagnostic_stage="historical_binding",
+                    diagnostic_code="MISSING_RECOMMENDATION"
+                )
+
+            original_rec = {
+                "priority": record.priority,
+                "action": record.content,
+                "mapping_version": record.mapping_version
+            }
 
             if not record.mapping_version:
                 return ReproductionResult(
-                    "NOT_REPRODUCIBLE", {}, {}, "RecommendationModel lacks historical bindings.")
+                    status="NOT_REPRODUCIBLE",
+                    recommendation_id=recommendation_id,
+                    original=original_rec,
+                    reproduced=None,
+                    differences=[],
+                    diagnostic_stage="historical_binding",
+                    diagnostic_code="MISSING_MAPPING_VERSION"
+                )
 
             # Fetch real historical inputs used for the evaluation (Issue #6 Fix)
             eval_record = db.query(RuleEvaluationModel).filter(
                 RuleEvaluationModel.evaluation_id == record.rule_evaluation_id).first()
             if not eval_record:
                 return ReproductionResult(
-                    "NOT_REPRODUCIBLE", {}, {}, "No RuleEvaluationModel found for recommendation.")
+                    status="NOT_REPRODUCIBLE",
+                    recommendation_id=recommendation_id,
+                    original=original_rec,
+                    reproduced=None,
+                    differences=[],
+                    diagnostic_stage="historical_binding",
+                    diagnostic_code="MISSING_RULE_EVALUATION"
+                )
 
             # 2. Fetch Historical Logic Versions
             historical_policy = self.registry.get_policy_by_version(
                 eval_record.policy_id, eval_record.policy_version)
             if not historical_policy:
                 return ReproductionResult(
-                    "NOT_REPRODUCIBLE", {}, {},
-                    f"Historical policy {eval_record.policy_id} version {eval_record.policy_version} no longer exists in registry.")
+                    status="NOT_REPRODUCIBLE",
+                    recommendation_id=recommendation_id,
+                    original=original_rec,
+                    reproduced=None,
+                    differences=[],
+                    diagnostic_stage="historical_logic",
+                    diagnostic_code="MISSING_POLICY",
+                    missing_dependency={"type": "Policy", "id": eval_record.policy_id, "version": eval_record.policy_version}
+                )
 
             historical_mapping = self.registry.get_recommendation_mapping_by_version(
                 record.mapping_id, record.mapping_version)
             if not historical_mapping:
                 return ReproductionResult(
-                    "NOT_REPRODUCIBLE", {}, {},
-                    f"Historical mapping {record.mapping_id} version {record.mapping_version} no longer exists in registry.")
+                    status="NOT_REPRODUCIBLE",
+                    recommendation_id=recommendation_id,
+                    original=original_rec,
+                    reproduced=None,
+                    differences=[],
+                    diagnostic_stage="historical_logic",
+                    diagnostic_code="MISSING_MAPPING",
+                    missing_dependency={"type": "RecommendationMapping", "id": record.mapping_id, "version": record.mapping_version}
+                )
 
             historical_rule = self.registry.get_rule_by_version(
                 eval_record.rule_id, eval_record.rule_version)
             if not historical_rule:
                 return ReproductionResult(
-                    "NOT_REPRODUCIBLE", {}, {},
-                    f"Historical rule {eval_record.rule_id} version {eval_record.rule_version} no longer exists in registry.")
+                    status="NOT_REPRODUCIBLE",
+                    recommendation_id=recommendation_id,
+                    original=original_rec,
+                    reproduced=None,
+                    differences=[],
+                    diagnostic_stage="historical_logic",
+                    diagnostic_code="MISSING_RULE",
+                    missing_dependency={"type": "Rule", "id": eval_record.rule_id, "version": eval_record.rule_version}
+                )
 
             # 3. Deterministic Reconstruction
 
             # 3a. Reproduce Rule Logic (isolated context)
-            original_rec = {
-                "priority": record.priority,
-                "action": record.content,
-                "mapping_version": record.mapping_version
-            }
+
 
             import json
             inputs = json.loads(eval_record.input_values_json) if eval_record.input_values_json else {}
@@ -125,16 +170,24 @@ class ReconstructionEngine:
                 orig_val = original_rec.get(k)
                 repr_val = reproduced_rec.get(k)
                 if orig_val != repr_val:
-                    diffs.append(f"{k}: '{orig_val}' != '{repr_val}'")
+                    diffs.append({
+                        "field": k,
+                        "original": orig_val,
+                        "reproduced": repr_val
+                    })
 
             if not diffs:
                 status = "MATCH"
-                diff_str = "No deviations found."
             else:
                 status = "MISMATCH"
-                diff_str = ", ".join(diffs)
 
-            return ReproductionResult(status, original_rec, reproduced_rec, diff_str)
+            return ReproductionResult(
+                status=status,
+                recommendation_id=recommendation_id,
+                original=original_rec,
+                reproduced=reproduced_rec,
+                differences=diffs
+            )
 
         finally:
             db.close()
