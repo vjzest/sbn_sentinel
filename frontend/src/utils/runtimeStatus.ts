@@ -1,12 +1,8 @@
+import { fetchWithAuth } from './fetchWithAuth';
 import { RuntimeStatusDTO } from '../types/runtimeStatus';
 
 export async function fetchRuntimeStatus(): Promise<RuntimeStatusDTO> {
-  const token = localStorage.getItem('token');
-  const response = await fetch('http://localhost:8000/api/v1/health/runtime', {
-    headers: {
-      'Authorization': `Bearer ${token}`
-    }
-  });
+  const response = await fetchWithAuth(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/health/runtime`);
 
   if (!response.ok) {
     if (response.status === 401) {

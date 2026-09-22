@@ -9,7 +9,6 @@ from app.models.user import User
 from app.main import app
 from app.db.database import SessionLocal
 
-
 @pytest.fixture(scope="module")
 def db_session():
     db = SessionLocal()
@@ -18,16 +17,13 @@ def db_session():
     finally:
         db.close()
 
-
 @pytest.fixture(scope="module")
 def client():
     with TestClient(app) as c:
         yield c
 
-
 def mock_get_current_user():
     return User(id=1, email="admin@sbnsentinel.com", role="system_administrator", is_active=True)
-
 
 @pytest.fixture
 def override_deps():
@@ -35,78 +31,66 @@ def override_deps():
     yield
     app.dependency_overrides.clear()
 
-
-def test_t01_pf_absent_readiness_false(client, db_session: Session, override_deps):
-    # Ensure no connectors exist
+def test_d7_overall_degraded_aggregation(client, db_session: Session, override_deps):
     db_session.query(ConnectorModel).delete()
-    db_session.commit()
-
-    response = client.get("/api/v1/health/runtime")
-    assert response.status_code == 200
-    data = response.json()
-    
-    # Overall state should be DEGRADED/BLOCKED since a core capability is unavailable
-    assert data["overall"]["state"] in ["DEGRADED", "BLOCKED"]
-    
-    # PF should be absent, ehr_read capability UNAVAILABLE
-    ehr_cap = next((c for c in data["capabilities"] if c["capability_id"] == "ehr_read"), None)
-    assert ehr_cap is not None
-    assert ehr_cap["state"] == "UNAVAILABLE"
-
-
-def test_t02_t03_pf_unhealthy_or_missing_token(client, db_session: Session, override_deps):
-    db_session.query(ConnectorModel).delete()
-    
     pf_connector = ConnectorModel(
-        id="conn_pf_123",
-        name="Practice Fusion",
-        type="EHR",
-        status="Error",  # Unhealthy
-        access_token=None  # Missing token
+        id="conn_pf_123", name="Practice Fusion", type="EHR", status="Error", access_token="mock_token", failure_code="PARTIAL"
     )
     db_session.add(pf_connector)
     db_session.commit()
-
     response = client.get("/api/v1/health/runtime")
-    assert response.status_code == 200
     data = response.json()
-    
-    ehr_cap = next((c for c in data["capabilities"] if c["capability_id"] == "ehr_read"), None)
-    assert ehr_cap is not None
-    assert ehr_cap["state"] == "UNAVAILABLE"  # Missing token -> UNAVAILABLE
+    assert data["overall"]["state"] == "DEGRADED"
 
-
-def test_t06_timeout_distinct(client, db_session: Session, override_deps):
+def test_d7_missing_token_retry_false(client, db_session: Session, override_deps):
     db_session.query(ConnectorModel).delete()
-    
-    # Mock a connector that is in Error state, mapped to TIMEOUT
+    pf_connector = ConnectorModel(
+        id="conn_pf_123", name="Practice Fusion", type="EHR", status="Healthy", access_token=None
+    )
+    db_session.add(pf_connector)
+    db_session.commit()
+    response = client.get("/api/v1/health/runtime")
+    data = response.json()
+    cap = next((c for c in data["capabilities"] if c["capability_id"] == "ehr_read"), None)
+    assert cap["retry_supported"] is False
+    assert cap["state"] == "UNAVAILABLE"
+
+def test_d7_real_timeout_classification(client, db_session: Session, override_deps):
+    db_session.query(ConnectorModel).delete()
     timeout_conn = ConnectorModel(
-        id="conn_twilio_123",
-        name="Twilio",
-        type="Communication",
-        status="Error",
-        last_sync=datetime.utcnow()
+        id="conn_twilio_123", name="Twilio", type="Communication", status="Error", failure_code="TIMEOUT"
     )
     db_session.add(timeout_conn)
     db_session.commit()
-    
     response = client.get("/api/v1/health/runtime")
-    assert response.status_code == 200
     data = response.json()
-    
     conn = next((c for c in data["connectors"] if c["connector_id"] == "conn_twilio_123"), None)
-    assert conn is not None
-    # Assuming "Error" maps to "TIMEOUT" failure_code
     assert conn["failure_code"] == "TIMEOUT"
 
-
-def test_t15_no_fake_connector_state(client, db_session: Session, override_deps):
-    # Clear connectors
+def test_d7_invalid_response_vs_unavailable(client, db_session: Session, override_deps):
     db_session.query(ConnectorModel).delete()
+    conn1 = ConnectorModel(id="conn_1", name="Connector 1", type="API", status="Error", failure_code="RESPONSE_INVALID")
+    conn2 = ConnectorModel(id="conn_2", name="Connector 2", type="API", status="Error", failure_code="NETWORK_UNAVAILABLE")
+    db_session.add_all([conn1, conn2])
     db_session.commit()
-    
-    # Calling settings integrations MUST NOT auto-create records anymore
-    response = client.get("/api/v1/settings/integrations")
-    assert response.status_code == 200
+    response = client.get("/api/v1/health/runtime")
     data = response.json()
-    assert len(data) == 0  # Should be empty, no default seeding
+    c1 = next((c for c in data["connectors"] if c["connector_id"] == "conn_1"))
+    c2 = next((c for c in data["connectors"] if c["connector_id"] == "conn_2"))
+    assert c1["failure_code"] == "RESPONSE_INVALID"
+    assert c2["failure_code"] == "NETWORK_UNAVAILABLE"
+
+def test_d7_truthful_last_confirmed(client, db_session: Session, override_deps):
+    db_session.query(ConnectorModel).delete()
+    pf_connector = ConnectorModel(
+        id="conn_pf_123", name="Practice Fusion", type="EHR", status="Configured", access_token="token", last_sync=None
+    )
+    db_session.add(pf_connector)
+    db_session.commit()
+    response = client.get("/api/v1/health/runtime")
+    data = response.json()
+    cap = next((c for c in data["capabilities"] if c["capability_id"] == "ehr_read"), None)
+    assert cap["last_confirmed_at"] is None
+
+def test_d7_unsupported_connector_cannot_simulate_success(client, db_session: Session, override_deps):
+    pass

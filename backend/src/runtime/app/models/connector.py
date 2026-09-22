@@ -11,12 +11,14 @@ class ConnectorModel(Base):
     name = Column(String, nullable=False)
     type = Column(String, nullable=False)
 
-    # SES-005 Lifecycle States:
     # Configured, Authenticated, Connected, Synchronizing, Healthy, Warning, Retrying, Disconnected, Recovered
     status = Column(String, default="Configured")
+    
+    # D7: Explicit failure classification from the connector/service owner
+    failure_code = Column(String, nullable=True)
 
     latency_ms = Column(Integer, default=50)
-    last_sync = Column(DateTime, default=datetime.utcnow)
+    last_sync = Column(DateTime, nullable=True)
     config = Column(JSON, nullable=True)
     access_token = Column(String, nullable=True)
     refresh_token = Column(String, nullable=True)

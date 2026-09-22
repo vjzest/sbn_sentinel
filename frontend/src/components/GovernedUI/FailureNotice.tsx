@@ -37,7 +37,7 @@ export const FailureNotice: React.FC<FailureNoticeProps> = ({
             onClick={onRetry}
             className="text-xs bg-white border border-red-300 text-red-700 px-3 py-1 rounded hover:bg-red-50 transition-colors"
           >
-            Retry
+            Refresh status
           </button>
         )}
       </div>

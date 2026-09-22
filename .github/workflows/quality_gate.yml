@@ -63,7 +63,15 @@ jobs:
         pytest \
           tests/integration/test_d6_action_lifecycle.py \
           tests/integration/test_d6_e2e_pipeline.py \
+          tests/integration/test_d6_migration.py \
           -v
+
+    - name: SDS-D7 Verification
+      env:
+        SECRET_KEY: "test-secret-key-for-ci"
+        PYTHONPATH: "src/runtime"
+      run: |
+        pytest tests/integration/test_d7_runtime_status.py -v
 
   frontend-quality:
     name: Frontend Quality Assurance
