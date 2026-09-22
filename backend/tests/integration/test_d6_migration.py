@@ -1,11 +1,11 @@
-import json
-from sqlalchemy import create_engine
-import sys
 import os
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../../")))
-from scripts.migrate_d6_schema import migrate, D6_COLUMNS
+import sys
+
 import pytest
-from sqlalchemy import text, inspect
+from sqlalchemy import create_engine, inspect, text
+
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../../")))
+from scripts.migrate_d6_schema import D6_COLUMNS, migrate  # noqa: E402
 
 
 def table_exists(conn, table_name):
