@@ -22,6 +22,8 @@ import { RuleResultList } from '@/components/DecisionBasis/RuleResultList';
 import { ProvenanceDetail } from '@/components/DecisionBasis/ProvenanceDetail';
 // D6.10: Action Lifecycle
 import { ActionLifecycleSection } from '@/components/Action/ActionLifecycleSection';
+// D8: Historical Trace
+import { HistoricalTraceSection } from '@/components/History/HistoricalTraceSection';
 // D7: Runtime Status
 import { fetchRuntimeStatus } from '@/utils/runtimeStatus';
 import { RuntimeStatusDTO } from '@/types/runtimeStatus';
@@ -471,6 +473,9 @@ export const SignalsDetailView: React.FC<{ initialSignalId?: string | null }> = 
                 </div>
               )}
             </ProgressiveSection>
+
+            {/* D8 — Historical Trace & Reproducibility */}
+            <HistoricalTraceSection journeyId={selectedSignal.id} />
           </div>
         </ContextPanel>
       </>

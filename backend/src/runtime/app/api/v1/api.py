@@ -1,7 +1,7 @@
 from app.api.v1.endpoints import outcomes
 from fastapi import APIRouter, Depends
 # Import subsystem routers here when created
-from app.api.v1.endpoints import runtime
+from app.api.v1.endpoints import runtime, history
 from app.api.v1.endpoints import reality_connectors, signals, auth, insurance, audit, settings, encounters, super_admin, billing, clinics, pasme, pipeline, health, decisions, actions, decision_basis, action_lifecycle
 
 from app.models.user import UserRole
@@ -112,6 +112,13 @@ api_router.include_router(
     decision_basis.router,
     prefix="/decision-basis",
     tags=["014_D4_DecisionBasis"],
+    dependencies=protected)
+
+# D8 - History & Reproducibility Read Contract
+api_router.include_router(
+    history.router,
+    prefix="/history",
+    tags=["016_D8_History"],
     dependencies=protected)
 
 

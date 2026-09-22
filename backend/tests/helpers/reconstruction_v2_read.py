@@ -18,7 +18,7 @@ def main():
     eval_id = sys.argv[3]
 
     # Invoke Reconstruction Engine in fresh process: must strictly resolve and match V1
-    result = reconstruction_engine.reproduce_decision(jny_id)
+    result = reconstruction_engine.reproduce_decision(rec_id)
 
     # Clean up right after check
     db = SessionLocal()
@@ -28,11 +28,11 @@ def main():
     db.close()
 
     if result.status != "MATCH":
-        print(f"Reconstruction failed: {result.diff}")
+        print(f"Reconstruction failed: {result.differences}")
         sys.exit(1)
 
-    if result.reproduced_recommendation.get("action") != "Test Action V1":
-        print(f"Reconstruction yielded wrong action: {result.reproduced_recommendation.get('action')}")
+    if result.reproduced.get("action") != "Test Action V1":
+        print(f"Reconstruction yielded wrong action: {result.reproduced.get('action')}")
         sys.exit(1)
 
     print("SUCCESS")

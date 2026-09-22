@@ -12,10 +12,30 @@ from app.db.database import Base, engine, SessionLocal
 from app.services.processing_orchestrator import processing_orchestrator
 from app.services.reconstruction_engine import reconstruction_engine
 from app.services.governance_registry import governance_registry, PolicyVersion, RuleVersion, LifecycleState
+import app.main # Ensure all models are loaded for create_all
+import app.models.decision_context_models
+import app.models.decision_context_models
+import app.models.governance_storage
+import app.models.event
+import app.models.decision_record
+import app.models.intelligence
+import app.models.canonical
+import app.models.event
+import app.models.decision_record
 
 @pytest.fixture(scope="module")
 def setup_db():
+    Base.metadata.drop_all(bind=engine)
     Base.metadata.create_all(bind=engine)
+    
+    # Clear registry for testing isolation
+    governance_registry._policies = []
+    governance_registry._rules = []
+    governance_registry._recommendation_mappings = []
+    
+    from app.services.governance_registry import initialize_registry_seeds
+    initialize_registry_seeds()
+    
     yield
     Base.metadata.drop_all(bind=engine)
 
@@ -42,9 +62,15 @@ def test_sesr010_deterministic_reconstruction_match(setup_db):
     processing_orchestrator.process_event_background(event.id)
     
     # 3. Reconstruct
-    result = reconstruction_engine.reproduce_decision(event.id)
+    db = SessionLocal()
+    from app.models.governance_storage import RecommendationModel
+    rec = db.query(RecommendationModel).filter(RecommendationModel.journey_id == event.correlation_id).first()
+    db.close()
+    assert rec is not None, "No recommendation generated for journey"
     
-    assert result.status == "MATCH", f"Expected MATCH, got {result.status}. Diff: {result.diff}"
+    result = reconstruction_engine.reproduce_decision(rec.recommendation_id)
+    
+    assert result.status == "MATCH", f"Expected MATCH, got {result.status}. Diff: {result.differences}"
 
 
 def test_sesr010_historical_isolation_after_logic_change(setup_db):
@@ -86,7 +112,13 @@ def test_sesr010_historical_isolation_after_logic_change(setup_db):
     
     # 3. Reconstruct the historical decision
     # It must bind to V1, not V2, and therefore still MATCH
-    result = reconstruction_engine.reproduce_decision(event.id)
+    db = SessionLocal()
+    from app.models.governance_storage import RecommendationModel
+    rec = db.query(RecommendationModel).filter(RecommendationModel.journey_id == event.correlation_id).first()
+    db.close()
+    assert rec is not None, "No recommendation generated for journey"
+    
+    result = reconstruction_engine.reproduce_decision(rec.recommendation_id)
     
     assert result.status == "MATCH", "Reconstruction failed historical isolation. It was influenced by the V2 rule change."
 
