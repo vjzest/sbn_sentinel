@@ -7,6 +7,13 @@ from typing import Dict, Any, List
 logger = logging.getLogger(__name__)
 
 
+class ConnectorException(Exception):
+    """Exception raised for specific connector errors with a machine-readable code."""
+    def __init__(self, message: str, failure_code: str = "UNKNOWN"):
+        super().__init__(message)
+        self.failure_code = failure_code
+
+
 class BaseConnector(ABC):
     """
     SES-005 Connector Engineering Framework
@@ -55,16 +62,26 @@ class BaseConnector(ABC):
         start_time = time.time()
 
         # 1. Authenticate
-        if not await self.authenticate(config):
-            self.logger.error(f"[{self.connector_id}] Authentication failed.")
-            return {"status": "Failed", "error": "Authentication Failed"}
+        try:
+            if not await self.authenticate(config):
+                self.logger.error(f"[{self.connector_id}] Authentication failed.")
+                return {"status": "Failed", "error": "Authentication Failed", "failure_code": "AUTHENTICATION_FAILED"}
+        except ConnectorException as ce:
+            self.logger.error(f"[{self.connector_id}] Authentication failed: {ce}")
+            return {"status": "Failed", "error": str(ce), "failure_code": ce.failure_code}
+        except Exception as e:
+            self.logger.error(f"[{self.connector_id}] Authentication exception: {e}")
+            return {"status": "Failed", "error": str(e), "failure_code": "UNKNOWN"}
 
         # 2. Retrieve Data
         try:
             raw_records = await self.retrieve_data()
+        except ConnectorException as ce:
+            self.logger.error(f"[{self.connector_id}] Data retrieval failed: {ce}")
+            return {"status": "Failed", "error": f"Retrieval Failed: {ce}", "failure_code": ce.failure_code}
         except Exception as e:
-            self.logger.error(f"[{self.connector_id}] Data retrieval failed: {e}")
-            return {"status": "Failed", "error": f"Retrieval Failed: {e}"}
+            self.logger.error(f"[{self.connector_id}] Data retrieval exception: {e}")
+            return {"status": "Failed", "error": f"Retrieval Failed: {e}", "failure_code": "UNKNOWN"}
 
         processed_count = 0
         failed_count = 0
@@ -96,8 +113,19 @@ class BaseConnector(ABC):
 
         duration_ms = (time.time() - start_time) * 1000
 
+        if failed_count > 0 and processed_count > 0:
+            return {
+                "status": "Failed",
+                "error": f"Processed {processed_count}, failed {failed_count}",
+                "failure_code": "PARTIAL",
+                "processed": processed_count,
+                "failed": failed_count,
+                "duration_ms": duration_ms
+            }
+
         return {
             "status": "Success",
+            "failure_code": None,
             "processed": processed_count,
             "failed": failed_count,
             "duration_ms": duration_ms

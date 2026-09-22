@@ -1,6 +1,6 @@
 import httpx
 from typing import Dict, Any, List
-from .base_connector import BaseConnector
+from .base_connector import BaseConnector, ConnectorException
 
 
 class PracticeFusionConnector(BaseConnector):
@@ -52,10 +52,14 @@ class PracticeFusionConnector(BaseConnector):
                 return data.get("entry", [])
         except httpx.HTTPStatusError as e:
             self.logger.error(f"HTTP Error: {e.response.status_code}")
-            raise Exception(f"Unauthorized or Invalid Key: {e.response.status_code}")
+            if e.response.status_code in (401, 403):
+                raise ConnectorException(f"Unauthorized or Invalid Key: {e.response.status_code}", "AUTHENTICATION_FAILED")
+            raise ConnectorException(f"Invalid Response: {e.response.status_code}", "RESPONSE_INVALID")
         except httpx.RequestError as e:
             self.logger.error(f"Network error: {str(e)}")
-            raise Exception(f"Network error: {str(e)}")
+            if isinstance(e, httpx.TimeoutException):
+                raise ConnectorException(f"Timeout: {str(e)}", "TIMEOUT")
+            raise ConnectorException(f"Network error: {str(e)}", "NETWORK_UNAVAILABLE")
 
     async def validate_data(self, raw_record: Dict[str, Any]) -> bool:
         """
