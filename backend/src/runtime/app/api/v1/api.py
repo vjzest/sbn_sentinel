@@ -44,7 +44,7 @@ api_router.include_router(
     tags=["Health & Diagnostics"])
 api_router.include_router(
     runtime.router,
-    prefix="/health/runtime",
+    prefix="/health",
     tags=["Runtime Status"])
 
 api_router.include_router(

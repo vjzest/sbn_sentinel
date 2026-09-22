@@ -1,8 +1,7 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
-from typing import Dict, Any, List
+from typing import Dict, Any
 from datetime import datetime
-import json
 
 from app.db.database import get_db
 from app.api.deps import get_current_user
@@ -10,6 +9,7 @@ from app.models.user import User
 from app.models.connector import ConnectorModel
 
 router = APIRouter()
+
 
 @router.get("/runtime", summary="D7 Authoritative Runtime Status")
 def get_runtime_status(
@@ -86,7 +86,7 @@ def get_runtime_status(
     # Overall state
     overall_state = "READY"
     if any(c["state"] == "UNAVAILABLE" for c in capabilities):
-        overall_state = "DEGRADED" # Or BLOCKED if it's full system block
+        overall_state = "DEGRADED"  # Or BLOCKED if it's full system block
         
     return {
         "overall": {
