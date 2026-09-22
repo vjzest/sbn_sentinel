@@ -142,7 +142,7 @@ def test_d7_connector_structured_failures(db_session: Session):
     original_auth = PracticeFusionConnector.authenticate
     PracticeFusionConnector.authenticate = mock_auth_fail
     
-    result = asyncio.run(connector_manager.sync_connector("conn_pf_test_fail"))
+    asyncio.run(connector_manager.sync_connector("conn_pf_test_fail"))
     db_session.refresh(conn)
     assert conn.failure_code == "AUTHENTICATION_FAILED"
     
@@ -206,4 +206,3 @@ def test_d7_pf_failure_is_bounded(client, db_session: Session, override_deps):
     assert cap["affected_scope"] == "EHR Data Retrieval / Practice Fusion"
     # Runtime READY does not imply operational health, it just means technical states are tracked
     assert data["technical_state"] == "ready"
-
