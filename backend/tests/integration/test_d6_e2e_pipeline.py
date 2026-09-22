@@ -23,6 +23,7 @@ from app.api.deps import get_current_user
 
 client = TestClient(app)
 
+
 @pytest.fixture(scope="function")
 def setup_db():
     Base.metadata.create_all(bind=SessionLocal().get_bind())
@@ -70,18 +71,18 @@ def mock_upstream_engines():
          patch("app.services.processing_orchestrator.policy_engine.invoke") as mock_pol, \
          patch("app.services.processing_orchestrator.rules_engine.invoke") as mock_rule, \
          patch("app.services.processing_orchestrator.revenue_intelligence_engine.invoke") as mock_rev:
-         
-         mock_ev.return_value = ServiceResponse(status=ServiceStatus.SUCCESS, result_payload={"eos_003_package": {}}, correlation_id="mock", processing_time_ms=10)
-         mock_ctx.return_value = ServiceResponse(status=ServiceStatus.SUCCESS, result_payload={"primary_context": "NoShow"}, correlation_id="mock", processing_time_ms=10)
-         
-         # Mock policy_result object correctly
-         class MockPolicyResult:
-             is_permitted = True
-         
-         mock_pol.return_value = ServiceResponse(status=ServiceStatus.SUCCESS, result_payload={"policy_result": MockPolicyResult(), "policy_version": "V1"}, correlation_id="mock", processing_time_ms=10)
-         mock_rule.return_value = ServiceResponse(status=ServiceStatus.SUCCESS, result_payload={"findings": [{"rule_id": "RULE-SCH-001", "result": "CONDITION_MET", "evaluation_id": f"EVAL-{uuid.uuid4().hex[:6]}"}]}, correlation_id="mock", processing_time_ms=10)
-         mock_rev.return_value = ServiceResponse(status=ServiceStatus.SUCCESS, result_payload={"estimated_exposure": "$0"}, correlation_id="mock", processing_time_ms=10)
-         yield
+
+        mock_ev.return_value = ServiceResponse(status=ServiceStatus.SUCCESS, result_payload={"eos_003_package": {}}, correlation_id="mock", processing_time_ms=10)
+        mock_ctx.return_value = ServiceResponse(status=ServiceStatus.SUCCESS, result_payload={"primary_context": "NoShow"}, correlation_id="mock", processing_time_ms=10)
+
+        # Mock policy_result object correctly
+        class MockPolicyResult:
+            is_permitted = True
+
+        mock_pol.return_value = ServiceResponse(status=ServiceStatus.SUCCESS, result_payload={"policy_result": MockPolicyResult(), "policy_version": "V1"}, correlation_id="mock", processing_time_ms=10)
+        mock_rule.return_value = ServiceResponse(status=ServiceStatus.SUCCESS, result_payload={"findings": [{"rule_id": "RULE-SCH-001", "result": "CONDITION_MET", "evaluation_id": f"EVAL-{uuid.uuid4().hex[:6]}"}]}, correlation_id="mock", processing_time_ms=10)
+        mock_rev.return_value = ServiceResponse(status=ServiceStatus.SUCCESS, result_payload={"estimated_exposure": "$0"}, correlation_id="mock", processing_time_ms=10)
+        yield
 
 
 def test_d6_real_pipeline_target_propagation_positive(setup_db, mock_admin):
