@@ -36,7 +36,7 @@ def get_runtime_status(
             "capability_id": "ehr_read",
             "label": "EHR Data Retrieval",
             "state": "UNAVAILABLE",
-            "affected_scope": "System Wide",
+            "affected_scope": "EHR Data Retrieval / Practice Fusion",
             "can_continue": False,
             "retry_supported": False,
             "last_confirmed_at": None
