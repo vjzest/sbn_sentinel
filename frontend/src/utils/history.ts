@@ -5,7 +5,8 @@ import { HistoricalContextResponse, ReproductionResult } from '../types/history'
  * Fetches the exact historical lifecycle bindings for a specific recommendation.
  */
 export async function getHistoricalRecommendation(recommendationId: string): Promise<HistoricalContextResponse> {
-    return fetchWithAuth(`/api/v1/history/recommendations/${recommendationId}`);
+    const res = await fetchWithAuth(`/api/v1/history/recommendations/${recommendationId}`);
+    return res.json();
 }
 
 /**
@@ -13,7 +14,8 @@ export async function getHistoricalRecommendation(recommendationId: string): Pro
  * Helps identify ambiguous states if a journey spawned multiple distinct recommendations.
  */
 export async function getHistoricalJourney(journeyId: string): Promise<HistoricalContextResponse> {
-    return fetchWithAuth(`/api/v1/history/journeys/${journeyId}`);
+    const res = await fetchWithAuth(`/api/v1/history/journeys/${journeyId}`);
+    return res.json();
 }
 
 /**
@@ -21,5 +23,6 @@ export async function getHistoricalJourney(journeyId: string): Promise<Historica
  * verify if the original recommendation would be reproduced identically today.
  */
 export async function reproduceDecision(recommendationId: string): Promise<ReproductionResult> {
-    return fetchWithAuth(`/api/v1/history/recommendations/${recommendationId}/reproduction`);
+    const res = await fetchWithAuth(`/api/v1/history/recommendations/${recommendationId}/reproduction`);
+    return res.json();
 }
