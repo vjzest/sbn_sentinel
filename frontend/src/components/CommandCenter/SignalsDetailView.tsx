@@ -22,6 +22,13 @@ import { RuleResultList } from '@/components/DecisionBasis/RuleResultList';
 import { ProvenanceDetail } from '@/components/DecisionBasis/ProvenanceDetail';
 // D6.10: Action Lifecycle
 import { ActionLifecycleSection } from '@/components/Action/ActionLifecycleSection';
+// D7: Runtime Status
+import { fetchRuntimeStatus } from '@/utils/runtimeStatus';
+import { RuntimeStatusDTO } from '@/types/runtimeStatus';
+import { mapStateToSemantic } from '@/utils/failurePresentation';
+import { FailureNotice } from '@/components/GovernedUI/FailureNotice';
+import { DegradedStateBanner } from '@/components/GovernedUI/DegradedStateBanner';
+
 export const SignalsDetailView: React.FC<{ initialSignalId?: string | null }> = ({ initialSignalId }) => {
   const dispatch = useDispatch();
   const reduxSignals = useSelector((state: RootState) => state.signals.events);
@@ -40,6 +47,10 @@ export const SignalsDetailView: React.FC<{ initialSignalId?: string | null }> = 
   const [highlightedRuleId, setHighlightedRuleId] = useState<string | null>(null);
   // D6.10 — Current decision_id for Action Lifecycle, propagated from RecommendationReview
   const [currentDecisionId, setCurrentDecisionId] = useState<string | null>(null);
+  
+  // D7 — Runtime Status
+  const [runtimeStatus, setRuntimeStatus] = useState<RuntimeStatusDTO | null>(null);
+
   // Combine redux state and db historical signals
   const fetchDbSignals = async () => {
     try {
@@ -67,9 +78,27 @@ export const SignalsDetailView: React.FC<{ initialSignalId?: string | null }> = 
       console.error("Failed to load dispatched actions log:", err);
     }
   };
+
+  const loadRuntimeStatus = async () => {
+    try {
+      const status = await fetchRuntimeStatus();
+      setRuntimeStatus(status);
+    } catch (e) {
+      console.error("Failed to load runtime status:", e);
+      // Construct a safe UNAVAILABLE state
+      setRuntimeStatus({
+        overall: { scope: 'system', state: 'UNAVAILABLE', message: 'Failed to communicate with runtime server.' },
+        capabilities: [],
+        connectors: [],
+        technical_state: 'unavailable'
+      });
+    }
+  };
+
   useEffect(() => {
     fetchDbSignals();
     fetchAuditLogs();
+    loadRuntimeStatus();
     // Audit 3 Item 8 / Audit 4 Item 6: Demo State gating
     fetchWithAuth(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/settings`)
       .then(res => res.json())
@@ -459,6 +488,20 @@ export const SignalsDetailView: React.FC<{ initialSignalId?: string | null }> = 
   }
   return (
     <div className="animate-in fade-in duration-500 max-w-[1600px] mx-auto space-y-8">
+      {/* D7 Banner for overall degraded state */}
+      {runtimeStatus?.overall.state === 'DEGRADED' && (
+        <DegradedStateBanner message={runtimeStatus.overall.message || "The system is currently operating in a degraded state."} />
+      )}
+      {runtimeStatus?.overall.state === 'UNAVAILABLE' && (
+        <FailureNotice 
+          title="System Unavailable" 
+          affected="Overall System" 
+          available="Cached data only" 
+          timestamp={runtimeStatus.overall.checked_at}
+          onRetry={loadRuntimeStatus}
+        />
+      )}
+
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 md:gap-0 relative">
         <div>
@@ -623,24 +666,27 @@ export const SignalsDetailView: React.FC<{ initialSignalId?: string | null }> = 
               <Activity className="w-5 h-5 text-[var(--color-accent)]" /> System Capability Matrix
             </h3>
             <div className="space-y-4">
-              <div className="flex justify-between items-center py-2 border-b border-white/10">
-                <span className="text-sm font-bold text-white/80">Historical Data (Read)</span>
-                <span className="inline-flex items-center gap-1 text-[10px] bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded-[8px] font-extrabold uppercase">
-                  <CheckCircle2 className="w-3 h-3" /> Available
-                </span>
-              </div>
-              <div className="flex justify-between items-center py-2 border-b border-white/10">
-                <span className="text-sm font-bold text-white/80">Practice Fusion (Write)</span>
-                <span className="inline-flex items-center gap-1 text-[10px] bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded-[8px] font-extrabold uppercase">
-                  <CheckCircle2 className="w-3 h-3" /> Available
-                </span>
-              </div>
-              <div className="flex justify-between items-center py-2 border-b border-white/10">
-                <span className="text-sm font-bold text-white/80">Policy Engine</span>
-                <span className="inline-flex items-center gap-1 text-[10px] bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded-[8px] font-extrabold uppercase">
-                  <CheckCircle2 className="w-3 h-3" /> Available
-                </span>
-              </div>
+              {runtimeStatus?.capabilities.map(cap => {
+                const semantic = mapStateToSemantic(cap.state, cap.label);
+                return (
+                  <div key={cap.capability_id} className="flex justify-between items-center py-2 border-b border-white/10">
+                    <span className="text-sm font-bold text-white/80">{cap.label}</span>
+                    <span className={`inline-flex items-center gap-1 text-[10px] border px-2 py-0.5 rounded-[8px] font-extrabold uppercase ${
+                      semantic.isCritical ? 'bg-red-500/20 text-red-400 border-red-500/30' :
+                      semantic.isWarning ? 'bg-amber-500/20 text-amber-400 border-amber-500/30' :
+                      'bg-emerald-500/20 text-emerald-400 border-emerald-500/30'
+                    }`}>
+                      {semantic.isCritical ? <AlertCircle className="w-3 h-3" /> :
+                       semantic.isWarning ? <AlertTriangle className="w-3 h-3" /> :
+                       <CheckCircle2 className="w-3 h-3" />}
+                      {cap.state}
+                    </span>
+                  </div>
+                );
+              })}
+              {!runtimeStatus && (
+                <div className="text-sm text-white/50 text-center py-2">Loading capabilities...</div>
+              )}
             </div>
           </div>
 
@@ -660,21 +706,36 @@ export const SignalsDetailView: React.FC<{ initialSignalId?: string | null }> = 
               <div className="space-y-3 pt-2 text-xs font-bold text-white/80">
                 <div className="flex justify-between py-2 border-b border-white/10">
                   <span className="text-white/70">Socket Connection</span>
-                  <span className="text-emerald-600 flex items-center gap-1">
-                    <span className="w-2 h-2 bg-emerald-500 rounded-full animate-ping"></span> Live Connected
+                  <span className={`${runtimeStatus?.overall.state === 'READY' ? 'text-emerald-600' : 'text-amber-500'} flex items-center gap-1`}>
+                    <span className={`w-2 h-2 ${runtimeStatus?.overall.state === 'READY' ? 'bg-emerald-500 animate-ping' : 'bg-amber-500'} rounded-full`}></span> 
+                    {runtimeStatus?.overall.state === 'READY' ? 'Live Connected' : 'Degraded / Blocked'}
                   </span>
                 </div>
                 <div className="flex justify-between py-2 border-b border-white/10">
                   <span className="text-white/70">Active Tunnels</span>
-                  <span className="text-white">Practice Fusion, Twilio, LabCorp</span>
+                  <span className="text-white">
+                    {runtimeStatus?.connectors
+                      .filter(c => c.state === 'connected' || c.state === 'healthy' || c.state === 'ready')
+                      .map(c => c.name)
+                      .join(', ') || 'None'}
+                  </span>
                 </div>
                 <div className="flex justify-between py-2 border-b border-white/10">
                   <span className="text-white/70">Response Latency</span>
-                  <span className="text-emerald-600">~12ms</span>
+                  <span className="text-emerald-600">
+                    {(() => {
+                      const latencies = runtimeStatus?.connectors
+                        .map(c => c.latency_ms)
+                        .filter(l => l != null) as number[];
+                      if (!latencies || latencies.length === 0) return 'N/A';
+                      const avg = latencies.reduce((a, b) => a + b, 0) / latencies.length;
+                      return `~${Math.round(avg)}ms`;
+                    })()}
+                  </span>
                 </div>
                 <div className="flex justify-between py-2 border-b border-white/10">
-                  <span className="text-white/70">Average Daily Volume</span>
-                  <span className="text-white">4,821 telemetry packets</span>
+                  <span className="text-white/70">Total Monitored Nodes</span>
+                  <span className="text-white">{runtimeStatus?.connectors.length || 0}</span>
                 </div>
               </div>
             </div>

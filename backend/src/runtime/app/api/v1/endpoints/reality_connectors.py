@@ -40,12 +40,8 @@ def seed_default_connectors(db: Session):
 def check_connectors_health(db: Session = Depends(get_db)):
     """
     Get the health status of all connected Reality Sources.
-    Seeds default connectors if none exist.
     """
     connectors = db.query(ConnectorModel).all()
-    if not connectors:
-        seed_default_connectors(db)
-        connectors = db.query(ConnectorModel).all()
 
     response = []
     for c in connectors:
