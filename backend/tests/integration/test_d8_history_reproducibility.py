@@ -1,3 +1,4 @@
+# flake8: noqa: E501
 import uuid
 import pytest
 from fastapi.testclient import TestClient
@@ -8,6 +9,7 @@ from app.api.deps import get_current_user
 from app.models.user import User
 from app.main import app
 from app.db.database import SessionLocal
+
 
 
 @pytest.fixture(scope="module")
