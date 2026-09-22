@@ -667,17 +667,19 @@ export const SignalsDetailView: React.FC<{ initialSignalId?: string | null }> = 
             </h3>
             <div className="space-y-4">
               {runtimeStatus?.capabilities.map(cap => {
-                const semantic = mapStateToSemantic(cap.state, cap.label);
+                const semantic = mapStateToSemantic(cap);
+                const isCritical = semantic.semantic === 'critical';
+                const isWarning = semantic.semantic === 'attention';
                 return (
                   <div key={cap.capability_id} className="flex justify-between items-center py-2 border-b border-white/10">
                     <span className="text-sm font-bold text-white/80">{cap.label}</span>
                     <span className={`inline-flex items-center gap-1 text-[10px] border px-2 py-0.5 rounded-[8px] font-extrabold uppercase ${
-                      semantic.isCritical ? 'bg-red-500/20 text-red-400 border-red-500/30' :
-                      semantic.isWarning ? 'bg-amber-500/20 text-amber-400 border-amber-500/30' :
+                      isCritical ? 'bg-red-500/20 text-red-400 border-red-500/30' :
+                      isWarning ? 'bg-amber-500/20 text-amber-400 border-amber-500/30' :
                       'bg-emerald-500/20 text-emerald-400 border-emerald-500/30'
                     }`}>
-                      {semantic.isCritical ? <AlertCircle className="w-3 h-3" /> :
-                       semantic.isWarning ? <AlertTriangle className="w-3 h-3" /> :
+                      {isCritical ? <AlertCircle className="w-3 h-3" /> :
+                       isWarning ? <AlertTriangle className="w-3 h-3" /> :
                        <CheckCircle2 className="w-3 h-3" />}
                       {cap.state}
                     </span>

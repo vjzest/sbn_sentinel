@@ -753,7 +753,7 @@ class GovernanceRegistry:
                 result=attempt.result.value,
                 attempt_timestamp=attempt.attempt_timestamp.isoformat(),
                 # D6.3: persist durable fields so attempt_number/connector survive restart
-                attempt_number=str(attempt.attempt_number),
+                attempt_number=attempt.attempt_number,
                 connector=attempt.connector,
                 request_reference=attempt.request_reference,
                 response_reference=attempt.response_reference,

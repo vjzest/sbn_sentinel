@@ -199,7 +199,7 @@ def test_unknown_blocks_retry(setup_db, mock_admin):
         action_id=action_id,
         journey_id=journey_id,
         result="UNKNOWN",
-        attempt_number="1",
+        attempt_number=1,
         connector="MOCK_PRACTICE_FUSION_CONNECTOR",
         attempt_timestamp=datetime.datetime.utcnow().isoformat()
     ))
@@ -318,7 +318,7 @@ def test_failed_retry_limits(setup_db, mock_admin):
             action_id=action_id,
             journey_id=journey_id,
             result="FAILED",
-            attempt_number=str(i),
+            attempt_number=i,
             connector="MOCK_PRACTICE_FUSION_CONNECTOR",
             attempt_timestamp=datetime.datetime.utcnow().isoformat()
         ))

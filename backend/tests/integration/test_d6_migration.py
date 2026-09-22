@@ -1,21 +1,24 @@
-import pytest
-from sqlalchemy import text, inspect
-from app.db.database import engine
+import json
+from sqlalchemy import create_engine
 import sys
 import os
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../../")))
 from scripts.migrate_d6_schema import migrate, D6_COLUMNS
+import pytest
+from sqlalchemy import text, inspect
+
 
 def table_exists(conn, table_name):
     return inspect(conn).has_table(table_name)
 
+
 def get_columns(conn, table_name):
     return {c["name"] for c in inspect(conn).get_columns(table_name)}
 
-from sqlalchemy import create_engine
 
 # Use a separate test engine just for this migration to avoid polluting app engine
 test_engine = create_engine("sqlite:///:memory:")
+
 
 def setup_pre_d6_schema(engine):
     with engine.begin() as conn:
@@ -90,6 +93,7 @@ def setup_pre_d6_schema(engine):
         conn.execute(text("INSERT INTO governed_recommendation_mappings (mapping_id, version, applicable_rule_id, eligible_result, recommendation_template, authority_requirement, priority, lifecycle_state) VALUES ('REC-MAP-001', 'V1', 'rule1', 'TRUE', 'template', 'SYSTEM', 'HIGH', 'ACTIVE')"))
         conn.execute(text("INSERT INTO governed_actions (action_id, authorization_reference, journey_id) VALUES ('action_1', 'dec_1', 'journey_1')"))
 
+
 @pytest.mark.governance
 def test_d6_schema_migration_and_idempotency(monkeypatch):
     # Monkeypatch the engine used in scripts.migrate_d6_schema
@@ -125,4 +129,3 @@ def test_d6_schema_migration_and_idempotency(monkeypatch):
 
     # 2. Run migration again to prove idempotency
     migrate()
-

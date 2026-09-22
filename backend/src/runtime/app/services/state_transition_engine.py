@@ -22,6 +22,7 @@ class SentinelStateTransitionEngine:
             "DeadLetter": []
         },
         "Connector": {
+            "Configured": ["Synchronizing", "Healthy", "Warning", "Error"],
             "Healthy": ["Synchronizing", "Warning", "Error"],
             "Warning": ["Synchronizing", "Healthy", "Error"],
             "Error": ["Synchronizing", "Healthy"],
