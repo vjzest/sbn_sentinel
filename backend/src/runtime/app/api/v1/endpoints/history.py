@@ -5,7 +5,7 @@ from typing import Dict, Any
 from app.db.database import get_db
 
 from app.api.deps import get_current_user
-from app.models.user import User
+from app.models.user import User, UserRole
 from app.models.governance_storage import (
     RecommendationModel,
     RuleEvaluationModel,
@@ -79,6 +79,8 @@ def get_reproduction(
     # Call reconstruction engine
     result = reconstruction_engine.reproduce_decision(recommendation_id)
 
+    is_authorized_diagnostic = current_user.role in [UserRole.SYSTEM_ADMINISTRATOR.value, "Developer"]
+
     # Return as dict
     return {
         "status": result.status,
@@ -90,7 +92,7 @@ def get_reproduction(
             "stage": result.diagnostic_stage,
             "code": result.diagnostic_code,
             "missing_dependency": result.missing_dependency
-        } if result.diagnostic_code else None
+        } if (result.diagnostic_code and is_authorized_diagnostic) else None
     }
 
 
@@ -137,7 +139,7 @@ def _build_historical_lifecycle(rec: RecommendationModel, db: Session) -> Dict[s
             })
             policy = {
                 "policy_id": rule_eval.policy_id,
-                "version": rule_eval.policy_version
+                "policy_version": rule_eval.policy_version
             }
 
     # Recommendations

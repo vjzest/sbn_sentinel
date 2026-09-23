@@ -4,6 +4,7 @@ import { vi, describe, it, expect, beforeEach } from 'vitest';
 import { HistoricalTraceSection } from '../components/History/HistoricalTraceSection';
 import { AuditTimeline } from '../components/History/AuditTimeline';
 import { MissingDependencyNotice } from '../components/History/MissingDependencyNotice';
+import { HistoricalBindings as HistoricalBindingsComponent } from '../components/History/HistoricalBindings';
 import * as historyApi from '../utils/history';
 import { HistoricalBindings, HistoricalContextResponse } from '../types/history';
 
@@ -198,5 +199,27 @@ describe('D8 History & Reproducibility Tests', () => {
         expect(screen.getByText('Missing Dependency: Recommendation Mapping')).toBeTruthy();
         expect(screen.getByText(/MAP-001/i)).toBeTruthy();
         expect(screen.getByText(/V1/i)).toBeTruthy();
+    });
+
+    it('renders non-null Policy version correctly and never shows undefined', () => {
+        const bindings: HistoricalBindings = {
+            evidence_refs: [],
+            decision_context_id: 'CTX-1',
+            policy: {
+                policy_id: 'POL-001',
+                policy_version: 'V1'
+            },
+            rule_evaluations: [],
+            recommendations: [],
+            decisions: [],
+            actions: []
+        };
+
+        render(<HistoricalBindingsComponent bindings={bindings} />);
+
+        // Must render POL-001 and (vV1)
+        expect(screen.getByText(/POL-001/i)).toBeTruthy();
+        expect(screen.getByText(/\(vV1\)/i)).toBeTruthy();
+        expect(screen.queryByText(/undefined/i)).toBeNull();
     });
 });

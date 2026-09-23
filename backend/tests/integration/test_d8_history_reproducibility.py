@@ -37,7 +37,10 @@ def client():
         yield c
 
 def mock_get_current_user():
-    return User(id=1, email="admin@sbnsentinel.com", role="system_administrator", is_active=True)
+    return User(id=1, email="admin@sbnsentinel.com", role="System Administrator", is_active=True)
+
+def mock_get_ordinary_user():
+    return User(id=2, email="user@sbnsentinel.com", role="Front Desk", is_active=True)
 
 @pytest.fixture
 def override_deps():
@@ -130,7 +133,7 @@ def test_d8_historical_chain_and_reproduction(client: TestClient, db_session: Se
         assert act["status"] == "COMPLETED"
         assert len(act["attempts"]) == 1
         assert act["attempts"][0]["attempt_id"] == att_id
-        assert act["attempts"][0]["attempt_number"] == 1
+        assert int(act["attempts"][0]["attempt_number"]) == 1
         assert act["attempts"][0]["result"] == "SUCCESS"
         assert act["outcome"] is not None
         assert act["outcome"]["outcome_id"] == out_id
@@ -212,6 +215,24 @@ def test_d8_historical_chain_and_reproduction(client: TestClient, db_session: Se
         assert db_session.query(RecommendationModel).count() == recs_count
         assert db_session.query(HumanDecisionModel).count() == decs_count
         assert db_session.query(OperationalActionModel).count() == acts_count
+
+        # Test 7: Diagnostic Authorization (Negative Test)
+        # Ordinary user should not see diagnostic payload, but status should remain NOT_REPRODUCIBLE
+        app.dependency_overrides[get_current_user] = mock_get_ordinary_user
+        
+        # We test with the missing mapping state from Test 6
+        rec_record.mapping_version = "V-MISSING"
+        db_session.commit()
+        resp_ordinary = client.get(f"/api/v1/history/recommendations/{rec_id}/reproduction")
+        assert resp_ordinary.status_code == 200
+        ordinary_json = resp_ordinary.json()
+        assert ordinary_json["status"] == "NOT_REPRODUCIBLE"
+        assert ordinary_json["diagnostic"] is None
+
+        # Restore dependencies
+        app.dependency_overrides[get_current_user] = mock_get_current_user
+        rec_record.mapping_version = "V1"
+        db_session.commit()
 
     finally:
         db_session.query(OperationalOutcomeModel).filter_by(outcome_id=out_id).delete()
