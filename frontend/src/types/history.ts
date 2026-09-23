@@ -62,7 +62,7 @@ export interface HistoricalContextResponse {
 }
 
 export interface ReproductionResult {
-    status: "EXACT_MATCH" | "DIVERGENT" | "NOT_REPRODUCIBLE";
+    status: "MATCH" | "MISMATCH" | "NOT_REPRODUCIBLE";
     recommendation_id: string;
     original: any | null;
     reproduced: any | null;
