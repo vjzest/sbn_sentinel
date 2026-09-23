@@ -23,7 +23,9 @@ export const HistoricalBindings: React.FC<HistoricalBindingsProps> = ({ bindings
                     ) : (
                         <ul className="text-xs text-white/80 list-disc list-inside space-y-1">
                             {bindings.evidence_refs.map((e, idx) => (
-                                <li key={idx} className="font-mono text-emerald-200/80 truncate" title={e.evidence_id}>{e.evidence_id}</li>
+                                <li key={idx} className="font-mono text-emerald-200/80 truncate" title={e.version ? `${e.evidence_id} / REV-${e.version}` : e.evidence_id}>
+                                    {e.version ? `${e.evidence_id} / REV-${e.version}` : e.evidence_id}
+                                </li>
                             ))}
                         </ul>
                     )}
