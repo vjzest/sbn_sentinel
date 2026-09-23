@@ -93,6 +93,9 @@ def get_reproduction(
     }
 
 
+from app.models.decision_context_models import ContextEvidenceModel
+
+
 def _empty_bindings():
     return {
         "evidence_refs": [],
@@ -106,8 +109,13 @@ def _empty_bindings():
 
 
 def _build_historical_lifecycle(rec: RecommendationModel, db: Session) -> Dict[str, Any]:
-    # Event / Evidence
-    event = db.query(OperationalEventModel).filter(OperationalEventModel.id == rec.journey_id).first()
+    # Event / Evidence (D4 Persisted Context instead of OperationalEventModel)
+    decision_context_id = rec.decision_context_id
+    evidence_refs = []
+    if decision_context_id:
+        evidence_records = db.query(ContextEvidenceModel).filter(ContextEvidenceModel.context_id == decision_context_id).all()
+        for ev in evidence_records:
+            evidence_refs.append({"evidence_id": ev.id, "version": None})
 
     # Policy / Rule evaluations
     evals = []
@@ -142,38 +150,39 @@ def _build_historical_lifecycle(rec: RecommendationModel, db: Session) -> Dict[s
     decisions = db.query(HumanDecisionModel).filter(HumanDecisionModel.recommendation_id == rec.recommendation_id).all()
     for d in decisions:
         decisions_out.append({
-            "decision_id": d.id,
+            "decision_id": d.decision_id,
             "decision_type": d.decision_type,
             "status": d.status
         })
 
     # Actions
     actions_out = []
-    # Find actions linked to this decision/recommendation
-    # Usually ActionModel has a decision_record_id
     for d in decisions:
-        actions = db.query(OperationalActionModel).filter(OperationalActionModel.decision_id == d.id).all()
+        actions = db.query(OperationalActionModel).filter(OperationalActionModel.authorization_reference == d.decision_id).all()
         for a in actions:
             attempts_out = []
-            attempts = db.query(ExecutionAttemptModel).filter(ExecutionAttemptModel.action_id == a.id).all()
+            attempts = db.query(ExecutionAttemptModel).filter(ExecutionAttemptModel.action_id == a.action_id).all()
             for att in attempts:
                 attempts_out.append({
-                    "attempt_id": att.id,
+                    "attempt_id": att.attempt_id,
                     "attempt_number": att.attempt_number,
                     "result": att.result
                 })
 
             outcome_out = None
-            outcome = db.query(OperationalOutcomeModel).filter(OperationalOutcomeModel.action_id == a.id).first()
+            outcome = db.query(OperationalOutcomeModel).filter(OperationalOutcomeModel.action_id == a.action_id).first()
             if outcome:
                 outcome_out = {
-                    "outcome_id": outcome.id,
+                    "outcome_id": outcome.outcome_id,
                     "confirmation_state": outcome.confirmation_state,
                     "resolution_state": outcome.resolution_state
                 }
 
             actions_out.append({
-                "action_id": a.id,
+                "action_id": a.action_id,
+                "action_type": a.action_type,
+                "status": a.status,
+                "current_result": a.current_result,
                 "attempts": attempts_out,
                 "outcome": outcome_out
             })
@@ -186,8 +195,8 @@ def _build_historical_lifecycle(rec: RecommendationModel, db: Session) -> Dict[s
             "mode": "historical"
         },
         "bindings": {
-            "evidence_refs": [{"evidence_id": event.evidence_id, "version": None}] if event and getattr(event, 'evidence_id', None) else [],
-            "decision_context_id": event.context_id if event and getattr(event, 'context_id', None) else None,
+            "evidence_refs": evidence_refs,
+            "decision_context_id": decision_context_id,
             "policy": policy,
             "rule_evaluations": evals,
             "recommendations": recs_out,

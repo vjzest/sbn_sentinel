@@ -73,6 +73,13 @@ jobs:
       run: |
         pytest tests/integration/test_d7_runtime_status.py -v
 
+    - name: SDS-D8 Verification
+      env:
+        SECRET_KEY: "test-secret-key-for-ci"
+        PYTHONPATH: "src/runtime"
+      run: |
+        pytest tests/integration/test_d8_history_reproducibility.py -v
+
   frontend-quality:
     name: Frontend Quality Assurance
     runs-on: ubuntu-latest

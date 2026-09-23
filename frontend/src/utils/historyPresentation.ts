@@ -22,8 +22,8 @@ export function technicalStateBadge(state: TechnicalState): string {
 
 export function reproductionStatusLabel(status: ReproductionResult['status']): string {
     const MAP: Record<string, string> = {
-        EXACT_MATCH: 'Exact Match',
-        DIVERGENT: 'Divergent Result',
+        MATCH: 'Exact Match',
+        MISMATCH: 'Mismatch',
         NOT_REPRODUCIBLE: 'Not Reproducible',
     };
     return MAP[status] ?? 'Unknown Status';
@@ -31,8 +31,8 @@ export function reproductionStatusLabel(status: ReproductionResult['status']): s
 
 export function reproductionStatusBadge(status: ReproductionResult['status']): string {
     switch (status) {
-        case 'EXACT_MATCH': return 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30';
-        case 'DIVERGENT': return 'bg-amber-500/20 text-amber-400 border-amber-500/30';
+        case 'MATCH': return 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30';
+        case 'MISMATCH': return 'bg-amber-500/20 text-amber-400 border-amber-500/30';
         case 'NOT_REPRODUCIBLE': return 'bg-red-500/20 text-red-400 border-red-500/30';
         default: return 'bg-white/5 text-white/40 border-white/10';
     }

@@ -88,7 +88,7 @@ export const HistoricalTraceSection: React.FC<HistoricalTraceSectionProps> = ({ 
                         <div className="space-y-4 mt-6">
                             <ReproductionStatus result={reproductionResult} />
                             
-                            {reproductionResult.status === 'DIVERGENT' && reproductionResult.differences && (
+                            {reproductionResult.status === 'MISMATCH' && reproductionResult.differences && (
                                 <ReproductionDifference differences={reproductionResult.differences} />
                             )}
 
