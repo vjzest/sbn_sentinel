@@ -26,7 +26,7 @@ export const AuditTimeline: React.FC<AuditTimelineProps> = ({ bindings }) => {
                         <div className="mt-2 space-y-2">
                             {bindings.evidence_refs.map(e => (
                                 <div key={e.evidence_id} className="bg-black/20 border border-white/5 p-2 rounded-lg text-xs text-blue-200/80 font-mono shadow-inner hover:bg-black/40 transition-colors">
-                                    {e.evidence_id}
+                                    {e.version ? `${e.evidence_id} / REV-${e.version}` : e.evidence_id}
                                 </div>
                             ))}
                         </div>
@@ -90,8 +90,45 @@ export const AuditTimeline: React.FC<AuditTimelineProps> = ({ bindings }) => {
                             {bindings.actions.map(a => (
                                 <div key={a.action_id} className="bg-black/20 border border-white/5 p-3 rounded-lg text-xs text-white/80 shadow-inner hover:bg-black/40 transition-colors flex flex-col gap-1">
                                     <div className="font-mono text-sky-300 font-medium">{a.action_type} <span className="text-white/60">- {a.status}</span></div>
+                                    {a.current_result && <div className="text-white/50 text-[10px]">Result: {a.current_result}</div>}
                                 </div>
                             ))}
+                        </div>
+                    </div>
+                )}
+
+                {/* 6. Execution Attempts */}
+                {bindings.actions.some(a => a.attempts && a.attempts.length > 0) && (
+                    <div className="relative pl-8 group/item">
+                        <div className="absolute w-4 h-4 bg-cyan-500 rounded-full -left-[9px] top-1 border-4 border-[#12121A] shadow-[0_0_10px_rgba(6,182,212,0.5)] transition-transform group-hover/item:scale-125"></div>
+                        <h4 className="text-sm font-semibold text-white tracking-wide">Execution Attempt(s)</h4>
+                        <div className="mt-2 space-y-2">
+                            {bindings.actions.flatMap(a => (a.attempts || []).map(att => (
+                                <div key={att.attempt_id} className="bg-black/20 border border-white/5 p-3 rounded-lg text-xs text-white/80 shadow-inner hover:bg-black/40 transition-colors flex flex-col gap-1">
+                                    <div className="font-mono text-cyan-300 font-medium">
+                                        Attempt {att.attempt_number ?? 1}: <span className="text-white/80">{att.result}</span>
+                                    </div>
+                                    <div className="text-white/40 text-[10px] font-mono">{att.attempt_id}</div>
+                                </div>
+                            )))}
+                        </div>
+                    </div>
+                )}
+
+                {/* 7. Outcome */}
+                {bindings.actions.some(a => a.outcome) && (
+                    <div className="relative pl-8 group/item">
+                        <div className="absolute w-4 h-4 bg-teal-500 rounded-full -left-[9px] top-1 border-4 border-[#12121A] shadow-[0_0_10px_rgba(20,184,166,0.5)] transition-transform group-hover/item:scale-125"></div>
+                        <h4 className="text-sm font-semibold text-white tracking-wide">Outcome</h4>
+                        <div className="mt-2 space-y-2">
+                            {bindings.actions.map(a => a.outcome ? (
+                                <div key={a.outcome.outcome_id} className="bg-black/20 border border-white/5 p-3 rounded-lg text-xs text-white/80 shadow-inner hover:bg-black/40 transition-colors flex flex-col gap-1">
+                                    <div className="font-mono text-teal-300 font-medium">
+                                        {a.outcome.confirmation_state} / {a.outcome.resolution_state}
+                                    </div>
+                                    <div className="text-white/40 text-[10px] font-mono">{a.outcome.outcome_id}</div>
+                                </div>
+                            ) : null)}
                         </div>
                     </div>
                 )}

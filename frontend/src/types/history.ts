@@ -30,11 +30,25 @@ export interface DecisionRef {
     timestamp: string | null;
 }
 
+export interface HistoricalAttemptRef {
+    attempt_id: string;
+    attempt_number: number | null;
+    result: string;
+}
+
+export interface HistoricalOutcomeRef {
+    outcome_id: string;
+    confirmation_state: string;
+    resolution_state: string;
+}
+
 export interface ActionRef {
     action_id: string;
     action_type: string;
     status: string;
     current_result: string | null;
+    attempts: HistoricalAttemptRef[];
+    outcome: HistoricalOutcomeRef | null;
 }
 
 export interface HistoricalBindings {

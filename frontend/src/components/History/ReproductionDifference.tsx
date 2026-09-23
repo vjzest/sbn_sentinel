@@ -1,5 +1,4 @@
 import React from 'react';
-import { ReproductionResult } from '../../types/history';
 
 interface ReproductionDifferenceProps {
     differences: any[];

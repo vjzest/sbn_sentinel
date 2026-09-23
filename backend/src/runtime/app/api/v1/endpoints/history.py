@@ -14,6 +14,7 @@ from app.models.governance_storage import (
     ExecutionAttemptModel,
     OperationalOutcomeModel
 )
+from app.models.evidence import EvidenceModel
 from app.models.decision_context_models import ContextEvidenceModel
 from app.services.reconstruction_engine import reconstruction_engine
 
@@ -112,7 +113,13 @@ def _build_historical_lifecycle(rec: RecommendationModel, db: Session) -> Dict[s
     if decision_context_id:
         evidence_records = db.query(ContextEvidenceModel).filter(ContextEvidenceModel.context_id == decision_context_id).all()
         for ev in evidence_records:
-            evidence_refs.append({"evidence_id": ev.id, "version": None})
+            evidence = db.query(EvidenceModel).filter(
+                EvidenceModel.evidence_id == ev.id
+            ).first()
+            evidence_refs.append({
+                "evidence_id": ev.id,
+                "version": str(evidence.version) if evidence and evidence.version is not None else None
+            })
 
     # Policy / Rule evaluations
     evals = []
@@ -139,7 +146,7 @@ def _build_historical_lifecycle(rec: RecommendationModel, db: Session) -> Dict[s
         "mapping_id": rec.mapping_id,
         "mapping_version": rec.mapping_version,
         "status": rec.status,
-        "generated_at": rec.generated_at + "Z" if rec.generated_at else None
+        "generated_at": rec.generated_at + "Z" if (rec.generated_at and not rec.generated_at.endswith("Z")) else rec.generated_at
     }]
 
     # Decisions
@@ -148,8 +155,10 @@ def _build_historical_lifecycle(rec: RecommendationModel, db: Session) -> Dict[s
     for d in decisions:
         decisions_out.append({
             "decision_id": d.decision_id,
+            "actor_id": d.actor_id,
             "decision_type": d.decision_type,
-            "status": d.status
+            "status": d.status,
+            "timestamp": d.decision_timestamp,
         })
 
     # Actions
@@ -184,6 +193,11 @@ def _build_historical_lifecycle(rec: RecommendationModel, db: Session) -> Dict[s
                 "outcome": outcome_out
             })
 
+    # Normal complete historical chain returns "valid", orphaned if rule_eval missing
+    technical_state = "valid"
+    if not rec.rule_evaluation_id or not evals:
+        technical_state = "orphaned"
+
     return {
         "anchor": {
             "object_type": "recommendation",
@@ -200,5 +214,5 @@ def _build_historical_lifecycle(rec: RecommendationModel, db: Session) -> Dict[s
             "decisions": decisions_out,
             "actions": actions_out
         },
-        "technical_state": "ready"
+        "technical_state": technical_state
     }
