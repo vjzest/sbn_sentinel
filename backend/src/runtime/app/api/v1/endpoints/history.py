@@ -14,7 +14,7 @@ from app.models.governance_storage import (
     ExecutionAttemptModel,
     OperationalOutcomeModel
 )
-from app.models.event import OperationalEventModel
+from app.models.decision_context_models import ContextEvidenceModel
 from app.services.reconstruction_engine import reconstruction_engine
 
 router = APIRouter()
@@ -91,9 +91,6 @@ def get_reproduction(
             "missing_dependency": result.missing_dependency
         } if result.diagnostic_code else None
     }
-
-
-from app.models.decision_context_models import ContextEvidenceModel
 
 
 def _empty_bindings():
