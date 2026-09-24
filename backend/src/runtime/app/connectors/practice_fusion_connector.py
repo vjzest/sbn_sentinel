@@ -1,11 +1,10 @@
 import httpx
 import time
-import uuid
-import json
 from typing import Dict, Any, List
 # import jwt  # Requires PyJWT
 
 from .base_connector import BaseConnector, ConnectorException
+
 
 class PracticeFusionConnector(BaseConnector):
     """
@@ -31,7 +30,7 @@ class PracticeFusionConnector(BaseConnector):
         Generates a signed JWT client assertion using the private key.
         In a real environment, this uses PyJWT.
         """
-        # For V1 implementation without PyJWT installed globally, 
+        # For V1 implementation without PyJWT installed globally,
         # this acts as the signature mock. In production:
         # return jwt.encode(payload, self.private_key, algorithm="RS384", headers={"kid": "..."})
         return "mocked_jwt_assertion_string"
@@ -173,6 +172,6 @@ class PracticeFusionConnector(BaseConnector):
             canonical["patient_id"] = resource_id
             canonical["patient_name"] = patient_name
 
-        # Explicitly stripping out 'raw_source_data' containing full PHI 
+        # Explicitly stripping out 'raw_source_data' containing full PHI
         # to prevent pipeline leakage, aligning with D1-D8 data boundaries.
         return canonical
