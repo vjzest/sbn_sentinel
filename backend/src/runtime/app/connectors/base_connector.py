@@ -107,11 +107,8 @@ class BaseConnector(ABC):
                 failed_count += 1
 
         # Push to ingress
-        try:
-            from app.services.ingress_service import canonical_ingress
-            await canonical_ingress.submit_batch(self.connector_id, canonical_results)
-        except ImportError:
-            self.logger.warning("canonical_ingress not implemented yet, just returning results")
+        from app.services.ingress_service import canonical_ingress
+        await canonical_ingress.submit_batch(self.connector_id, canonical_results)
 
         duration_ms = (time.time() - start_time) * 1000
 
