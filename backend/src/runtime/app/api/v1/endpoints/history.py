@@ -79,7 +79,7 @@ def get_reproduction(
     # Call reconstruction engine
     result = reconstruction_engine.reproduce_decision(recommendation_id)
 
-    is_authorized_diagnostic = current_user.role in [UserRole.SYSTEM_ADMINISTRATOR.value, "Developer"]
+    is_authorized_diagnostic = current_user.role == UserRole.SYSTEM_ADMINISTRATOR.value
 
     # Return as dict
     return {
