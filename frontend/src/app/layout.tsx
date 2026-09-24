@@ -13,13 +13,19 @@ export const metadata: Metadata = {
 
 import { ErrorScreen } from '@/components/CommandCenter/ErrorScreen';
 
+// SDS-D9: Localization/RTL readiness contract
+const uiLocale = {
+  locale: process.env.NEXT_PUBLIC_LOCALE || 'en',
+  dir: (process.env.NEXT_PUBLIC_DIR || 'ltr') as 'ltr' | 'rtl'
+};
+
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="dark">
+    <html lang={uiLocale.locale} dir={uiLocale.dir} className="dark">
       <body className={`${inter.className} antialiased bg-[var(--color-canvas)] text-[var(--color-text-primary)]`}>
         <StoreProvider>
           <ErrorScreen>

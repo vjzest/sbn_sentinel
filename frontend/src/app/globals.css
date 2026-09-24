@@ -73,26 +73,10 @@
 /* =============================================
    DARK MODE (default): rich dark purple — no filter needed
    ============================================= */
-html.dark {
+html.dark, html:not(.dark) {
+  /* Light mode is explicitly UNSUPPORTED in V1 (D9) to prevent contrast violations from CSS inversion. */
   filter: none;
-  transition: filter 0.5s ease;
-}
-
-/* =============================================
-   LIGHT MODE: bright clinical white theme
-   Strong invert so the switch is clearly visible
-   ============================================= */
-html:not(.dark) {
-  filter: invert(0.93) hue-rotate(180deg) brightness(1.05) saturate(0.9);
-  transition: filter 0.5s ease;
-}
-
-/* Re-invert images & avatars so they look correct in light mode */
-html:not(.dark) img,
-html:not(.dark) video,
-html:not(.dark) canvas,
-html:not(.dark) svg image {
-  filter: invert(1) hue-rotate(180deg);
+  transition: none;
 }
 
 @theme {
