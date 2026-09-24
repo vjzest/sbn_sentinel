@@ -19,7 +19,7 @@ export const GovernedWorkspace: React.FC<GovernedWorkspaceProps> = ({
   contextPanels
 }) => {
   return (
-    <div className="flex flex-col h-full bg-[#120524] rounded-[24px] border border-white/10 overflow-hidden shadow-[0_20px_50px_rgba(46,16,85,0.3)] animate-in fade-in duration-300 relative">
+    <div className="flex flex-col h-full bg-[var(--color-surface)] rounded-[24px] border border-white/10 overflow-hidden shadow-2xl animate-in fade-in duration-300 relative">
       {/* Workspace Header */}
       <div className="flex flex-wrap items-center justify-between p-4 px-6 border-b border-white/10 bg-white/5 shrink-0 gap-4">
         <ContextBreadcrumbs context={context} onNavigateUp={onNavigateUp} />
@@ -27,7 +27,7 @@ export const GovernedWorkspace: React.FC<GovernedWorkspaceProps> = ({
         {onClose && (
           <button
             onClick={onClose}
-            className="w-8 h-8 rounded-full hover:bg-white/10 flex items-center justify-center transition-colors cursor-pointer text-white/60 hover:text-white ml-auto focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
+            className="w-8 h-8 rounded-full hover:bg-white/10 flex items-center justify-center transition-colors cursor-pointer text-white/60 hover:text-white ms-auto focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
             aria-label="Close Workspace"
           >
             <X className="w-4 h-4" />
@@ -38,7 +38,7 @@ export const GovernedWorkspace: React.FC<GovernedWorkspaceProps> = ({
       {/* Workspace Body - Responsive Layout */}
       <div className="flex-1 overflow-hidden flex flex-col lg:flex-row">
         {/* Primary Content (Level 1) */}
-        <div className={`flex-1 overflow-y-auto custom-scrollbar p-6 ${contextPanels ? 'lg:border-r lg:border-white/10' : ''}`}>
+        <div className={`flex-1 overflow-y-auto custom-scrollbar p-6 ${contextPanels ? 'lg:border-e lg:border-white/10' : ''}`}>
           {primaryContent}
         </div>
 
