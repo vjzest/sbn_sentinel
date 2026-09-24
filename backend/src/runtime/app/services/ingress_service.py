@@ -1,8 +1,8 @@
 import logging
-import uuid
 from typing import Dict, Any, List
 
 logger = logging.getLogger(__name__)
+
 
 class CanonicalIngressService:
     """
@@ -38,5 +38,6 @@ class CanonicalIngressService:
             "processed": len(records),
             "connector_id": connector_id
         }
+
 
 canonical_ingress = CanonicalIngressService()
