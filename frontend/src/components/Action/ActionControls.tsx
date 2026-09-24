@@ -57,26 +57,34 @@ export const CreateActionControls: React.FC<CreateControlsProps> = ({ decisionId
   return (
     <div className="space-y-2 pt-2 border-t border-white/10">
       <p className="text-[10px] font-bold text-white/50 uppercase tracking-widest">Create New Action</p>
-      <select
-        value={selectedType}
-        onChange={e => setSelectedType(e.target.value)}
-        disabled={inflight}
-        className="w-full bg-black/40 border border-white/10 rounded-[8px] text-xs text-white px-3 py-1.5 outline-none focus:border-violet-500/50 disabled:opacity-50"
-      >
-        {creation.allowed_action_types.map(t => (
-          <option key={t} value={t}>{actionTypeLabel(t)}</option>
-        ))}
-      </select>
-      <select
-        value={targetRef}
-        onChange={e => setTargetRef(e.target.value)}
-        disabled={inflight}
-        className="w-full bg-black/40 border border-white/10 rounded-[8px] text-xs text-white px-3 py-1.5 outline-none focus:border-violet-500/50 disabled:opacity-50"
-      >
-        {creation.permitted_targets.map(t => (
-          <option key={t.target_id} value={t.target_id}>{t.label}</option>
-        ))}
-      </select>
+      <label className="block space-y-1">
+        <span className="sr-only">Action Type</span>
+        <select
+          value={selectedType}
+          onChange={e => setSelectedType(e.target.value)}
+          disabled={inflight}
+          className="w-full bg-black/40 border border-white/10 rounded-[8px] text-xs text-white px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] focus:border-transparent disabled:opacity-50"
+          aria-label="Select action type"
+        >
+          {creation.allowed_action_types.map(t => (
+            <option key={t} value={t}>{actionTypeLabel(t)}</option>
+          ))}
+        </select>
+      </label>
+      <label className="block space-y-1 mt-2">
+        <span className="sr-only">Action Target</span>
+        <select
+          value={targetRef}
+          onChange={e => setTargetRef(e.target.value)}
+          disabled={inflight}
+          className="w-full bg-black/40 border border-white/10 rounded-[8px] text-xs text-white px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] focus:border-transparent disabled:opacity-50"
+          aria-label="Select action target"
+        >
+          {creation.permitted_targets.map(t => (
+            <option key={t.target_id} value={t.target_id}>{t.label}</option>
+          ))}
+        </select>
+      </label>
       {error && (
         <div className="flex items-center gap-1.5 text-[11px] text-red-400">
           <AlertTriangle className="w-3.5 h-3.5" />
@@ -86,7 +94,7 @@ export const CreateActionControls: React.FC<CreateControlsProps> = ({ decisionId
       <button
         onClick={handleCreate}
         disabled={inflight || !selectedType || !targetRef.trim()}
-        className="w-full flex items-center justify-center gap-2 bg-violet-600/80 hover:bg-violet-600 text-white text-xs font-bold px-4 py-2 rounded-[10px] transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+        className="w-full flex items-center justify-center gap-2 bg-violet-600/80 hover:bg-violet-600 text-white text-xs font-bold px-4 py-2 rounded-[10px] transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] focus:ring-offset-1 focus:ring-offset-[#0B0E14]"
       >
         {inflight ? <Loader className="w-3.5 h-3.5 animate-spin" /> : <Plus className="w-3.5 h-3.5" />}
         {inflight ? 'Creating…' : 'Create Action'}
@@ -137,7 +145,7 @@ export const ExecuteActionControls: React.FC<ExecuteControlsProps> = ({ action, 
       <button
         onClick={handleExecute}
         disabled={inflight}
-        className="w-full flex items-center justify-center gap-2 bg-emerald-600/80 hover:bg-emerald-600 text-white text-xs font-bold px-4 py-2 rounded-[10px] transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+        className="w-full flex items-center justify-center gap-2 bg-emerald-600/80 hover:bg-emerald-600 text-white text-xs font-bold px-4 py-2 rounded-[10px] transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] focus:ring-offset-1 focus:ring-offset-[#0B0E14]"
       >
         {inflight ? <Loader className="w-3.5 h-3.5 animate-spin" /> : <Icon className="w-3.5 h-3.5" />}
         {inflight ? 'Executing…' : label}
