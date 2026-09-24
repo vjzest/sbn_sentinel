@@ -14,21 +14,7 @@ import { Play, Plus, RefreshCw, Loader, AlertTriangle } from 'lucide-react';
 import type { ActionCreationStateDTO, ActionItemDTO } from '@/types/actionLifecycle';
 import { createAction, executeAction } from '@/utils/actionCommands';
 import { actionTypeLabel } from '@/utils/actionPresentation';
-
-// Arabic NOT IMPLEMENTED IN V1
-const LOCALES = {
-  en: {
-    createAction: "Create Action",
-    executeAction: "Execute Action",
-    retryExecution: "Retry Execution",
-    selectActionType: "Select action type",
-    selectActionTarget: "Select action target",
-    creating: "Creating…",
-    executing: "Executing…",
-    createNewAction: "Create New Action"
-  }
-};
-const t = LOCALES.en;
+import { t } from '@/localization/messages';
 
 // ---------------------------------------------------------------------------
 // Create Action Controls

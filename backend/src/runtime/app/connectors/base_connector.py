@@ -88,6 +88,7 @@ class BaseConnector(ABC):
         failed_count = 0
 
         # Process each record
+        canonical_results = []
         for record in raw_records:
             try:
                 # 3. Validate
@@ -98,19 +99,20 @@ class BaseConnector(ABC):
                 # 4. Transform
                 canonical = await self.transform_to_canonical(record)
 
-                # 5. Submit to Pipeline (SES-002 / SES-006)
-                from app.services.processing_orchestrator import processing_orchestrator
-                processing_orchestrator.create_event(
-                    event_type=canonical.get("event_type", "Unknown"),
-                    source=self.name,
-                    raw_payload={"detail": canonical.get("detail", str(record)), **record},
-                    priority="Normal",
-                    correlation_id=str(uuid.uuid4())
-                )
+                # 5. Submit to Canonical Ingress (Evidence Input)
+                # Instead of creating an operational event automatically, we push to Canonical Ingress
+                canonical_results.append(canonical)
                 processed_count += 1
             except Exception as e:
                 self.logger.error(f"[{self.connector_id}] Failed to process record: {e}")
                 failed_count += 1
+
+        # Push to ingress
+        try:
+            from app.services.ingress_service import canonical_ingress
+            await canonical_ingress.submit_batch(self.connector_id, canonical_results)
+        except ImportError:
+            self.logger.warning("canonical_ingress not implemented yet, just returning results")
 
         duration_ms = (time.time() - start_time) * 1000
 
