@@ -25,7 +25,7 @@ export const AuditTimeline: React.FC<AuditTimelineProps> = ({ bindings }) => {
                         <h4 className="text-sm font-semibold text-white tracking-wide">Evidence Received</h4>
                         <div className="mt-2 space-y-2">
                             {bindings.evidence_refs.map(e => (
-                                <div key={e.evidence_id} className="bg-black/20 border border-white/5 p-2 rounded-lg text-xs text-blue-200/80 font-mono shadow-inner hover:bg-black/40 transition-colors">
+                                <div key={e.evidence_id} className="bg-black/20 border border-white/5 p-2 rounded-lg text-xs text-blue-200/80 font-mono shadow-inner hover:bg-black/40 transition-colors break-all">
                                     {e.version ? `${e.evidence_id} / REV-${e.version}` : e.evidence_id}
                                 </div>
                             ))}
@@ -41,7 +41,7 @@ export const AuditTimeline: React.FC<AuditTimelineProps> = ({ bindings }) => {
                         <div className="mt-2 space-y-2">
                             {bindings.rule_evaluations.map(r => (
                                 <div key={r.evaluation_id} className="bg-black/20 border border-white/5 p-3 rounded-lg text-xs text-white/80 shadow-inner hover:bg-black/40 transition-colors flex flex-col gap-1">
-                                    <div className="font-mono text-purple-300 font-medium">{r.rule_id} <span className="text-white/40">(v{r.rule_version})</span></div>
+                                    <div className="font-mono text-purple-300 font-medium break-all">{r.rule_id} <span className="text-white/40">(v{r.rule_version})</span></div>
                                     <div className="text-white/40 text-[10px] uppercase tracking-widest">{formatDateTime(r.evaluated_at)}</div>
                                 </div>
                             ))}
@@ -57,7 +57,7 @@ export const AuditTimeline: React.FC<AuditTimelineProps> = ({ bindings }) => {
                         <div className="mt-2 space-y-2">
                             {bindings.recommendations.map(r => (
                                 <div key={r.recommendation_id} className="bg-black/20 border border-white/5 p-3 rounded-lg text-xs text-white/80 shadow-inner hover:bg-black/40 transition-colors flex flex-col gap-1">
-                                    <div className="font-mono text-emerald-300 font-medium">{r.mapping_id} <span className="text-white/40">(v{r.mapping_version})</span></div>
+                                    <div className="font-mono text-emerald-300 font-medium break-all">{r.mapping_id} <span className="text-white/40">(v{r.mapping_version})</span></div>
                                     <div className="text-white/40 text-[10px] uppercase tracking-widest">{formatDateTime(r.generated_at)}</div>
                                 </div>
                             ))}
@@ -89,8 +89,8 @@ export const AuditTimeline: React.FC<AuditTimelineProps> = ({ bindings }) => {
                         <div className="mt-2 space-y-2">
                             {bindings.actions.map(a => (
                                 <div key={a.action_id} className="bg-black/20 border border-white/5 p-3 rounded-lg text-xs text-white/80 shadow-inner hover:bg-black/40 transition-colors flex flex-col gap-1">
-                                    <div className="font-mono text-sky-300 font-medium">{a.action_type} <span className="text-white/60">- {a.status}</span></div>
-                                    {a.current_result && <div className="text-white/50 text-[10px]">Result: {a.current_result}</div>}
+                                    <div className="font-mono text-sky-300 font-medium break-all">{a.action_type} <span className="text-white/60">- {a.status}</span></div>
+                                    {a.current_result && <div className="text-white/50 text-[10px] break-all">Result: {a.current_result}</div>}
                                 </div>
                             ))}
                         </div>
@@ -108,7 +108,7 @@ export const AuditTimeline: React.FC<AuditTimelineProps> = ({ bindings }) => {
                                     <div className="font-mono text-cyan-300 font-medium">
                                         Attempt {att.attempt_number ?? 1}: <span className="text-white/80">{att.result}</span>
                                     </div>
-                                    <div className="text-white/40 text-[10px] font-mono">{att.attempt_id}</div>
+                                    <div className="text-white/40 text-[10px] font-mono break-all">{att.attempt_id}</div>
                                 </div>
                             )))}
                         </div>
@@ -126,7 +126,7 @@ export const AuditTimeline: React.FC<AuditTimelineProps> = ({ bindings }) => {
                                     <div className="font-mono text-teal-300 font-medium">
                                         {a.outcome.confirmation_state} / {a.outcome.resolution_state}
                                     </div>
-                                    <div className="text-white/40 text-[10px] font-mono">{a.outcome.outcome_id}</div>
+                                    <div className="text-white/40 text-[10px] font-mono break-all">{a.outcome.outcome_id}</div>
                                 </div>
                             ) : null)}
                         </div>
