@@ -39,6 +39,17 @@ class Settings(BaseSettings):
     BUILD_ID: str = "unknown"
     BOOTSTRAP_ADMIN_PASSWORD: str = "SBNAdmin@2024"  # Default for dev
 
+    # JWT / JWKS — System App (SMART Backend Services)
+    # JWT_PRIVATE_KEY must be a PEM-encoded RSA private key.
+    # Never commit a real private key. Set via environment variable in production.
+    JWT_PRIVATE_KEY: str = ""
+    JWT_KEY_ID: str = "sbn-sentinel-key-1"
+    JWT_ALGORITHM: str = "RS384"
+
+    # Runtime database URL — overrides the default SQLite dev URL.
+    # In production set: SQLALCHEMY_DATABASE_URL=postgresql://user:pass@host/db
+    SQLALCHEMY_DATABASE_URL: str = "sqlite:///./sentinel.db"
+
     @model_validator(mode='after')
     def validate_sesr012_config(self) -> 'Settings':
         if self.ENVIRONMENT == "PRODUCTION":
@@ -52,12 +63,20 @@ class Settings(BaseSettings):
             if self.BOOTSTRAP_ADMIN_PASSWORD == "SBNAdmin@2024" or not self.BOOTSTRAP_ADMIN_PASSWORD:
                 raise ValueError(
                     "PRODUCTION_BOOTSTRAP_ERROR: BOOTSTRAP_ADMIN_PASSWORD must be explicitly provided in production and cannot be the default.")
+            # JWT System App key must be configured in production
+            if not self.JWT_PRIVATE_KEY:
+                raise ValueError(
+                    "PRODUCTION_JWT_ERROR: JWT_PRIVATE_KEY must be set in production for SMART System App authentication.")
+            if not self.JWT_KEY_ID:
+                raise ValueError(
+                    "PRODUCTION_JWT_ERROR: JWT_KEY_ID must be set in production.")
         if not self.CLINIC_TIMEZONE:
             raise ValueError("SESR-012 CDI-014 Violation: CLINIC_TIMEZONE is required")
         return self
 
     @property
     def SQLALCHEMY_DATABASE_URI(self) -> str:
+        """Legacy property kept for compatibility. Prefer SQLALCHEMY_DATABASE_URL."""
         return f"postgresql://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}@{self.POSTGRES_SERVER}/{self.POSTGRES_DB}"
 
     class Config:

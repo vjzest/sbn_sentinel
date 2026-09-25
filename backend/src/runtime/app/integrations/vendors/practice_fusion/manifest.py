@@ -45,11 +45,51 @@ class PracticeFusionManifest:
         """Returns minimum-necessary scopes derived from manifest resources."""
         return [rc.scope for rc in self.resources.values()]
 
-    def get_auth_strategy(self, config: Dict[str, Any]) -> AuthStrategy:
-        """Returns configured AuthStrategy with SMART-discovered token endpoint."""
+    def build_auth(self, config: Dict[str, Any], token_endpoint: str) -> AuthStrategy:
+        """
+        Build JwtClientAssertionAuth with a SMART-discovered token_endpoint.
+
+        This is the preferred production factory method.
+        Called inside adapter.sync() AFTER SMART discovery has resolved
+        the token_endpoint. Never requires token_endpoint to be in config
+        before discovery.
+        """
         from app.integrations.auth.jwt_client_assertion import JwtClientAssertionAuth
 
-        is_mock = "mock" in str(config.get("id", ""))
+        is_mock = "mock" in str(config.get("id", "")) or "mock" in str(config.get("base_url", ""))
+
+        client_id = config.get("client_id")
+        private_key = config.get("private_key")
+        key_id = config.get("key_id", "key-1")
+
+        if not client_id and not is_mock:
+            raise ValueError("client_id required for Practice Fusion authentication")
+        if not private_key and not is_mock:
+            raise ValueError("private_key required for Practice Fusion authentication")
+        if not token_endpoint:
+            raise ValueError(
+                "token_endpoint is required. Must be resolved from SMART discovery."
+            )
+
+        return JwtClientAssertionAuth(
+            client_id=client_id or "mock_client",
+            private_key=private_key or "mock_key",
+            key_id=key_id,
+            token_endpoint=token_endpoint,
+            scopes=self.get_minimum_scopes(),
+        )
+
+    def get_auth_strategy(self, config: Dict[str, Any]) -> AuthStrategy:
+        """
+        Legacy factory: returns auth strategy accepting a pre-resolved
+        token_endpoint in config. Used in tests and legacy call sites.
+
+        In production, prefer manifest.build_auth(config, token_endpoint)
+        after SMART discovery.
+        """
+        from app.integrations.auth.jwt_client_assertion import JwtClientAssertionAuth
+
+        is_mock = "mock" in str(config.get("id", "")) or "mock" in str(config.get("base_url", ""))
 
         client_id = config.get("client_id")
         private_key = config.get("private_key")
@@ -77,3 +117,4 @@ class PracticeFusionManifest:
             token_endpoint=token_endpoint,
             scopes=self.get_minimum_scopes(),
         )
+

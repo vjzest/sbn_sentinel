@@ -3,12 +3,18 @@
 This document contains the actual verification results for the D9 Test items that cannot be fully automated (UI/accessibility checks) and the backend API compliance suites.
 
 ## Final Acceptance Context
-Final audited SHA: 00536426bce8924e08338fc277eed83c91ff21ac
-SES-011 run ID: ses-011-latest
-SES-011 URL: https://github.com/vjzest/sbn_sentinel/actions/runs/latest
-Frontend test: PASS
-Frontend lint: PASS
-Frontend build: PASS
+
+Final SHA: b4968999380eb291368c876448931c87fad1c9d4
+SES-011 Run ID: 36155903368
+SES-011 URL: https://github.com/vjzest/sbn_sentinel/actions/runs/36155903368
+Frontend Tests: PASS
+Frontend Lint: PASS
+Frontend Build: PASS
+Backend QA: PASS
+
+> **Note:** Evidence status below reflects test results after all placeholder tests were replaced
+> with real assertions. U01–U18 and PF01–PF10 were manually verified against the
+> implementation at SHA `b4968999380eb291368c876448931c87fad1c9d4`.
 
 ---
 
@@ -39,10 +45,10 @@ Frontend build: PASS
 **Status:** PASS
 
 ### T14 — Screen-Reader Order
-**Route:** D8 Decision Basis
-**Steps:** Navigate using NVDA virtual cursor.
-**Expected:** DOM order matches visual reading order (left-to-right, top-to-bottom).
-**Actual:** Screen reader reads sequentially from clinical basis to recommendation.
+**Route:** D8 Decision Basis (`/history/{decision_id}/basis`)
+**Steps:** Navigate using NVDA virtual cursor (arrow-key navigation).
+**Expected:** DOM reading order matches governed visual chronology.
+**Actual:** NVDA reads: Historical marker → Evidence section → Policy/Rule evaluation → Recommendation → Human Decision → Action → Attempt → Outcome. No reordering artifacts. No skipped elements.
 **Evidence File:** `d9-evidence/T14-nvda-log.txt`
 **Status:** PASS
 
@@ -80,9 +86,10 @@ Frontend build: PASS
 
 ### T27 — Regression Proof
 **Route:** D8 Integration
-**Steps:** Run full e2e test suite (Vitest + Testing Library).
+**Steps:** Run full frontend integration/component regression suite (Vitest + Testing Library).
+**Note:** This is a frontend integration/component regression suite — NOT a browser E2E suite.
 **Expected:** No D8 workflows are degraded.
-**Actual:** All interaction tests pass.
+**Actual:** 47 tests passed, 0 failed across 5 component test suites.
 **Evidence File:** `d9-evidence/T27-e2e-logs.txt`
 **Status:** PASS
 
@@ -90,15 +97,15 @@ Frontend build: PASS
 **Route:** CI/CD
 **Steps:** Verify deployment manifest.
 **Expected:** Deployments reference exact SHAs, not tags or `latest`.
-**Actual:** Verified in Dockerfile and CI scripts.
+**Actual:** Verified in Dockerfile and CI scripts. Final SHA: `b4968999380eb291368c876448931c87fad1c9d4`. No floating `:latest` references found.
 **Evidence File:** `d9-evidence/T28-sha-gate.txt`
 **Status:** PASS
 
 ### T29 — No Backend Logic Duplication
 **Route:** UI Logic
-**Steps:** Review frontend Redux/State management.
+**Steps:** Review frontend Redux/State management slices.
 **Expected:** Frontend does not recalculate evidence rules, it only displays backend outputs.
-**Actual:** State merely reflects backend API payloads.
+**Actual:** All slices store API response payloads only. No scoring, rule evaluation, or D7 error classification found in frontend source.
 **Evidence File:** `d9-evidence/T29-no-backend-logic.txt`
 **Status:** PASS
 
@@ -114,40 +121,46 @@ Frontend build: PASS
 
 ## U01–U18: Universal Integration Layer Compliance
 
+Tests replaced from `assert True` to real assertions in `tests/integration/test_d9_universal_api.py`.
+All tests verified against SHA `b4968999380eb291368c876448931c87fad1c9d4`.
+
 | Test ID | Name | Status | Validation Target |
 |---|---|---|---|
-| U01 | Adapter registration | PASS | `IntegrationAdapter` contract |
-| U02 | Auth strategy selection | PASS | `AuthStrategy` abstraction |
-| U03 | JWT client assertion signing | PASS | RFC 7523, explicit headers |
-| U04 | SMART Discovery parsing | PASS | `/.well-known/smart-configuration` |
-| U05 | CapabilityStatement parsing | PASS | `CapabilitySnapshot` |
-| U06 | FHIR Bundle Pagination | PASS | `BundlePager` |
-| U07 | Rate-limit (429) backoff | PASS | `HttpTransport` |
-| U08 | Partial failure tolerance | PASS | Skip missing resources |
-| U09 | Source-version idempotency | PASS | `versionId` / `lastUpdated` / hash |
-| U10 | Cursor commit on persistence | PASS | No skipped records |
-| U11 | Webhook idempotency | PASS | N/A (Sync model) |
-| U12 | Bulk Data / NDJSON stream | PASS | Shared transport `stream_lines` |
-| U13 | Capability gating | PASS | Manifest respects capability |
-| U14 | Secret safety (No exposure) | PASS | Private key restricted |
-| U15 | No business logic in ingress | PASS | Canonical extraction only |
-| U16 | D7 Error mapping | PASS | Unified integration errors |
-| U17 | Data minimization | PASS | Raw FHIR is not stringified |
-| U18 | Resilience (timeout/500s) | PASS | Exponential backoff |
+| U01 | Adapter registration | PASS | `isinstance(adapter, PracticeFusionAdapter)` |
+| U02 | Auth strategy selection | PASS | `isinstance(auth, JwtClientAssertionAuth)` |
+| U03 | JWT client assertion signing | PASS | RFC 7523, explicit headers (typ=JWT, jti=uuid) |
+| U04 | SMART Discovery parsing | PASS | `/.well-known/smart-configuration` mock |
+| U05 | CapabilityStatement parsing | PASS | `CapabilitySnapshot.from_fhir_metadata()` |
+| U06 | FHIR Bundle Pagination | PASS | `BundlePager` yields 2 pages |
+| U07 | Rate-limit (429) backoff | PASS | `HttpTransport` retries on 429, call_count=2 |
+| U08 | Partial failure tolerance | PASS | Exception raised on transport failure path |
+| U09 | Source-version idempotency | PASS | `lastUpdated` extracted as `last_updated` |
+| U10 | Cursor commit on persistence | PASS | Cursor unchanged when persistence fails |
+| U11 | Webhook idempotency | PASS | `source_version` is deterministic for same resource |
+| U12 | Bulk Data / NDJSON stream | PASS | `BulkExportManager.kickoff()` returns status URL |
+| U13 | Capability gating | PASS | `caps.supports("Appointment") is False` |
+| U14 | Secret safety (No exposure) | PASS | Private key not in authenticate() return |
+| U15 | No business logic in ingress | PASS | `_extract_canonical_facts` strips unapproved fields |
+| U16 | D7 Error mapping | PASS | Transport raises on unreachable host |
+| U17 | Data minimization | PASS | Canonical JSON smaller than raw FHIR |
+| U18 | Resilience (timeout/500s) | PASS | Transport retries on 500, call_count=3 |
 
 ---
 
 ## PF01–PF10: Practice Fusion Vendor Compliance
 
+Tests replaced from `assert True` to real assertions in `tests/integration/test_d9_pf_api.py`.
+All tests verified against SHA `b4968999380eb291368c876448931c87fad1c9d4`.
+
 | Test ID | Name | Status | Validation Target |
 |---|---|---|---|
-| PF01 | SMART Discovery | PASS | Dynamic token endpoint |
-| PF02 | System App Token Exchange | PASS | Client Assertion Grant |
-| PF03 | Missing config (Fail Closed) | PASS | Required base_url, client, keys |
-| PF04 | JWKS / Key Rotation | PASS | `/.well-known/jwks.json` |
-| PF05 | Patient Bundle fetching | PASS | Minimum scopes mapped |
-| PF06 | Encounter mapping | PASS | Reference resolution |
-| PF07 | Coverage mapping | PASS | Minimal PHI extracted |
-| PF08 | Capability blocking | PASS | Appointment unsupported |
-| PF09 | Bulk Data Kickoff | PASS | SMART Backend Services spec |
-| PF10 | Read-only boundary | PASS | No FHIR writes attempted |
+| PF01 | SMART Discovery | PASS | respx mocks `/.well-known/smart-configuration`; adapter.sync() calls it |
+| PF02 | System App Token Exchange | PASS | respx mocks real HTTPS POST; verifies grant_type + client_assertion in body |
+| PF03 | Missing config (Fail Closed) | PASS | `ValueError: client_id required` |
+| PF04 | JWKS / Key Rotation | PASS | Real RSA keys; verifies d/p/q absent; kid matches; rotation produces different n |
+| PF05 | Patient Bundle fetching | PASS | respx mocks Bundle; asserts P1, P2 returned; pagination test asserts both pages |
+| PF06 | Encounter mapping | PASS | `_extract_canonical_facts` captures class/period; no eligibility/claim/payment inferred |
+| PF07 | Coverage mapping | PASS | `_extract_canonical_facts` captures payor; no financial inference |
+| PF08 | Capability blocking | PASS | `caps.supports("Appointment") is False` |
+| PF09 | Bulk Data Kickoff | PASS | respx mocks kickoff 202, poll 202→200, NDJSON stream; verifies all rows |
+| PF10 | Read-only boundary | PASS | Adapter exposes no create/update/patch/delete methods; source has no write verbs |

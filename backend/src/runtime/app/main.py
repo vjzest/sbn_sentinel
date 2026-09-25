@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from app.api.endpoints import jwks
 from starlette.middleware.cors import CORSMiddleware
 
 from app.core.config import settings
@@ -37,7 +38,9 @@ def create_app() -> FastAPI:
         allow_headers=["*"],
     )
 
-    # Mount the v1 API router
+    # Mount JWKS directly on app — public URL is /.well-known/jwks.json (NOT under /api/v1)
+    app.include_router(jwks.router)
+    # Mount the v1 API router under /api/v1
     app.include_router(api_router, prefix=settings.API_V1_STR)
 
     @app.get("/")
