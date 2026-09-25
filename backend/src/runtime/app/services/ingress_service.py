@@ -33,7 +33,7 @@ class CanonicalIngressService:
                 context_type = r.get("context_type", "Unknown")
                 detail = r.get("detail", {})
                 resource_id = detail.get("id", "")
-                
+
                 # Create a stable source key for idempotency
                 source_key_str = f"{connector_id}_{context_type}_{resource_id}_{detail.get('meta', {}).get('lastUpdated', '')}"
                 fact_key = hashlib.sha256(source_key_str.encode()).hexdigest()
@@ -43,13 +43,13 @@ class CanonicalIngressService:
                     EvidenceModel.source_connector == connector_id,
                     EvidenceModel.fact_key == fact_key
                 ).first()
-                
+
                 if existing:
                     continue  # ALREADY_PROCESSED
 
                 import uuid
                 evidence_id = f"evd_{uuid.uuid4().hex}"
-                
+
                 evidence = EvidenceModel(
                     evidence_id=evidence_id,
                     canonical_entity=context_type,
@@ -62,7 +62,7 @@ class CanonicalIngressService:
                 )
                 db.add(evidence)
                 processed += 1
-            
+
             db.commit()
 
         self.logger.info(f"[{connector_id}] Successfully ingested {processed} canonical records.")
@@ -71,5 +71,6 @@ class CanonicalIngressService:
             "processed": processed,
             "connector_id": connector_id
         }
+
 
 canonical_ingress = CanonicalIngressService()

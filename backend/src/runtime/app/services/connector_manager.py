@@ -5,7 +5,6 @@ from datetime import datetime
 from app.db.database import SessionLocal
 from app.models.connector import ConnectorModel
 # Removed static import of PracticeFusionConnector
-from app.core.encryption import decrypt_value
 from app.services.state_transition_engine import sste
 
 logger = logging.getLogger(__name__)
@@ -41,7 +40,7 @@ class ConnectorManager:
 
             config = db_connector.config or {}
             config["id"] = db_connector.id
-            
+
             # Use SecretProvider or secure vault in real implementation
             # For now, rely entirely on the secure config JSON for credentials
             # Do not overload access_token as private_key!

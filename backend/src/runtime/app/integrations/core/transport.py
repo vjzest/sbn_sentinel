@@ -1,19 +1,22 @@
 import httpx
 import asyncio
 import logging
-from typing import Dict, Any, Optional
+from typing import Dict, Any
 
 logger = logging.getLogger(__name__)
+
 
 class RateLimitedException(Exception):
     def __init__(self, retry_after: int):
         self.retry_after = retry_after
         super().__init__(f"Rate limited. Retry after {retry_after}s")
 
+
 class HttpTransport:
     """
     Shared transport layer with exponential backoff, jitter, and rate-limit handling.
     """
+
     def __init__(self, timeout: int = 30):
         self.timeout = timeout
 
@@ -33,27 +36,27 @@ class HttpTransport:
                 attempt += 1
                 try:
                     response = await client.request(method, url, **kwargs)
-                    
+
                     if response.status_code == 429:
                         retry_after = int(response.headers.get("Retry-After", backoff))
                         logger.warning(f"Rate limited. Waiting {retry_after}s.")
                         await asyncio.sleep(retry_after)
                         backoff *= 2
                         continue
-                        
+
                     if response.status_code >= 500:
                         logger.warning(f"Server error {response.status_code}. Retrying...")
                         await asyncio.sleep(backoff)
                         backoff *= 2
                         continue
-                        
+
                     response.raise_for_status()
                     return response
-                    
+
                 except httpx.RequestError as e:
                     if attempt >= max_attempts:
                         raise e
                     await asyncio.sleep(backoff)
                     backoff *= 2
-            
+
             raise Exception("Max retries exceeded")

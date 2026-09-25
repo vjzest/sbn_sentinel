@@ -12,7 +12,6 @@ class IntegrationAdapter(ABC):
     @abstractmethod
     async def get_capability_statement(self) -> Dict[str, Any]:
         """Fetch vendor capability metadata."""
-        pass
 
     @abstractmethod
     async def get_resource(
@@ -21,7 +20,6 @@ class IntegrationAdapter(ABC):
         query_params: Dict[str, Any] = None
     ) -> List[Dict[str, Any]]:
         """Generic resource fetch."""
-        pass
 
 
 class AuthStrategy(ABC):
@@ -32,4 +30,3 @@ class AuthStrategy(ABC):
     @abstractmethod
     async def authenticate(self) -> Dict[str, Any]:
         """Authenticate and return credentials/tokens."""
-        pass

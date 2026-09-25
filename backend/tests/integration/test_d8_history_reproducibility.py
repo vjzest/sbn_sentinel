@@ -1,7 +1,6 @@
 # flake8: noqa: E501
 import uuid
 import pytest
-import json
 from datetime import datetime
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
@@ -23,6 +22,7 @@ from app.services.governance_registry import (
     RecommendationMapping, AuthorityRequirement
 )
 
+
 @pytest.fixture(scope="module")
 def db_session():
     db = SessionLocal()
@@ -31,22 +31,27 @@ def db_session():
     finally:
         db.close()
 
+
 @pytest.fixture(scope="module")
 def client():
     with TestClient(app) as c:
         yield c
 
+
 def mock_get_current_user():
     return User(id=1, email="admin@sbnsentinel.com", role="System Administrator", is_active=True)
 
+
 def mock_get_ordinary_user():
     return User(id=2, email="user@sbnsentinel.com", role="Front Desk", is_active=True)
+
 
 @pytest.fixture
 def override_deps():
     app.dependency_overrides[get_current_user] = mock_get_current_user
     yield
     app.dependency_overrides.clear()
+
 
 def test_d8_historical_chain_and_reproduction(client: TestClient, db_session: Session, override_deps):
     uid = uuid.uuid4().hex[:6]
@@ -72,7 +77,7 @@ def test_d8_historical_chain_and_reproduction(client: TestClient, db_session: Se
     policy_v1 = PolicyVersion(policy_id=pol_id, version="V1", content="V1 Policy", lifecycle_state=LifecycleState.ACTIVE)
     rule_v1 = RuleVersion(rule_id=rule_id, version="V1", logic_description="", lifecycle_state=LifecycleState.ACTIVE, inputs=[], allowed_outputs=[], governing_policy_id=pol_id, governing_policy_version="V1")
     mapping_v1 = RecommendationMapping(mapping_id=map_id, version="V1", applicable_rule_id=rule_id, eligible_result="CONDITION_MET", recommendation_template="Action V1", authority_requirement=AuthorityRequirement.INFORMATIONAL, priority="High", lifecycle_state=LifecycleState.ACTIVE)
-    
+
     governance_registry.register_policy(policy_v1)
     governance_registry.register_rule(rule_v1)
     governance_registry.register_recommendation_mapping(mapping_v1)
@@ -81,7 +86,7 @@ def test_d8_historical_chain_and_reproduction(client: TestClient, db_session: Se
     policy_v2 = PolicyVersion(policy_id=pol_id, version="V2", content="V2 Policy", lifecycle_state=LifecycleState.ACTIVE)
     rule_v2 = RuleVersion(rule_id=rule_id, version="V2", logic_description="", lifecycle_state=LifecycleState.ACTIVE, inputs=[], allowed_outputs=[], governing_policy_id=pol_id, governing_policy_version="V2")
     mapping_v2 = RecommendationMapping(mapping_id=map_id, version="V2", applicable_rule_id=rule_id, eligible_result="CONDITION_MET", recommendation_template="Action V2", authority_requirement=AuthorityRequirement.APPROVAL_REQUIRED, priority="Critical", lifecycle_state=LifecycleState.ACTIVE)
-    
+
     governance_registry.register_policy(policy_v2)
     governance_registry.register_rule(rule_v2)
     governance_registry.register_recommendation_mapping(mapping_v2)
@@ -167,7 +172,7 @@ def test_d8_historical_chain_and_reproduction(client: TestClient, db_session: Se
         rec_record = db_session.query(RecommendationModel).filter_by(recommendation_id=rec_id).first()
         rec_record.content = "Action V-Modified"
         db_session.commit()
-        
+
         resp_mismatch = client.get(f"/api/v1/history/recommendations/{rec_id}/reproduction")
         assert resp_mismatch.status_code == 200
         mismatch = resp_mismatch.json()
@@ -219,7 +224,7 @@ def test_d8_historical_chain_and_reproduction(client: TestClient, db_session: Se
         # Test 7: Diagnostic Authorization (Negative Test)
         # Ordinary user should not see diagnostic payload, but status should remain NOT_REPRODUCIBLE
         app.dependency_overrides[get_current_user] = mock_get_ordinary_user
-        
+
         # We test with the missing mapping state from Test 6
         rec_record.mapping_version = "V-MISSING"
         db_session.commit()

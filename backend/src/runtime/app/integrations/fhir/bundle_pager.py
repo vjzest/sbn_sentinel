@@ -3,10 +3,12 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+
 class BundlePager:
     """
     Handles generic FHIR Bundle pagination using standard 'next' links.
     """
+
     def __init__(self, transport, headers: Dict[str, str]):
         self.transport = transport
         self.headers = headers
@@ -31,22 +33,22 @@ class BundlePager:
             try:
                 response = await self.transport.get(url, headers=self.headers, params=current_params)
                 data = response.json()
-                
+
                 if data.get("resourceType") != "Bundle":
                     yield [data]
                     break
-                    
+
                 entries = data.get("entry", [])
                 resources = [entry.get("resource", {}) for entry in entries if entry.get("resource")]
-                
+
                 if resources:
                     yield resources
-                    
+
                 # Find next page link
                 next_link = next((link.get("url") for link in data.get("link", []) if link.get("relation") == "next"), None)
                 url = next_link
                 current_params = None  # Params are typically embedded in the next link
-                
+
             except Exception as e:
                 logger.error(f"Error paginating FHIR bundle at {url}: {e}")
                 raise e

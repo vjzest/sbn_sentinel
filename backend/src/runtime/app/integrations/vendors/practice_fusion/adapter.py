@@ -19,9 +19,9 @@ class PracticeFusionAdapter(IntegrationAdapter):
         """Fetch vendor capability metadata."""
         from app.integrations.core.transport import HttpTransport
         transport = HttpTransport()
-        
+
         base_url = self.config.get("base_url", "https://api.practicefusion.com/fhir/2")
-        
+
         # Test bypass
         if "mock" in base_url or base_url == "test":
             return {
@@ -30,38 +30,38 @@ class PracticeFusionAdapter(IntegrationAdapter):
                 "Coverage": True,
                 "Appointment": False,
             }
-            
+
         response = await transport.get(f"{base_url}/metadata")
         data = response.json()
-        
+
         capabilities = {}
         for rest in data.get("rest", []):
             for resource in rest.get("resource", []):
                 capabilities[resource.get("type")] = True
-                
+
         return capabilities
 
     async def get_resource(self, resource_type: str, query_params: Dict[str, Any] = None) -> List[Dict[str, Any]]:
         # Simulate fetch using auth
         token_data = await self.auth.authenticate()
-        
+
         from app.integrations.core.transport import HttpTransport
         transport = HttpTransport()
-        
+
         base_url = self.config.get("base_url", "https://api.practicefusion.com/fhir/2")
-        
+
         # Test bypass
         if "mock" in base_url or base_url == "test":
             return [{"id": "123", "resourceType": resource_type, "status": "active"}]
-            
+
         headers = {
             "Authorization": f"Bearer {token_data['access_token']}",
             "Accept": "application/fhir+json"
         }
-        
+
         response = await transport.get(f"{base_url}/{resource_type}", headers=headers, params=query_params)
         data = response.json()
-        
+
         if data.get("resourceType") == "Bundle":
             return [entry.get("resource", {}) for entry in data.get("entry", [])]
         return [data]
@@ -73,7 +73,7 @@ class PracticeFusionAdapter(IntegrationAdapter):
         """
         # Validate capabilities first
         caps = await self.get_capability_statement()
-        
+
         from app.services.cursor_store import cursor_store
         from app.integrations.fhir.bundle_pager import BundlePager
         from app.integrations.core.transport import HttpTransport
@@ -82,13 +82,13 @@ class PracticeFusionAdapter(IntegrationAdapter):
         transport = HttpTransport()
         total_processed = 0
         start_time = time.time()
-        
+
         token_data = await self.auth.authenticate()
         headers = {
             "Authorization": f"Bearer {token_data['access_token']}",
             "Accept": "application/fhir+json"
         }
-        
+
         pager = BundlePager(transport, headers)
         base_url = self.config.get("base_url", "https://api.practicefusion.com/fhir/2")
 
@@ -96,14 +96,14 @@ class PracticeFusionAdapter(IntegrationAdapter):
         for resource_type in ["Patient"]:
             if not caps.get(resource_type, False):
                 continue
-                
+
             checkpoint = cursor_store.get(self.connector_id, resource_type)
             params = {}
             if checkpoint:
                 params["_lastUpdated"] = f"gt{checkpoint}"
-                
+
             url = f"{base_url}/{resource_type}"
-            
+
             # Fetch using pager (handles pagination and rate limits internally via transport)
             if "mock" in base_url or base_url == "test":
                 records = [{"id": "123", "resourceType": resource_type, "status": "active"}]
@@ -130,7 +130,7 @@ class PracticeFusionAdapter(IntegrationAdapter):
 
             result = await canonical_ingress.submit_batch(self.connector_id, canonical_records)
             total_processed += result.get("processed", 0)
-            
+
             # Commit cursor after durable persistence succeeds
             if newest_checkpoint:
                 cursor_store.commit(self.connector_id, resource_type, newest_checkpoint)

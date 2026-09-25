@@ -1,14 +1,16 @@
 import logging
-from typing import Dict, Any, Optional
+from typing import Dict, Any
 from app.integrations.core.transport import HttpTransport
 
 logger = logging.getLogger(__name__)
+
 
 class SmartDiscovery:
     """
     Implements SMART on FHIR discovery (/.well-known/smart-configuration).
     Provides the token endpoint, authorization endpoint, and capabilities.
     """
+
     def __init__(self, base_url: str):
         self.base_url = base_url.rstrip("/")
         self.transport = HttpTransport()
@@ -18,7 +20,7 @@ class SmartDiscovery:
         Fetches the SMART configuration from the FHIR server.
         """
         discovery_url = f"{self.base_url}/.well-known/smart-configuration"
-        
+
         # Test mock bypass
         if "mock" in self.base_url or "test" in self.base_url:
             return {

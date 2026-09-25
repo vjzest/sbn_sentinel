@@ -1,5 +1,5 @@
 import pytest
-from app.integrations.core.transport import HttpTransport, RateLimitedException
+from app.integrations.core.transport import HttpTransport
 from app.integrations.auth.jwt_client_assertion import JwtClientAssertionAuth
 from app.integrations.fhir.discovery import SmartDiscovery
 from app.integrations.fhir.bundle_pager import BundlePager
@@ -7,6 +7,7 @@ import httpx
 import respx
 
 from unittest.mock import patch
+
 
 @pytest.mark.asyncio
 @patch("app.integrations.auth.jwt_client_assertion.jwt.encode")
@@ -18,12 +19,14 @@ async def test_u03_jwt_signing(mock_encode):
     assert token == "mock_jwt_token"
     mock_encode.assert_called_once()
 
+
 @pytest.mark.asyncio
 async def test_u04_smart_discovery():
     """U04: Verify SMART discovery parses correctly."""
     discovery = SmartDiscovery("mock")
     ep = await discovery.get_token_endpoint()
     assert ep == "mock/auth/token"
+
 
 @respx.mock
 @pytest.mark.asyncio
@@ -36,12 +39,13 @@ async def test_u07_rate_limit_backoff():
         httpx.Response(429, headers={"Retry-After": "1"}),
         httpx.Response(200, json={"success": True})
     ]
-    
+
     transport = HttpTransport(timeout=2)
     # The transport should internally wait 1 second and retry
     res = await transport.get(url)
     assert res.status_code == 200
     assert route.call_count == 2
+
 
 @pytest.mark.asyncio
 async def test_u06_pagination():
@@ -59,12 +63,13 @@ async def test_u06_pagination():
                     "resourceType": "Bundle",
                     "entry": [{"resource": {"id": "2"}}]
                 })
-                
+
     pager = BundlePager(MockTransport(), {})
     results = await pager.fetch_all("page1")
     assert len(results) == 2
     assert results[0]["id"] == "1"
     assert results[1]["id"] == "2"
+
 
 @pytest.mark.asyncio
 @patch("app.integrations.auth.jwt_client_assertion.jwt.encode")
