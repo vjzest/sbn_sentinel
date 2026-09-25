@@ -99,7 +99,6 @@ class PracticeFusionAdapter:
         4. Commit cursor only after durable persistence succeeds.
         """
         from app.integrations.fhir.discovery import SmartDiscovery
-        from app.integrations.auth.jwt_client_assertion import JwtClientAssertionAuth
         from app.integrations.fhir.bundle_pager import BundlePager
         from app.integrations.core.transport import HttpTransport
         from app.services.cursor_store import cursor_store
@@ -115,13 +114,13 @@ class PracticeFusionAdapter:
             discovery = SmartDiscovery(base_url)
             token_endpoint = await discovery.get_token_endpoint()
 
-        # Rebuild auth with the SMART-discovered endpoint
-        auth = JwtClientAssertionAuth(
-            client_id=self.config.get("client_id", "mock_client"),
-            private_key=self.config.get("private_key", "mock_key"),
-            key_id=self.config.get("key_id", "key-1"),
+        # Build auth via manifest factory AFTER SMART discovery has resolved endpoint.
+        # This is the clean production sequence:
+        #   Registry.create() -> adapter (no auth yet)
+        #   adapter.sync() -> SMART discovery -> manifest.build_auth() -> token exchange
+        auth = self.manifest.build_auth(
+            config=self.config,
             token_endpoint=token_endpoint,
-            scopes=self.manifest.get_minimum_scopes(),
         )
 
         # Step 2: Fetch capability snapshot

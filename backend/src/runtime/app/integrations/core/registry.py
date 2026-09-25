@@ -7,17 +7,33 @@ from app.integrations.vendors.practice_fusion.manifest import PracticeFusionMani
 class IntegrationRegistry:
     """
     Central registry for discovering and instantiating vendor integration adapters.
+
+    Auth strategy is NOT constructed here. The registry creates the adapter with
+    the manifest and raw config. SMART discovery and auth construction happen
+    inside adapter.sync() after token_endpoint is resolved at runtime.
+
+    Sequence:
+        Registry.create()
+            -> builds manifest + adapter (no auth yet)
+        adapter.sync()
+            -> SMART discovery -> token_endpoint
+            -> manifest/auth factory builds JwtClientAssertionAuth
+            -> token exchange
     """
 
     def __init__(self):
         self._vendors = {
             "Practice Fusion": {
                 "adapter": PracticeFusionAdapter,
-                "manifest": PracticeFusionManifest
+                "manifest": PracticeFusionManifest,
             }
         }
 
     def create(self, vendor_id: str, config: Dict[str, Any]) -> Optional[IntegrationAdapter]:
+        """
+        Create an adapter instance without requiring auth at creation time.
+        Auth is deferred until adapter.sync() runs SMART discovery.
+        """
         vendor_data = None
         # Match by name or exact ID (support legacy naming)
         for key, val in self._vendors.items():
@@ -32,14 +48,10 @@ class IntegrationRegistry:
         adapter_cls = vendor_data["adapter"]
 
         manifest = manifest_cls()
-        # In a real dynamic setup, auth strategy is selected via manifest.
-        # For Practice Fusion, it requires JWT Client Assertion.
-        auth_config = config.get("auth", {})
 
-        # Load auth strategy based on manifest
-        auth_strategy = manifest.get_auth_strategy(auth_config)
-
-        adapter = adapter_cls(auth=auth_strategy, manifest=manifest, config=config)
+        # Registry does NOT require auth or token_endpoint yet.
+        # auth will be built inside adapter.sync() after SMART discovery.
+        adapter = adapter_cls(auth=None, manifest=manifest, config=config)
         return adapter
 
 

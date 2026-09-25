@@ -5,6 +5,9 @@ Public JWKS endpoint required for SMART Backend Services / System App registrati
 Publishes the RSA public key so Practice Fusion can verify JWT client assertions.
 Private key NEVER leaves the server — only public key components are exposed here.
 Supports kid for future key rotation.
+
+Mounted directly on the FastAPI app (not under /api/v1) so the public URL is:
+  GET /.well-known/jwks.json
 """
 import base64
 import logging
@@ -29,16 +32,18 @@ def _int_to_base64url(value: int) -> str:
 async def jwks_endpoint():
     """
     Returns the public JWKS used for JWT Client Assertion verification.
-    The private key is never exposed.
+    The private key is never exposed — only n and e (RSA public components).
     kid must match the kid used in JWT headers so key rotation is possible.
+    Requires JWT_PRIVATE_KEY and JWT_KEY_ID to be set in environment / settings.
     """
     try:
         from app.core.config import settings
         from cryptography.hazmat.primitives.serialization import load_pem_private_key
         from cryptography.hazmat.primitives.asymmetric.rsa import RSAPrivateKey
 
-        pem_bytes = getattr(settings, "JWT_PRIVATE_KEY", None)
-        key_id = getattr(settings, "JWT_KEY_ID", "sbn-sentinel-key-1")
+        # Use explicit declared settings fields (not getattr fallbacks)
+        pem_bytes = settings.JWT_PRIVATE_KEY
+        key_id = settings.JWT_KEY_ID
 
         if not pem_bytes:
             raise HTTPException(
@@ -63,7 +68,7 @@ async def jwks_endpoint():
             "kty": "RSA",
             "kid": key_id,
             "use": "sig",
-            "alg": "RS384",
+            "alg": settings.JWT_ALGORITHM,
             "n": _int_to_base64url(pub.n),
             "e": _int_to_base64url(pub.e),
         }
