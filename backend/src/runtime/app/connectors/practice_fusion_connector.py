@@ -55,7 +55,7 @@ class PracticeFusionConnector(BaseConnector):
                 discovery_resp.raise_for_status()
                 smart_config = discovery_resp.json()
                 self.token_endpoint = smart_config.get("token_endpoint")
-                
+
                 if not self.token_endpoint:
                     raise ConnectorException("Token endpoint not found in SMART config", "CONFIGURATION_INVALID")
 
@@ -103,15 +103,15 @@ class PracticeFusionConnector(BaseConnector):
             async with httpx.AsyncClient() as client:
                 while next_url:
                     response = await client.get(next_url, headers=self.headers, timeout=10.0)
-                    
+
                     if response.status_code == 429:
                         raise ConnectorException("Rate limit exceeded", "RATE_LIMITED")
                     if response.status_code in (401, 403):
                         raise ConnectorException("Token expired or unauthorized", "AUTHENTICATION_FAILED")
-                    
+
                     response.raise_for_status()
                     data = response.json()
-                    
+
                     entries = data.get("entry", [])
                     all_entries.extend(entries)
 
@@ -122,7 +122,7 @@ class PracticeFusionConnector(BaseConnector):
                         if link.get("relation") == "next":
                             next_url = link.get("url")
                             break
-                            
+
             return all_entries
 
         except httpx.HTTPStatusError as e:
@@ -168,7 +168,7 @@ class PracticeFusionConnector(BaseConnector):
                 first = name_obj.get("given", [""])[0]
                 last = name_obj.get("family", "")
                 patient_name = f"{first} {last}".strip()
-            
+
             canonical["patient_id"] = resource_id
             canonical["patient_name"] = patient_name
 

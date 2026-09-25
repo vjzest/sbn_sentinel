@@ -1,11 +1,10 @@
 import logging
-from typing import Dict, Any, Type
+from typing import Dict, Any
 from datetime import datetime
 
 from app.db.database import SessionLocal
 from app.models.connector import ConnectorModel
-from app.connectors.base_connector import BaseConnector
-from app.connectors.practice_fusion_connector import PracticeFusionConnector
+# Removed static import of PracticeFusionConnector
 from app.core.encryption import decrypt_value
 from app.services.state_transition_engine import sste
 
@@ -21,9 +20,9 @@ class ConnectorManager:
     def __init__(self):
         self.logger = logging.getLogger(self.__class__.__name__)
         # Register available connector classes
-        self._connector_registry: Dict[str, Type[BaseConnector]] = {
-            "Practice Fusion": PracticeFusionConnector
-        }
+        # We no longer hard-code the Practice Fusion registry here.
+        # It is managed by app.integrations.core.registry
+        self._connector_registry: Dict[str, Any] = {}
 
     async def sync_connector(self, connector_id: str) -> Dict[str, Any]:
         """
@@ -37,11 +36,23 @@ class ConnectorManager:
             if not db_connector:
                 return {"status": "Failed", "error": "Connector not found"}
 
-            # Instantiate the specific connector logic
-            connector_class = next(
-                (cls for name, cls in self._connector_registry.items() if name in db_connector.name), None)
+            # Enforce dynamic loading via IntegrationRegistry
+            from app.integrations.core.registry import registry
 
-            if not connector_class:
+            # Combine config with decrypted access token for now
+            # Note: The new model uses manifest and AuthStrategy instead of direct api_key mapping
+            config = db_connector.config or {}
+            config["id"] = db_connector.id
+            if db_connector.access_token:
+                # Still mapping the decrypted token to 'private_key' for the new adapter scaffolding
+                config["private_key"] = decrypt_value(db_connector.access_token)
+
+            adapter = registry.create(
+                vendor_id=db_connector.name,
+                config=config
+            )
+
+            if not adapter:
                 # D7: Do not simulate success for unsupported connectors.
                 sste.execute_transition(db_connector, "Connector", "Warning")
                 db_connector.failure_code = "UNSUPPORTED"
@@ -52,16 +63,7 @@ class ConnectorManager:
             sste.execute_transition(db_connector, "Connector", "Synchronizing")
             db.commit()
 
-            # Execute the canonical sync process
-            connector_instance = connector_class(connector_id=db_connector.id)
-            config = db_connector.config or {}
-
-            # If access_token exists on the model, inject it into config for auth
-            if db_connector.access_token:
-                # SES-008: Decrypt credentials at rest before usage
-                config["api_key"] = decrypt_value(db_connector.access_token)
-
-            result = await connector_instance.sync(config)
+            result = await adapter.sync()
 
             # Process result and update lifecycle state
             if result.get("status") == "Success":

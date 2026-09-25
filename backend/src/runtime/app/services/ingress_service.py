@@ -31,7 +31,7 @@ class CanonicalIngressService:
         # In a real environment, this would persist to the evidence datastore
         # and trigger evidence evaluation if the context matches a qualification rule.
         self.persisted_records.extend(records)
-        
+
         self.logger.info(f"[{connector_id}] Successfully ingested {len(records)} canonical records.")
         return {
             "status": "Success",
