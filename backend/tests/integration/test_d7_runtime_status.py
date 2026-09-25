@@ -124,7 +124,7 @@ def test_d7_unsupported_connector_cannot_simulate_success(client, db_session: Se
 
 def test_d7_connector_structured_failures(db_session: Session):
     from app.services.connector_manager import connector_manager
-    from app.connectors.practice_fusion_connector import PracticeFusionConnector
+    from app.integrations.vendors.practice_fusion.adapter import PracticeFusionAdapter
     from app.connectors.base_connector import ConnectorException
     import asyncio
 
@@ -135,66 +135,60 @@ def test_d7_connector_structured_failures(db_session: Session):
     db_session.add(conn)
     db_session.commit()
 
-    # Mock authenticate to raise AUTHENTICATION_FAILED
-    async def mock_auth_fail(self, config):
+    original_sync = PracticeFusionAdapter.sync
+
+    # Mock sync to raise AUTHENTICATION_FAILED
+    async def mock_auth_fail(self):
         raise ConnectorException("Auth failed", "AUTHENTICATION_FAILED")
 
-    original_auth = PracticeFusionConnector.authenticate
-    PracticeFusionConnector.authenticate = mock_auth_fail
-
+    PracticeFusionAdapter.sync = mock_auth_fail
     asyncio.run(connector_manager.sync_connector("conn_pf_test_fail"))
     db_session.refresh(conn)
     assert conn.failure_code == "AUTHENTICATION_FAILED"
 
-    # Mock retrieve_data for other failures
-    async def mock_auth_success(self, config):
-        return True
-    PracticeFusionConnector.authenticate = mock_auth_success
-
+    # Mock timeout
     async def mock_timeout(self):
         raise ConnectorException("Timeout", "TIMEOUT")
-
-    original_retrieve = PracticeFusionConnector.retrieve_data
-    PracticeFusionConnector.retrieve_data = mock_timeout
-
+    PracticeFusionAdapter.sync = mock_timeout
     asyncio.run(connector_manager.sync_connector("conn_pf_test_fail"))
     db_session.refresh(conn)
     assert conn.failure_code == "TIMEOUT"
 
+    # Mock network
     async def mock_network(self):
         raise ConnectorException("Network", "NETWORK_UNAVAILABLE")
-    PracticeFusionConnector.retrieve_data = mock_network
+    PracticeFusionAdapter.sync = mock_network
     asyncio.run(connector_manager.sync_connector("conn_pf_test_fail"))
     db_session.refresh(conn)
     assert conn.failure_code == "NETWORK_UNAVAILABLE"
 
+    # Mock invalid
     async def mock_invalid(self):
         raise ConnectorException("Invalid", "RESPONSE_INVALID")
-    PracticeFusionConnector.retrieve_data = mock_invalid
+    PracticeFusionAdapter.sync = mock_invalid
     asyncio.run(connector_manager.sync_connector("conn_pf_test_fail"))
     db_session.refresh(conn)
     assert conn.failure_code == "RESPONSE_INVALID"
 
-    # Test Partial
-    async def mock_retrieve_partial(self):
-        return [{"invalid": "record"}, {"resource": {"resourceType": "Patient", "name": [{"given": ["A"], "family": "B"}]}}]
-    PracticeFusionConnector.retrieve_data = mock_retrieve_partial
+    # Mock partial (handled by returning a dict with failure_code in new model, or raising exception)
+    async def mock_partial(self):
+        return {"status": "Failed", "failure_code": "PARTIAL"}
+    PracticeFusionAdapter.sync = mock_partial
     asyncio.run(connector_manager.sync_connector("conn_pf_test_fail"))
     db_session.refresh(conn)
     assert conn.failure_code == "PARTIAL"
 
-    # Test successful recovery clears failure_code
-    async def mock_retrieve_success(self):
-        return [{"resource": {"resourceType": "Patient", "name": [{"given": ["A"], "family": "B"}]}}]
-    PracticeFusionConnector.retrieve_data = mock_retrieve_success
+    # Mock success clears failure_code
+    async def mock_success(self):
+        return {"status": "Success", "duration_ms": 100}
+    PracticeFusionAdapter.sync = mock_success
     asyncio.run(connector_manager.sync_connector("conn_pf_test_fail"))
     db_session.refresh(conn)
     assert conn.failure_code is None
     assert conn.status == "Healthy"
 
     # Restore originals
-    PracticeFusionConnector.authenticate = original_auth
-    PracticeFusionConnector.retrieve_data = original_retrieve
+    PracticeFusionAdapter.sync = original_sync
 
 
 def test_d7_pf_failure_is_bounded(client, db_session: Session, override_deps):

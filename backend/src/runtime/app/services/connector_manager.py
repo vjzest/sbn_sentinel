@@ -82,7 +82,7 @@ class ConnectorManager:
             self.logger.error(f"Sync failed for connector {connector_id}: {e}")
             if 'db_connector' in locals() and db_connector:
                 sste.execute_transition(db_connector, "Connector", "Warning")
-                db_connector.failure_code = "UNKNOWN"
+                db_connector.failure_code = getattr(e, "failure_code", "UNKNOWN")
                 db.commit()
             return {"status": "Failed", "error": str(e)}
         finally:
