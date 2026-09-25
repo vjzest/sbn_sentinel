@@ -10,11 +10,12 @@ class JwtClientAssertionAuth(AuthStrategy):
     (RFC 7523) to authenticate to external FHIR servers.
     """
 
-    def __init__(self, client_id: str, token_endpoint: str, private_key: str, key_id: str, algorithm: str = "RS384"):
+    def __init__(self, client_id: str, private_key: str, key_id: str, token_endpoint: str = None, base_url: str = None, algorithm: str = "RS384"):
         self.client_id = client_id
-        self.token_endpoint = token_endpoint
         self.private_key = private_key
         self.key_id = key_id
+        self.token_endpoint = token_endpoint
+        self.base_url = base_url
         self.algorithm = algorithm
 
     def _generate_jwt_assertion(self) -> str:
