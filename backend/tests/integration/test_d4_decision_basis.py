@@ -1,27 +1,23 @@
 import pytest
-import sys
-import os
 import uuid
 from datetime import datetime
 
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../../src/runtime")))
-
-from app.db.database import Base, engine, SessionLocal  # noqa: E402
-from app.models.signal import SignalModel  # noqa: E402
-from app.models.governance_storage import (  # noqa: E402
+from app.db.database import Base, engine, SessionLocal
+from app.models.signal import SignalModel
+from app.models.governance_storage import (
     RuleEvaluationModel,
     GovernedPolicyVersionModel,
 )
-from app.models.intelligence import DecisionContextModel  # noqa: E402
-from app.models.decision_context_models import (  # noqa: E402
+from app.models.intelligence import DecisionContextModel
+from app.models.decision_context_models import (
     ContextEvidenceModel,
     ContextProvenanceModel,
     ContextFreshnessModel,
     ContextConflictsModel,
 )
-from fastapi.testclient import TestClient  # noqa: E402
-from app.main import app  # noqa: E402
-from app.api.deps import get_current_user  # noqa: E402
+from fastapi.testclient import TestClient
+from app.main import app
+from app.api.deps import get_current_user
 
 
 @pytest.fixture(scope="function")
