@@ -11,6 +11,10 @@ api_router = APIRouter()
 # Auth is public
 api_router.include_router(auth.router, prefix="/auth", tags=["00_Authentication"])
 
+# JWKS public endpoint
+from app.api.endpoints import jwks
+api_router.include_router(jwks.router, tags=["JWKS"])
+
 # All other routes protected by SIAME Default Deny (Must be logged in)
 protected = [Depends(get_current_user)]
 
