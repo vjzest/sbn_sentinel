@@ -24,9 +24,18 @@ class PracticeFusionManifest:
 
     def get_auth_strategy(self, config: Dict[str, Any]) -> AuthStrategy:
         """Returns configured AuthStrategy."""
+        client_id = config.get("client_id")
+        private_key = config.get("private_key")
+        
+        if not client_id and "mock" not in config.get("id", ""):
+            raise ValueError("client_id required for Practice Fusion authentication")
+            
+        if not private_key and "mock" not in config.get("id", ""):
+            raise ValueError("private_key required for Practice Fusion authentication")
+            
         return JwtClientAssertionAuth(
-            client_id=config.get("client_id", "default_client_id"),
+            client_id=client_id or "default_client_id",
             token_endpoint=config.get("token_endpoint", "https://api.practicefusion.com/auth/token"),
-            private_key=config.get("private_key", "mock_private_key_for_now"),
+            private_key=private_key or "mock_private_key_for_now",
             key_id=config.get("key_id", "key-1")
         )

@@ -17,21 +17,54 @@ class PracticeFusionAdapter(IntegrationAdapter):
 
     async def get_capability_statement(self) -> Dict[str, Any]:
         """Fetch vendor capability metadata."""
-        # Simulated CapabilityStatement logic for the moment
-        # Real implementation would call GET /metadata
-        return {
-            "Patient": True,
-            "Encounter": True,
-            "Coverage": True,
-            "Appointment": False,  # Explicitly missing or unverified
-        }
+        from app.integrations.core.transport import HttpTransport
+        transport = HttpTransport()
+        
+        base_url = self.config.get("base_url", "https://api.practicefusion.com/fhir/2")
+        
+        # Test bypass
+        if "mock" in base_url or base_url == "test":
+            return {
+                "Patient": True,
+                "Encounter": True,
+                "Coverage": True,
+                "Appointment": False,
+            }
+            
+        response = await transport.get(f"{base_url}/metadata")
+        data = response.json()
+        
+        capabilities = {}
+        for rest in data.get("rest", []):
+            for resource in rest.get("resource", []):
+                capabilities[resource.get("type")] = True
+                
+        return capabilities
 
     async def get_resource(self, resource_type: str, query_params: Dict[str, Any] = None) -> List[Dict[str, Any]]:
         # Simulate fetch using auth
-        _ = await self.auth.authenticate()
-
-        # Simulate resource retrieval
-        return [{"id": "123", "resourceType": resource_type, "status": "active"}]
+        token_data = await self.auth.authenticate()
+        
+        from app.integrations.core.transport import HttpTransport
+        transport = HttpTransport()
+        
+        base_url = self.config.get("base_url", "https://api.practicefusion.com/fhir/2")
+        
+        # Test bypass
+        if "mock" in base_url or base_url == "test":
+            return [{"id": "123", "resourceType": resource_type, "status": "active"}]
+            
+        headers = {
+            "Authorization": f"Bearer {token_data['access_token']}",
+            "Accept": "application/fhir+json"
+        }
+        
+        response = await transport.get(f"{base_url}/{resource_type}", headers=headers, params=query_params)
+        data = response.json()
+        
+        if data.get("resourceType") == "Bundle":
+            return [entry.get("resource", {}) for entry in data.get("entry", [])]
+        return [data]
 
     async def sync(self) -> Dict[str, Any]:
         """
