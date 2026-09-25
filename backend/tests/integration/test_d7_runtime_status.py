@@ -129,9 +129,10 @@ def test_d7_connector_structured_failures(db_session: Session):
     import asyncio
 
     db_session.query(ConnectorModel).delete()
+    db_session.query(ConnectorModel).delete()
     conn = ConnectorModel(
-        id="conn_pf_test_fail", name="Practice Fusion", type="EHR", status="Configured", access_token="mock",
-        config={"id": "mock", "auth": {"client_id": "mock", "private_key": "mock"}}
+        id="mock_conn_pf_test_fail", name="Practice Fusion", type="EHR", status="Configured", access_token="mock",
+        config={"base_url": "mock", "id": "mock", "auth": {"id": "mock", "client_id": "mock", "private_key": "mock", "key_id": "mock", "token_endpoint": "mock"}}
     )
     db_session.add(conn)
     db_session.commit()
@@ -143,7 +144,7 @@ def test_d7_connector_structured_failures(db_session: Session):
         raise ConnectorException("Auth failed", "AUTHENTICATION_FAILED")
 
     PracticeFusionAdapter.sync = mock_auth_fail
-    asyncio.run(connector_manager.sync_connector("conn_pf_test_fail"))
+    asyncio.run(connector_manager.sync_connector("mock_conn_pf_test_fail"))
     db_session.refresh(conn)
     assert conn.failure_code == "AUTHENTICATION_FAILED"
 
@@ -151,7 +152,7 @@ def test_d7_connector_structured_failures(db_session: Session):
     async def mock_timeout(self):
         raise ConnectorException("Timeout", "TIMEOUT")
     PracticeFusionAdapter.sync = mock_timeout
-    asyncio.run(connector_manager.sync_connector("conn_pf_test_fail"))
+    asyncio.run(connector_manager.sync_connector("mock_conn_pf_test_fail"))
     db_session.refresh(conn)
     assert conn.failure_code == "TIMEOUT"
 
@@ -159,7 +160,7 @@ def test_d7_connector_structured_failures(db_session: Session):
     async def mock_network(self):
         raise ConnectorException("Network", "NETWORK_UNAVAILABLE")
     PracticeFusionAdapter.sync = mock_network
-    asyncio.run(connector_manager.sync_connector("conn_pf_test_fail"))
+    asyncio.run(connector_manager.sync_connector("mock_conn_pf_test_fail"))
     db_session.refresh(conn)
     assert conn.failure_code == "NETWORK_UNAVAILABLE"
 
@@ -167,7 +168,7 @@ def test_d7_connector_structured_failures(db_session: Session):
     async def mock_invalid(self):
         raise ConnectorException("Invalid", "RESPONSE_INVALID")
     PracticeFusionAdapter.sync = mock_invalid
-    asyncio.run(connector_manager.sync_connector("conn_pf_test_fail"))
+    asyncio.run(connector_manager.sync_connector("mock_conn_pf_test_fail"))
     db_session.refresh(conn)
     assert conn.failure_code == "RESPONSE_INVALID"
 
@@ -175,7 +176,7 @@ def test_d7_connector_structured_failures(db_session: Session):
     async def mock_partial(self):
         return {"status": "Failed", "failure_code": "PARTIAL"}
     PracticeFusionAdapter.sync = mock_partial
-    asyncio.run(connector_manager.sync_connector("conn_pf_test_fail"))
+    asyncio.run(connector_manager.sync_connector("mock_conn_pf_test_fail"))
     db_session.refresh(conn)
     assert conn.failure_code == "PARTIAL"
 
@@ -183,7 +184,7 @@ def test_d7_connector_structured_failures(db_session: Session):
     async def mock_success(self):
         return {"status": "Success", "duration_ms": 100}
     PracticeFusionAdapter.sync = mock_success
-    asyncio.run(connector_manager.sync_connector("conn_pf_test_fail"))
+    asyncio.run(connector_manager.sync_connector("mock_conn_pf_test_fail"))
     db_session.refresh(conn)
     assert conn.failure_code is None
     assert conn.status == "Healthy"
