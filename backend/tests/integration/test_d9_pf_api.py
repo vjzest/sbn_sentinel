@@ -16,7 +16,7 @@ from cryptography.hazmat.primitives import serialization
 from app.integrations.vendors.practice_fusion.adapter import PracticeFusionAdapter
 from app.integrations.vendors.practice_fusion.manifest import PracticeFusionManifest
 from app.integrations.auth.jwt_client_assertion import JwtClientAssertionAuth
-from app.integrations.fhir.capability_snapshot import CapabilitySnapshot
+
 
 
 # ---------------------------------------------------------------------------
@@ -222,11 +222,6 @@ async def test_pf04_jwks_rotation():
 
     # --- Key A ---
     key_a = _rsa.generate_private_key(65537, 2048, _backend())
-    pem_a = key_a.private_bytes(
-        serialization.Encoding.PEM,
-        serialization.PrivateFormat.TraditionalOpenSSL,
-        serialization.NoEncryption(),
-    )
     pub_a = key_a.public_key().public_numbers()
 
     jwk_a = {
@@ -361,7 +356,7 @@ async def test_pf05_patient_bundle_pagination(pf_config):
         "test_client", "test_key", "test_kid",
         token_endpoint=f"{real_base}/auth/token",
     )
-    adapter = PracticeFusionAdapter(auth=auth, manifest=manifest, config=config)
+    PracticeFusionAdapter(auth=auth, manifest=manifest, config=config)
 
     from app.integrations.fhir.bundle_pager import BundlePager
     from app.integrations.core.transport import HttpTransport
@@ -521,8 +516,8 @@ async def test_pf09_bulk_data():
     respx.get(status_url).side_effect = status_responses
 
     # NDJSON output
-    ndjson_body = json.dumps({"resourceType": "Patient", "id": "P1"}) + "\n" + \
-                  json.dumps({"resourceType": "Patient", "id": "P2"}) + "\n"
+    ndjson_body = (json.dumps({"resourceType": "Patient", "id": "P1"}) + "\n" +
+                   json.dumps({"resourceType": "Patient", "id": "P2"}) + "\n")
     respx.get(ndjson_url).mock(
         return_value=httpx.Response(200, text=ndjson_body)
     )

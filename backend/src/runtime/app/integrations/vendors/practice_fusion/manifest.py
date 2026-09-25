@@ -117,4 +117,3 @@ class PracticeFusionManifest:
             token_endpoint=token_endpoint,
             scopes=self.get_minimum_scopes(),
         )
-

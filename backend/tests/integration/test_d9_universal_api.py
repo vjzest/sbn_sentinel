@@ -1,7 +1,7 @@
 import pytest
 import httpx
 import respx
-from unittest.mock import patch, AsyncMock, MagicMock
+from unittest.mock import patch
 from app.integrations.core.transport import HttpTransport
 from app.integrations.auth.jwt_client_assertion import JwtClientAssertionAuth
 from app.integrations.fhir.discovery import SmartDiscovery
@@ -200,7 +200,7 @@ async def test_u09_dedupe_idempotency():
 @pytest.mark.asyncio
 async def test_u10_cursor_commit():
     """U10: Cursor is committed AFTER durable persistence, not before."""
-    from app.services.cursor_store import CursorStore
+    # We mock CursorStore behavior without importing it directly
 
     committed = {}
 
