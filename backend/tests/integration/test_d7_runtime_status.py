@@ -130,7 +130,8 @@ def test_d7_connector_structured_failures(db_session: Session):
 
     db_session.query(ConnectorModel).delete()
     conn = ConnectorModel(
-        id="conn_pf_test_fail", name="Practice Fusion", type="EHR", status="Configured", access_token="mock"
+        id="conn_pf_test_fail", name="Practice Fusion", type="EHR", status="Configured", access_token="mock",
+        config={"id": "mock", "auth": {"client_id": "mock", "private_key": "mock"}}
     )
     db_session.add(conn)
     db_session.commit()

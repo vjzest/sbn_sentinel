@@ -23,6 +23,7 @@ def ensure_schema_compatibility():
             organization, encounter, clinic, billing, insurance, connector,
             audit, telemetry, settings, rule, evidence
         )
+        from app.services.cursor_store import CursorModel
     except Exception:
         pass
     Base.metadata.create_all(bind=engine)

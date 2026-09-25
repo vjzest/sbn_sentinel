@@ -39,13 +39,12 @@ class ConnectorManager:
             # Enforce dynamic loading via IntegrationRegistry
             from app.integrations.core.registry import registry
 
-            # Combine config with decrypted access token for now
-            # Note: The new model uses manifest and AuthStrategy instead of direct api_key mapping
             config = db_connector.config or {}
             config["id"] = db_connector.id
-            if db_connector.access_token:
-                # Still mapping the decrypted token to 'private_key' for the new adapter scaffolding
-                config["private_key"] = decrypt_value(db_connector.access_token)
+            
+            # Use SecretProvider or secure vault in real implementation
+            # For now, rely entirely on the secure config JSON for credentials
+            # Do not overload access_token as private_key!
 
             adapter = registry.create(
                 vendor_id=db_connector.name,
