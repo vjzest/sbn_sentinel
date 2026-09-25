@@ -18,7 +18,6 @@ from app.integrations.vendors.practice_fusion.manifest import PracticeFusionMani
 from app.integrations.auth.jwt_client_assertion import JwtClientAssertionAuth
 
 
-
 # ---------------------------------------------------------------------------
 # Shared fixtures
 # ---------------------------------------------------------------------------
