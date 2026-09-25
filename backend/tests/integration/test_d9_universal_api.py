@@ -7,8 +7,8 @@ from app.integrations.auth.jwt_client_assertion import JwtClientAssertionAuth
 from app.integrations.fhir.discovery import SmartDiscovery
 from app.integrations.fhir.bundle_pager import BundlePager
 from app.integrations.fhir.capability_snapshot import CapabilitySnapshot
-from app.integrations.fhir.bulk_export import BulkExportManager, BulkExportMode
-from app.services.ingress_service import canonical_ingress, _extract_canonical_facts
+from app.integrations.fhir.bulk_export import BulkExportManager
+from app.services.ingress_service import _extract_canonical_facts
 
 
 @pytest.mark.asyncio

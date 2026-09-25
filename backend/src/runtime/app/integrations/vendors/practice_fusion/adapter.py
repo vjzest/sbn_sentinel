@@ -1,6 +1,9 @@
 import logging
 import time
-from typing import Dict, Any, List
+from typing import Dict, Any, List, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from app.integrations.fhir.capability_snapshot import CapabilitySnapshot
 
 logger = logging.getLogger(__name__)
 

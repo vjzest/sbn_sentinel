@@ -1,6 +1,6 @@
 from unittest.mock import patch
 import pytest
-from app.integrations.vendors.practice_fusion.adapter import PracticeFusionAdapter, ConfigurationInvalid
+from app.integrations.vendors.practice_fusion.adapter import PracticeFusionAdapter
 from app.integrations.vendors.practice_fusion.manifest import PracticeFusionManifest
 
 

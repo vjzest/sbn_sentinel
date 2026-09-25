@@ -3,6 +3,7 @@ from fastapi import APIRouter, Depends
 # Import subsystem routers here when created
 from app.api.v1.endpoints import runtime, history
 from app.api.v1.endpoints import reality_connectors, signals, auth, insurance, audit, settings, encounters, super_admin, billing, clinics, pasme, pipeline, health, decisions, actions, decision_basis, action_lifecycle
+from app.api.endpoints import jwks
 
 from app.models.user import UserRole
 from app.api.deps import get_current_user, RoleChecker
@@ -12,7 +13,6 @@ api_router = APIRouter()
 api_router.include_router(auth.router, prefix="/auth", tags=["00_Authentication"])
 
 # JWKS public endpoint
-from app.api.endpoints import jwks
 api_router.include_router(jwks.router, tags=["JWKS"])
 
 # All other routes protected by SIAME Default Deny (Must be logged in)
