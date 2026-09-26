@@ -89,8 +89,7 @@ class ConnectorManager:
     def is_ready(self, connector_name: str = "PRACTICE_FUSION") -> bool:
         """SES-005 / SESR-011: Verify operational readiness for a specific connector.
         Fail-closed: returns False if the connector record is absent, unhealthy,
-        or missing credentials. Does NOT create a connector record -- that is
-        exclusively the responsibility of the startup seeding path in main.py.
+        or missing credentials.
         """
         db = SessionLocal()
         try:
@@ -100,10 +99,20 @@ class ConnectorManager:
             ).first()
             if not row:
                 return False
-            if row.status not in {"Healthy", "Ready"}:
+            if row.status not in {"Healthy", "Ready", "Configured"}:
                 return False
-            if not getattr(row, "access_token", None):
+                
+            from app.integrations.core.secrets import SigningKeyProvider
+            if not SigningKeyProvider.is_configured():
                 return False
+                
+            config = row.config or {}
+            client_id = config.get("client_id")
+            base_url = config.get("base_url")
+            
+            if not client_id or not base_url:
+                return False
+                
             return True
         finally:
             db.close()

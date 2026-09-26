@@ -38,7 +38,7 @@ def override_deps():
 def test_d7_overall_degraded_aggregation(client, db_session: Session, override_deps):
     db_session.query(ConnectorModel).delete()
     pf_connector = ConnectorModel(
-        id="conn_pf_123", name="Practice Fusion", type="EHR", status="Error", access_token="mock_token", failure_code="PARTIAL"
+        id="conn_pf_123", name="Practice Fusion", type="EHR", status="Error", config={"client_id": "test", "base_url": "http://test"}, failure_code="PARTIAL"
     )
     db_session.add(pf_connector)
     db_session.commit()
@@ -50,7 +50,7 @@ def test_d7_overall_degraded_aggregation(client, db_session: Session, override_d
 def test_d7_missing_token_retry_false(client, db_session: Session, override_deps):
     db_session.query(ConnectorModel).delete()
     pf_connector = ConnectorModel(
-        id="conn_pf_123", name="Practice Fusion", type="EHR", status="Healthy", access_token=None
+        id="conn_pf_123", name="Practice Fusion", type="EHR", status="Healthy", config={}
     )
     db_session.add(pf_connector)
     db_session.commit()
@@ -91,7 +91,7 @@ def test_d7_invalid_response_vs_unavailable(client, db_session: Session, overrid
 def test_d7_truthful_last_confirmed(client, db_session: Session, override_deps):
     db_session.query(ConnectorModel).delete()
     pf_connector = ConnectorModel(
-        id="conn_pf_123", name="Practice Fusion", type="EHR", status="Configured", access_token="token", last_sync=None
+        id="conn_pf_123", name="Practice Fusion", type="EHR", status="Configured", config={"client_id": "test", "base_url": "http://test"}, last_sync=None
     )
     db_session.add(pf_connector)
     db_session.commit()
@@ -107,7 +107,7 @@ def test_d7_unsupported_connector_cannot_simulate_success(client, db_session: Se
 
     db_session.query(ConnectorModel).delete()
     unsupported_conn = ConnectorModel(
-        id="conn_unsupported_123", name="Unsupported Legacy EHR", type="EHR", status="Configured", access_token="mock"
+        id="conn_unsupported_123", name="Unsupported Legacy EHR", type="EHR", status="Configured", config={"client_id": "test", "base_url": "http://test"}
     )
     db_session.add(unsupported_conn)
     db_session.commit()
@@ -131,7 +131,7 @@ def test_d7_connector_structured_failures(db_session: Session):
     db_session.query(ConnectorModel).delete()
     db_session.query(ConnectorModel).delete()
     conn = ConnectorModel(
-        id="mock_conn_pf_test_fail", name="Practice Fusion", type="EHR", status="Configured", access_token="mock",
+        id="mock_conn_pf_test_fail", name="Practice Fusion", type="EHR", status="Configured",
         config={"base_url": "mock", "client_id": "mock", "id": "mock", "auth": {"id": "mock", "private_key": "mock", "key_id": "mock", "token_endpoint": "mock"}}
     )
     db_session.add(conn)

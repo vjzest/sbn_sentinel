@@ -46,22 +46,55 @@ class HttpTransport:
         """
         Streams a remote resource line-by-line through the shared transport.
         Used for NDJSON Bulk Data output files.
-        Enforces shared timeout and authentication headers.
+        Enforces shared timeout, jitter, and retry behavior.
         """
+        max_attempts = 3
+        attempt = 0
+        backoff = 1.0
+        import random
+
         async with httpx.AsyncClient(timeout=self.timeout) as client:
-            async with client.stream("GET", url, headers=headers or {}) as response:
-                if response.status_code >= 400:
-                    raise Exception(
-                        f"Bulk stream HTTP error {response.status_code} for {url}"
-                    )
-                async for line in response.aiter_lines():
-                    if line.strip():
-                        yield line
+            while attempt < max_attempts:
+                attempt += 1
+                try:
+                    async with client.stream("GET", url, headers=headers or {}) as response:
+                        if response.status_code == 429:
+                            retry_after = int(response.headers.get("Retry-After", backoff))
+                            delay = retry_after + random.uniform(0, retry_after * 0.2)
+                            logger.warning(f"Rate limited. Waiting {delay:.2f}s.")
+                            await asyncio.sleep(delay)
+                            backoff *= 2
+                            continue
+
+                        if response.status_code >= 500:
+                            delay = backoff + random.uniform(0, backoff * 0.2)
+                            logger.warning(
+                                f"Server error {response.status_code}. Retrying in {delay:.2f}s..."
+                            )
+                            await asyncio.sleep(delay)
+                            backoff *= 2
+                            continue
+
+                        response.raise_for_status()
+                        async for line in response.aiter_lines():
+                            if line.strip():
+                                yield line
+                        return
+
+                except httpx.RequestError as e:
+                    if attempt >= max_attempts:
+                        raise e
+                    delay = backoff + random.uniform(0, backoff * 0.2)
+                    await asyncio.sleep(delay)
+                    backoff *= 2
+
+            raise Exception("Max retries exceeded for stream")
 
     async def _request(self, method: str, url: str, **kwargs) -> httpx.Response:
         max_attempts = 3
         attempt = 0
         backoff = 1.0
+        import random
 
         async with httpx.AsyncClient(timeout=self.timeout) as client:
             while attempt < max_attempts:
@@ -71,16 +104,18 @@ class HttpTransport:
 
                     if response.status_code == 429:
                         retry_after = int(response.headers.get("Retry-After", backoff))
-                        logger.warning(f"Rate limited. Waiting {retry_after}s.")
-                        await asyncio.sleep(retry_after)
+                        delay = retry_after + random.uniform(0, retry_after * 0.2)
+                        logger.warning(f"Rate limited. Waiting {delay:.2f}s.")
+                        await asyncio.sleep(delay)
                         backoff *= 2
                         continue
 
                     if response.status_code >= 500:
+                        delay = backoff + random.uniform(0, backoff * 0.2)
                         logger.warning(
-                            f"Server error {response.status_code}. Retrying..."
+                            f"Server error {response.status_code}. Retrying in {delay:.2f}s..."
                         )
-                        await asyncio.sleep(backoff)
+                        await asyncio.sleep(delay)
                         backoff *= 2
                         continue
 
@@ -90,7 +125,8 @@ class HttpTransport:
                 except httpx.RequestError as e:
                     if attempt >= max_attempts:
                         raise e
-                    await asyncio.sleep(backoff)
+                    delay = backoff + random.uniform(0, backoff * 0.2)
+                    await asyncio.sleep(delay)
                     backoff *= 2
 
             raise Exception("Max retries exceeded")

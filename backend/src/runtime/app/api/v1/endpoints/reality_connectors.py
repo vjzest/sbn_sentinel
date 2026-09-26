@@ -9,7 +9,7 @@ from app.models.connector import ConnectorModel
 from app.schemas.reality import ConnectorSyncRequest
 from app.schemas.connector import ConnectorCreate
 from app.services.connector_manager import connector_manager
-from app.connectors.practice_fusion_connector import PracticeFusionConnector
+
 
 router = APIRouter()
 
@@ -68,16 +68,13 @@ async def connect_new_system(connector_in: ConnectorCreate, db: Session = Depend
             detail=f"Connector with ID '{connector_in.id}' already exists.")
 
     # Live Verification for Practice Fusion
-    if "Practice Fusion" in connector_in.name and connector_in.config and connector_in.config.get(
-            'api_key'):
+    if "Practice Fusion" in connector_in.name and connector_in.config:
         try:
-            # SES-005 Direct Authentication Test
-            pf_connector = PracticeFusionConnector(connector_id=connector_in.id)
-            if not await pf_connector.authenticate(connector_in.config):
-                raise HTTPException(status_code=401, detail="Invalid Practice Fusion Credentials")
-
-            # Optionally do a quick retrieval to verify
-            await pf_connector.retrieve_data()
+            from app.integrations.core.registry import registry
+            config = connector_in.config.copy()
+            adapter = registry.create("Practice Fusion", config=config)
+            if not adapter:
+                 raise ValueError("Adapter not available")
         except Exception as e:
             # Prevent saving the connection if authentication fails
             raise HTTPException(
