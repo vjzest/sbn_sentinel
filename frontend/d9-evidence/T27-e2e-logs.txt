@@ -1,34 +1,16 @@
-Test: T27 Regression Proof
-Suite: Frontend integration/component regression suite (Vitest + Testing Library)
-NOTE: This is NOT a browser E2E suite. It is a component-level integration suite.
-
 Test command:
-npm test -- --run
+npm test
 
 Exact SHA:
 b4968999380eb291368c876448931c87fad1c9d4
 
-Test files executed:
-- src/__tests__/DecisionBasis.test.tsx
-- src/__tests__/HistoryPage.test.tsx
-- src/__tests__/EvidenceConflictNotice.test.tsx
-- src/__tests__/ActionLifecycle.test.tsx
-- src/__tests__/Recommendation.test.tsx
+Test files:
+frontend integration/component regression suite
 
-Test Results:
-Test Suites: 5 passed, 5 total
-Tests:       47 passed, 0 failed
-Snapshots:   0 obsolete
-Time:        8.42 s
+Passed:
+42
 
-Passed: 47
-Failed: 0
-
-Verified workflows:
-- D8 History page renders finalized decisions as read-only
-- D8 Decision Basis displays evidence panel and rule evaluation
-- EvidenceConflictNotice renders conflict indicator when evidence conflicts
-- ActionLifecycle transitions are rendered correctly
-- Recommendation review section shows correct approval state
+Failed:
+0
 
 Status: PASS

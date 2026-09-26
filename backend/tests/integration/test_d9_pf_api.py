@@ -471,6 +471,7 @@ async def test_pf07_coverage_mapping():
 @pytest.mark.asyncio
 @patch("app.integrations.auth.jwt_client_assertion.jwt.encode")
 async def test_pf08_appointment_unsupported(mock_encode, pf_config):
+    """PF08: Verify Appointment is blocked by CapabilityStatement."""
     respx.get("https://mock/metadata").mock(
         return_value=httpx.Response(
             200,
@@ -480,7 +481,6 @@ async def test_pf08_appointment_unsupported(mock_encode, pf_config):
             }
         )
     )
-    """PF08: Verify Appointment is blocked by CapabilityStatement."""
     mock_encode.return_value = "mock_jwt"
     manifest = PracticeFusionManifest()
     config = {**pf_config, "token_endpoint": "https://mock/token", "base_url": "https://mock"}
