@@ -331,7 +331,7 @@ def test_e2e_authentic_journey():
     from datetime import datetime
     pf = ConnectorModel(
         id=f"CONN-PF-{uuid.uuid4().hex[:6]}", name="Practice Fusion EHR", type="EHR",
-        status="Healthy", latency_ms=45, last_sync=datetime.utcnow(), access_token="mock_token"
+        status="Healthy", latency_ms=45, last_sync=datetime.utcnow(), config={"client_id": "test", "base_url": "http://test"}
     )
     db.add(user)
     db.add(pf)
@@ -523,7 +523,7 @@ def test_a026_readiness_gate_positive_and_negative():
     from datetime import datetime
     pf = ConnectorModel(
         id=f"CONN-PF-{uuid.uuid4().hex[:6]}", name="Practice Fusion EHR", type="EHR",
-        status="Healthy", latency_ms=45, last_sync=datetime.utcnow(), access_token="mock_token"
+        status="Healthy", latency_ms=45, last_sync=datetime.utcnow(), config={"client_id": "test", "base_url": "http://test"}
     )
 
     db.add_all([u_active, u_unassigned, pf])
@@ -869,7 +869,7 @@ def test_a026b_practice_fusion_readiness():
         # 2. Only an unrelated connector exists -> 503, pf=false
         db.add(ConnectorModel(
             id="CONN-OTHER", name="Random CRM", type="CRM", status="Healthy",
-            latency_ms=10, last_sync=datetime.utcnow(), access_token="token"
+            latency_ms=10, last_sync=datetime.utcnow(), config={"client_id": "test", "base_url": "http://test"}
         ))
         db.commit()
         r2 = local_client.get("/api/v1/health/ready", headers=headers)
@@ -879,7 +879,7 @@ def test_a026b_practice_fusion_readiness():
         # 3. PF record exists but no credential/token -> 503
         pf1 = ConnectorModel(
             id="CONN-PF-TEST", name="Practice Fusion EHR", type="EHR", status="Healthy",
-            latency_ms=10, last_sync=datetime.utcnow(), access_token=None
+            latency_ms=10, last_sync=datetime.utcnow(), config={}
         )
         db.add(pf1)
         db.commit()
@@ -887,7 +887,7 @@ def test_a026b_practice_fusion_readiness():
         assert r3.status_code == 503
 
         # 4. PF status is Warning or Disconnected -> 503
-        pf1.access_token = "some_token"
+        pf1.config = {"client_id": "test", "base_url": "http://test"}
         pf1.status = "Warning"
         db.commit()
         r4 = local_client.get("/api/v1/health/ready", headers=headers)

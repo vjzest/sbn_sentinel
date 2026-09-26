@@ -104,7 +104,7 @@ class PracticeFusionAdapter(IntegrationAdapter):
         # This is the clean production sequence:
         #   Registry.create() -> adapter (no auth yet)
         #   adapter.sync() -> SMART discovery -> manifest.build_auth() -> token exchange
-        auth = self.manifest.build_auth(
+        self.auth = self.manifest.build_auth(
             config=self.config,
             token_endpoint=token_endpoint,
         )
@@ -116,7 +116,7 @@ class PracticeFusionAdapter(IntegrationAdapter):
         total_processed = 0
         start_time = time.time()
 
-        token_data = await auth.authenticate()
+        token_data = await self.auth.authenticate()
         headers = {
             "Authorization": f"Bearer {token_data['access_token']}",
             "Accept": "application/fhir+json",

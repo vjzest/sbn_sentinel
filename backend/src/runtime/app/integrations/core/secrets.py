@@ -15,3 +15,7 @@ class SigningKeyProvider:
     @classmethod
     def get_algorithm(cls) -> str:
         return settings.JWT_ALGORITHM
+
+    @classmethod
+    def is_configured(cls) -> bool:
+        return bool(settings.JWT_PRIVATE_KEY)
