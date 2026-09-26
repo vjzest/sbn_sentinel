@@ -85,12 +85,16 @@ async def test_u03_jwt_signing(mock_encode):
 # U04: SMART Discovery
 # ---------------------------------------------------------------------------
 
+@respx.mock
 @pytest.mark.asyncio
 async def test_u04_smart_discovery():
     """U04: Verify SMART discovery parses correctly."""
-    discovery = SmartDiscovery("mock")
+    respx.get("https://mock.com/.well-known/smart-configuration").respond(
+        json={"token_endpoint": "https://mock.com/auth/token"}
+    )
+    discovery = SmartDiscovery("https://mock.com")
     ep = await discovery.get_token_endpoint()
-    assert ep == "mock/auth/token"
+    assert ep == "https://mock.com/auth/token"
 
 
 # ---------------------------------------------------------------------------
@@ -254,13 +258,17 @@ async def test_u11_webhook_idempotency():
 # U12: Bulk Data / NDJSON stream
 # ---------------------------------------------------------------------------
 
+@respx.mock
 @pytest.mark.asyncio
 async def test_u12_bulk_data():
     """U12: Verify Bulk Data kickoff and streaming uses transport."""
+    respx.get("https://mock.com/Patient/$export").respond(
+        202, headers={"Content-Location": "https://mock.com/status"}
+    )
     transport = HttpTransport()
     manager = BulkExportManager(transport, {})
-    url = await manager.kickoff("mock")
-    assert "mock" in url
+    url = await manager.kickoff("https://mock.com")
+    assert "https://mock.com" in url
 
 
 # ---------------------------------------------------------------------------
@@ -290,12 +298,16 @@ async def test_u13_capability_gating():
 # U14: Secret safety
 # ---------------------------------------------------------------------------
 
+@respx.mock
 @pytest.mark.asyncio
 @patch("app.integrations.auth.jwt_client_assertion.jwt.encode")
 async def test_u14_secret_safety(mock_encode):
     """U14: Verify private key is not exposed in authenticate() return value."""
+    respx.post("https://mock.com/auth").respond(
+        json={"access_token": "token123"}
+    )
     mock_encode.return_value = "mock_jwt_token"
-    auth = JwtClientAssertionAuth("test_client", "test_key", "test_kid", "mock")
+    auth = JwtClientAssertionAuth("test_client", "test_key", "test_kid", "https://mock.com/auth")
     token = await auth.authenticate()
     assert "test_key" not in str(token), (
         "Private key must never appear in the authenticate() return value"

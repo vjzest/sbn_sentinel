@@ -55,26 +55,21 @@ class PracticeFusionManifest:
         before discovery.
         """
         from app.integrations.auth.jwt_client_assertion import JwtClientAssertionAuth
-
-        is_mock = "mock" in str(config.get("id", "")) or "mock" in str(config.get("base_url", ""))
+        from app.integrations.core.secrets import SigningKeyProvider
 
         client_id = config.get("client_id")
-        private_key = config.get("private_key")
-        key_id = config.get("key_id", "key-1")
 
-        if not client_id and not is_mock:
+        if not client_id:
             raise ValueError("client_id required for Practice Fusion authentication")
-        if not private_key and not is_mock:
-            raise ValueError("private_key required for Practice Fusion authentication")
         if not token_endpoint:
             raise ValueError(
                 "token_endpoint is required. Must be resolved from SMART discovery."
             )
 
         return JwtClientAssertionAuth(
-            client_id=client_id or "mock_client",
-            private_key=private_key or "mock_key",
-            key_id=key_id,
+            client_id=client_id,
+            private_key=SigningKeyProvider.get_private_key(),
+            key_id=SigningKeyProvider.get_key_id(),
             token_endpoint=token_endpoint,
             scopes=self.get_minimum_scopes(),
         )
@@ -88,32 +83,26 @@ class PracticeFusionManifest:
         after SMART discovery.
         """
         from app.integrations.auth.jwt_client_assertion import JwtClientAssertionAuth
-
-        is_mock = "mock" in str(config.get("id", "")) or "mock" in str(config.get("base_url", ""))
+        from app.integrations.core.secrets import SigningKeyProvider
 
         client_id = config.get("client_id")
-        private_key = config.get("private_key")
-        key_id = config.get("key_id", "key-1")
 
-        if not client_id and not is_mock:
+        if not client_id:
             raise ValueError("client_id required for Practice Fusion authentication")
-
-        if not private_key and not is_mock:
-            raise ValueError("private_key required for Practice Fusion authentication")
 
         # token_endpoint must come from SMART discovery at runtime.
         # In production, the adapter calls SmartDiscovery before building auth.
         # Here we accept a pre-resolved endpoint (or mock for tests).
-        token_endpoint = config.get("token_endpoint", "mock/auth/token")
-        if not is_mock and token_endpoint == "mock/auth/token":
+        token_endpoint = config.get("token_endpoint")
+        if not token_endpoint:
             raise ValueError(
                 "token_endpoint is required. It must be resolved from SMART discovery."
             )
 
         return JwtClientAssertionAuth(
-            client_id=client_id or "mock_client",
-            private_key=private_key or "mock_key",
-            key_id=key_id,
+            client_id=client_id,
+            private_key=SigningKeyProvider.get_private_key(),
+            key_id=SigningKeyProvider.get_key_id(),
             token_endpoint=token_endpoint,
             scopes=self.get_minimum_scopes(),
         )

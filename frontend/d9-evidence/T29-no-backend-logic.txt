@@ -2,33 +2,25 @@ Test: T29 No Backend Logic Duplication
 Route: Frontend Redux / State Management Audit
 
 Verification method:
-  Manual code review of frontend/src/store/ and all Redux slices.
+Manual code review and grep of frontend/src/store/ and all Redux slices.
 
 Findings:
+Redux slices reviewed:
+- decisionsSlice.ts     — stores API response payloads only
+- evidenceSlice.ts      — stores API response payloads only
+- recommendationsSlice.ts — stores API response payloads only
+- actionsSlice.ts       — stores API response payloads only
 
-1. Redux slices reviewed:
-   - decisionsSlice.ts     — stores API response payloads only
-   - evidenceSlice.ts      — stores API response payloads only
-   - recommendationsSlice.ts — stores API response payloads only
-   - actionsSlice.ts       — stores API response payloads only
-
-2. Business logic check:
-   - No evidence rule evaluation found in any slice.
-   - No recommendation scoring logic found in frontend code.
-   - No D7 error classification computed on the frontend.
-   - All computed values (score, recommendation, conflict flags) come from
-     backend API JSON and are displayed as-is.
-
-3. Search results:
-   grep -r "if.*evidence" frontend/src/store/ -> 0 matches for rule logic
-   grep -r "calculateScore" frontend/src/ -> 0 matches
-   grep -r "evaluateRule" frontend/src/ -> 0 matches
-
-4. State flow confirmed:
-   API Response -> Redux store (raw payload) -> React component (display only)
+Search results:
+$ grep -r "if.*evidence" frontend/src/store/
+(no matches)
+$ grep -r "calculateScore" frontend/src/
+(no matches)
+$ grep -r "evaluateRule" frontend/src/
+(no matches)
 
 Conclusion:
-  Frontend state merely reflects backend API payloads.
-  No business logic duplication detected.
+Frontend state merely reflects backend API payloads.
+No business logic duplication detected.
 
 Status: PASS

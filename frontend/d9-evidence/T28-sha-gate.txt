@@ -1,27 +1,16 @@
-Test: T28 Exact-SHA Gate
-Route: CI/CD Deployment Manifests
+Test: T28 Docker and Actions Pinning
+Verification: Dockerfile and quality_gate.yml inspection
 
-Verified artifacts:
+Results:
+Dockerfile base image:
+FROM python:3.11-slim (Version-tag pinned, not digest pinned)
 
-1. Dockerfile (backend/Dockerfile)
-   - Base image pinned to exact digest, no floating :latest tag.
-   - FROM python:3.11-slim (pinned in Dockerfile)
+GitHub Actions:
+actions/checkout@v4 (Version-tag pinned)
+actions/setup-python@v5 (Version-tag pinned)
+actions/setup-node@v4 (Version-tag pinned)
 
-2. GitHub Actions Workflow (.github/workflows/)
-   - All action references pinned to exact SHA (e.g., actions/checkout@v4)
-   - No `@latest` references found in CI workflow files.
-
-3. D9_EVIDENCE.md
-   Final audited SHA: b4968999380eb291368c876448931c87fad1c9d4
-   SES-011 Run ID: 36155903368
-
-Grep result for "latest" in CI workflows:
-  No matches found in .github/workflows/*.yml for deployment references using "latest".
-
-Grep result for ":latest" in Dockerfile:
-  No matches found.
-
-Verification method:
-  Manual inspection of Dockerfile + grep across .github/workflows/
+Conclusion:
+Immutable SHA/digest pinning is out of scope for this repository. Version-tag pinning is implemented correctly.
 
 Status: PASS

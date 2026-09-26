@@ -21,13 +21,7 @@ class SmartDiscovery:
         """
         discovery_url = f"{self.base_url}/.well-known/smart-configuration"
 
-        # Test mock bypass
-        if "mock" in self.base_url or "test" in self.base_url:
-            return {
-                "token_endpoint": f"{self.base_url}/auth/token",
-                "authorization_endpoint": f"{self.base_url}/auth/authorize",
-                "capabilities": ["client-credentials", "launch-standalone"]
-            }
+
 
         try:
             response = await self.transport.get(discovery_url)

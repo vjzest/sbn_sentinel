@@ -12,7 +12,9 @@ class ConfigurationInvalid(Exception):
     """Raised when required adapter configuration is missing."""
 
 
-class PracticeFusionAdapter:
+from app.integrations.core.contracts import IntegrationAdapter
+
+class PracticeFusionAdapter(IntegrationAdapter):
     """
     Thin adapter for Practice Fusion FHIR.
     Relies on shared FHIR behaviors, auth, and transport layers.
@@ -21,24 +23,20 @@ class PracticeFusionAdapter:
     Iterates over manifest-enabled resources gated by CapabilitySnapshot.
     """
 
-    REQUIRED_CONFIG = ["base_url", "client_id", "key_id", "private_key"]
+    REQUIRED_CONFIG = ["base_url", "client_id"]
 
     def __init__(self, auth, manifest, config: Dict[str, Any]):
-        is_mock = "mock" in str(config.get("id", ""))
-
-        # Fail closed on missing required configuration (mocks exempt)
-        if not is_mock:
-            for field in self.REQUIRED_CONFIG:
-                if not config.get(field):
-                    raise ConfigurationInvalid(
-                        f"Practice Fusion requires '{field}' in configuration"
-                    )
+        for field in self.REQUIRED_CONFIG:
+            if not config.get(field):
+                raise ConfigurationInvalid(
+                    f"Practice Fusion requires '{field}' in configuration"
+                )
 
         self.auth = auth
         self.manifest = manifest
         self.config = config
         self.connector_id = config.get("id", "PF-SYS")
-        self._base_url = config.get("base_url", "mock")
+        self._base_url = config.get("base_url")
 
     async def _resolve_base_url(self) -> str:
         return self._base_url.rstrip("/")
@@ -46,15 +44,11 @@ class PracticeFusionAdapter:
     async def get_capability_statement(self) -> "CapabilitySnapshot":
         """
         Fetch vendor CapabilityStatement and return a rich CapabilitySnapshot.
-        Returns a mock snapshot in test environments.
         """
         from app.integrations.fhir.capability_snapshot import CapabilitySnapshot
         from app.integrations.core.transport import HttpTransport
 
         base_url = await self._resolve_base_url()
-
-        if "mock" in base_url:
-            return CapabilitySnapshot.mock()
 
         transport = HttpTransport()
         response = await transport.get(f"{base_url}/metadata")
@@ -73,9 +67,6 @@ class PracticeFusionAdapter:
         transport = HttpTransport()
 
         base_url = await self._resolve_base_url()
-
-        if "mock" in base_url:
-            return [{"id": "123", "resourceType": resource_type, "status": "active"}]
 
         headers = {
             "Authorization": f"Bearer {token_data['access_token']}",
@@ -105,14 +96,10 @@ class PracticeFusionAdapter:
         from app.services.ingress_service import canonical_ingress
 
         base_url = await self._resolve_base_url()
-        is_mock = "mock" in base_url
 
         # Step 1: Resolve token_endpoint from SMART discovery
-        if is_mock:
-            token_endpoint = f"{base_url}/auth/token"
-        else:
-            discovery = SmartDiscovery(base_url)
-            token_endpoint = await discovery.get_token_endpoint()
+        discovery = SmartDiscovery(base_url)
+        token_endpoint = await discovery.get_token_endpoint()
 
         # Build auth via manifest factory AFTER SMART discovery has resolved endpoint.
         # This is the clean production sequence:
@@ -163,17 +150,7 @@ class PracticeFusionAdapter:
 
             url = f"{base_url}/{resource_type}"
 
-            if is_mock:
-                records = [
-                    {
-                        "id": "123",
-                        "resourceType": resource_type,
-                        "status": "active",
-                        "meta": {"lastUpdated": "2026-01-01T00:00:00Z", "versionId": "1"},
-                    }
-                ]
-            else:
-                records = await pager.fetch_all(url, params)
+            records = await pager.fetch_all(url, params)
 
             if not records:
                 continue

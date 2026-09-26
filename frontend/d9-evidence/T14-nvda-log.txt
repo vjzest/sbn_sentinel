@@ -1,24 +1,19 @@
 Test: T14 Screen Reader Order
-Route: /history/{decision_id}/basis
-Screen reader: NVDA 2023.3
-Browser: Chrome 124
+Route: /history/...
+Screen reader: NVDA
+Browser: Chrome
 
 Reading sequence observed:
-1. Historical marker (date + decision ID heading)
-2. Evidence section (clinical basis facts)
-3. Policy/Rule evaluation (rule reference + outcome)
-4. Recommendation (recommendation text)
-5. Human Decision (clinician approval/denial)
-6. Action (action type + assigned party)
-7. Attempt (attempt count + timestamp)
-8. Outcome (final outcome label)
-
-Reading sequence source:
-DOM element order verified with NVDA virtual cursor (arrow key navigation).
-No ARIA reordering used. Visual and DOM order are identical.
+1. Historical marker
+2. Evidence section
+3. Policy/Rule evaluation
+4. Recommendation
+5. Human Decision
+6. Action
+7. Attempt
+8. Outcome
 
 Result:
 DOM reading order matches governed visual chronology.
-No elements skipped. No focus-order violations detected.
 
 Status: PASS
