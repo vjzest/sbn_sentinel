@@ -1,8 +1,0 @@
-PASS - Code Review of frontend/src/localization/messages.ts
-
-Review findings:
-1. Only 'en' locale is present in LOCALES object.
-2. No Arabic text or RTL structures are falsely represented.
-3. Explicit comment confirms: "// Arabic NOT IMPLEMENTED IN V1".
-
-No false Arabic claims found.

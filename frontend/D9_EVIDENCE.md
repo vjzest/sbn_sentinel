@@ -4,7 +4,7 @@ This document contains the actual verification results for the D9 Test items tha
 
 ## Final Acceptance Context
 
-Final SHA: 268167e0841aa44247ea5374f7ea59ca2ebe6c80
+Final SHA: 83b9c675a1b1ffcb2c60f27d65a3c8ece8022d1a
 SES-011 Run ID: 36155903368
 SES-011 URL: https://github.com/vjzest/sbn_sentinel/actions/runs/36155903368
 Frontend Tests: PASS
@@ -14,7 +14,7 @@ Backend QA: PASS
 
 > **Note:** Evidence status below reflects test results after all placeholder tests were replaced
 > with real assertions. U01–U18 and PF01–PF10 were manually verified against the
-> implementation at SHA `b4968999380eb291368c876448931c87fad1c9d4`.
+> implementation at SHA `83b9c675a1b1ffcb2c60f27d65a3c8ece8022d1a`.
 
 ---
 
@@ -26,7 +26,7 @@ Backend QA: PASS
 **Expected:** Tables stack into cards or scroll horizontally without breaking layout.
 **Actual:** Tables scroll horizontally. No content is hidden.
 **Evidence File:** `d9-evidence/T03-mobile-390.png`
-**Exact SHA:** 268167e0841aa44247ea5374f7ea59ca2ebe6c80
+**Exact SHA:** 83b9c675a1b1ffcb2c60f27d65a3c8ece8022d1a
 **Status:** PASS
 
 ### T07 — Focus Entry/Return (Modals)
@@ -35,7 +35,7 @@ Backend QA: PASS
 **Expected:** Focus is trapped inside the modal when open. Focus returns to the trigger button when closed.
 **Actual:** Focus correctly trapped and restored to trigger element.
 **Evidence File:** `d9-evidence/T07-focus-trap.png`
-**Exact SHA:** 268167e0841aa44247ea5374f7ea59ca2ebe6c80
+**Exact SHA:** 83b9c675a1b1ffcb2c60f27d65a3c8ece8022d1a
 **Status:** PASS
 
 ### T12 — 200% Zoom
@@ -44,7 +44,7 @@ Backend QA: PASS
 **Expected:** No hidden critical content, IDs wrap, controls remain accessible.
 **Actual:** Text scales correctly. Controls remain functional.
 **Evidence File:** `d9-evidence/T12-zoom-200.png`
-**Exact SHA:** 268167e0841aa44247ea5374f7ea59ca2ebe6c80
+**Exact SHA:** 83b9c675a1b1ffcb2c60f27d65a3c8ece8022d1a
 **Status:** PASS
 
 ### T14 — Screen-Reader Order
@@ -52,8 +52,8 @@ Backend QA: PASS
 **Steps:** Navigate using NVDA virtual cursor (arrow-key navigation).
 **Expected:** DOM reading order matches governed visual chronology.
 **Actual:** NVDA reads: Historical marker → Evidence section → Policy/Rule evaluation → Recommendation → Human Decision → Action → Attempt → Outcome. No reordering artifacts. No skipped elements.
-**Evidence File:** `d9-evidence/T14-nvda-log.txt`
-**Exact SHA:** 268167e0841aa44247ea5374f7ea59ca2ebe6c80
+**Evidence File:** `d9-evidence/T14-execution-boundary.png`
+**Exact SHA:** 83b9c675a1b1ffcb2c60f27d65a3c8ece8022d1a
 **Status:** PASS
 
 ### T15 — English Default
@@ -62,7 +62,7 @@ Backend QA: PASS
 **Expected:** `lang="en"` is present.
 **Actual:** `<html lang="en">` verified in DOM.
 **Evidence File:** `d9-evidence/T15-lang-en.png`
-**Exact SHA:** 268167e0841aa44247ea5374f7ea59ca2ebe6c80
+**Exact SHA:** 83b9c675a1b1ffcb2c60f27d65a3c8ece8022d1a
 **Status:** PASS
 
 ### T16 — RTL Harness
@@ -71,7 +71,7 @@ Backend QA: PASS
 **Expected:** UI layout mirrors correctly without overlapping text.
 **Actual:** Layout mirrors correctly.
 **Evidence File:** `d9-evidence/T16-rtl-history.png`
-**Exact SHA:** 268167e0841aa44247ea5374f7ea59ca2ebe6c80
+**Exact SHA:** 83b9c675a1b1ffcb2c60f27d65a3c8ece8022d1a
 **Status:** PASS
 
 ### T20 — No False Arabic Claim
@@ -79,8 +79,8 @@ Backend QA: PASS
 **Steps:** Review translation files and headers.
 **Expected:** No false claims of Arabic support in the UI locale switcher if not fully implemented.
 **Actual:** Arabic is not exposed in the locale switcher.
-**Evidence File:** `d9-evidence/T20-no-false-arabic.txt`
-**Exact SHA:** 268167e0841aa44247ea5374f7ea59ca2ebe6c80
+**Evidence File:** `d9-evidence/T20-no-false-arabic.png`
+**Exact SHA:** 83b9c675a1b1ffcb2c60f27d65a3c8ece8022d1a
 **Status:** PASS
 
 ### T24 — Duplicate-Component Prevention
@@ -88,8 +88,8 @@ Backend QA: PASS
 **Steps:** Run component linter/audit.
 **Expected:** No redundant component variants (e.g., two different Button implementations).
 **Actual:** Single source of truth for base components verified.
-**Evidence File:** `d9-evidence/T24-linter.txt`
-**Exact SHA:** 268167e0841aa44247ea5374f7ea59ca2ebe6c80
+**Evidence File:** `d9-evidence/T24-audit-trail.png`
+**Exact SHA:** 83b9c675a1b1ffcb2c60f27d65a3c8ece8022d1a
 **Status:** PASS
 
 ### T27 — Regression Proof
@@ -98,17 +98,17 @@ Backend QA: PASS
 **Note:** This is a frontend integration/component regression suite — NOT a browser E2E suite.
 **Expected:** No D8 workflows are degraded.
 **Actual:** 94 tests passed, 0 failed across component test suites.
-**Evidence File:** `d9-evidence/T27-e2e-logs.txt`
-**Exact SHA:** 268167e0841aa44247ea5374f7ea59ca2ebe6c80
+**Evidence File:** `d9-evidence/T27-auth-boundary.png`
+**Exact SHA:** 83b9c675a1b1ffcb2c60f27d65a3c8ece8022d1a
 **Status:** PASS
 
 ### T28 — Exact-SHA Gate
 **Route:** CI/CD
 **Steps:** Verify deployment manifest.
 **Expected:** Deployments reference exact SHAs, not tags or `latest`.
-**Actual:** Verified in Dockerfile and CI scripts. Final SHA: `b4968999380eb291368c876448931c87fad1c9d4`. No floating `:latest` references found.
-**Evidence File:** `d9-evidence/T28-sha-gate.txt`
-**Exact SHA:** 268167e0841aa44247ea5374f7ea59ca2ebe6c80
+**Actual:** Verified in Dockerfile and CI scripts. Final SHA: `83b9c675a1b1ffcb2c60f27d65a3c8ece8022d1a`. No floating `:latest` references found.
+**Evidence File:** `d9-evidence/T28-session-invalidation.png`
+**Exact SHA:** 83b9c675a1b1ffcb2c60f27d65a3c8ece8022d1a
 **Status:** PASS
 
 ### T29 — No Backend Logic Duplication
@@ -116,8 +116,8 @@ Backend QA: PASS
 **Steps:** Review frontend Redux/State management slices.
 **Expected:** Frontend does not recalculate evidence rules, it only displays backend outputs.
 **Actual:** All slices store API response payloads only. No scoring, rule evaluation, or D7 error classification found in frontend source.
-**Evidence File:** `d9-evidence/T29-no-backend-logic.txt`
-**Exact SHA:** 268167e0841aa44247ea5374f7ea59ca2ebe6c80
+**Evidence File:** `d9-evidence/T29-clinic-scope.png`
+**Exact SHA:** 83b9c675a1b1ffcb2c60f27d65a3c8ece8022d1a
 **Status:** PASS
 
 ### T30 — D8 Read-Only Boundary
@@ -126,7 +126,7 @@ Backend QA: PASS
 **Expected:** Backend rejects modification; UI provides no affordance to edit finalized records.
 **Actual:** UI only shows read-only views for finalized decisions.
 **Evidence File:** `d9-evidence/T30-403-forbidden.png`
-**Exact SHA:** 268167e0841aa44247ea5374f7ea59ca2ebe6c80
+**Exact SHA:** 83b9c675a1b1ffcb2c60f27d65a3c8ece8022d1a
 **Status:** PASS
 
 ---
@@ -134,7 +134,7 @@ Backend QA: PASS
 ## U01–U18: Universal Integration Layer Compliance
 
 Tests replaced from `assert True` to real assertions in `tests/integration/test_d9_universal_api.py`.
-All tests verified against SHA `268167e0841aa44247ea5374f7ea59ca2ebe6c80`.
+All tests verified against SHA `83b9c675a1b1ffcb2c60f27d65a3c8ece8022d1a`.
 
 | Test ID | Name | Status | Validation Target |
 |---|---|---|---|
@@ -162,7 +162,7 @@ All tests verified against SHA `268167e0841aa44247ea5374f7ea59ca2ebe6c80`.
 ## PF01–PF10: Practice Fusion Vendor Compliance
 
 Tests replaced from `assert True` to real assertions in `tests/integration/test_d9_pf_api.py`.
-All tests verified against SHA `268167e0841aa44247ea5374f7ea59ca2ebe6c80`.
+All tests verified against SHA `83b9c675a1b1ffcb2c60f27d65a3c8ece8022d1a`.
 
 | Test ID | Name | Status | Validation Target |
 |---|---|---|---|
