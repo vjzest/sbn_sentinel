@@ -1,3 +1,4 @@
+from app.integrations.core.contracts import IntegrationAdapter
 import logging
 import time
 from typing import Dict, Any, List, TYPE_CHECKING
@@ -11,8 +12,6 @@ logger = logging.getLogger(__name__)
 class ConfigurationInvalid(Exception):
     """Raised when required adapter configuration is missing."""
 
-
-from app.integrations.core.contracts import IntegrationAdapter
 
 class PracticeFusionAdapter(IntegrationAdapter):
     """

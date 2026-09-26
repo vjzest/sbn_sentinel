@@ -21,8 +21,6 @@ class SmartDiscovery:
         """
         discovery_url = f"{self.base_url}/.well-known/smart-configuration"
 
-
-
         try:
             response = await self.transport.get(discovery_url)
             return response.json()
