@@ -4,11 +4,10 @@ from sqlalchemy.orm import sessionmaker
 from typing import Generator
 from app.core.config import settings
 
-import os
 # Database URL is environment-driven.
 # Default (dev): sqlite:///./sentinel.db
 # Production:    set SQLALCHEMY_DATABASE_URL=postgresql://user:pass@host/db
-SQLALCHEMY_DATABASE_URL = os.environ.get("SQLALCHEMY_DATABASE_URL") or settings.SQLALCHEMY_DATABASE_URI
+SQLALCHEMY_DATABASE_URL = settings.SQLALCHEMY_DATABASE_URL
 
 # connect_args required by SQLite; not used for PostgreSQL
 _connect_args = {"check_same_thread": False} if SQLALCHEMY_DATABASE_URL.startswith("sqlite") else {}
