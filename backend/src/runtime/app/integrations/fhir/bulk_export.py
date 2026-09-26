@@ -60,9 +60,7 @@ class BulkExportManager:
         """Starts the bulk export and returns the polling status endpoint."""
         url = self._build_export_url(base_url, mode, group_id)
 
-        # Mock bypass for tests
-        if "mock" in base_url:
-            return f"{base_url}/status/mock-job-id"
+
 
         response = await self.transport.get(url, headers=self.headers)
 
@@ -78,8 +76,7 @@ class BulkExportManager:
         self, status_url: str, max_attempts: int = 20
     ) -> Dict[str, Any]:
         """Polls the status endpoint until the manifest is ready."""
-        if "mock" in status_url:
-            return {"output": [{"type": "Patient", "url": "mock_ndjson_url"}]}
+
 
         attempt = 0
         while attempt < max_attempts:
@@ -106,9 +103,7 @@ class BulkExportManager:
         Streams NDJSON output file line-by-line through the shared transport.
         The transport layer enforces timeout, headers, and error classification.
         """
-        if "mock" in file_url:
-            yield {"resourceType": "Patient", "id": "mock_bulk_1"}
-            return
+
 
         # Stream via shared transport.stream_lines — no raw httpx client here
         async for line in self.transport.stream_lines(file_url, headers=self.headers):

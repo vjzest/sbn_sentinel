@@ -37,13 +37,13 @@ async def jwks_endpoint():
     Requires JWT_PRIVATE_KEY and JWT_KEY_ID to be set in environment / settings.
     """
     try:
-        from app.core.config import settings
+        from app.integrations.core.secrets import SigningKeyProvider
         from cryptography.hazmat.primitives.serialization import load_pem_private_key
         from cryptography.hazmat.primitives.asymmetric.rsa import RSAPrivateKey
 
-        # Use explicit declared settings fields (not getattr fallbacks)
-        pem_bytes = settings.JWT_PRIVATE_KEY
-        key_id = settings.JWT_KEY_ID
+        # Use explicit declared settings fields via provider
+        pem_bytes = SigningKeyProvider.get_private_key()
+        key_id = SigningKeyProvider.get_key_id()
 
         if not pem_bytes:
             raise HTTPException(
@@ -68,7 +68,7 @@ async def jwks_endpoint():
             "kty": "RSA",
             "kid": key_id,
             "use": "sig",
-            "alg": settings.JWT_ALGORITHM,
+            "alg": SigningKeyProvider.get_algorithm(),
             "n": _int_to_base64url(pub.n),
             "e": _int_to_base64url(pub.e),
         }

@@ -80,6 +80,13 @@ jobs:
       run: |
         pytest tests/integration/test_d8_history_reproducibility.py -v
 
+    - name: API Module Verification
+      env:
+        SECRET_KEY: "test-secret-key-for-ci"
+        PYTHONPATH: "src/runtime"
+      run: |
+        pytest tests/integration/test_d9_universal_api.py tests/integration/test_d9_pf_api.py -v
+
   frontend-quality:
     name: Frontend Quality Assurance
     runs-on: ubuntu-latest

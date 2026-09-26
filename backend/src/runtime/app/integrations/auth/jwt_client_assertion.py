@@ -77,15 +77,5 @@ class JwtClientAssertionAuth(AuthStrategy):
         if scope_string:
             data["scope"] = scope_string
 
-        # Test mock bypass
-        if "mock" in self.token_endpoint:
-            return {
-                "access_token": "simulated_access_token",
-                "token_type": "Bearer",
-                "expires_in": 3600,
-                "scope": scope_string,
-                "client_assertion_used": assertion,
-            }
-
         response = await transport.post(self.token_endpoint, data=data)
         return response.json()

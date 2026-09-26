@@ -53,7 +53,8 @@ def _make_rsa_private_key_pem() -> bytes:
 
 @respx.mock
 @pytest.mark.asyncio
-async def test_pf01_smart_discovery(pf_config):
+@patch("app.integrations.auth.jwt_client_assertion.jwt.encode")
+async def test_pf01_smart_discovery(mock_encode, pf_config):
     """
     PF01: PracticeFusionAdapter.sync() must call SMART discovery to resolve
     the token_endpoint before building JwtClientAssertionAuth.
@@ -113,6 +114,7 @@ async def test_pf01_smart_discovery(pf_config):
         )
     )
 
+    mock_encode.return_value = "mock_jwt"
     manifest = PracticeFusionManifest()
     adapter = PracticeFusionAdapter(auth=None, manifest=manifest, config=pf_config)
 
@@ -269,7 +271,8 @@ async def test_pf04_jwks_rotation():
 
 @respx.mock
 @pytest.mark.asyncio
-async def test_pf05_patient_bundle(pf_config):
+@patch("app.integrations.auth.jwt_client_assertion.jwt.encode")
+async def test_pf05_patient_bundle(mock_encode, pf_config):
     """
     PF05: get_resource('Patient') parses a real FHIR Bundle response.
     Must handle entry[] and return the resources, not a hard-coded list.
@@ -301,6 +304,7 @@ async def test_pf05_patient_bundle(pf_config):
         )
     )
 
+    mock_encode.return_value = "mock_jwt"
     manifest = PracticeFusionManifest()
     auth = JwtClientAssertionAuth(
         "test_client", "test_key", "test_kid",
@@ -317,7 +321,8 @@ async def test_pf05_patient_bundle(pf_config):
 
 @respx.mock
 @pytest.mark.asyncio
-async def test_pf05_patient_bundle_pagination(pf_config):
+@patch("app.integrations.auth.jwt_client_assertion.jwt.encode")
+async def test_pf05_patient_bundle_pagination(mock_encode, pf_config):
     """PF05 (pagination): Both pages of a paginated Bundle are returned."""
     real_base = "https://mock-pf"
     config = {**pf_config, "base_url": real_base}
@@ -335,12 +340,12 @@ async def test_pf05_patient_bundle_pagination(pf_config):
             json={
                 "resourceType": "Bundle",
                 "entry": [{"resource": {"resourceType": "Patient", "id": "P1"}}],
-                "link": [{"relation": "next", "url": f"{real_base}/Patient?page=2"}],
+                "link": [{"relation": "next", "url": f"{real_base}/PatientPage2"}],
             },
         )
     )
     # Page 2
-    respx.get(f"{real_base}/Patient?page=2").mock(
+    respx.get(f"{real_base}/PatientPage2").mock(
         return_value=httpx.Response(
             200,
             json={
@@ -350,6 +355,7 @@ async def test_pf05_patient_bundle_pagination(pf_config):
         )
     )
 
+    mock_encode.return_value = "mock_jwt"
     manifest = PracticeFusionManifest()
     auth = JwtClientAssertionAuth(
         "test_client", "test_key", "test_kid",
@@ -360,7 +366,7 @@ async def test_pf05_patient_bundle_pagination(pf_config):
     from app.integrations.fhir.bundle_pager import BundlePager
     from app.integrations.core.transport import HttpTransport
 
-    transport = HttpTransport()
+    transport = HttpTransport(timeout=0.1)
     pager = BundlePager(transport, {"Authorization": "Bearer tok"})
     results = await pager.fetch_all(f"{real_base}/Patient")
 
@@ -461,12 +467,25 @@ async def test_pf07_coverage_mapping():
 # PF08: Capability blocking
 # ---------------------------------------------------------------------------
 
+@respx.mock
 @pytest.mark.asyncio
-async def test_pf08_appointment_unsupported(pf_config):
+@patch("app.integrations.auth.jwt_client_assertion.jwt.encode")
+async def test_pf08_appointment_unsupported(mock_encode, pf_config):
+    respx.get("https://mock/metadata").mock(
+        return_value=httpx.Response(
+            200,
+            json={
+                "resourceType": "CapabilityStatement",
+                "rest": [{"resource": [{"type": "Patient"}]}]
+            }
+        )
+    )
     """PF08: Verify Appointment is blocked by CapabilityStatement."""
+    mock_encode.return_value = "mock_jwt"
     manifest = PracticeFusionManifest()
-    auth = manifest.get_auth_strategy(pf_config)
-    adapter = PracticeFusionAdapter(auth=auth, manifest=manifest, config=pf_config)
+    config = {**pf_config, "token_endpoint": "https://mock/token", "base_url": "https://mock"}
+    auth = manifest.get_auth_strategy(config)
+    adapter = PracticeFusionAdapter(auth=auth, manifest=manifest, config=config)
     caps = await adapter.get_capability_statement()
     assert caps.supports("Appointment") is False
 
@@ -557,8 +576,9 @@ async def test_pf10_read_only_boundary(pf_config):
     (POST /Patient, PUT, PATCH, DELETE).
     """
     manifest = PracticeFusionManifest()
-    auth = manifest.get_auth_strategy(pf_config)
-    adapter = PracticeFusionAdapter(auth=auth, manifest=manifest, config=pf_config)
+    config = {**pf_config, "token_endpoint": "https://mock/token"}
+    auth = manifest.get_auth_strategy(config)
+    adapter = PracticeFusionAdapter(auth=auth, manifest=manifest, config=config)
 
     # Inspect public methods on the adapter
     write_methods = ["create", "update", "patch", "delete", "post_resource"]
