@@ -101,18 +101,18 @@ class ConnectorManager:
                 return False
             if row.status not in {"Healthy", "Ready", "Configured"}:
                 return False
-                
+
             from app.integrations.core.secrets import SigningKeyProvider
             if not SigningKeyProvider.is_configured():
                 return False
-                
+
             config = row.config or {}
             client_id = config.get("client_id")
             base_url = config.get("base_url")
-            
+
             if not client_id or not base_url:
                 return False
-                
+
             return True
         finally:
             db.close()

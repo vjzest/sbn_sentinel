@@ -74,7 +74,7 @@ async def connect_new_system(connector_in: ConnectorCreate, db: Session = Depend
             config = connector_in.config.copy()
             adapter = registry.create("Practice Fusion", config=config)
             if not adapter:
-                 raise ValueError("Adapter not available")
+                raise ValueError("Adapter not available")
         except Exception as e:
             # Prevent saving the connection if authentication fails
             raise HTTPException(
