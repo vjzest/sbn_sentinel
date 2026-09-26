@@ -37,6 +37,7 @@ jobs:
     - name: SES-011 Unit Testing (Pytest)
       env:
         SECRET_KEY: "test-secret-key-for-ci"
+        JWT_PRIVATE_KEY: "test-jwt-key"
         PYTHONPATH: "src/runtime"
       run: |
         pytest tests/unit/ -v -m unit
@@ -44,6 +45,7 @@ jobs:
     - name: SESR-001 Governance Testing
       env:
         SECRET_KEY: "test-secret-key-for-ci"
+        JWT_PRIVATE_KEY: "test-jwt-key"
         PYTHONPATH: "src/runtime"
       run: |
         pytest tests/ -v -k "governance"
@@ -51,6 +53,7 @@ jobs:
     - name: SDS-D4 and SDS-D5 Verification
       env:
         SECRET_KEY: "test-secret-key-for-ci"
+        JWT_PRIVATE_KEY: "test-jwt-key"
         PYTHONPATH: "src/runtime"
       run: |
         pytest tests/integration/test_d4_decision_basis.py tests/integration/test_d5_recommendation_review.py -v
@@ -58,6 +61,7 @@ jobs:
     - name: SDS-D6 Verification
       env:
         SECRET_KEY: "test-secret-key-for-ci"
+        JWT_PRIVATE_KEY: "test-jwt-key"
         PYTHONPATH: "src/runtime"
       run: |
         pytest \
@@ -69,6 +73,7 @@ jobs:
     - name: SDS-D7 Verification
       env:
         SECRET_KEY: "test-secret-key-for-ci"
+        JWT_PRIVATE_KEY: "test-jwt-key"
         PYTHONPATH: "src/runtime"
       run: |
         pytest tests/integration/test_d7_runtime_status.py -v
@@ -76,6 +81,7 @@ jobs:
     - name: SDS-D8 Verification
       env:
         SECRET_KEY: "test-secret-key-for-ci"
+        JWT_PRIVATE_KEY: "test-jwt-key"
         PYTHONPATH: "src/runtime"
       run: |
         pytest tests/integration/test_d8_history_reproducibility.py -v
@@ -83,6 +89,7 @@ jobs:
     - name: API Module Verification
       env:
         SECRET_KEY: "test-secret-key-for-ci"
+        JWT_PRIVATE_KEY: "test-jwt-key"
         PYTHONPATH: "src/runtime"
       run: |
         pytest tests/integration/test_d9_universal_api.py tests/integration/test_d9_pf_api.py -v
