@@ -31,11 +31,21 @@ class PracticeFusionAdapter(IntegrationAdapter):
                     f"Practice Fusion requires '{field}' in configuration"
                 )
 
+        # auth may be None when created by the registry before SMART discovery.
+        # Call _ensure_auth() before any method that needs a token.
         self.auth = auth
         self.manifest = manifest
         self.config = config
         self.connector_id = config.get("id", "PF-SYS")
         self._base_url = config.get("base_url")
+
+    def _ensure_auth(self) -> None:
+        """Raise if auth has not yet been resolved via SMART discovery."""
+        if self.auth is None:
+            raise ConfigurationInvalid(
+                "PracticeFusionAdapter: auth not yet resolved. "
+                "Call sync() first to perform SMART discovery and build auth."
+            )
 
     async def _resolve_base_url(self) -> str:
         return self._base_url.rstrip("/")
@@ -60,6 +70,7 @@ class PracticeFusionAdapter(IntegrationAdapter):
         query_params: Dict[str, Any] = None,
     ) -> List[Dict[str, Any]]:
         """Fetch a single resource type from the FHIR server."""
+        self._ensure_auth()
         token_data = await self.auth.authenticate()
 
         from app.integrations.core.transport import HttpTransport
