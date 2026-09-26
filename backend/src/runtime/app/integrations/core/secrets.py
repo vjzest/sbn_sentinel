@@ -1,5 +1,6 @@
 from app.core.config import settings
 
+
 class SigningKeyProvider:
     """Provides JWT signing key materials for SMART authentication and JWKS publication."""
 
